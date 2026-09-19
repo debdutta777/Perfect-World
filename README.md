@@ -1,0 +1,42 @@
+# Perfect World: Awakening
+
+**Starter project — Kolkata, West Bengal • Age16 • Class XI • 1,000 creation points**
+
+Live ordinary school and family life while your actions gradually shape extraordinary abilities. The working title comes from the supplied concept. The opening now uses real **Kolkata** with fictional **Nabapara** and **Nabapara Vidyalaya**. The first playable scope is one neighborhood; West Bengal and then India form the expansion plan.
+
+## What is included
+
+- Unreal Engine5.7 C++ project and a small native Slate character-creation menu.
+- Portable C++20 rules:20 traits, ranks0–4, cumulative costs0/25/60/110/180,1,000-point budget, maximum four rank-4 traits, exact age16, free identity/cosmetics, reversible draft edits and validation.
+- One implemented1,000-point Balanced Scholar preset. Other documented presets and all trait gameplay effects are design specifications for future work.
+- In-memory versioned creation snapshots with validation. This is **not disk save/load** or a complete long-term life save system.
+- Detailed game design, creator specification, Bengal world bible, names, Unreal architecture, art direction, production plan and small-step queue.
+- Two generated concept sheets: Kolkata neighborhood and student costumes. They are reference art, not playable3D assets.
+
+## Start here
+
+**First time in Unreal? Follow [UNREAL_QUICKSTART](Docs/UNREAL_QUICKSTART.md).** It walks through building, opening the project and checking the creator controls.
+
+1. Read [NEXT_SMALL_STEPS](Docs/NEXT_SMALL_STEPS.md) to keep work bounded.
+2. Follow [BUILD_GUIDE](Docs/BUILD_GUIDE.md) for standalone tests and Unreal compilation.
+3. Read [GAME_DESIGN](Docs/GAME_DESIGN.md), [CHARACTER_CREATION](Docs/CHARACTER_CREATION.md) and [INDIA_WORLD_BIBLE](Docs/INDIA_WORLD_BIBLE.md).
+4. See [NAMING](Docs/NAMING.md), [TECHNICAL_ARCHITECTURE](Docs/TECHNICAL_ARCHITECTURE.md), [ART_DIRECTION](Docs/ART_DIRECTION.md) and [PRODUCTION_PLAN](Docs/PRODUCTION_PLAN.md).
+5. Check [STATUS](Docs/STATUS.md) for exactly what has been verified.
+
+## Current boundary
+
+The menu edits the budget and confirms an origin record. It does not load a playable school or city. The avatar editor, disk saves, school timetable simulation, aging, combat, quests and cross-platform packages are future steps. The project has no map or imported3D content beyond the engine's blank Entry map. Standalone test success does not prove UI usability or device performance.
+
+Windows is the development host. Android performance and touch are early planned gates; other platforms need their own tooling and tests. See the architecture document for Epic documentation and limits.
+
+## Model workflow
+
+Use **GPT-5.6 Sol** for small routine tasks, **Claude Sonnet** for complementary design/content/review, and **Claude Opus** only for difficult work when authorized and available. The project AGENTS.md captures this preference; it does not change global application model settings. Work one small change at a time with an explicit check. Model execution notes are in STATUS.md.
+
+## Art
+
+![Kolkata neighborhood concept](Art/kolkata-nabapara.png)
+
+![Student costume concepts](Art/student-lineup.png)
+
+See [ART_PROVENANCE](Docs/ART_PROVENANCE.md) for generation notes and the student sheet's noncanonical background.

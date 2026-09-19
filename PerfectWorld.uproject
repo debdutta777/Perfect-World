@@ -1,0 +1,18 @@
+{
+  "FileVersion": 3,
+  "EngineAssociation": "5.7",
+  "Category": "Games",
+  "Description": "Perfect World: Awakening - India-first life simulation action RPG foundation",
+  "Modules": [
+    {
+      "Name": "PerfectWorldCore",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    },
+    {
+      "Name": "PerfectWorld",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ]
+}
