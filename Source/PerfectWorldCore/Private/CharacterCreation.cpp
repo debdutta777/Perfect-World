@@ -32,6 +32,20 @@ constexpr std::array<TraitDefinition, TraitCount> Definitions{{
     {"adversity_resilience", "Adversity Resilience", "prior_experiences"},
 }};
 
+constexpr std::array<HouseholdDefinition, HouseholdTemplateCount> Households{{
+    {"parent_household", "Parent household", "One or two parents or stepparents",
+     "compact_family_flat", "Compact family flat", "Work schedules and expectations"},
+    {"extended_family", "Extended family", "Aunt, uncle or multigenerational adults",
+     "row_house", "Row house", "Shared space and many obligations"},
+    {"grandparent_household", "Grandparent household", "One or two grandparents",
+     "cooperative_flat", "Older cooperative flat", "Care flows in both directions"},
+    {"adult_sibling_household", "Adult sibling household", "A sibling aged 21 or older",
+     "rented_flat", "Rented flat", "A young household under financial pressure"},
+    {"appointed_guardian", "Appointed guardian", "A family friend or hostel warden",
+     "staff_quarters", "Staff quarters with private sleeping space",
+     "Negotiated trust and formal responsibility"},
+}};
+
 constexpr std::array<std::int32_t, TraitCount> BalancedScholarRanks{
     1, 1, 1, 3, 2,
     2, 1, 2,
@@ -55,6 +69,18 @@ OperationResult OperationResult::Failure(CreationError error, std::string messag
 const std::array<TraitDefinition, TraitCount>& CharacterCreator::TraitDefinitions() noexcept
 {
     return Definitions;
+}
+
+const std::array<HouseholdDefinition, HouseholdTemplateCount>& CharacterCreator::HouseholdDefinitions() noexcept
+{
+    return Households;
+}
+
+const HouseholdDefinition* CharacterCreator::FindHousehold(std::string_view householdId) noexcept
+{
+    const auto found = std::find_if(Households.begin(), Households.end(),
+        [householdId](const HouseholdDefinition& definition) { return definition.Id == householdId; });
+    return found == Households.end() ? nullptr : &*found;
 }
 
 std::int32_t CharacterCreator::CostForRank(std::int32_t rank) noexcept
@@ -133,6 +159,22 @@ OperationResult CharacterCreator::SetTraitRank(std::string_view traitId, std::in
     return OperationResult::Success();
 }
 
+OperationResult CharacterCreator::SetHouseholdTemplate(std::string_view householdId)
+{
+    if (HasStarted_)
+    {
+        return OperationResult::Failure(CreationError::CreationAlreadyStarted,
+                                        "The household is locked after life begins.");
+    }
+    if (FindHousehold(householdId) == nullptr)
+    {
+        return OperationResult::Failure(CreationError::UnknownHousehold,
+                                        "Unknown household template: " + std::string(householdId));
+    }
+    HouseholdTemplateId_ = std::string(householdId);
+    return OperationResult::Success();
+}
+
 OperationResult CharacterCreator::ApplyPreset(std::string_view presetId)
 {
     if (HasStarted_)
@@ -170,6 +212,7 @@ OperationResult CharacterCreator::StartLife()
 void CharacterCreator::Reset()
 {
     TraitRanks_.fill(0);
+    HouseholdTemplateId_ = std::string(DefaultHouseholdTemplateId);
     Identity_ = {};
     Cosmetics_ = {};
     HasStarted_ = false;
@@ -179,6 +222,9 @@ CreationReview CharacterCreator::Review() const
 {
     CreationReview review;
     review.HasStarted = HasStarted_;
+    const HouseholdDefinition& household = Household();
+    review.HouseholdTemplateId = household.Id;
+    review.HomeKitId = household.HomeKitId;
     review.Allocations.reserve(TraitCount);
     for (std::size_t index = 0; index < TraitCount; ++index)
     {
@@ -198,6 +244,14 @@ std::int32_t CharacterCreator::GetTraitRank(std::string_view traitId) const noex
 {
     const std::int32_t index = FindTraitIndex(traitId);
     return index < 0 ? -1 : TraitRanks_[static_cast<std::size_t>(index)];
+}
+
+const HouseholdDefinition& CharacterCreator::Household() const noexcept
+{
+    // HouseholdTemplateId_ is only ever assigned a validated ID, so the
+    // default is a safety net rather than an expected outcome.
+    const HouseholdDefinition* found = FindHousehold(HouseholdTemplateId_);
+    return found != nullptr ? *found : *FindHousehold(DefaultHouseholdTemplateId);
 }
 
 OperationResult CharacterCreator::SetIdentity(IdentityProfile identity)
@@ -226,6 +280,7 @@ CharacterCreationSave CharacterCreator::CaptureSave() const
 {
     CharacterCreationSave save;
     save.TraitRanks = TraitRanks_;
+    save.HouseholdTemplateId = HouseholdTemplateId_;
     save.Identity = Identity_;
     save.Cosmetics = Cosmetics_;
     save.HasStarted = HasStarted_;
@@ -234,7 +289,7 @@ CharacterCreationSave CharacterCreator::CaptureSave() const
 
 OperationResult CharacterCreator::RestoreSave(const CharacterCreationSave& save)
 {
-    if (save.SchemaVersion != SaveSchemaVersion)
+    if (save.SchemaVersion < MinSupportedSaveVersion || save.SchemaVersion > SaveSchemaVersion)
     {
         return OperationResult::Failure(CreationError::UnsupportedSaveVersion,
                                         "The character save uses an unsupported schema version.");
@@ -249,7 +304,23 @@ OperationResult CharacterCreator::RestoreSave(const CharacterCreationSave& save)
         return OperationResult::Failure(CreationError::InvalidSave, validation.Message);
     }
 
+    // Version 1 predates household selection. Migrate it to the documented
+    // default rather than guessing; a version 2 record must name a known
+    // template, so a corrupted household ID fails the whole load.
+    std::string household{DefaultHouseholdTemplateId};
+    if (save.SchemaVersion >= 2)
+    {
+        if (FindHousehold(save.HouseholdTemplateId) == nullptr)
+        {
+            return OperationResult::Failure(CreationError::InvalidSave,
+                                            "The creation save names an unknown household template: " +
+                                                save.HouseholdTemplateId);
+        }
+        household = save.HouseholdTemplateId;
+    }
+
     TraitRanks_ = save.TraitRanks;
+    HouseholdTemplateId_ = std::move(household);
     Identity_ = save.Identity;
     Cosmetics_ = save.Cosmetics;
     HasStarted_ = save.HasStarted;

@@ -7,6 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/CharacterCreation.cpp
+    Source/PerfectWorldCore/Private/CreationSaveSerialization.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)

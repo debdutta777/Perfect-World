@@ -1,4 +1,5 @@
 #include "CharacterCreation.h"
+#include "CreationSaveSerialization.h"
 #include <cstdlib>
 #include <iostream>
 #include <random>
@@ -87,5 +88,105 @@ int main()
     }
     c.Reset();
     Check(c.Review().Remaining == 1000 && c.Identity().GivenName.empty(), "reset creates fresh draft");
+    Check(c.Review().HouseholdTemplateId == "parent_household", "reset restores default household");
+
+    // Household templates are narrative, free, and validated by stable ID.
+    std::set<std::string_view> householdIds;
+    std::set<std::string_view> homeKitIds;
+    for (const auto& h : c.HouseholdDefinitions()) { householdIds.insert(h.Id); homeKitIds.insert(h.HomeKitId); }
+    Check(householdIds.size() == 5 && homeKitIds.size() == 5, "five distinct households and home kits");
+    Check(!c.SetHouseholdTemplate("mansion"), "unknown household rejected");
+    Check(c.Review().HouseholdTemplateId == "parent_household", "household rejection atomic");
+    Check(c.SetHouseholdTemplate("grandparent_household").Succeeded(), "household selectable");
+    Check(c.Review().Remaining == 1000, "household costs no creation points");
+    Check(c.Review().HomeKitId == "cooperative_flat", "household selects its home kit");
+
+    // Text round trip, by stable trait ID.
+    Check(c.ApplyPreset("balanced_scholar").Succeeded(), "preset for serialization");
+    Check(c.SetIdentity({"Ananya \"Ana\"", "Sen\\Roy", "she/her", "Kolkata", "Bengali"}).Succeeded(),
+          "identity with quotes and backslashes");
+    const std::string text = SerializeCreationSave(c.CaptureSave());
+    Check(text.find("\"household_resources\": 1") != std::string::npos, "ranks written by stable ID");
+    Check(text.find("\"householdTemplateId\": \"grandparent_household\"") != std::string::npos,
+          "household written");
+    CharacterCreationSave parsed;
+    Check(DeserializeCreationSave(text, parsed).Succeeded(), "text round trip parses");
+    CharacterCreator fromText;
+    Check(fromText.RestoreSave(parsed).Succeeded(), "parsed record restores");
+    Check(fromText.Review().Spent == 1000, "round trip keeps the ledger");
+    Check(fromText.Identity().GivenName == "Ananya \"Ana\"", "round trip keeps escaped identity");
+    Check(fromText.Identity().FamilyName == "Sen\\Roy", "round trip keeps backslashes");
+    Check(fromText.Review().HouseholdTemplateId == "grandparent_household", "round trip keeps household");
+
+    // A corrupt file must be reported, never silently reinterpreted.
+    CharacterCreationSave untouched = parsed;
+    CharacterCreationSave target = parsed;
+    for (const char* bad : {"", "{", "not json at all", "{}", "{\"schemaVersion\": 2}",
+                            "{\"schemaVersion\": \"two\", \"traitRanks\": {}}",
+                            "{\"schemaVersion\": 2, \"traitRanks\": {}}",
+                            "{\"schemaVersion\": 2, \"surprise\": 1}"})
+    {
+        Check(DeserializeCreationSave(bad, target).Error == CreationError::MalformedSaveText,
+              "corrupt text rejected");
+    }
+    Check(target.HouseholdTemplateId == untouched.HouseholdTemplateId &&
+          target.TraitRanks == untouched.TraitRanks, "failed parse leaves the target untouched");
+
+    // Truncating anywhere must fail rather than produce a half record. The
+    // record ends with a closing brace and a newline, so the only prefix that
+    // is still a whole record is the one missing that final newline.
+    CharacterCreationSave withoutNewline;
+    Check(DeserializeCreationSave(std::string_view(text).substr(0, text.size() - 1), withoutNewline).Succeeded(),
+          "a record without its trailing newline still parses");
+    for (std::size_t cut = 1; cut + 1 < text.size(); ++cut)
+    {
+        CharacterCreationSave partial;
+        if (DeserializeCreationSave(std::string_view(text).substr(0, cut), partial).Succeeded())
+        {
+            Check(false, "a truncated save must not parse");
+        }
+    }
+
+    // A renamed or missing trait must fail loudly instead of shifting ranks.
+    std::string renamed = text;
+    const std::size_t at = renamed.find("\"vitality\"");
+    Check(at != std::string::npos, "test fixture contains vitality");
+    renamed.replace(at, 10, "\"vitalityX\"");
+    Check(DeserializeCreationSave(renamed, target).Error == CreationError::MalformedSaveText,
+          "renamed trait rejected");
+
+    // An unknown household in a version 2 file fails; version 1 migrates.
+    CharacterCreationSave strangeHousehold = parsed;
+    strangeHousehold.HouseholdTemplateId = "penthouse";
+    CharacterCreator loader;
+    Check(loader.RestoreSave(strangeHousehold).Error == CreationError::InvalidSave,
+          "unknown household in save rejected");
+    CharacterCreationSave legacy = parsed;
+    legacy.SchemaVersion = 1;
+    legacy.HouseholdTemplateId = "penthouse";
+    Check(loader.RestoreSave(legacy).Succeeded(), "version 1 record still loads");
+    Check(loader.Review().HouseholdTemplateId == "parent_household",
+          "version 1 migrates to the default household");
+    legacy.SchemaVersion = 3;
+    Check(loader.RestoreSave(legacy).Error == CreationError::UnsupportedSaveVersion,
+          "future schema version rejected");
+
+    // Slots are bounded and named distinctly.
+    Check(SaveSlotCount == 3, "three creation slots");
+    std::set<std::string> slotNames;
+    for (std::int32_t slot = 0; slot < SaveSlotCount; ++slot)
+    {
+        Check(IsValidSaveSlot(slot), "slot in range");
+        slotNames.insert(SaveSlotFileName(slot));
+    }
+    Check(slotNames.size() == 3, "distinct slot file names");
+    Check(!IsValidSaveSlot(-1) && !IsValidSaveSlot(SaveSlotCount), "out-of-range slot rejected");
+    Check(SaveSlotFileName(SaveSlotCount).empty(), "out-of-range slot has no file name");
+
+    // The household is locked once life begins, like every other origin field.
+    CharacterCreator committed;
+    Check(committed.ApplyPreset("balanced_scholar").Succeeded(), "preset for lock test");
+    Check(committed.StartLife().Succeeded(), "life starts for lock test");
+    Check(!committed.SetHouseholdTemplate("row_house_family"), "household locked after start");
     std::cout << "PASS: " << Checks << " checks, including 10000 deterministic edit sequences\n";
 }
