@@ -7,6 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/Appearance.cpp
+    Source/PerfectWorldCore/Private/GameClock.cpp
     Source/PerfectWorldCore/Private/CharacterCreation.cpp
     Source/PerfectWorldCore/Private/CreationSaveSerialization.cpp
 )
@@ -23,3 +24,7 @@ enable_testing()
 add_executable(PerfectWorldCoreTests Tests/CharacterCreationTests.cpp)
 target_link_libraries(PerfectWorldCoreTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldCoreTests COMMAND PerfectWorldCoreTests)
+
+add_executable(PerfectWorldClockTests Tests/GameClockTests.cpp)
+target_link_libraries(PerfectWorldClockTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldClockTests COMMAND PerfectWorldClockTests)
