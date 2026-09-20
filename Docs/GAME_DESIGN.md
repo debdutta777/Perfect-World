@@ -22,7 +22,7 @@ Every feature must connect at least two of ordinary life, relationships, city sy
 
 ## Player and lifecycle
 
-The opening date is the first Monday of Class XI. The player is exactly 16 on opening day; any birthday choice must preserve this starting age. They live with a parent, extended family member, or appointed guardian; a minor cannot begin alone in a rented flat. The creator defines circumstances and modest starting tendencies, not destiny. Full rules are in `CHARACTER_CREATION.md`.
+The opening date is the first Monday of Class XI. The player is exactly 16 on opening day; any birthday choice must preserve this starting age. They live with a parent, extended family member, or appointed guardian, chosen through Household Resources Ranks 1–4 — or, as of a 2026-09-20 design decision, grew up in institutional care (a children's home) if Household Resources is left at Rank 0. A minor still cannot begin alone in a rented flat outside of that institutional-care outcome. The creator defines circumstances and modest starting tendencies, not destiny; the institutional-care outcome is a legitimate starting circumstance, written with the same dignity as the family templates, and it does not grant or deny supernatural potential. Full rules, including the tradeoff this decision accepts, are in `CHARACTER_CREATION.md`.
 
 The long arc is planned as five lifecycle bands:
 
@@ -72,6 +72,8 @@ School play uses short decisions, observation, dialogue, and optional subject ch
 ### Household and housing
 
 Every starting home has a guardian NPC, sleeping space, study surface, storage, kitchen access, curfew expectation, chores, and household budget state. Family resources affect convenience and pressure, while guardian support affects communication and recovery; neither measures love or moral worth. The slice offers three authored home layouts using shared modular art: compact family flat, extended-family row house, and staff quarters/rented room attached to a guardian household.
+
+A fourth starting layout, a children's home, is now part of the design (Household Resources Rank 0; see CHARACTER_CREATION.md, 2026-09-20). It replaces the guardian NPC with institutional staff and replaces the family household budget with an institutional one, but keeps the same baseline access to a bed, meals, storage, and school. No art or level exists yet for this layout; it is planned alongside the other three.
 
 Housing progression begins only after adulthood. Hostel, shared flat, rental, ownership, furnishing, and household formation are lifecycle systems for later chapters. Furniture bonuses remain small and practical: a good desk reduces study fatigue; it never grants Intelligence.
 

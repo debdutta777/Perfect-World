@@ -43,7 +43,7 @@ The base script is professionally written in English with a localization glossar
 
 The game shows economic difference through space, time, risk, privacy, commute, and available buffers. It avoids equating wealth with intelligence, virtue, cleanliness, English fluency, or family affection. Prices use ₹ and are internally consistent, then updated as a tuning table rather than claimed as a live cost-of-living index.
 
-The player has personal pocket money and earnings, while the household has its own budget. A higher household reserve can absorb a repair or school expense; it is not lootable cash. Low resources create tradeoffs but never make a background a misery-for-points option.
+The player has personal pocket money and earnings, while the household has its own budget. A higher household reserve can absorb a repair or school expense; it is not lootable cash. Low resources create tradeoffs, and above Household Resources Rank 0 they never make a background a misery-for-points option. As of a 2026-09-20 design decision, Household Resources Rank 0 itself is the one deliberate exception: it means institutional care (a children's home) rather than an ordinary low-resource family, a coupling the design contract otherwise avoids on purpose. See CHARACTER_CREATION.md ("Household selection") for the full rule and its content-handling note.
 
 ## Nabapara
 
@@ -73,7 +73,7 @@ Each public location needs opening hours, staff ownership, delivery/service acce
 
 ## Opening household life
 
-The protagonist's guardian is built from a template plus authored scenes. Regardless of template, the household establishes:
+The protagonist's guardian is built from a template plus authored scenes — or, at Household Resources Rank 0, the protagonist grew up in institutional care (a children's home) with institutional staff in place of a guardian; see CHARACTER_CREATION.md. Regardless of template or the institutional-care outcome, the household (or children's home) establishes:
 
 - where shoes, school bag, charger, medicines, and keys belong;
 - who wakes first and who prepares or buys breakfast;
@@ -100,7 +100,7 @@ Names and details remain subject to sensitivity and voice casting review.
 
 | ID | Name | Identity and role | Regular schedule | Personal tension | Relationship use |
 |---|---|---|---|---|---|
-| `npc_guardian_primary` | Player-defined | adult guardian from the selected household template | home plus a template-specific work shift | protection conflicts with the player's growing secrecy | trust, obligation, recovery |
+| `npc_guardian_primary` | Player-defined | adult guardian from the selected household template, or (Household Resources Rank 0) children's-home staff | home plus a template-specific work shift | protection conflicts with the player's growing secrecy | trust, obligation, recovery |
 | `npc_mira_sen` | Mira Sen | Class XI Commerce student; helps at her family's stationery counter | school weekdays; counter after class twice a week | wants independence without destabilizing the shop | planner, potential confidante or rival |
 | `npc_ishan_sheikh` | Ishan Sheikh | Class XI Science student; records neighborhood stories | school weekdays; bus commute; maidan some evenings | curiosity crosses safety boundaries | friend, witness, media pressure |
 | `npc_tara_das` | Tara Das | Class XI Humanities student and runner | school; maidan practice; younger-sibling pickup | disciplined scheduling conceals strain at home | training partner and honest critic |

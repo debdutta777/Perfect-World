@@ -12,7 +12,7 @@ Completion targets are under eight minutes with a preset and under twenty minute
 
 - The story begins in Class XI. The opening age is exactly 16. Any future birthday selector must preserve that age on opening day.
 - The selected date of birth becomes canonical save data and drives later aging. Age is never adjusted to optimize stats.
-- The player lives with a parent, relative, adult sibling aged 21+, or appointed guardian. “Lives alone” is unavailable while the character is a minor.
+- The player lives with a parent, relative, adult sibling aged 21+, or appointed guardian — or, if Household Resources is left at Rank 0, grew up in institutional care (a children's home) with no family guardian at all. See "Household selection" below for the 2026-09-20 decision that introduced this. “Lives alone” is unavailable while the character is a minor.
 - School stream, household, and guardian affect scenes and schedules. They do not grant a purchased class or power.
 - Teenage relationships are age-appropriate. Adult/minor romance, explicit sexual content, gambling, alcohol use, and hazardous employment are unavailable.
 - Formal Gate licenses and unrestricted contracts are adult systems. The opening Gate is an accident; later slice access is supervised.
@@ -21,7 +21,7 @@ Completion targets are under eight minutes with a preset and under twenty minute
 
 1. **Identity:** name, pronouns, address terms, voice presentation, age/birthday, and optional accessibility settings.
 2. **Appearance:** body, face, skin, hair, clothing, and presentation. All choices are cosmetic and cost zero.
-3. **Household:** select an authored guardian relationship and home template; edit names and relationship terms.
+3. **Household:** select an authored guardian relationship and home template (Household Resources Ranks 1–4), or leave Household Resources at Rank 0 for institutional care with no family template; edit names and relationship terms where applicable.
 4. **School:** choose Science, Commerce, or Humanities and a reason for the choice. This sets a timetable, not a class.
 5. **Background traits:** allocate exactly 1,000 points among twenty ranked traits or select a valid preset.
 6. **Review:** show the first-day household, timetable, all mechanical starting effects, budget arithmetic, and content notes.
@@ -43,11 +43,32 @@ The following never consume background points and do not alter stats, prices, di
 
 Appearance has animation compatibility constraints, not “good/bad” values. Physical Presence is a learned bearing and first-impression trait; it is not a hidden attractiveness score. Personal Presentation reflects preparation and clothing care, not price, complexion, body type, gender conformity, or brand ownership.
 
+### Appearance editor (design decision, 2026-09-20; scope corrected 2026-09-20)
+
+The planned appearance step is a full character editor producing anime-styled 2D/2.5D characters, not a fixed set of pre-made heads. It mixes two control types, and the split between them is deliberate and scoped to what the 2D presentation layer can actually render:
+
+- **Continuous sliders — colours only, in the first version.** Skin tone, hair colour, and eye colour are true sliders (e.g. hue/value ranges or a calibrated ramp position), because a 2D layer can be recoloured/tinted cheaply at runtime.
+- **Discrete pickers — everything else, in the first version.** Hair style, face shape, build, and uniform/outfit variant are chosen from a finite set of authored options, each a distinct art layer, not a slider. Proportions and facial-feature sliders (height, head/limb scale, eye shape/spacing, nose, mouth, jaw, brow, ear morphs) are **deferred, not implemented in v1**, and this is a deliberate scope decision, not an oversight: a 2D layered sprite cannot cheaply deform its geometry at runtime the way a 3D mesh can, so continuous proportion sliders would need per-frame runtime mesh deformation on flat art for a benefit only the eventual 3D rig can deliver cheaply through morph targets. Continuous proportion control returns once the 3D presentation layer (TECHNICAL_ARCHITECTURE.md) exists.
+
+This extends rather than reduces the free-cosmetics list above; every slider and picker in the editor stays inside that list and stays free.
+
+**Critical rule: appearance is stored as data, not as a picked asset.** The editor's output — slider values for colour, and selected option IDs for every discrete pick — is a named, versioned, engine-neutral parameter set, never a chosen sprite filename or a chosen mesh reference. The same saved `AppearanceRecord` parameter set must be able to drive a 2D composed sprite (today's presentation layer) and, later, a 3D morph-target/skeletal rig (see TECHNICAL_ARCHITECTURE.md's presentation-layer decision) without the save becoming invalid or needing a new schema. Presentation code reads the parameter set and decides how to render it; it never writes gameplay-visible state back into it. This engine-neutral, versioned shape is exactly what makes it safe to widen the discrete/continuous split later (e.g. adding proportion sliders once 3D lands) without another save-breaking schema change.
+
+The existing rule stands unchanged: appearance parameters never cost creation points and must never alter point costs, stats, dialogue success, NPC attraction, or supernatural potential. A future slider/picker count or default preset for the editor is production work, not a design reopening of this rule.
+
 ## Household selection
 
-**Implemented:** the five templates below exist as data in the portable core with their stable IDs (`parent_household`, `extended_family`, `grandparent_household`, `adult_sibling_household`, `appointed_guardian`), each naming a home kit ID. Selecting one costs no creation points, and the choice is locked once the prologue starts, the same as identity and cosmetics. The chosen household ID is part of the persisted creation record. **Planned, not yet built:** guardian records (names, individual relationship terms), editable relationship terms beyond the template default, the home scenes themselves, and per-household art — none of the five home kit IDs name anything that exists yet as art or a level.
+**Implemented:** the five templates below exist as data in the portable core with their stable IDs (`parent_household`, `extended_family`, `grandparent_household`, `adult_sibling_household`, `appointed_guardian`), each naming a home kit ID. Selecting one costs no creation points, and the choice is locked once the prologue starts, the same as identity and cosmetics. The chosen household ID is part of the persisted creation record. **Planned, not yet built:** guardian records (names, individual relationship terms), editable relationship terms beyond the template default, the home scenes themselves, per-household art, and the institutional-care outcome described below — none of the six possible starting rooms exist yet as art or a level.
 
-Five narrative templates share the same baseline access to a bed, meals, storage, school, and a guardian:
+### Design decision, 2026-09-20 — Household Resources Rank 0 means institutional care
+
+This reverses the rule this document stated before today. Household Resources Rank 0 no longer means an ordinary family baseline. It means the character grew up in **institutional care — a children's home — with no family household at all.** None of the five templates below applies at Rank 0. Household Resources Ranks 1 through 4 select one of the five templates and escalate the resources available inside it, at the reserve values already given in the trait catalogue (₹500 / ₹1,000 / ₹2,000 / ₹4,000).
+
+The owner has made this decision deliberately, accepting a consequence that the earlier design contract was specifically written to avoid: **the point ledger and the origin's hardship are now coupled for this one trait.** A player who leaves Household Resources at Rank 0 in order to spend those 0 points elsewhere is knowingly choosing a harder starting origin, not a neutral one — spending fewer points now produces a harder origin. The sentence this replaces read: "Rank 0 means an ordinary baseline, never abuse, homelessness, or deprivation. Serious family harm belongs only in authored, reviewed stories and is not a point optimization choice." That protection is withdrawn for Household Resources Rank 0 only, as of 2026-09-20; it still holds for every other trait and every other rank, and no other trait may be spent (or left unspent) to buy or avoid family hardship. This paragraph exists so a future reader understands the coupling was chosen on this date, not an oversight the validator failed to catch.
+
+**Content-handling note.** A children's-home origin must be written and depicted with dignity. It is not squalor, not abuse, and not a punishment for how a player allocated points — it is a sixth legitimate starting circumstance alongside the five templates below. Like every other household outcome, it must not grant or deny supernatural potential.
+
+Five narrative templates, selected at Household Resources Rank 1 and above, share the same baseline access to a bed, meals, storage, school, and a guardian:
 
 | Template | Guardian examples | Home kit | Story emphasis |
 |---|---|---|---|
@@ -57,7 +78,13 @@ Five narrative templates share the same baseline access to a bed, meals, storage
 | Adult sibling household | sibling aged 21+ | rented flat | young household under financial pressure |
 | Appointed guardian | family friend/hostel warden | staff quarters with private sleeping space | negotiated trust and formal responsibility |
 
-Household Resources, Guardian Support, and Housing Stability are purchased separately so money, care, and security are never treated as the same thing. A low-resource home can be highly supportive; a wealthy home can be emotionally distant. Rank 0 means an ordinary baseline, never abuse, homelessness, or deprivation. Serious family harm belongs only in authored, reviewed stories and is not a point optimization choice.
+At Rank 0, the sixth outcome is institutional care: no template, no family guardian, a children's-home staff caregiver in their place.
+
+This branch **is implemented** in the portable core as of commit `c081998`. `CharacterCreator::ResolveOpeningHome()` combines the chosen template with the Household Resources rank and returns an `OpeningHomePlan`. At Rank 0 it sets `GrewUpInCare`, overrides the home kit to `childrens_home_dormitory` and names the dressing tier `institutional_care`; at Ranks 1–4 it returns the chosen template's own home kit with the tiers `modest`, `steady`, `comfortable` and `ample`. The plan keeps reporting the template the player chose even while care overrides it, so raising the rank restores their choice instead of discarding it. The creator reads this resolved plan rather than a household's own kit, so the interface cannot contradict the rules at Rank 0.
+
+What does **not** exist yet is any actual room: no home kit ID names a built level, mesh or sprite set, and confirming an origin still loads no scene. Building the rooms is future work — see NEXT_SMALL_STEPS.md.
+
+Household Resources, Guardian Support, and Housing Stability are purchased separately so money, care, and security are never treated as the same thing. A low-resource home (Ranks 1+) can be highly supportive; a wealthy home can be emotionally distant. This baseline-versus-support independence is unchanged above Rank 0; only Rank 0 itself changed meaning today.
 
 ## Point economy
 
@@ -65,11 +92,13 @@ Each of the twenty traits has ranks 0–4. The displayed cost is cumulative:
 
 | Rank | Cumulative cost | Increment from prior rank | Design meaning |
 |---:|---:|---:|---|
-| 0 | 0 | — | ordinary baseline |
+| 0 | 0 | — | ordinary baseline* |
 | 1 | 25 | 25 | noticeable tendency |
 | 2 | 60 | 35 | practiced advantage |
 | 3 | 110 | 50 | strong part of the background |
 | 4 | 180 | 70 | exceptional starting circumstance |
+
+\* "Ordinary baseline" describes Rank 0 for nineteen of the twenty traits. As of 2026-09-20, Household Resources is the sole exception: its Rank 0 means institutional care (a children's home), not an ordinary baseline. See "Household selection" above.
 
 The player must spend **exactly 1,000 points**. No more than four traits may be Rank 4. There are no negative ranks and no disadvantage traits that award points. Increasing a trait charges only the difference to its new cumulative price; lowering it refunds only the difference originally committed in the current creator session.
 
@@ -85,7 +114,7 @@ IDs are save/API contracts and must not be renamed without migration. Numeric ef
 |---|---|---|---|
 | Appearance & presentation | `physical_presence` | Physical Presence | +1 / +2 / +3 / +4% composure window in first-impression interactions |
 | Appearance & presentation | `personal_presentation` | Personal Presentation | +1 / +2 / +3 / +4% reduction to stress gained from formal school/social checks |
-| Family resources & support | `household_resources` | Household Resources | household discretionary reserve +₹500 / ₹1,000 / ₹2,000 / ₹4,000; not player cash |
+| Family resources & support | `household_resources` | Household Resources | R0: institutional care (children's home), no family template, no reserve; R1/R2/R3/R4: chosen household template with discretionary reserve +₹500 / ₹1,000 / ₹2,000 / ₹4,000; not player cash |
 | Family resources & support | `guardian_support` | Guardian Support | +1 / +2 / +3 / +4% stress recovery from supportive home interactions |
 | Family resources & support | `housing_stability` | Housing Stability | +1 / +2 / +3 / +4% sleep recovery at the starting home |
 | Physical | `vitality` | Vitality | +1 / +2 / +3 / +4% maximum Health at start |
@@ -165,6 +194,8 @@ Arithmetic: **4×110 + 6×60 + 8×25 = 1,000**. Rank-4 count: 0.
 - Rank 0 (4): `household_resources`, `strength`, `creative_aptitude`, `athletic_aptitude`
 
 Arithmetic: **5×110 + 5×60 + 6×25 = 550 + 300 + 150 = 1,000**. Rank-4 count: 0.
+
+**Note (2026-09-20):** this preset leaves `household_resources` at Rank 0. Under the household decision above, selecting Independent Generalist now means the character grew up in institutional care rather than in one of the five family templates. This is a deliberate consequence of the preset's existing point spread, not a new allocation choice; the preset's numbers are unchanged.
 
 The UI must display only the valid Independent Generalist rows. The explanatory rejected composition above is retained in the design record to make the arithmetic review explicit; it is not shipped as UI copy or data.
 

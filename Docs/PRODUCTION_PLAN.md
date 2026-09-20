@@ -76,7 +76,8 @@ Everything beyond Phase 2 (careers, Bengal-wide expansion, India-wide expansion)
 
 ## Art Pipeline
 - Greybox/blockout first for all environments (home, school, para, Gate) before any final art pass.
-- Placeholder character meshes/animations during Phase 0–1; final creator-compatible assets only once trait system is stable.
+- Characters are 2D layered art first, not placeholder meshes. Per the 2026-09-20 decision, the first pass composes a character from tintable and pre-coloured PNG layers against a fixed canvas and shared anchor lines; a 3D mesh and morph-target set comes later, driven by the same saved appearance parameters. See ART_DIRECTION.md for the layer spec and TECHNICAL_ARCHITECTURE.md for the swappable presentation layer.
+- Final creator-compatible character assets only once the trait system and the appearance parameter set are stable.
 - Mobile-first budget from the start: polycount/texture size caps set in Phase 0 based on the reference Android device, not adjusted downward later.
 
 ## Test & Device Gate

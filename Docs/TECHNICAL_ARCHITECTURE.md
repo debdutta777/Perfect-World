@@ -17,11 +17,26 @@ Windows is the initial development and test host. Android is an early performanc
 | Life simulation, planned | Calendar, needs, school attendance, scheduled activity completion | Frame-by-frame cosmetic work |
 | Narrative, planned | Conditions, journal, event consequences, story flags | Direct uncontrolled mutation of every subsystem |
 | Combat, planned | Encounters, damage, abilities, cooldowns, rewards | Real-world career progression rules |
-| World presentation, planned | Characters, camera, navigation, weather visuals, animation | Persistent truth about offscreen NPC locations |
+| World presentation, planned | 3D world space, navigation, weather visuals, camera, and the character-display interface (see below) | Persistent truth about offscreen NPC locations; gameplay rules that key off how a character is currently drawn |
 | UI, planned | Creation steps, phone, school planner, accessibility | File access, balance authority, paid entitlements |
 | Persistence, planned | Versioned snapshot, migration, atomic write, recovery | Serializing raw actor pointers |
 
 First keep these as folders and clean interfaces in one game module. Extract plugins only when a boundary has independent content, tests and ownership. Splitting every feature into a plugin now increases build and asset-management overhead without proving a benefit.
+
+## Presentation layer: 2D now, 3D later (design decision, 2026-09-20)
+
+This extends, rather than replaces, the target architecture: gameplay, simulation, and world state stay in 3D world space and stay authoritative, exactly as before. What changes is that **how a character is displayed is a separate, replaceable layer**, not an assumption baked into the simulation. Today that layer composes a 2D anime-styled sprite/paper representation (driven by the appearance parameter set described in CHARACTER_CREATION.md) positioned and oriented in the 3D world; later it can be a fully skeletal 3D mesh rig driven by the same parameter set, with no change to anything below the presentation layer.
+
+The rule this buys, stated plainly so it cannot be silently violated: **nothing in the rules or simulation may depend on whether a character is currently drawn as a sprite or a mesh.** Concretely:
+
+- Position, collision, navigation, interaction, and simulation state live in 3D world space regardless of display mode.
+- A `ICharacterDisplay`-style interface (name indicative, not yet implemented) sits between world presentation and the actual drawn representation. Simulation and gameplay code call through this interface (e.g. "play this animation state," "face this direction") and never touch a sprite component or a skeletal mesh component directly.
+- The appearance parameter set (CHARACTER_CREATION.md) is the only appearance data gameplay code is allowed to read. It is display-mode-neutral by construction.
+- Save data stores the appearance parameter set and world-space transforms, never a sprite asset reference or a mesh asset reference as the source of truth.
+
+What this buys later: moving to full 3D character display becomes a presentation-layer swap — implement the interface against skeletal meshes and retire the sprite implementation — not a rewrite of simulation, saves, or rules. It also means the two can coexist during a transition (some characters shown as sprites, others as meshes) without branching gameplay logic, since gameplay never queries which one is active.
+
+This decision does not change the "World presentation, planned" row above; it specifies what that row's ownership boundary must look like once built.
 
 ## Creation transaction
 
@@ -39,7 +54,7 @@ A scheduled event has stable ID, due minute, priority, prerequisite, payload and
 
 ## NPC and city scaling (planned)
 
-Only near-camera NPCs need full skeletal meshes, animation, path following and interaction components. Other residents have schedule records, coarse location, relationship state and story flags. Upgrade a resident to an Actor when relevant and reconcile back to its record when released. A named character keeps the same stable identity through both representations.
+Only near-camera NPCs need a full display representation (2D composed sprite today, skeletal mesh later — see the presentation-layer decision above), animation/state, path following and interaction components. Other residents have schedule records, coarse location, relationship state and story flags. Upgrade a resident to an Actor when relevant and reconcile back to its record when released. A named character keeps the same stable identity through both representations, and through a future swap from sprite to mesh display.
 
 Prototype a modest district with level instances/interior loads and explicit travel transitions. Gate maps are separate encounter spaces. Evaluate World Partition when actual district size and streaming measurements justify it, rather than using a national continuous map as the starting architecture. India expands by authored cities, regional event packs and a national travel graph. Trains or flights can be time-and-money transitions, not kilometers of empty terrain.
 

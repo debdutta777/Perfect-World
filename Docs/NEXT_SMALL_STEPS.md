@@ -2,22 +2,25 @@
 
 Latest working preference: GPT-5.6 Sol for ordinary work, Claude Sonnet for design and selective review, Claude Opus only for the hardest issues. Each step should produce a reviewable change and one clear verification result. Stop expanding scope when its acceptance criterion is met.
 
+**Queue rewritten 2026-09-20** to match the owner's new game-flow decision: Title screen (New Game / Load Game / Settings / Exit) → New Game opens the appearance editor → point allocation including household → play starts in the room the confirmed household template and Household Resources rank determine. This reorders and re-scopes steps 02–04 below; steps 05 onward are renumbered but otherwise unchanged in intent.
+
 | Step | Small deliverable | Pass condition | Preferred model |
 |---|---|---|---|
-| 01 — current | Kolkata starter package, creation ledger, documents, two concept sheets | C++ tests pass; build status stated honestly; project copied to Desktop | GPT-5.6 Sol + local integration |
-| 02 | Visually inspect the existing Unreal creator menu | Preset, plus/minus, rejection, reset and confirm work in a launched window | GPT-5.6 Sol |
-| 03 | Save one creation record to one local slot | Relaunch restores origin; corrupt file gives recoverable message | GPT-5.6 Sol; Opus only if migration design is difficult |
-| 03 — code done, not yet verified | Household templates, stable-ID text serialization, version-2 schema with version-1 migration, and three local slots are implemented and covered by the portable CTest (see STATUS.md). No visual Play-In-Editor smoke test of the household picker or the slot buttons has been run yet, so step03's pass condition is not yet confirmed. Do not start step04 until that smoke test is recorded. | Visual smoke test of household picker and all three slots (save, load, delete, corrupt-file message) | GPT-5.6 Sol |
-| 04 | One greybox bedroom and a controllable isometric pawn | Walk, camera, collision and interaction tested | GPT-5.6 Sol |
-| 05 | One guardian dialogue and school-bag interaction | Chosen response appears in journal and survives reload | Sonnet writing, Sol implementation |
-| 06 | One lane from home to school gate | Traversal and loading work on Windows | GPT-5.6 Sol |
-| 07 | Android packaging proof using the existing tiny scene | Launch, touch input, suspend/resume on a named device | GPT-5.6 Sol |
-| 08 | One45-minute school activity | Advances clock once and applies bounded XP once | GPT-5.6 Sol |
-| 09 | One classmate memory | Dialogue reacts to earlier choice after reload | Sonnet writing, Sol implementation |
-| 10 | One Gate anomaly event | Known start/finish conditions and reliable return to normal life | GPT-5.6 Sol |
+| 01 — done | Kolkata starter package, creation ledger, documents, two concept sheets | C++ tests pass; build status stated honestly; project copied to Desktop | GPT-5.6 Sol + local integration |
+| 02 — done, not yet verified | Household templates, stable-ID text serialization, version-2 schema with version-1 migration, and three local save slots are implemented and covered by the portable CTest (see STATUS.md). No visual Play-In-Editor smoke test of the household picker, the slot buttons, or the point-allocation menu has been run yet. | Visual smoke test: preset, plus/minus, rejection, reset, confirm, household picker, and all three slots (save, load, delete, corrupt-file message) all work in a launched window | GPT-5.6 Sol |
+| 03 | Title screen with New Game / Load Game / Settings / Exit, wired to placeholder actions where the target flow does not exist yet (Load Game may simply route to the step02 slot UI) | All four options are visible, keyboard/controller/mouse-navigable, and each does something observable when chosen, in a launched window | GPT-5.6 Sol |
+| 04 | Appearance editor screen (data-only): continuous colour sliders for skin/hair/eye, discrete pickers for hair style/face shape/build/uniform variant, composed as flat 2D layers per CHARACTER_CREATION.md and ART_DIRECTION.md — placeholder/greybox art is acceptable | Adjusting every slider and picker updates a live `AppearanceRecord`; the record round-trips through save/load without loss; New Game reaches this screen before point allocation | GPT-5.6 Sol |
+| 05 | Reorder New Game so the appearance editor (step04) runs before the point-allocation/household menu (step02's menu), matching the title-screen-to-play flow | A fresh New Game visits appearance, then points/household, then Review, in that order, in a launched window | GPT-5.6 Sol |
+| 06 | Six greybox starting rooms selected automatically from the confirmed origin record: one per household template (parent, extended family, grandparent, adult sibling, appointed guardian) plus the institutional-care room at Household Resources Rank 0 | Confirming an origin at each of the six outcomes loads the matching greybox room; a controllable isometric pawn can walk, use the camera, collide, and interact in each | GPT-5.6 Sol |
+| 07 | One guardian (or institutional-care staff) dialogue and school-bag interaction | Chosen response appears in journal and survives reload | Sonnet writing, Sol implementation |
+| 08 | One lane from home to school gate | Traversal and loading work on Windows | GPT-5.6 Sol |
+| 09 | Android packaging proof using the existing tiny scene | Launch, touch input, suspend/resume on a named device | GPT-5.6 Sol |
+| 10 | One 45-minute school activity | Advances clock once and applies bounded XP once | GPT-5.6 Sol |
+| 11 | One classmate memory | Dialogue reacts to earlier choice after reload | Sonnet writing, Sol implementation |
+| 12 | One Gate anomaly event | Known start/finish conditions and reliable return to normal life | GPT-5.6 Sol |
 
-Since step03 was designed, the user has decided: three local save slots rather than one; the record format stays plain text (a JSON subset) with a `USaveGame` wrapper deferred until an actual platform-packaging need requires it; and the initial room/household menu shown after Confirm Origin should vary by the chosen household template rather than showing one generic room. That last point changes the shape of step04 — the greybox bedroom becomes household-dependent rather than a single fixed room — and should be accounted for when step04 is scoped.
+Since the original step03 (now step02) was designed, the user has decided: three local save slots rather than one; the record format stays plain text (a JSON subset) with a `USaveGame` wrapper deferred until an actual platform-packaging need requires it; the initial room shown after Confirm Origin varies by the chosen household template (now folded into step06 below, which also adds the institutional-care outcome); the appearance editor now runs before point allocation rather than after identity (steps04–05); and a title screen now precedes New Game entirely (step03). None of this changes the discipline of one small deliverable with one clear pass condition per step.
 
-Steps beyond01 are a queue for subsequent work, not claims of completion. Do not begin nationwide maps, full careers, multiplayer or a large procgen pipeline while these foundations remain unproven.
+Steps beyond 01 are a queue for subsequent work, not claims of completion. Do not begin nationwide maps, full careers, multiplayer or a large procgen pipeline while these foundations remain unproven.
 
 For each step record: intent, files changed, exact check, result, remaining limitation, next smallest action. Reuse context through these files rather than sending the entire design bible to every model call.
