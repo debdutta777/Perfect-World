@@ -29,6 +29,46 @@ enum class EPWCreationError : uint8
     FileAccess
 };
 
+/**
+ * The opening room this creation calls for. Always ask for this rather than
+ * reading a household's home kit directly: at Household Resources rank 0 the
+ * character was raised in institutional care and the chosen template does not
+ * describe where they live.
+ */
+USTRUCT(BlueprintType)
+struct FPWOpeningHomePlan
+{
+    GENERATED_BODY()
+
+    /** The template the player chose, kept even while care overrides it. */
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
+    FName HouseholdTemplateId;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
+    FText HouseholdName;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
+    FName HomeKitId;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
+    FText HomeKitName;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
+    int32 ResourceRank = 0;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
+    FName DressingTierId;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
+    FText DressingTierName;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
+    FText DressingDescription;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
+    bool bGrewUpInCare = false;
+};
+
 /** One authored household template. Choosing a household costs no points. */
 USTRUCT(BlueprintType)
 struct FPWHouseholdView
@@ -157,6 +197,10 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Perfect World|Creation")
     bool SetHouseholdTemplate(FName HouseholdId);
+
+    /** The opening room this creation calls for, household and rank combined. */
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Creation")
+    FPWOpeningHomePlan GetOpeningHome() const;
 
     UFUNCTION(BlueprintPure, Category = "Perfect World|Save")
     static int32 GetSaveSlotCount();

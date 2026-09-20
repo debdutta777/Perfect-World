@@ -120,6 +120,22 @@ bool UPerfectWorldCharacterCreatorSubsystem::SetHouseholdTemplate(FName Househol
     return RecordResult(Creator.SetHouseholdTemplate(ToUtf8(HouseholdId.ToString())));
 }
 
+FPWOpeningHomePlan UPerfectWorldCharacterCreatorSubsystem::GetOpeningHome() const
+{
+    const PerfectWorld::OpeningHomePlan CorePlan = Creator.ResolveOpeningHome();
+    FPWOpeningHomePlan Plan;
+    Plan.HouseholdTemplateId = FName(ToFString(CorePlan.HouseholdTemplateId));
+    Plan.HouseholdName = FText::FromString(ToFString(CorePlan.HouseholdName));
+    Plan.HomeKitId = FName(ToFString(CorePlan.HomeKitId));
+    Plan.HomeKitName = FText::FromString(ToFString(CorePlan.HomeKitName));
+    Plan.ResourceRank = CorePlan.ResourceRank;
+    Plan.DressingTierId = FName(ToFString(CorePlan.DressingTierId));
+    Plan.DressingTierName = FText::FromString(ToFString(CorePlan.DressingTierName));
+    Plan.DressingDescription = FText::FromString(ToFString(CorePlan.DressingDescription));
+    Plan.bGrewUpInCare = CorePlan.GrewUpInCare;
+    return Plan;
+}
+
 bool UPerfectWorldCharacterCreatorSubsystem::StartLife()
 {
     return RecordResult(Creator.StartLife());
