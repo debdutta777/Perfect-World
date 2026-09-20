@@ -7,6 +7,7 @@ Latest working preference: GPT-5.6 Sol for ordinary work, Claude Sonnet for desi
 | 01 — current | Kolkata starter package, creation ledger, documents, two concept sheets | C++ tests pass; build status stated honestly; project copied to Desktop | GPT-5.6 Sol + local integration |
 | 02 | Visually inspect the existing Unreal creator menu | Preset, plus/minus, rejection, reset and confirm work in a launched window | GPT-5.6 Sol |
 | 03 | Save one creation record to one local slot | Relaunch restores origin; corrupt file gives recoverable message | GPT-5.6 Sol; Opus only if migration design is difficult |
+| 03 — code done, not yet verified | Household templates, stable-ID text serialization, version-2 schema with version-1 migration, and three local slots are implemented and covered by the portable CTest (see STATUS.md). No visual Play-In-Editor smoke test of the household picker or the slot buttons has been run yet, so step03's pass condition is not yet confirmed. Do not start step04 until that smoke test is recorded. | Visual smoke test of household picker and all three slots (save, load, delete, corrupt-file message) | GPT-5.6 Sol |
 | 04 | One greybox bedroom and a controllable isometric pawn | Walk, camera, collision and interaction tested | GPT-5.6 Sol |
 | 05 | One guardian dialogue and school-bag interaction | Chosen response appears in journal and survives reload | Sonnet writing, Sol implementation |
 | 06 | One lane from home to school gate | Traversal and loading work on Windows | GPT-5.6 Sol |
@@ -14,6 +15,8 @@ Latest working preference: GPT-5.6 Sol for ordinary work, Claude Sonnet for desi
 | 08 | One45-minute school activity | Advances clock once and applies bounded XP once | GPT-5.6 Sol |
 | 09 | One classmate memory | Dialogue reacts to earlier choice after reload | Sonnet writing, Sol implementation |
 | 10 | One Gate anomaly event | Known start/finish conditions and reliable return to normal life | GPT-5.6 Sol |
+
+Since step03 was designed, the user has decided: three local save slots rather than one; the record format stays plain text (a JSON subset) with a `USaveGame` wrapper deferred until an actual platform-packaging need requires it; and the initial room/household menu shown after Confirm Origin should vary by the chosen household template rather than showing one generic room. That last point changes the shape of step04 — the greybox bedroom becomes household-dependent rather than a single fixed room — and should be accounted for when step04 is scoped.
 
 Steps beyond01 are a queue for subsequent work, not claims of completion. Do not begin nationwide maps, full careers, multiplayer or a large procgen pipeline while these foundations remain unproven.
 

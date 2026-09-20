@@ -35,9 +35,27 @@ The host initially exposed duplicate Path/PATH environment entries, so the child
 
 No claim is made that model switching avoids shared account limits. Future tasks should default to GPT-5.6 Sol and stay small, with Sonnet and selective Opus as requested.
 
+## Checkpoint — household templates and local save slots (bf91db6)
+
+The five authored household templates from CHARACTER_CREATION.md (parent household, extended family, grandparent household, adult sibling household, appointed guardian) are now implemented in the portable core. Choosing one is free, costs no creation points, and is locked once life begins, the same as identity and cosmetics. Each template names a home kit ID that a future opening scene will build from; no such scene exists yet.
+
+Creation records are now serialized to text (a JSON subset) by stable trait ID rather than by array position, so a renamed or reordered trait fails loudly instead of silently shifting ranks. The save schema moved from version1 to version2. Version1 records still load and migrate to the default household (`parent_household`). A version2 record naming an unknown household is refused outright, and version3+ is refused as unsupported. There are three save slots (`creation_slot_1.json` .. `creation_slot_3.json`) under the project's `Saved/SaveGames/` directory; saves write to a temporary file and move it into place so an interrupted write cannot destroy the previous record.
+
+The Unreal subsystem now exposes household selection and the slot operations (list, describe, save, load, delete) to Blueprint.
+
+| Check | Result |
+|---|---|
+| Portable CTest | PASS — 1/1 test executable, 225,230 assertions |
+| New coverage | household rules, escaped identity round trip (quotes/backslashes), every truncation prefix of a serialized record, a renamed trait, corrupt/garbage text, unknown household, version-1 migration, version-3 rejection, out-of-range slots |
+| Unreal PerfectWorldEditor Win64 Development | PASS — compiles |
+| Visual Play In Editor smoke test of the household picker or slot buttons | NOT RUN |
+| Packaged/cooked game | NOT RUN |
+| Android test | NOT RUN |
+| Playable room, school or city; art or level for the named home kits | NOT IMPLEMENTED |
+
 ## Next checkpoint
 
-The Desktop copy was also compiled successfully and opened in Unreal5.7.4. The creator smoke test and screenshot are recorded in MENU_SMOKE_TEST.md. Next: improve the small menu text/control sizes and repeat that check. Do not add city, combat or full school simulation in the same step.
+The menu font/control polish is done and committed (`aab1e5c`). Next: a visual Play-In-Editor smoke test of the new household picker and the three save-slot buttons (save, load, delete, corrupt-file recovery message), recorded the same way as MENU_SMOKE_TEST.md. After that smoke test passes, proceed to step 04 (one greybox bedroom and a controllable isometric pawn). Do not add city, combat or full school simulation in the same step.
 
 ## GitHub checkpoint
 

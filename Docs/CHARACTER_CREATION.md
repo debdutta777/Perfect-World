@@ -45,6 +45,8 @@ Appearance has animation compatibility constraints, not “good/bad” values. P
 
 ## Household selection
 
+**Implemented:** the five templates below exist as data in the portable core with their stable IDs (`parent_household`, `extended_family`, `grandparent_household`, `adult_sibling_household`, `appointed_guardian`), each naming a home kit ID. Selecting one costs no creation points, and the choice is locked once the prologue starts, the same as identity and cosmetics. The chosen household ID is part of the persisted creation record. **Planned, not yet built:** guardian records (names, individual relationship terms), editable relationship terms beyond the template default, the home scenes themselves, and per-household art — none of the five home kit IDs name anything that exists yet as art or a level.
+
 Five narrative templates share the same baseline access to a bed, meals, storage, school, and a guardian:
 
 | Template | Guardian examples | Home kit | Story emphasis |

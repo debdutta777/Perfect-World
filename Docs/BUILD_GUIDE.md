@@ -12,7 +12,7 @@ python Scripts/build_core.py --build-dir build/core
 
 This configures CMake, builds Release and runs CTest. The included runner removes duplicate case variants of environment keys in child processes because this host supplied both Path and PATH, which MSBuild rejected. No system environment settings are changed.
 
-The standalone suite checks age16, budget totals, default preset, invalid IDs/ranks, exact refunds, over-budget atomic rejection, four-premium cap, immutable started origin, reset and versioned in-memory record validation. It also exercises10,000 deterministic edit sequences. It does not test the Unreal UI, disk persistence or school gameplay.
+The standalone suite checks age16, budget totals, default preset, invalid IDs/ranks, exact refunds, over-budget atomic rejection, four-premium cap, immutable started origin, reset and versioned in-memory record validation. It also exercises10,000 deterministic edit sequences, the household rules, and the save text format: an escaped round trip, every truncation of a record, a renamed trait, corrupt text, an unknown household, version-1 migration and out-of-range slots. It does not test the Unreal UI or school gameplay, and it does not touch the file system. Reading and writing slot files lives in the Unreal subsystem and has no automated coverage yet.
 
 ## Unreal Editor module
 
@@ -39,7 +39,14 @@ Manual smoke checklist, to be completed in the next small step unless STATUS exp
 5. A fifth rank4 is rejected even if total spend is under1,000.
 6. Confirm Origin is enabled only for an exact valid allocation.
 7. Confirm locks trait changes and displays that school/world gameplay is future work.
-8. New Draft resets the creator. No file is saved and relaunch starts fresh.
+8. New Draft resets the creator and re-enables the household rows.
+9. The Household section lists five templates; clicking one moves the `[x]` marker and updates the opening room kit line. Remaining points do not change.
+10. Confirm Origin disables the household rows along with the trait controls.
+11. Each of the three save slots starts empty with Load and Delete disabled.
+12. Save writes the slot; its description line updates and Load and Delete become available.
+13. Load restores that record, including its household. Delete empties the slot again.
+14. Relaunch and Load restores the saved origin, which the in-memory-only build could not do.
+15. Corrupting a slot file by hand produces a readable message and leaves the creation in progress untouched.
 
 Full controller/touch navigation and the complete appearance editor are planned. Slate labels are currently prototype English strings, not production localized text.
 
@@ -47,7 +54,7 @@ Full controller/touch navigation and the complete appearance editor are planned.
 
 Source/PerfectWorldCore owns the portable rules. Source/PerfectWorld adapts them to Blueprint and displays the prototype menu. Tests contains the standalone executable. Config selects the menu game mode and a conservative rendering baseline. Docs describes the intended game. Art is concept reference only.
 
-CaptureSave/RestoreSave operate on C++ values in memory. The current schema stores a fixed-order20-rank array. Before changing trait order or shipping persistent files, replace this with stable-ID serialization plus migration; current version1 records must not be silently reinterpreted. Reset creates a new draft and intentionally discards its prior origin. Neither helper is a gameplay progression save service.
+CaptureSave/RestoreSave operate on C++ values in memory. Persistent creation records are written by `Source/PerfectWorldCore/Private/CreationSaveSerialization.cpp` as text, a JSON subset, with trait ranks keyed by stable trait ID rather than array position — a renamed or reordered trait fails loudly instead of silently shifting ranks. The schema is version2. A version1 record still loads and migrates to the default household (`parent_household`); a version2 record naming an unknown household is refused outright; version3+ is refused as an unsupported version. There are three save slots, `PerfectWorld::SaveSlotCount ==3`, written as `creation_slot_1.json` through `creation_slot_3.json` under the project's `Saved/SaveGames/` directory. A save writes to a `.tmp` file first and moves it into place, so an interrupted save cannot destroy the previous record; a corrupt or missing file leaves the in-progress creation untouched and reports a player-readable message. Reset creates a new draft and intentionally discards its prior origin. None of this is a gameplay progression save service — it persists only the creation record.
 
 Do not copy Intermediate, Saved, DerivedDataCache or generated build folders into source control. Binary art/Unreal assets can use Git LFS once the repository is initialized. The source repository is [debdutta777/Perfect-World](https://github.com/debdutta777/Perfect-World); build outputs remain local and ignored.
 
