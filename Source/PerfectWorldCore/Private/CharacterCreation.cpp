@@ -46,21 +46,26 @@ constexpr std::array<HouseholdDefinition, HouseholdTemplateCount> Households{{
      "Negotiated trust and formal responsibility"},
 }};
 
-// Indexed by Household Resources rank. Each tier states what it adds to the
-// one below it. Rank 0 is a decent working home, never deprivation, so the
-// opening scene never uses poverty as visual shorthand.
+// Indexed by Household Resources rank. Rank 0 is a category change, not a
+// poorer version of rank 1: it means institutional care with no family
+// household. Each tier is therefore self-describing rather than incremental.
+// All five are written as places a person lives, never as squalor.
 constexpr std::array<HomeDressingTier, HomeDressingTierCount> DressingTiers{{
-    {"everyday", "Everyday",
-     "A working home kept in order: a bed, a study corner shared with the household, a fan, "
-     "and storage the family looks after together."},
-    {"settled", "Settled",
-     "Adds a desk the teenager does not have to clear at mealtimes, and a shelf kept for school books."},
-    {"provided", "Provided",
-     "Adds steady light for late study, better ventilation, and a drawer of their own that closes properly."},
-    {"comfortable", "Comfortable",
-     "Adds a partitioned study space that stays quiet in the evening, and a computer the household shares."},
-    {"ample", "Ample",
-     "Adds a room the teenager does not share, dependable power through a cut, and a computer that is theirs."},
+    {"institutional_care", "Children's home",
+     "A children's home run to a steady routine: a bed in a shared dormitory, a study table used in "
+     "turns, a footlocker that locks, and staff who keep the timetable and know the residents by name."},
+    {"modest", "Modest household",
+     "A family home where the main room does everything: a bed, a study corner cleared at mealtimes, "
+     "a fan, and storage the household looks after together."},
+    {"steady", "Steady household",
+     "A family home with a desk the teenager does not have to clear, a shelf kept for school books, "
+     "and steady light for studying after dark."},
+    {"comfortable", "Comfortable household",
+     "A family home with a partitioned study space that stays quiet in the evening, reliable "
+     "ventilation, and a computer the household shares."},
+    {"ample", "Ample household",
+     "A family home with a room the teenager does not share, dependable power through a cut, and a "
+     "computer that is theirs."},
 }};
 
 constexpr std::array<std::int32_t, TraitCount> BalancedScholarRanks{
@@ -277,14 +282,28 @@ OpeningHomePlan CharacterCreator::ResolveOpeningHome() const
     const HomeDressingTier& Tier = DressingTiers[static_cast<std::size_t>(Rank)];
 
     OpeningHomePlan Plan;
+    // The chosen template is always reported, so raising the rank out of care
+    // restores the player's choice rather than silently losing it.
     Plan.HouseholdTemplateId = Chosen.Id;
-    Plan.HouseholdName = Chosen.DisplayName;
-    Plan.HomeKitId = Chosen.HomeKitId;
-    Plan.HomeKitName = Chosen.HomeKitName;
     Plan.ResourceRank = Rank;
     Plan.DressingTierId = Tier.Id;
     Plan.DressingTierName = Tier.DisplayName;
-    Plan.DressingAdds = Tier.Adds;
+    Plan.DressingDescription = Tier.Description;
+    Plan.GrewUpInCare = Rank == 0;
+
+    if (Plan.GrewUpInCare)
+    {
+        // Rank 0 means no family household at all, so the template names
+        // nothing the opening scene can build from.
+        Plan.HouseholdName = InstitutionalHouseholdName;
+        Plan.HomeKitId = InstitutionalHomeKitId;
+        Plan.HomeKitName = InstitutionalHomeKitName;
+        return Plan;
+    }
+
+    Plan.HouseholdName = Chosen.DisplayName;
+    Plan.HomeKitId = Chosen.HomeKitId;
+    Plan.HomeKitName = Chosen.HomeKitName;
     return Plan;
 }
 

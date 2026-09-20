@@ -24,6 +24,10 @@ constexpr std::size_t TraitCount = 20;
 constexpr std::size_t HouseholdTemplateCount = 5;
 constexpr std::size_t HomeDressingTierCount = 5;
 constexpr std::string_view HouseholdResourcesTraitId = "household_resources";
+/** The home kit built when the character was raised in institutional care. */
+constexpr std::string_view InstitutionalHomeKitId = "childrens_home_dormitory";
+constexpr std::string_view InstitutionalHomeKitName = "Children's home dormitory";
+constexpr std::string_view InstitutionalHouseholdName = "Children's home";
 constexpr std::int32_t SaveSlotCount = 3;
 constexpr std::int32_t MaxRank = 4;
 constexpr std::int32_t MaxRankFourTraits = 4;
@@ -81,16 +85,21 @@ struct HouseholdDefinition
 };
 
 /**
- * How far the opening home is furnished, derived from the Household Resources
- * rank. Every tier describes what it adds to a decent working home: rank 0 is
- * an ordinary baseline, never deprivation, so the opening scene never uses
- * poverty as visual shorthand.
+ * The opening home at each Household Resources rank. Rank 0 is not a poorer
+ * family home: it means the character grew up in institutional care with no
+ * family household, and the chosen household template does not apply. Ranks
+ * 1 to 4 are family households of increasing means.
+ *
+ * Decided 2026-09-20. This deliberately couples the point ledger to how hard
+ * the origin is, which the earlier contract avoided on purpose; see
+ * Docs/CHARACTER_CREATION.md for the reasoning. Each tier is written to be
+ * described with dignity and never as squalor.
  */
 struct HomeDressingTier
 {
     std::string_view Id;
     std::string_view DisplayName;
-    std::string_view Adds;
+    std::string_view Description;
 };
 
 /**
@@ -100,6 +109,8 @@ struct HomeDressingTier
  */
 struct OpeningHomePlan
 {
+    /** The template the player chose. Kept even when care overrides it, so
+     *  raising the resources rank restores their choice. */
     std::string_view HouseholdTemplateId;
     std::string_view HouseholdName;
     std::string_view HomeKitId;
@@ -107,7 +118,10 @@ struct OpeningHomePlan
     std::int32_t ResourceRank = 0;
     std::string_view DressingTierId;
     std::string_view DressingTierName;
-    std::string_view DressingAdds;
+    std::string_view DressingDescription;
+    /** True at resources rank 0: raised in institutional care, no family
+     *  household, and HouseholdTemplateId does not describe where they live. */
+    bool GrewUpInCare = false;
 };
 
 struct IdentityProfile

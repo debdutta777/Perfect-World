@@ -189,9 +189,12 @@ int main()
     for (const auto& t : c.HomeDressingTiers()) tierIds.insert(t.Id);
     Check(tierIds.size() == 5, "five distinct dressing tiers");
     CharacterCreator home;
-    Check(home.ResolveOpeningHome().HomeKitId == "compact_family_flat", "default household shell");
+    // Resources rank 0 means institutional care, not a poorer family home, so
+    // a fresh creation starts in care until points are spent on the household.
     Check(home.ResolveOpeningHome().ResourceRank == 0, "default resources rank");
-    Check(home.ResolveOpeningHome().DressingTierId == "everyday", "rank 0 is the everyday tier");
+    Check(home.ResolveOpeningHome().GrewUpInCare, "rank 0 means raised in care");
+    Check(home.ResolveOpeningHome().HomeKitId == "childrens_home_dormitory", "rank 0 builds the care shell");
+    Check(home.ResolveOpeningHome().DressingTierId == "institutional_care", "rank 0 names the care tier");
     for (std::int32_t rank = 0; rank <= 4; ++rank)
     {
         Check(home.SetTraitRank("household_resources", rank).Succeeded(), "set resources rank");
@@ -199,16 +202,30 @@ int main()
         Check(plan.ResourceRank == rank, "plan reports the resources rank");
         Check(plan.DressingTierId == home.HomeDressingTiers()[static_cast<std::size_t>(rank)].Id,
               "tier follows the resources rank");
-        Check(!plan.DressingAdds.empty() && !plan.DressingTierName.empty(), "tier is described");
+        Check(plan.GrewUpInCare == (rank == 0), "only rank 0 is raised in care");
+        Check(!plan.DressingDescription.empty() && !plan.DressingTierName.empty(), "tier is described");
     }
-    // The shell follows the household; the tier follows the rank. They are independent.
+
+    // Above rank 0 the shell follows the household and the tier follows the
+    // rank, and the two stay independent.
     Check(home.SetHouseholdTemplate("appointed_guardian").Succeeded(), "switch household for plan");
     Check(home.ResolveOpeningHome().HomeKitId == "staff_quarters", "shell follows household");
     Check(home.ResolveOpeningHome().ResourceRank == 4, "switching household keeps the rank");
     Check(home.SetTraitRank("household_resources", 1).Succeeded(), "lower resources rank");
     Check(home.ResolveOpeningHome().HomeKitId == "staff_quarters", "lowering rank keeps the shell");
-    Check(home.ResolveOpeningHome().DressingTierId == "settled", "lowering rank changes the tier");
+    Check(home.ResolveOpeningHome().DressingTierId == "modest", "lowering rank changes the tier");
     Check(home.Review().HouseholdTemplateId == "appointed_guardian", "review agrees with the plan");
+
+    // Dropping to rank 0 overrides the template, and raising it back restores
+    // the player's choice rather than losing it.
+    Check(home.SetTraitRank("household_resources", 0).Succeeded(), "drop to care");
+    Check(home.ResolveOpeningHome().GrewUpInCare, "rank 0 overrides any template");
+    Check(home.ResolveOpeningHome().HomeKitId == "childrens_home_dormitory", "care overrides the shell");
+    Check(home.ResolveOpeningHome().HouseholdTemplateId == "appointed_guardian",
+          "care still remembers the chosen template");
+    Check(home.SetTraitRank("household_resources", 2).Succeeded(), "raise back out of care");
+    Check(!home.ResolveOpeningHome().GrewUpInCare && home.ResolveOpeningHome().HomeKitId == "staff_quarters",
+          "raising the rank restores the chosen household");
 
     // Every household and rank combination resolves to a named shell and tier.
     for (const auto& h : c.HouseholdDefinitions())
@@ -219,7 +236,8 @@ int main()
         {
             Check(each.SetTraitRank("household_resources", rank).Succeeded(), "each rank settable");
             const auto plan = each.ResolveOpeningHome();
-            Check(plan.HomeKitId == h.HomeKitId && !plan.HomeKitName.empty(), "combination names a shell");
+            const std::string_view expected = rank == 0 ? std::string_view("childrens_home_dormitory") : h.HomeKitId;
+            Check(plan.HomeKitId == expected && !plan.HomeKitName.empty(), "combination names a shell");
             Check(!plan.DressingTierId.empty(), "combination names a tier");
         }
     }
