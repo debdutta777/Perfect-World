@@ -92,6 +92,9 @@ void APerfectWorldMenuGameMode::ShowSettings()
 
 void APerfectWorldMenuGameMode::ShowAppearance()
 {
+    // Record progress as the player moves, so a slot saved from here reopens
+    // here rather than at the start of the flow.
+    if (Creator.IsValid()) Creator->SetResumePoint(EPWResumePoint::Appearance);
     SetActiveWidget(BuildAppearancePanel(Creator,
         FSimpleDelegate::CreateUObject(this, &APerfectWorldMenuGameMode::ShowCreator),
         FSimpleDelegate::CreateUObject(this, &APerfectWorldMenuGameMode::ShowTitle)));
@@ -99,7 +102,33 @@ void APerfectWorldMenuGameMode::ShowAppearance()
 
 void APerfectWorldMenuGameMode::ShowCreator()
 {
+    if (Creator.IsValid()) Creator->SetResumePoint(EPWResumePoint::Allocation);
     SetActiveWidget(BuildCreatorPanel(Creator, FSimpleDelegate::CreateUObject(this, &APerfectWorldMenuGameMode::ShowAppearance)));
+}
+
+void APerfectWorldMenuGameMode::ResumeFromLoadedRecord()
+{
+    if (!Creator.IsValid())
+    {
+        ShowTitle();
+        return;
+    }
+    switch (Creator->GetResumePoint())
+    {
+    case EPWResumePoint::Appearance:
+        ShowAppearance();
+        return;
+    case EPWResumePoint::InWorld:
+        // The origin was confirmed and play had begun, but no playable room
+        // exists yet. Land on the confirmed creation, which already states
+        // that world gameplay is not built, rather than inventing a screen.
+        ShowCreator();
+        return;
+    case EPWResumePoint::Allocation:
+    default:
+        ShowCreator();
+        return;
+    }
 }
 
 TSharedRef<SWidget> APerfectWorldMenuGameMode::BuildTitleScreen()
@@ -177,8 +206,16 @@ TSharedRef<SWidget> APerfectWorldMenuGameMode::BuildLoadGameScreen()
             })
             .OnClicked_Lambda([this, SlotIndex]
             {
-                if (Creator.IsValid()) Creator->LoadFromSlot(SlotIndex);
-                ShowCreator();
+                // Return the player where they left off rather than restarting
+                // the flow. A failed load leaves the creation in progress
+                // untouched, so stay here and let the message explain why.
+                if (!Creator.IsValid()) return FReply::Handled();
+                if (!Creator->LoadFromSlot(SlotIndex))
+                {
+                    RefreshLoadSlotCache();
+                    return FReply::Handled();
+                }
+                ResumeFromLoadedRecord();
                 return FReply::Handled();
             })
             [SNew(STextBlock)

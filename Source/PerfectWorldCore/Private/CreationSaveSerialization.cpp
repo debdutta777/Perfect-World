@@ -374,6 +374,7 @@ std::string SerializeCreationSave(const CharacterCreationSave& save)
     out += ",\n  \"hasStarted\": ";
     out += save.HasStarted ? "true" : "false";
     out += ",\n  ";
+    AppendStringField(out, "resumePoint", ResumePointId(save.Resume), ",\n  ");
     AppendStringField(out, "householdTemplateId", save.HouseholdTemplateId, ",\n");
 
     out += "  \"identity\": {\n    ";
@@ -452,6 +453,18 @@ OperationResult DeserializeCreationSave(std::string_view text, CharacterCreation
                 if (!reader.ReadBool(parsed.HasStarted))
                 {
                     return Malformed("the started flag is not true or false.");
+                }
+            }
+            else if (key == "resumePoint")
+            {
+                std::string resumeId;
+                if (!reader.ReadString(resumeId))
+                {
+                    return Malformed("the resume point is not text.");
+                }
+                if (!ParseResumePoint(resumeId, parsed.Resume))
+                {
+                    return Malformed("it names an unknown resume point: " + resumeId);
                 }
             }
             else if (key == "householdTemplateId")

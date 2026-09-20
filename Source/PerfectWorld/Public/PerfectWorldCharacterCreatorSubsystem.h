@@ -31,6 +31,18 @@ enum class EPWCreationError : uint8
 };
 
 /**
+ * Mirrors PerfectWorld::ResumePoint by value; keep the order identical.
+ * Load Game sends the player back to the screen this names.
+ */
+UENUM(BlueprintType)
+enum class EPWResumePoint : uint8
+{
+    Appearance,
+    Allocation,
+    InWorld
+};
+
+/**
  * The opening room this creation calls for. Always ask for this rather than
  * reading a household's home kit directly: at Household Resources rank 0 the
  * character was raised in institutional care and the chosen template does not
@@ -299,6 +311,14 @@ public:
     /** The opening room this creation calls for, household and rank combined. */
     UFUNCTION(BlueprintPure, Category = "Perfect World|Creation")
     FPWOpeningHomePlan GetOpeningHome() const;
+
+    /** Where the player had reached, so Load Game returns them there. */
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Save")
+    EPWResumePoint GetResumePoint() const;
+
+    /** Records progress through the flow. A confirmed origin stays InWorld. */
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Save")
+    void SetResumePoint(EPWResumePoint Point);
 
     UFUNCTION(BlueprintPure, Category = "Perfect World|Save")
     static int32 GetSaveSlotCount();

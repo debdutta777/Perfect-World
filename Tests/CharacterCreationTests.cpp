@@ -330,6 +330,55 @@ int main()
     Check(oldLoader.Appearance().FaceShapeId == AppearanceRecord::Default().FaceShapeId,
           "version 2 migrates to the default appearance");
 
+    // Load Game returns the player where they were, so the record carries it.
+    CharacterCreator resume;
+    Check(resume.Resume() == ResumePoint::Appearance, "a new draft resumes at appearance");
+    resume.SetResumePoint(ResumePoint::Allocation);
+    Check(resume.Resume() == ResumePoint::Allocation, "the resume point follows the player");
+    Check(resume.ApplyPreset("balanced_scholar").Succeeded(), "preset for resume test");
+    const std::string resumeText = SerializeCreationSave(resume.CaptureSave());
+    Check(resumeText.find("\"resumePoint\": \"allocation\"") != std::string::npos, "resume point written");
+    CharacterCreationSave resumeParsed;
+    Check(DeserializeCreationSave(resumeText, resumeParsed).Succeeded(), "resume point parses");
+    CharacterCreator resumeBack;
+    Check(resumeBack.RestoreSave(resumeParsed).Succeeded(), "resume record restores");
+    Check(resumeBack.Resume() == ResumePoint::Allocation, "round trip keeps the resume point");
+
+    // Confirming an origin moves the player into the world and stays there.
+    Check(resumeBack.StartLife().Succeeded(), "start life for resume test");
+    Check(resumeBack.Resume() == ResumePoint::InWorld, "confirming an origin resumes in world");
+    resumeBack.SetResumePoint(ResumePoint::Appearance);
+    Check(resumeBack.Resume() == ResumePoint::InWorld, "a confirmed origin cannot resume earlier");
+    CharacterCreator startedBack;
+    Check(startedBack.RestoreSave(resumeBack.CaptureSave()).Succeeded(), "confirmed record restores");
+    Check(startedBack.Resume() == ResumePoint::InWorld, "confirmed record still resumes in world");
+
+    // Records written before version 4 carry no resume point and derive one.
+    CharacterCreationSave preV4 = resumeParsed;
+    preV4.SchemaVersion = 3;
+    preV4.Resume = ResumePoint::Appearance;
+    CharacterCreator derived;
+    Check(derived.RestoreSave(preV4).Succeeded(), "a version 3 record still loads");
+    Check(derived.Resume() == ResumePoint::Allocation, "an unconfirmed old draft resumes at allocation");
+    preV4.HasStarted = true;
+    Check(derived.RestoreSave(preV4).Succeeded(), "a started version 3 record loads");
+    Check(derived.Resume() == ResumePoint::InWorld, "a confirmed old record resumes in world");
+
+    // An unknown resume point is a corrupt file, not something to guess at.
+    std::string badResume = resumeText;
+    const std::size_t resumeAt = badResume.find("\"allocation\"");
+    Check(resumeAt != std::string::npos, "test fixture contains the resume point");
+    badResume.replace(resumeAt, 12, "\"elsewhere\"");
+    CharacterCreationSave badParsed;
+    Check(DeserializeCreationSave(badResume, badParsed).Error == CreationError::MalformedSaveText,
+          "an unknown resume point is refused");
+    for (const auto point : {ResumePoint::Appearance, ResumePoint::Allocation, ResumePoint::InWorld})
+    {
+        ResumePoint parsedPoint = ResumePoint::InWorld;
+        Check(ParseResumePoint(ResumePointId(point), parsedPoint) && parsedPoint == point,
+              "every resume point survives its own text");
+    }
+
     // The household is locked once life begins, like every other origin field.
     CharacterCreator committed;
     Check(committed.ApplyPreset("balanced_scholar").Succeeded(), "preset for lock test");

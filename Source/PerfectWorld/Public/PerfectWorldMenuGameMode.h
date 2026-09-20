@@ -30,6 +30,9 @@ private:
     void ShowAppearance();
     void ShowCreator();
 
+    /** Sends the player to the screen a just-loaded record was left on. */
+    void ResumeFromLoadedRecord();
+
     void SetActiveWidget(TSharedRef<SWidget> NewWidget);
     void RefreshLoadSlotCache();
 

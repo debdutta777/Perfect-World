@@ -253,6 +253,16 @@ bool UPerfectWorldCharacterCreatorSubsystem::SetHouseholdTemplate(FName Househol
     return RecordResult(Creator.SetHouseholdTemplate(ToUtf8(HouseholdId.ToString())));
 }
 
+EPWResumePoint UPerfectWorldCharacterCreatorSubsystem::GetResumePoint() const
+{
+    return static_cast<EPWResumePoint>(Creator.Resume());
+}
+
+void UPerfectWorldCharacterCreatorSubsystem::SetResumePoint(EPWResumePoint Point)
+{
+    Creator.SetResumePoint(static_cast<PerfectWorld::ResumePoint>(Point));
+}
+
 FPWOpeningHomePlan UPerfectWorldCharacterCreatorSubsystem::GetOpeningHome() const
 {
     const PerfectWorld::OpeningHomePlan CorePlan = Creator.ResolveOpeningHome();

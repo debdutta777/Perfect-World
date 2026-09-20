@@ -78,6 +78,25 @@ constexpr std::array<std::int32_t, TraitCount> BalancedScholarRanks{
 };
 } // namespace
 
+std::string_view ResumePointId(ResumePoint point) noexcept
+{
+    switch (point)
+    {
+    case ResumePoint::Appearance: return "appearance";
+    case ResumePoint::Allocation: return "allocation";
+    case ResumePoint::InWorld: return "in_world";
+    }
+    return "appearance";
+}
+
+bool ParseResumePoint(std::string_view id, ResumePoint& outPoint) noexcept
+{
+    if (id == "appearance") { outPoint = ResumePoint::Appearance; return true; }
+    if (id == "allocation") { outPoint = ResumePoint::Allocation; return true; }
+    if (id == "in_world") { outPoint = ResumePoint::InWorld; return true; }
+    return false;
+}
+
 OperationResult OperationResult::Success()
 {
     return {};
@@ -228,6 +247,7 @@ OperationResult CharacterCreator::StartLife()
         return validation;
     }
     HasStarted_ = true;
+    Resume_ = ResumePoint::InWorld;
     return OperationResult::Success();
 }
 
@@ -237,7 +257,20 @@ void CharacterCreator::Reset()
     HouseholdTemplateId_ = std::string(DefaultHouseholdTemplateId);
     Identity_ = {};
     Appearance_ = AppearanceRecord::Default();
+    Resume_ = ResumePoint::Appearance;
     HasStarted_ = false;
+}
+
+void CharacterCreator::SetResumePoint(ResumePoint point) noexcept
+{
+    // A confirmed origin cannot go back to an earlier screen, so the furthest
+    // point reached is kept rather than overwritten.
+    if (HasStarted_)
+    {
+        Resume_ = ResumePoint::InWorld;
+        return;
+    }
+    Resume_ = point;
 }
 
 CreationReview CharacterCreator::Review() const
@@ -355,6 +388,7 @@ CharacterCreationSave CharacterCreator::CaptureSave() const
     save.HouseholdTemplateId = HouseholdTemplateId_;
     save.Identity = Identity_;
     save.Appearance = Appearance_;
+    save.Resume = Resume_;
     save.HasStarted = HasStarted_;
     return save;
 }
@@ -412,6 +446,15 @@ OperationResult CharacterCreator::RestoreSave(const CharacterCreationSave& save)
     Identity_ = save.Identity;
     Appearance_ = std::move(appearance);
     HasStarted_ = save.HasStarted;
+    // Version 3 and older never recorded a resume point. Derive the best
+    // available answer: a confirmed origin resumes in world, and an
+    // unconfirmed draft resumes at the allocation screen it was written from.
+    Resume_ = save.SchemaVersion >= 4 ? save.Resume
+                                      : (save.HasStarted ? ResumePoint::InWorld : ResumePoint::Allocation);
+    if (HasStarted_)
+    {
+        Resume_ = ResumePoint::InWorld;
+    }
     return OperationResult::Success();
 }
 } // namespace PerfectWorld

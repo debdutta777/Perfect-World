@@ -22,8 +22,10 @@ constexpr std::int32_t CreationBudget = 1000;
 // strings with a structured appearance record; because those strings had no
 // defined mapping to the new option IDs, a version 1 or 2 record loads with
 // the default appearance rather than a guessed one. Older records always
-// migrate explicitly and are never reinterpreted in place.
-constexpr std::int32_t SaveSchemaVersion = 3;
+// migrate explicitly and are never reinterpreted in place. Version 4 records
+// where the player had reached, so Load Game resumes there; older records
+// derive it from whether the origin was confirmed.
+constexpr std::int32_t SaveSchemaVersion = 4;
 constexpr std::int32_t MinSupportedSaveVersion = 1;
 constexpr std::size_t TraitCount = 20;
 constexpr std::size_t HouseholdTemplateCount = 5;
@@ -37,6 +39,26 @@ constexpr std::int32_t SaveSlotCount = 3;
 constexpr std::int32_t MaxRank = 4;
 constexpr std::int32_t MaxRankFourTraits = 4;
 constexpr std::string_view DefaultHouseholdTemplateId = "parent_household";
+
+/**
+ * Where the player had got to when the slot was written, so Load Game returns
+ * them there instead of always restarting at the beginning of creation.
+ *
+ * InWorld means the origin was confirmed and play had begun. No playable world
+ * exists yet, so loading such a record currently lands on the confirmed
+ * creation and says so; when rooms exist this is the value that will send the
+ * player back into one.
+ */
+enum class ResumePoint
+{
+    Appearance,
+    Allocation,
+    InWorld
+};
+
+/** Stable text for the save file. Never renumber; the text is the contract. */
+[[nodiscard]] PERFECTWORLDCORE_API std::string_view ResumePointId(ResumePoint point) noexcept;
+[[nodiscard]] PERFECTWORLDCORE_API bool ParseResumePoint(std::string_view id, ResumePoint& outPoint) noexcept;
 
 enum class CreationError
 {
@@ -171,6 +193,7 @@ struct CharacterCreationSave
     IdentityProfile Identity;
     AppearanceRecord Appearance{AppearanceRecord::Default()};
     bool HasStarted = false;
+    ResumePoint Resume = ResumePoint::Appearance;
 };
 
 class PERFECTWORLDCORE_API CharacterCreator
@@ -204,6 +227,10 @@ public:
     [[nodiscard]] const AppearanceRecord& Appearance() const noexcept { return Appearance_; }
     [[nodiscard]] bool HasStarted() const noexcept { return HasStarted_; }
 
+    /** Where the player had reached. StartLife forces this to InWorld. */
+    [[nodiscard]] ResumePoint Resume() const noexcept { return Resume_; }
+    void SetResumePoint(ResumePoint point) noexcept;
+
     [[nodiscard]] OperationResult SetIdentity(IdentityProfile identity);
     [[nodiscard]] OperationResult SetAppearance(AppearanceRecord appearance);
 
@@ -220,5 +247,6 @@ private:
     IdentityProfile Identity_;
     AppearanceRecord Appearance_{AppearanceRecord::Default()};
     bool HasStarted_ = false;
+    ResumePoint Resume_ = ResumePoint::Appearance;
 };
 } // namespace PerfectWorld
