@@ -4,17 +4,22 @@ This guide opens the Perfect World creator prototype in Unreal Engine 5.7. It do
 
 ## Build and open the project
 
-1. Install Unreal Engine **5.7** and Visual Studio 2022 with the C++ game development tools.
-2. Open PowerShell in `C:\Users\DEBDUTTA\Desktop\PerfectWorld` (File Explorer: open that folder, click the address bar, type `powershell`, press Enter).
+1. Use Unreal Engine **5.7** and Visual Studio 2022 with the C++ game development tools. Both were found on this PC, and the Desktop project compiled successfully on 19 September 2026.
+2. Open PowerShell and go to the project folder:
+   ```powershell
+   Set-Location 'C:\Users\DEBDUTTA\Desktop\PerfectWorld'
+   ```
 3. Build the Unreal modules:
    ```powershell
    python Scripts/build_unreal.py
    ```
    Wait for the command to finish. If Python is not found, install Python 3 and reopen PowerShell.
-4. In File Explorer, double-click `PerfectWorld.uproject`. If Windows asks which Unreal version to use, choose **Unreal Engine 5.7**. If asked to convert or upgrade the project, choose **No** or **Open a Copy**; do not convert the source project.
+4. In File Explorer, double-click `PerfectWorld.uproject`. If Windows asks which Unreal version to use, choose **Unreal Engine 5.7**. If asked to convert or upgrade the project, cancel and reopen with 5.7. First launch can take time while shaders are prepared.
 5. Unreal opens the default **Entry** map, a blank engine map. In the top toolbar, click **Play** (or press **Alt+P**) to use **Play Selected Viewport**. The expected result is the character creator menu in the viewport.
 
 ## Try the creator
+
+These main desktop mouse controls were checked on20 September2026. See [the smoke-test report and screenshot](MENU_SMOKE_TEST.md). The menu currently uses small prototype text; enlarging it is the next UI task.
 
 - Click **Balanced Scholar preset**. It should set the traits to exactly **1,000 creation points**.
 - Use each trait row's **+** and **−** buttons to raise or lower its rank. A change that exceeds the budget, or would give a fifth trait rank 4, should be rejected without changing the draft. Lowering a rank refunds its cost difference.
@@ -45,4 +50,6 @@ This uses CMake to configure and build the C++20 core, then runs CTest. It does 
 
 ## Current limits and GitHub
 
-The project currently has no city or school world, school gameplay, or disk saves. The Entry map is blank, and confirming the origin only keeps a record in memory; closing the game loses it. The GitHub repository has not been created yet. The project maintainer will add its URL here later.
+The project currently has no city or school world, school gameplay, or disk saves. The Entry map is blank, and confirming the origin only keeps a record in memory; closing the game loses it.
+
+The first local commit is `f948f1f`. Check local history with `git log --oneline` from the project folder. The requested private GitHub repository/upload is pending explicit approval; no remote URL has been configured yet.

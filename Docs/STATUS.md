@@ -16,7 +16,7 @@
 | Test assertions | PASS —225,187 checks including10,000 seeded edit sequences |
 | Unreal5.7 Editor build | PASS —PerfectWorldEditor Win64 Development, all17 actions completed |
 | Unreal reflection and module linking | PASS as part of Editor build |
-| Visual Play In Editor/menu interaction | NOT RUN; next small task |
+| Visual Play In Editor/menu interaction | PASS for the desktop mouse smoke checks on20 September; see MENU_SMOKE_TEST.md |
 | Cooked Windows game | NOT RUN |
 | Android/iOS/console package or device tests | NOT RUN |
 | Disk save/load, playable world, school or combat | NOT IMPLEMENTED |
@@ -37,4 +37,4 @@ No claim is made that model switching avoids shared account limits. Future tasks
 
 ## Next checkpoint
 
-Launch the Unreal project and verify only the existing creator menu: preset, rank edits, error messages, reset and confirm. Record a screenshot and a short smoke result. Do not add the city, combat or full school simulation in the same step.
+The Desktop copy was also compiled successfully and opened in Unreal5.7.4. The creator smoke test and screenshot are recorded in MENU_SMOKE_TEST.md. Next: improve the small menu text/control sizes and repeat that check. Do not add city, combat or full school simulation in the same step.
