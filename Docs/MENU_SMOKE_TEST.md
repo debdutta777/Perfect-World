@@ -24,4 +24,4 @@ The menu's text and controls are small at the observed editor viewport size. Nex
 
 ## Source-control state
 
-The first local commit is `f948f1f` — `Initial Unreal C++ foundation for Kolkata life RPG`. The requested private GitHub upload is pending explicit source/destination approval. Unreal-generated local configuration was not included in this documentation checkpoint.
+The first local commit is `f948f1f` — `Initial Unreal C++ foundation for Kolkata life RPG`. The initial commits are pushed to the private repository [https://github.com/debdutta777/Perfect-World](https://github.com/debdutta777/Perfect-World). Unreal-generated local configuration was not included in this documentation checkpoint.

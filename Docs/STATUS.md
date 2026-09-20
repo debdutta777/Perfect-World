@@ -38,3 +38,7 @@ No claim is made that model switching avoids shared account limits. Future tasks
 ## Next checkpoint
 
 The Desktop copy was also compiled successfully and opened in Unreal5.7.4. The creator smoke test and screenshot are recorded in MENU_SMOKE_TEST.md. Next: improve the small menu text/control sizes and repeat that check. Do not add city, combat or full school simulation in the same step.
+
+## GitHub checkpoint
+
+Initial commits `f948f1f` and `fee9b4b` are pushed to [https://github.com/debdutta777/Perfect-World](https://github.com/debdutta777/Perfect-World), a private repository. Remote `main` matched local commit `fee9b4baafe04541e0f4dd80761e1f9460566109` when verified. Unreal-generated local configuration changes remain outside these commits.

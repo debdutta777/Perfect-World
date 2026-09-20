@@ -49,7 +49,7 @@ Source/PerfectWorldCore owns the portable rules. Source/PerfectWorld adapts them
 
 CaptureSave/RestoreSave operate on C++ values in memory. The current schema stores a fixed-order20-rank array. Before changing trait order or shipping persistent files, replace this with stable-ID serialization plus migration; current version1 records must not be silently reinterpreted. Reset creates a new draft and intentionally discards its prior origin. Neither helper is a gameplay progression save service.
 
-Do not copy Intermediate, Saved, DerivedDataCache or generated build folders into source control. Binary art/Unreal assets can use Git LFS once the repository is initialized. No remote repository has been created by this starter task.
+Do not copy Intermediate, Saved, DerivedDataCache or generated build folders into source control. Binary art/Unreal assets can use Git LFS once the repository is initialized. The source repository is [debdutta777/Perfect-World](https://github.com/debdutta777/Perfect-World); build outputs remain local and ignored.
 
 The build script disables the optional Unreal Build Accelerator (-NoUBA) so local compilation does not depend on its global cache permissions. This uses the standard parallel compiler executor.
 

@@ -52,4 +52,4 @@ This uses CMake to configure and build the C++20 core, then runs CTest. It does 
 
 The project currently has no city or school world, school gameplay, or disk saves. The Entry map is blank, and confirming the origin only keeps a record in memory; closing the game loses it.
 
-The first local commit is `f948f1f`. Check local history with `git log --oneline` from the project folder. The requested private GitHub repository/upload is pending explicit approval; no remote URL has been configured yet.
+The first local commit is `f948f1f`. Check local history with `git log --oneline` from the project folder. The project is now pushed to the private repository [debdutta777/Perfect-World](https://github.com/debdutta777/Perfect-World). The Desktop project tracks `origin/main`.

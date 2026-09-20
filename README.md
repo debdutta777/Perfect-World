@@ -13,6 +13,8 @@ Live ordinary school and family life while your actions gradually shape extraord
 - Detailed game design, creator specification, Bengal world bible, names, Unreal architecture, art direction, production plan and small-step queue.
 - Two generated concept sheets: Kolkata neighborhood and student costumes. They are reference art, not playable3D assets.
 
+Private GitHub repository: [debdutta777/Perfect-World](https://github.com/debdutta777/Perfect-World).
+
 ## Start here
 
 **First time in Unreal? Follow [UNREAL_QUICKSTART](Docs/UNREAL_QUICKSTART.md).** It walks through building, opening the project and checking the creator controls.
