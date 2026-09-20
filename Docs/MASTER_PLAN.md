@@ -4,6 +4,12 @@
 
 **Owner's stated goal:** a generational game at AAAA scale, 2–3 years acceptable, artists hired later, free or generated art until then. Working part-time, most evenings.
 
+> **Scope superseded, 2026-09-20.** After this plan was written the owner decided the main story must be **world level, not one district**: thirty major nations relevant, yearly country competitions at several hunter levels, open and university-level tower competitions, worldwide individual, university and national rankings, and a national "country level" that scales rewards. See `GLOBAL_WORLD.md` and `PATHS_AND_PROGRESSION.md`, which are authoritative on scope.
+>
+> The concern that a solo part-time developer cannot build a thirty-nation open world was raised once and the owner decided against it. It is not restated further; the global documents are written to make that vision work rather than to argue with it.
+>
+> **What survives from this document unchanged and still binding:** every architecture decision in section 4, the AI capability split in section 5, the five risks in section 6, and the immediate build order in section 7. Those are independent of scope and become *more* important as scope grows, not less. Sections 2 and 3 — the district caps, the 6–8 hour target, the "end at the examination" cut list — are superseded and are kept only as the record of a rejected alternative.
+
 ## 1. The honest position
 
 One person plus AI agents cannot produce a AAA-scale open-world action RPG. AI writes code and tests quickly; it does not supply the hundreds of person-years of art, animation, level design, writing, audio, tuning, QA and platform support that scale requires. Pursuing that scope directly produces a permanently unfinished framework, which is the most common way ambitious solo projects die.
