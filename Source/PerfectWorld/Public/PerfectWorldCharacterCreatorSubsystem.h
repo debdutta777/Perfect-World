@@ -26,6 +26,7 @@ enum class EPWCreationError : uint8
     InvalidSave,
     UnknownHousehold,
     MalformedSaveText,
+    InvalidAppearance,
     FileAccess
 };
 
@@ -152,6 +153,57 @@ struct FPWCreationReview
     FName HomeKitId;
 };
 
+/** One discrete appearance choice (face shape, hair style, build or uniform variant). */
+USTRUCT(BlueprintType)
+struct FPWAppearanceOption
+{
+    GENERATED_BODY()
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Appearance")
+    FName Id;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Appearance")
+    FText DisplayName;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Appearance")
+    bool bSelected = false;
+};
+
+/**
+ * Mirrors PerfectWorld::AppearanceRecord for Blueprint. Colours are carried as
+ * FLinearColor for editor-friendly colour pickers rather than as raw ints; the
+ * core's 0-255 ColorValue is divided by 255 to build each FLinearColor channel
+ * and, going back, each channel is multiplied by 255, rounded to the nearest
+ * integer with FMath::RoundToInt, and clamped to 0-255. Alpha is unused and is
+ * always 1.
+ */
+USTRUCT(BlueprintType)
+struct FPWAppearanceRecord
+{
+    GENERATED_BODY()
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Appearance")
+    FName FaceShapeId;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Appearance")
+    FName HairStyleId;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Appearance")
+    FName BuildId;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Appearance")
+    FName UniformVariantId;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Appearance")
+    FLinearColor SkinTone = FLinearColor::White;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Appearance")
+    FLinearColor HairColor = FLinearColor::White;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Appearance")
+    FLinearColor EyeColor = FLinearColor::White;
+};
+
 /** Blueprint-facing owner of the deterministic, portable character-creation rules. */
 UCLASS()
 class PERFECTWORLD_API UPerfectWorldCharacterCreatorSubsystem : public UGameInstanceSubsystem
@@ -172,9 +224,55 @@ public:
     bool SetIdentity(const FString& GivenName, const FString& FamilyName, const FString& Pronouns,
                      const FString& HomeCity, const FString& PrimaryLanguage);
 
-    UFUNCTION(BlueprintCallable, Category = "Perfect World|Creation")
-    bool SetCosmetics(const FString& BodyPreset, const FString& SkinTone, const FString& HairStyle,
-                      const FString& HairColor, const FString& Outfit);
+    /** The current appearance record, read back from the core every call. */
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Appearance")
+    FPWAppearanceRecord GetAppearance() const;
+
+    /** Pushes a whole appearance record through the core so all validation runs. */
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Appearance")
+    bool SetAppearance(const FPWAppearanceRecord& Appearance);
+
+    /** The authored face shapes, with the currently selected one marked. */
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Appearance")
+    TArray<FPWAppearanceOption> GetFaceShapeOptions() const;
+
+    /** The authored hair styles, with the currently selected one marked. */
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Appearance")
+    TArray<FPWAppearanceOption> GetHairStyleOptions() const;
+
+    /** The authored builds, with the currently selected one marked. */
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Appearance")
+    TArray<FPWAppearanceOption> GetBuildOptions() const;
+
+    /** The authored uniform variants, with the currently selected one marked. */
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Appearance")
+    TArray<FPWAppearanceOption> GetUniformVariantOptions() const;
+
+    /**
+     * Narrow per-control helpers: each reads the current appearance record,
+     * changes the one field named, and pushes the whole record back through
+     * the core so all validation runs there rather than in the UI.
+     */
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Appearance")
+    bool SetFaceShape(FName FaceShapeId);
+
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Appearance")
+    bool SetHairStyle(FName HairStyleId);
+
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Appearance")
+    bool SetBuild(FName BuildId);
+
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Appearance")
+    bool SetUniformVariant(FName UniformVariantId);
+
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Appearance")
+    bool SetSkinColor(FLinearColor Color);
+
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Appearance")
+    bool SetHairColor(FLinearColor Color);
+
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Appearance")
+    bool SetEyeColor(FLinearColor Color);
 
     UFUNCTION(BlueprintPure, Category = "Perfect World|Creation")
     FPWCreationReview GetCreationReview() const;

@@ -23,7 +23,7 @@ struct FPWCreatorSlotCache
 } // namespace
 
 TSharedRef<SWidget> BuildCreatorPanel(TWeakObjectPtr<UPerfectWorldCharacterCreatorSubsystem> Creator,
-                                       FSimpleDelegate OnBackToTitle)
+                                       FSimpleDelegate OnBack)
 {
     const FSlateFontInfo TitleFont = FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 24);
     const FSlateFontInfo BodyFont = FCoreStyle::GetDefaultFontStyle(TEXT("Regular"), 17);
@@ -227,14 +227,14 @@ TSharedRef<SWidget> BuildCreatorPanel(TWeakObjectPtr<UPerfectWorldCharacterCreat
         + SVerticalBox::Slot().AutoHeight().Padding(0,10,0,0)[SNew(STextBlock)
             .Font(BodyFont)
             .AutoWrapText(true)
-            .Text(FText::FromString(TEXT("Identity and appearance are free. This desktop prototype implements the point ledger and disk saves; avatar controls and school gameplay are future work.")))]
+            .Text(FText::FromString(TEXT("Identity and appearance are free. This desktop prototype implements the point ledger and disk saves; school gameplay is future work.")))]
         + SVerticalBox::Slot().AutoHeight().Padding(0,14,0,0)[SNew(SBox).WidthOverride(160)[SNew(SButton)
             .ContentPadding(FMargin(14, 8))
-            .OnClicked_Lambda([OnBackToTitle]
+            .OnClicked_Lambda([OnBack]
             {
-                OnBackToTitle.ExecuteIfBound();
+                OnBack.ExecuteIfBound();
                 return FReply::Handled();
             })
-            [SNew(STextBlock).Font(ButtonFont).Justification(ETextJustify::Center).Text(FText::FromString(TEXT("Back to Title")))]]]
+            [SNew(STextBlock).Font(ButtonFont).Justification(ETextJustify::Center).Text(FText::FromString(TEXT("Back")))]]]
     ];
 }

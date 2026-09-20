@@ -11,6 +11,73 @@ std::string ToUtf8(const FString& Value)
 {
     return std::string(TCHAR_TO_UTF8(*Value));
 }
+
+FString FromUtf8(std::string_view Value)
+{
+    return FString(UTF8_TO_TCHAR(std::string(Value).c_str()));
+}
+
+/** 0-255 -> 0-1, matching the rounding documented on FPWAppearanceRecord. */
+FLinearColor ToLinearColor(const PerfectWorld::ColorValue& Color)
+{
+    return FLinearColor(Color.R / 255.f, Color.G / 255.f, Color.B / 255.f, 1.f);
+}
+
+/** 0-1 -> 0-255: multiply, round to nearest int, clamp. */
+PerfectWorld::ColorValue ToColorValue(const FLinearColor& Color)
+{
+    auto ToChannel = [](float Value)
+    {
+        return FMath::Clamp(FMath::RoundToInt(Value * 255.f), 0, 255);
+    };
+    PerfectWorld::ColorValue Result;
+    Result.R = ToChannel(Color.R);
+    Result.G = ToChannel(Color.G);
+    Result.B = ToChannel(Color.B);
+    return Result;
+}
+
+FPWAppearanceRecord ToUnrealAppearance(const PerfectWorld::AppearanceRecord& Record)
+{
+    FPWAppearanceRecord View;
+    View.FaceShapeId = FName(FromUtf8(Record.FaceShapeId));
+    View.HairStyleId = FName(FromUtf8(Record.HairStyleId));
+    View.BuildId = FName(FromUtf8(Record.BuildId));
+    View.UniformVariantId = FName(FromUtf8(Record.UniformVariantId));
+    View.SkinTone = ToLinearColor(Record.SkinTone);
+    View.HairColor = ToLinearColor(Record.HairColor);
+    View.EyeColor = ToLinearColor(Record.EyeColor);
+    return View;
+}
+
+PerfectWorld::AppearanceRecord ToCoreAppearance(const FPWAppearanceRecord& View)
+{
+    PerfectWorld::AppearanceRecord Record;
+    Record.FaceShapeId = ToUtf8(View.FaceShapeId.ToString());
+    Record.HairStyleId = ToUtf8(View.HairStyleId.ToString());
+    Record.BuildId = ToUtf8(View.BuildId.ToString());
+    Record.UniformVariantId = ToUtf8(View.UniformVariantId.ToString());
+    Record.SkinTone = ToColorValue(View.SkinTone);
+    Record.HairColor = ToColorValue(View.HairColor);
+    Record.EyeColor = ToColorValue(View.EyeColor);
+    return Record;
+}
+
+template <std::size_t N>
+TArray<FPWAppearanceOption> BuildOptionList(const std::array<PerfectWorld::AppearanceOption, N>& Options,
+                                             const std::string& SelectedId)
+{
+    TArray<FPWAppearanceOption> Result;
+    Result.Reserve(static_cast<int32>(N));
+    for (const PerfectWorld::AppearanceOption& Option : Options)
+    {
+        FPWAppearanceOption& View = Result.AddDefaulted_GetRef();
+        View.Id = FName(FromUtf8(Option.Id));
+        View.DisplayName = FText::FromString(FromUtf8(Option.DisplayName));
+        View.bSelected = Option.Id == SelectedId;
+    }
+    return Result;
+}
 }
 
 FString UPerfectWorldCharacterCreatorSubsystem::ToFString(std::string_view Value)
@@ -66,17 +133,83 @@ bool UPerfectWorldCharacterCreatorSubsystem::SetIdentity(const FString& GivenNam
     return RecordResult(Creator.SetIdentity(MoveTemp(Identity)));
 }
 
-bool UPerfectWorldCharacterCreatorSubsystem::SetCosmetics(const FString& BodyPreset, const FString& SkinTone,
-                                                           const FString& HairStyle, const FString& HairColor,
-                                                           const FString& Outfit)
+FPWAppearanceRecord UPerfectWorldCharacterCreatorSubsystem::GetAppearance() const
 {
-    PerfectWorld::CosmeticProfile Cosmetics;
-    Cosmetics.BodyPreset = ToUtf8(BodyPreset);
-    Cosmetics.SkinTone = ToUtf8(SkinTone);
-    Cosmetics.HairStyle = ToUtf8(HairStyle);
-    Cosmetics.HairColor = ToUtf8(HairColor);
-    Cosmetics.Outfit = ToUtf8(Outfit);
-    return RecordResult(Creator.SetCosmetics(MoveTemp(Cosmetics)));
+    return ToUnrealAppearance(Creator.Appearance());
+}
+
+bool UPerfectWorldCharacterCreatorSubsystem::SetAppearance(const FPWAppearanceRecord& Appearance)
+{
+    return RecordResult(Creator.SetAppearance(ToCoreAppearance(Appearance)));
+}
+
+TArray<FPWAppearanceOption> UPerfectWorldCharacterCreatorSubsystem::GetFaceShapeOptions() const
+{
+    return BuildOptionList(PerfectWorld::FaceShapes(), Creator.Appearance().FaceShapeId);
+}
+
+TArray<FPWAppearanceOption> UPerfectWorldCharacterCreatorSubsystem::GetHairStyleOptions() const
+{
+    return BuildOptionList(PerfectWorld::HairStyles(), Creator.Appearance().HairStyleId);
+}
+
+TArray<FPWAppearanceOption> UPerfectWorldCharacterCreatorSubsystem::GetBuildOptions() const
+{
+    return BuildOptionList(PerfectWorld::Builds(), Creator.Appearance().BuildId);
+}
+
+TArray<FPWAppearanceOption> UPerfectWorldCharacterCreatorSubsystem::GetUniformVariantOptions() const
+{
+    return BuildOptionList(PerfectWorld::UniformVariants(), Creator.Appearance().UniformVariantId);
+}
+
+bool UPerfectWorldCharacterCreatorSubsystem::SetFaceShape(FName FaceShapeId)
+{
+    PerfectWorld::AppearanceRecord Record = Creator.Appearance();
+    Record.FaceShapeId = ToUtf8(FaceShapeId.ToString());
+    return RecordResult(Creator.SetAppearance(MoveTemp(Record)));
+}
+
+bool UPerfectWorldCharacterCreatorSubsystem::SetHairStyle(FName HairStyleId)
+{
+    PerfectWorld::AppearanceRecord Record = Creator.Appearance();
+    Record.HairStyleId = ToUtf8(HairStyleId.ToString());
+    return RecordResult(Creator.SetAppearance(MoveTemp(Record)));
+}
+
+bool UPerfectWorldCharacterCreatorSubsystem::SetBuild(FName BuildId)
+{
+    PerfectWorld::AppearanceRecord Record = Creator.Appearance();
+    Record.BuildId = ToUtf8(BuildId.ToString());
+    return RecordResult(Creator.SetAppearance(MoveTemp(Record)));
+}
+
+bool UPerfectWorldCharacterCreatorSubsystem::SetUniformVariant(FName UniformVariantId)
+{
+    PerfectWorld::AppearanceRecord Record = Creator.Appearance();
+    Record.UniformVariantId = ToUtf8(UniformVariantId.ToString());
+    return RecordResult(Creator.SetAppearance(MoveTemp(Record)));
+}
+
+bool UPerfectWorldCharacterCreatorSubsystem::SetSkinColor(FLinearColor Color)
+{
+    PerfectWorld::AppearanceRecord Record = Creator.Appearance();
+    Record.SkinTone = ToColorValue(Color);
+    return RecordResult(Creator.SetAppearance(MoveTemp(Record)));
+}
+
+bool UPerfectWorldCharacterCreatorSubsystem::SetHairColor(FLinearColor Color)
+{
+    PerfectWorld::AppearanceRecord Record = Creator.Appearance();
+    Record.HairColor = ToColorValue(Color);
+    return RecordResult(Creator.SetAppearance(MoveTemp(Record)));
+}
+
+bool UPerfectWorldCharacterCreatorSubsystem::SetEyeColor(FLinearColor Color)
+{
+    PerfectWorld::AppearanceRecord Record = Creator.Appearance();
+    Record.EyeColor = ToColorValue(Color);
+    return RecordResult(Creator.SetAppearance(MoveTemp(Record)));
 }
 
 FPWCreationReview UPerfectWorldCharacterCreatorSubsystem::GetCreationReview() const

@@ -1,5 +1,6 @@
 #include "PerfectWorldMenuGameMode.h"
 #include "PerfectWorldCreatorPanel.h"
+#include "PerfectWorldAppearancePanel.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
@@ -89,9 +90,16 @@ void APerfectWorldMenuGameMode::ShowSettings()
     SetActiveWidget(BuildSettingsScreen());
 }
 
+void APerfectWorldMenuGameMode::ShowAppearance()
+{
+    SetActiveWidget(BuildAppearancePanel(Creator,
+        FSimpleDelegate::CreateUObject(this, &APerfectWorldMenuGameMode::ShowCreator),
+        FSimpleDelegate::CreateUObject(this, &APerfectWorldMenuGameMode::ShowTitle)));
+}
+
 void APerfectWorldMenuGameMode::ShowCreator()
 {
-    SetActiveWidget(BuildCreatorPanel(Creator, FSimpleDelegate::CreateUObject(this, &APerfectWorldMenuGameMode::ShowTitle)));
+    SetActiveWidget(BuildCreatorPanel(Creator, FSimpleDelegate::CreateUObject(this, &APerfectWorldMenuGameMode::ShowAppearance)));
 }
 
 TSharedRef<SWidget> APerfectWorldMenuGameMode::BuildTitleScreen()
@@ -124,7 +132,7 @@ TSharedRef<SWidget> APerfectWorldMenuGameMode::BuildTitleScreen()
                 MakeMenuButton(TEXT("New Game"), FOnClicked::CreateLambda([this]
                 {
                     if (Creator.IsValid()) Creator->ResetCreation();
-                    ShowCreator();
+                    ShowAppearance();
                     return FReply::Handled();
                 }))]
             + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center).Padding(0,0,0,10)[
