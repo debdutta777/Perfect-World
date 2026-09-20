@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(PerfectWorldCore STATIC
+    Source/PerfectWorldCore/Private/Appearance.cpp
     Source/PerfectWorldCore/Private/CharacterCreation.cpp
     Source/PerfectWorldCore/Private/CreationSaveSerialization.cpp
 )

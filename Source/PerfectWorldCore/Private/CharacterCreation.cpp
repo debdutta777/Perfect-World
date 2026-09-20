@@ -236,7 +236,7 @@ void CharacterCreator::Reset()
     TraitRanks_.fill(0);
     HouseholdTemplateId_ = std::string(DefaultHouseholdTemplateId);
     Identity_ = {};
-    Cosmetics_ = {};
+    Appearance_ = AppearanceRecord::Default();
     HasStarted_ = false;
 }
 
@@ -326,14 +326,25 @@ OperationResult CharacterCreator::SetIdentity(IdentityProfile identity)
     return OperationResult::Success();
 }
 
-OperationResult CharacterCreator::SetCosmetics(CosmeticProfile cosmetics)
+OperationResult CharacterCreator::SetAppearance(AppearanceRecord appearance)
 {
     if (HasStarted_)
     {
         return OperationResult::Failure(CreationError::CreationAlreadyStarted,
                                         "Appearance is locked after life begins.");
     }
-    Cosmetics_ = std::move(cosmetics);
+    // Colours are clamped rather than refused: a slider dragged past its end
+    // should settle at the end, not reject the whole edit. Unknown option IDs
+    // are a different matter and do fail, because they name art that does not
+    // exist.
+    appearance.SkinTone = ClampColor(appearance.SkinTone);
+    appearance.HairColor = ClampColor(appearance.HairColor);
+    appearance.EyeColor = ClampColor(appearance.EyeColor);
+    if (const std::string problem = DescribeAppearanceProblem(appearance); !problem.empty())
+    {
+        return OperationResult::Failure(CreationError::InvalidAppearance, problem);
+    }
+    Appearance_ = std::move(appearance);
     return OperationResult::Success();
 }
 
@@ -343,7 +354,7 @@ CharacterCreationSave CharacterCreator::CaptureSave() const
     save.TraitRanks = TraitRanks_;
     save.HouseholdTemplateId = HouseholdTemplateId_;
     save.Identity = Identity_;
-    save.Cosmetics = Cosmetics_;
+    save.Appearance = Appearance_;
     save.HasStarted = HasStarted_;
     return save;
 }
@@ -380,10 +391,26 @@ OperationResult CharacterCreator::RestoreSave(const CharacterCreationSave& save)
         household = save.HouseholdTemplateId;
     }
 
+    // Version 1 and 2 predate the structured appearance record. Their
+    // free-form cosmetic strings had no defined mapping to the option IDs, so
+    // they migrate to the documented default rather than to a guess.
+    AppearanceRecord appearance = AppearanceRecord::Default();
+    if (save.SchemaVersion >= 3)
+    {
+        appearance = save.Appearance;
+        appearance.SkinTone = ClampColor(appearance.SkinTone);
+        appearance.HairColor = ClampColor(appearance.HairColor);
+        appearance.EyeColor = ClampColor(appearance.EyeColor);
+        if (const std::string problem = DescribeAppearanceProblem(appearance); !problem.empty())
+        {
+            return OperationResult::Failure(CreationError::InvalidSave, problem);
+        }
+    }
+
     TraitRanks_ = save.TraitRanks;
     HouseholdTemplateId_ = std::move(household);
     Identity_ = save.Identity;
-    Cosmetics_ = save.Cosmetics;
+    Appearance_ = std::move(appearance);
     HasStarted_ = save.HasStarted;
     return OperationResult::Success();
 }

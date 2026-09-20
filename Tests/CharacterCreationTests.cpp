@@ -40,7 +40,7 @@ int main()
         Check(c.Review().Remaining == 0, "no refund farming");
     }
     Check(c.SetIdentity({"Ananya", "Sen", "she/her", "Kolkata", "Bengali"}).Succeeded(), "identity free");
-    Check(c.SetCosmetics({"frame_01", "tone_07", "braid", "black", "school_blue"}).Succeeded(), "cosmetics free");
+    Check(c.SetAppearance(AppearanceRecord::Default()).Succeeded(), "appearance free");
     Check(c.Review().Spent == 1000, "identity has no budget effect");
     auto saved = c.CaptureSave();
     CharacterCreator restored;
@@ -48,7 +48,8 @@ int main()
     Check(restored.Identity().HomeCity == "Kolkata", "identity retained");
     Check(restored.StartLife().Succeeded(), "valid life starts");
     Check(!restored.StartLife() && !restored.SetTraitRank("strength", 0), "start cannot replay or edit");
-    Check(!restored.SetIdentity({}) && !restored.SetCosmetics({}), "origin identity locked");
+    Check(!restored.SetIdentity({}) && !restored.SetAppearance(AppearanceRecord::Default()),
+          "origin identity and appearance locked");
     Check(!restored.ApplyPreset("balanced_scholar"), "preset locked after start");
     CharacterCreator loaded;
     Check(loaded.RestoreSave(restored.CaptureSave()).Succeeded() && loaded.HasStarted(), "committed record roundtrip");
@@ -167,7 +168,9 @@ int main()
     Check(loader.RestoreSave(legacy).Succeeded(), "version 1 record still loads");
     Check(loader.Review().HouseholdTemplateId == "parent_household",
           "version 1 migrates to the default household");
-    legacy.SchemaVersion = 3;
+    // Derived from the constant so bumping the schema cannot silently turn
+    // this "too new" case into a currently supported version.
+    legacy.SchemaVersion = SaveSchemaVersion + 1;
     Check(loader.RestoreSave(legacy).Error == CreationError::UnsupportedSaveVersion,
           "future schema version rejected");
 
@@ -241,6 +244,91 @@ int main()
             Check(!plan.DressingTierId.empty(), "combination names a tier");
         }
     }
+
+    // Appearance is engine-neutral data: named option IDs plus plain colours,
+    // so the same record can drive 2D layers now and a 3D rig later.
+    CharacterCreator look;
+    Check(DescribeAppearanceProblem(AppearanceRecord::Default()).empty(), "the default appearance is valid");
+    std::set<std::string_view> optionIds;
+    for (const auto& o : FaceShapes()) optionIds.insert(o.Id);
+    for (const auto& o : HairStyles()) optionIds.insert(o.Id);
+    for (const auto& o : Builds()) optionIds.insert(o.Id);
+    for (const auto& o : UniformVariants()) optionIds.insert(o.Id);
+    Check(optionIds.size() == 4 + 4 + 3 + 2, "every appearance option ID is unique");
+
+    AppearanceRecord chosen = AppearanceRecord::Default();
+    chosen.FaceShapeId = "face_heart";
+    chosen.HairStyleId = "hair_long_braid";
+    chosen.BuildId = "build_sturdy";
+    chosen.UniformVariantId = "uniform_casual";
+    chosen.SkinTone = {123, 84, 61};
+    chosen.HairColor = {20, 16, 14};
+    chosen.EyeColor = {90, 120, 60};
+    Check(look.SetAppearance(chosen).Succeeded(), "a valid appearance is accepted");
+    Check(look.Appearance().FaceShapeId == "face_heart", "appearance is kept");
+    Check(look.Review().Remaining == 1000, "appearance costs no creation points");
+
+    // Unknown option IDs name art that does not exist, so they fail.
+    AppearanceRecord unknown = AppearanceRecord::Default();
+    unknown.HairStyleId = "hair_mohawk";
+    Check(look.SetAppearance(unknown).Error == CreationError::InvalidAppearance, "unknown hair style rejected");
+    Check(look.Appearance().HairStyleId == "hair_long_braid", "rejected appearance is atomic");
+
+    // A slider dragged past its end settles at the end rather than failing.
+    AppearanceRecord overshoot = AppearanceRecord::Default();
+    overshoot.SkinTone = {-40, 300, 128};
+    Check(look.SetAppearance(overshoot).Succeeded(), "out-of-range colour is clamped, not refused");
+    Check(look.Appearance().SkinTone == ColorValue{0, 255, 128}, "clamp keeps each channel in range");
+    Check(IsValidColor(look.Appearance().SkinTone), "clamped colour is valid");
+
+    // The record survives the text round trip exactly.
+    Check(look.SetAppearance(chosen).Succeeded(), "restore the chosen appearance");
+    Check(look.ApplyPreset("balanced_scholar").Succeeded(), "preset for appearance round trip");
+    const std::string lookText = SerializeCreationSave(look.CaptureSave());
+    Check(lookText.find("\"faceShapeId\": \"face_heart\"") != std::string::npos, "appearance written by ID");
+    Check(lookText.find("\"eyeColor\": { \"r\": 90, \"g\": 120, \"b\": 60 }") != std::string::npos,
+          "colours written as channels");
+    CharacterCreationSave lookParsed;
+    Check(DeserializeCreationSave(lookText, lookParsed).Succeeded(), "appearance round trip parses");
+    CharacterCreator lookBack;
+    Check(lookBack.RestoreSave(lookParsed).Succeeded(), "appearance record restores");
+    Check(lookBack.Appearance().FaceShapeId == chosen.FaceShapeId &&
+          lookBack.Appearance().HairStyleId == chosen.HairStyleId &&
+          lookBack.Appearance().BuildId == chosen.BuildId &&
+          lookBack.Appearance().UniformVariantId == chosen.UniformVariantId,
+          "round trip keeps every discrete choice");
+    Check(lookBack.Appearance().SkinTone == chosen.SkinTone &&
+          lookBack.Appearance().HairColor == chosen.HairColor &&
+          lookBack.Appearance().EyeColor == chosen.EyeColor,
+          "round trip keeps every colour exactly");
+
+    // Truncating the record anywhere must fail rather than half-load a look.
+    for (std::size_t cut = 1; cut + 1 < lookText.size(); ++cut)
+    {
+        CharacterCreationSave partial;
+        if (DeserializeCreationSave(std::string_view(lookText).substr(0, cut), partial).Succeeded())
+        {
+            Check(false, "a truncated appearance save must not parse");
+        }
+    }
+
+    // A saved record naming art that no longer exists fails the load rather
+    // than starting the game with an unrenderable character.
+    CharacterCreationSave staleArt = lookParsed;
+    staleArt.Appearance.FaceShapeId = "face_removed_in_a_later_patch";
+    CharacterCreator staleLoader;
+    Check(staleLoader.RestoreSave(staleArt).Error == CreationError::InvalidSave,
+          "a save naming a missing appearance option is refused");
+
+    // Version 1 and 2 records predate the appearance record and migrate to the
+    // default rather than to a guess at what the old strings meant.
+    CharacterCreationSave oldLook = lookParsed;
+    oldLook.SchemaVersion = 2;
+    oldLook.Appearance.FaceShapeId = "whatever_v2_wrote";
+    CharacterCreator oldLoader;
+    Check(oldLoader.RestoreSave(oldLook).Succeeded(), "a version 2 record still loads");
+    Check(oldLoader.Appearance().FaceShapeId == AppearanceRecord::Default().FaceShapeId,
+          "version 2 migrates to the default appearance");
 
     // The household is locked once life begins, like every other origin field.
     CharacterCreator committed;

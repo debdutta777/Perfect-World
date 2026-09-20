@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Appearance.h"
+
 #include <array>
 #include <cstdint>
 #include <string>
@@ -15,10 +17,13 @@ namespace PerfectWorld
 {
 constexpr std::int32_t CreationAge = 16;
 constexpr std::int32_t CreationBudget = 1000;
-// Version 1 stored trait ranks only. Version 2 adds the household template and
-// is written by stable trait ID; version 1 records migrate to the default
-// household rather than being reinterpreted.
-constexpr std::int32_t SaveSchemaVersion = 2;
+// Version 1 stored trait ranks only. Version 2 added the household template
+// and stable-ID trait ranks. Version 3 replaces the old free-form cosmetic
+// strings with a structured appearance record; because those strings had no
+// defined mapping to the new option IDs, a version 1 or 2 record loads with
+// the default appearance rather than a guessed one. Older records always
+// migrate explicitly and are never reinterpreted in place.
+constexpr std::int32_t SaveSchemaVersion = 3;
 constexpr std::int32_t MinSupportedSaveVersion = 1;
 constexpr std::size_t TraitCount = 20;
 constexpr std::size_t HouseholdTemplateCount = 5;
@@ -46,7 +51,8 @@ enum class CreationError
     UnsupportedSaveVersion,
     InvalidSave,
     UnknownHousehold,
-    MalformedSaveText
+    MalformedSaveText,
+    InvalidAppearance
 };
 
 struct PERFECTWORLDCORE_API OperationResult
@@ -133,14 +139,7 @@ struct IdentityProfile
     std::string PrimaryLanguage;
 };
 
-struct CosmeticProfile
-{
-    std::string BodyPreset;
-    std::string SkinTone;
-    std::string HairStyle;
-    std::string HairColor;
-    std::string Outfit;
-};
+
 
 struct TraitAllocation
 {
@@ -170,7 +169,7 @@ struct CharacterCreationSave
     std::array<std::int32_t, TraitCount> TraitRanks{};
     std::string HouseholdTemplateId{DefaultHouseholdTemplateId};
     IdentityProfile Identity;
-    CosmeticProfile Cosmetics;
+    AppearanceRecord Appearance{AppearanceRecord::Default()};
     bool HasStarted = false;
 };
 
@@ -202,11 +201,11 @@ public:
      */
     [[nodiscard]] OpeningHomePlan ResolveOpeningHome() const;
     [[nodiscard]] const IdentityProfile& Identity() const noexcept { return Identity_; }
-    [[nodiscard]] const CosmeticProfile& Cosmetics() const noexcept { return Cosmetics_; }
+    [[nodiscard]] const AppearanceRecord& Appearance() const noexcept { return Appearance_; }
     [[nodiscard]] bool HasStarted() const noexcept { return HasStarted_; }
 
     [[nodiscard]] OperationResult SetIdentity(IdentityProfile identity);
-    [[nodiscard]] OperationResult SetCosmetics(CosmeticProfile cosmetics);
+    [[nodiscard]] OperationResult SetAppearance(AppearanceRecord appearance);
 
     [[nodiscard]] CharacterCreationSave CaptureSave() const;
     [[nodiscard]] OperationResult RestoreSave(const CharacterCreationSave& save);
@@ -219,7 +218,7 @@ private:
     std::array<std::int32_t, TraitCount> TraitRanks_{};
     std::string HouseholdTemplateId_{DefaultHouseholdTemplateId};
     IdentityProfile Identity_;
-    CosmeticProfile Cosmetics_;
+    AppearanceRecord Appearance_{AppearanceRecord::Default()};
     bool HasStarted_ = false;
 };
 } // namespace PerfectWorld

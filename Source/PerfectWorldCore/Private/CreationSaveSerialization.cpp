@@ -1,4 +1,5 @@
 #include "CreationSaveSerialization.h"
+#include "Appearance.h"
 
 #include <cctype>
 #include <cstdio>
@@ -45,6 +46,16 @@ void AppendStringField(std::string& out, std::string_view key, std::string_view 
     AppendEscaped(out, key);
     out += ": ";
     AppendEscaped(out, value);
+    out += suffix;
+}
+
+void AppendColorField(std::string& out, std::string_view key, const ColorValue& color, const char* suffix)
+{
+    AppendEscaped(out, key);
+    out += ": { \"r\": " + std::to_string(color.R);
+    out += ", \"g\": " + std::to_string(color.G);
+    out += ", \"b\": " + std::to_string(color.B);
+    out += " }";
     out += suffix;
 }
 
@@ -280,6 +291,57 @@ bool ReadIntObject(Reader& reader, std::map<std::string, std::int32_t>& out)
     }
 }
 
+/**
+ * Reads the appearance object. Its members are a mix of strings, one integer
+ * and three nested colour objects, so it gets its own reader rather than being
+ * forced into the flat string/int helpers.
+ */
+bool ReadAppearanceObject(Reader& reader, AppearanceRecord& out)
+{
+    const auto ReadColor = [&reader](ColorValue& color)
+    {
+        if (!reader.Consume('{')) return false;
+        bool sawR = false, sawG = false, sawB = false;
+        while (true)
+        {
+            std::string channel;
+            std::int32_t value = 0;
+            if (!reader.ReadString(channel) || !reader.Consume(':') || !reader.ReadInt(value)) return false;
+            if (channel == "r") { color.R = value; sawR = true; }
+            else if (channel == "g") { color.G = value; sawG = true; }
+            else if (channel == "b") { color.B = value; sawB = true; }
+            else return false;
+            if (reader.Consume(',')) continue;
+            break;
+        }
+        return reader.Consume('}') && sawR && sawG && sawB;
+    };
+
+    if (!reader.Consume('{')) return false;
+    if (reader.Consume('}')) return true;
+    while (true)
+    {
+        std::string key;
+        if (!reader.ReadString(key) || !reader.Consume(':')) return false;
+        if (key == "schemaVersion")
+        {
+            if (!reader.ReadInt(out.SchemaVersion)) return false;
+        }
+        else if (key == "faceShapeId") { if (!reader.ReadString(out.FaceShapeId)) return false; }
+        else if (key == "hairStyleId") { if (!reader.ReadString(out.HairStyleId)) return false; }
+        else if (key == "buildId") { if (!reader.ReadString(out.BuildId)) return false; }
+        else if (key == "uniformVariantId") { if (!reader.ReadString(out.UniformVariantId)) return false; }
+        else if (key == "skinTone") { if (!ReadColor(out.SkinTone)) return false; }
+        else if (key == "hairColor") { if (!ReadColor(out.HairColor)) return false; }
+        else if (key == "eyeColor") { if (!ReadColor(out.EyeColor)) return false; }
+        else return false;
+
+        if (reader.Consume(',')) continue;
+        break;
+    }
+    return reader.Consume('}');
+}
+
 std::string LookUp(const std::map<std::string, std::string>& values, const char* key)
 {
     const auto found = values.find(key);
@@ -321,12 +383,16 @@ std::string SerializeCreationSave(const CharacterCreationSave& save)
     AppendStringField(out, "homeCity", save.Identity.HomeCity, ",\n    ");
     AppendStringField(out, "primaryLanguage", save.Identity.PrimaryLanguage, "\n  },\n");
 
-    out += "  \"cosmetics\": {\n    ";
-    AppendStringField(out, "bodyPreset", save.Cosmetics.BodyPreset, ",\n    ");
-    AppendStringField(out, "skinTone", save.Cosmetics.SkinTone, ",\n    ");
-    AppendStringField(out, "hairStyle", save.Cosmetics.HairStyle, ",\n    ");
-    AppendStringField(out, "hairColor", save.Cosmetics.HairColor, ",\n    ");
-    AppendStringField(out, "outfit", save.Cosmetics.Outfit, "\n  },\n");
+    out += "  \"appearance\": {\n    \"schemaVersion\": ";
+    out += std::to_string(save.Appearance.SchemaVersion);
+    out += ",\n    ";
+    AppendStringField(out, "faceShapeId", save.Appearance.FaceShapeId, ",\n    ");
+    AppendStringField(out, "hairStyleId", save.Appearance.HairStyleId, ",\n    ");
+    AppendStringField(out, "buildId", save.Appearance.BuildId, ",\n    ");
+    AppendStringField(out, "uniformVariantId", save.Appearance.UniformVariantId, ",\n    ");
+    AppendColorField(out, "skinTone", save.Appearance.SkinTone, ",\n    ");
+    AppendColorField(out, "hairColor", save.Appearance.HairColor, ",\n    ");
+    AppendColorField(out, "eyeColor", save.Appearance.EyeColor, "\n  },\n");
 
     out += "  \"traitRanks\": {\n";
     const auto& definitions = CharacterCreator::TraitDefinitions();
@@ -402,11 +468,22 @@ OperationResult DeserializeCreationSave(std::string_view text, CharacterCreation
                     return Malformed("the identity section is malformed.");
                 }
             }
-            else if (key == "cosmetics")
+            else if (key == "appearance")
             {
-                if (!ReadStringObject(reader, cosmetics))
+                if (!ReadAppearanceObject(reader, parsed.Appearance))
                 {
                     return Malformed("the appearance section is malformed.");
+                }
+            }
+            else if (key == "cosmetics")
+            {
+                // Version 1 and 2 wrote free-form cosmetic strings. Accept and
+                // discard them: they have no defined mapping to the option IDs,
+                // so the record migrates to the default appearance instead of a
+                // guess. Rejecting the file outright would lose the whole save.
+                if (!ReadStringObject(reader, cosmetics))
+                {
+                    return Malformed("the legacy cosmetics section is malformed.");
                 }
             }
             else if (key == "traitRanks")
@@ -465,11 +542,8 @@ OperationResult DeserializeCreationSave(std::string_view text, CharacterCreation
     parsed.Identity.Pronouns = LookUp(identity, "pronouns");
     parsed.Identity.HomeCity = LookUp(identity, "homeCity");
     parsed.Identity.PrimaryLanguage = LookUp(identity, "primaryLanguage");
-    parsed.Cosmetics.BodyPreset = LookUp(cosmetics, "bodyPreset");
-    parsed.Cosmetics.SkinTone = LookUp(cosmetics, "skinTone");
-    parsed.Cosmetics.HairStyle = LookUp(cosmetics, "hairStyle");
-    parsed.Cosmetics.HairColor = LookUp(cosmetics, "hairColor");
-    parsed.Cosmetics.Outfit = LookUp(cosmetics, "outfit");
+    // `cosmetics` is the discarded version 1 and 2 section; see the reader.
+    (void)cosmetics;
 
     outSave = std::move(parsed);
     return OperationResult::Success();
