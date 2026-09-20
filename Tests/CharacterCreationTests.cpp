@@ -183,6 +183,47 @@ int main()
     Check(!IsValidSaveSlot(-1) && !IsValidSaveSlot(SaveSlotCount), "out-of-range slot rejected");
     Check(SaveSlotFileName(SaveSlotCount).empty(), "out-of-range slot has no file name");
 
+    // The opening room comes from the household template plus the Household
+    // Resources rank: five shells and five tiers, not twenty-five rooms.
+    std::set<std::string_view> tierIds;
+    for (const auto& t : c.HomeDressingTiers()) tierIds.insert(t.Id);
+    Check(tierIds.size() == 5, "five distinct dressing tiers");
+    CharacterCreator home;
+    Check(home.ResolveOpeningHome().HomeKitId == "compact_family_flat", "default household shell");
+    Check(home.ResolveOpeningHome().ResourceRank == 0, "default resources rank");
+    Check(home.ResolveOpeningHome().DressingTierId == "everyday", "rank 0 is the everyday tier");
+    for (std::int32_t rank = 0; rank <= 4; ++rank)
+    {
+        Check(home.SetTraitRank("household_resources", rank).Succeeded(), "set resources rank");
+        const auto plan = home.ResolveOpeningHome();
+        Check(plan.ResourceRank == rank, "plan reports the resources rank");
+        Check(plan.DressingTierId == home.HomeDressingTiers()[static_cast<std::size_t>(rank)].Id,
+              "tier follows the resources rank");
+        Check(!plan.DressingAdds.empty() && !plan.DressingTierName.empty(), "tier is described");
+    }
+    // The shell follows the household; the tier follows the rank. They are independent.
+    Check(home.SetHouseholdTemplate("appointed_guardian").Succeeded(), "switch household for plan");
+    Check(home.ResolveOpeningHome().HomeKitId == "staff_quarters", "shell follows household");
+    Check(home.ResolveOpeningHome().ResourceRank == 4, "switching household keeps the rank");
+    Check(home.SetTraitRank("household_resources", 1).Succeeded(), "lower resources rank");
+    Check(home.ResolveOpeningHome().HomeKitId == "staff_quarters", "lowering rank keeps the shell");
+    Check(home.ResolveOpeningHome().DressingTierId == "settled", "lowering rank changes the tier");
+    Check(home.Review().HouseholdTemplateId == "appointed_guardian", "review agrees with the plan");
+
+    // Every household and rank combination resolves to a named shell and tier.
+    for (const auto& h : c.HouseholdDefinitions())
+    {
+        CharacterCreator each;
+        Check(each.SetHouseholdTemplate(h.Id).Succeeded(), "each household selectable");
+        for (std::int32_t rank = 0; rank <= 4; ++rank)
+        {
+            Check(each.SetTraitRank("household_resources", rank).Succeeded(), "each rank settable");
+            const auto plan = each.ResolveOpeningHome();
+            Check(plan.HomeKitId == h.HomeKitId && !plan.HomeKitName.empty(), "combination names a shell");
+            Check(!plan.DressingTierId.empty(), "combination names a tier");
+        }
+    }
+
     // The household is locked once life begins, like every other origin field.
     CharacterCreator committed;
     Check(committed.ApplyPreset("balanced_scholar").Succeeded(), "preset for lock test");

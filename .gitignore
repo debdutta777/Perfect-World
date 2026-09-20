@@ -12,3 +12,6 @@ __pycache__/
 .env
 .env.*
 !.env.example
+
+# Imported art kits stay local for now; see STATUS for the LFS decision.
+Content/Fab/

@@ -46,6 +46,23 @@ constexpr std::array<HouseholdDefinition, HouseholdTemplateCount> Households{{
      "Negotiated trust and formal responsibility"},
 }};
 
+// Indexed by Household Resources rank. Each tier states what it adds to the
+// one below it. Rank 0 is a decent working home, never deprivation, so the
+// opening scene never uses poverty as visual shorthand.
+constexpr std::array<HomeDressingTier, HomeDressingTierCount> DressingTiers{{
+    {"everyday", "Everyday",
+     "A working home kept in order: a bed, a study corner shared with the household, a fan, "
+     "and storage the family looks after together."},
+    {"settled", "Settled",
+     "Adds a desk the teenager does not have to clear at mealtimes, and a shelf kept for school books."},
+    {"provided", "Provided",
+     "Adds steady light for late study, better ventilation, and a drawer of their own that closes properly."},
+    {"comfortable", "Comfortable",
+     "Adds a partitioned study space that stays quiet in the evening, and a computer the household shares."},
+    {"ample", "Ample",
+     "Adds a room the teenager does not share, dependable power through a cut, and a computer that is theirs."},
+}};
+
 constexpr std::array<std::int32_t, TraitCount> BalancedScholarRanks{
     1, 1, 1, 3, 2,
     2, 1, 2,
@@ -244,6 +261,31 @@ std::int32_t CharacterCreator::GetTraitRank(std::string_view traitId) const noex
 {
     const std::int32_t index = FindTraitIndex(traitId);
     return index < 0 ? -1 : TraitRanks_[static_cast<std::size_t>(index)];
+}
+
+const std::array<HomeDressingTier, HomeDressingTierCount>& CharacterCreator::HomeDressingTiers() noexcept
+{
+    return DressingTiers;
+}
+
+OpeningHomePlan CharacterCreator::ResolveOpeningHome() const
+{
+    const HouseholdDefinition& Chosen = Household();
+    // Ranks are validated on every edit, so this only guards against a rank
+    // arriving from a future trait set with a wider range.
+    const std::int32_t Rank = std::clamp(GetTraitRank(HouseholdResourcesTraitId), 0, MaxRank);
+    const HomeDressingTier& Tier = DressingTiers[static_cast<std::size_t>(Rank)];
+
+    OpeningHomePlan Plan;
+    Plan.HouseholdTemplateId = Chosen.Id;
+    Plan.HouseholdName = Chosen.DisplayName;
+    Plan.HomeKitId = Chosen.HomeKitId;
+    Plan.HomeKitName = Chosen.HomeKitName;
+    Plan.ResourceRank = Rank;
+    Plan.DressingTierId = Tier.Id;
+    Plan.DressingTierName = Tier.DisplayName;
+    Plan.DressingAdds = Tier.Adds;
+    return Plan;
 }
 
 const HouseholdDefinition& CharacterCreator::Household() const noexcept

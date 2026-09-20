@@ -22,6 +22,8 @@ constexpr std::int32_t SaveSchemaVersion = 2;
 constexpr std::int32_t MinSupportedSaveVersion = 1;
 constexpr std::size_t TraitCount = 20;
 constexpr std::size_t HouseholdTemplateCount = 5;
+constexpr std::size_t HomeDressingTierCount = 5;
+constexpr std::string_view HouseholdResourcesTraitId = "household_resources";
 constexpr std::int32_t SaveSlotCount = 3;
 constexpr std::int32_t MaxRank = 4;
 constexpr std::int32_t MaxRankFourTraits = 4;
@@ -76,6 +78,36 @@ struct HouseholdDefinition
     std::string_view HomeKitId;
     std::string_view HomeKitName;
     std::string_view StoryEmphasis;
+};
+
+/**
+ * How far the opening home is furnished, derived from the Household Resources
+ * rank. Every tier describes what it adds to a decent working home: rank 0 is
+ * an ordinary baseline, never deprivation, so the opening scene never uses
+ * poverty as visual shorthand.
+ */
+struct HomeDressingTier
+{
+    std::string_view Id;
+    std::string_view DisplayName;
+    std::string_view Adds;
+};
+
+/**
+ * The opening room to build: the shell the household template calls for, and
+ * how far it is furnished. Five shells and five tiers resolved at run time, so
+ * the content set stays ten authored pieces rather than twenty-five rooms.
+ */
+struct OpeningHomePlan
+{
+    std::string_view HouseholdTemplateId;
+    std::string_view HouseholdName;
+    std::string_view HomeKitId;
+    std::string_view HomeKitName;
+    std::int32_t ResourceRank = 0;
+    std::string_view DressingTierId;
+    std::string_view DressingTierName;
+    std::string_view DressingAdds;
 };
 
 struct IdentityProfile
@@ -136,6 +168,7 @@ public:
     [[nodiscard]] static const std::array<TraitDefinition, TraitCount>& TraitDefinitions() noexcept;
     [[nodiscard]] static const std::array<HouseholdDefinition, HouseholdTemplateCount>& HouseholdDefinitions() noexcept;
     [[nodiscard]] static const HouseholdDefinition* FindHousehold(std::string_view householdId) noexcept;
+    [[nodiscard]] static const std::array<HomeDressingTier, HomeDressingTierCount>& HomeDressingTiers() noexcept;
     [[nodiscard]] static std::int32_t CostForRank(std::int32_t rank) noexcept;
 
     [[nodiscard]] OperationResult SetTraitRank(std::string_view traitId, std::int32_t rank);
@@ -147,6 +180,13 @@ public:
     [[nodiscard]] CreationReview Review() const;
     [[nodiscard]] std::int32_t GetTraitRank(std::string_view traitId) const noexcept;
     [[nodiscard]] const HouseholdDefinition& Household() const noexcept;
+
+    /**
+     * Which opening room this creation calls for. Combines the chosen household
+     * template with the current Household Resources rank. Valid at any time, so
+     * the creator can preview it before life begins.
+     */
+    [[nodiscard]] OpeningHomePlan ResolveOpeningHome() const;
     [[nodiscard]] const IdentityProfile& Identity() const noexcept { return Identity_; }
     [[nodiscard]] const CosmeticProfile& Cosmetics() const noexcept { return Cosmetics_; }
     [[nodiscard]] bool HasStarted() const noexcept { return HasStarted_; }
