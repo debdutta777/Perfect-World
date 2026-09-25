@@ -1,3 +1,5 @@
+> **Archived record, 2026-09-23.** This records decisions taken on the early Sonnet design review, when the project was a mobile-first, isometric, single-district game. Decisions that still hold have been carried into the current documents. The current decision log is `GAME_PLAN.md` §10, and anything here that conflicts with it is superseded.
+
 # Review decisions
 
 Claude Sonnet produced SONNET_DESIGN_REVIEW.md and the first production-plan draft. Review suggestions are proposals; this document records which govern the starter.

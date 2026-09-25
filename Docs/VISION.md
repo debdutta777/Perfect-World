@@ -49,14 +49,21 @@ What follows from that premise, practically:
 
 ## Reading order
 
+**Updated 2026-09-23** to add `GAME_PLAN.md` as the entry point directly below this document, plus `SYSTEMS.md`, `ASSET_PIPELINE.md`, `DEVELOPMENT_WORKFLOW.md` and `ROADMAP.md`. This is a table update only; nothing above this section changed.
+
 | Document | Authority over |
 |---|---|
 | `VISION.md` | This. The North Star |
+| `GAME_PLAN.md` | The master plan: what the game is, its full flow, presentation, milestones, decisions |
+| `SYSTEMS.md` | Every system: data it owns, commands, events, dependencies, save data |
 | `GLOBAL_WORLD.md` | Nations, rankings, competitions, global tension |
 | `PATHS_AND_PROGRESSION.md` | Life paths and their ladders |
 | `ALTERNATE_WORLD.md` | Ordinary life simulation, the world living without the player |
 | `AWAKENING_AND_EXAM.md` | Awakening, the tutorial dungeon, the tower examination |
 | `SCHOOL_AND_PROGRESSION.md` | Classroom, assessment, latent stat growth |
+| `ASSET_PIPELINE.md` | Voxel placeholder style, asset IDs, the swap contract, both import routes |
 | `MASTER_PLAN.md` | Architecture, risks, AI capability split, build order |
+| `DEVELOPMENT_WORKFLOW.md` | How the owner and AI agents build, verify and record work |
+| `ROADMAP.md` | Every milestone broken into bounded, verifiable steps |
 | `CHARACTER_CREATION.md` | The creation contract |
 | `INDIA_WORLD_BIBLE.md` | Kolkata, West Bengal, cultural authority |

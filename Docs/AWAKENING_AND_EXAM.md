@@ -16,7 +16,7 @@ The game never states this. It simply lets the player live those sixteen years' 
 
 | Phase | What the player does | Length |
 |---|---|---|
-| **Latent life** | Ordinary school life in Nabapara. No powers. Every meaningful action feeds latent stats. The projection terminal shows what they are becoming. | The bulk of the game |
+| **Latent life** | Ordinary school life in Nabapara. No powers. Every meaningful action feeds latent stats. The projection terminal shows what they are becoming. | The bulk of the game *(note, 2026-09-23: under `GAME_PLAN.md` §4 the game is a full life, roughly 60–120 hours; the Class XI latent-life year is one phase of it, roughly 12–20 hours. "The bulk of the game" described this document's own three/four-phase scope, not the whole life that now follows the examination — see `GAME_PLAN.md` §4 Phases 6–10.)* |
 | **The tutorial dungeon** | A supervised, sanctioned F-rank instance in the school. Completing it triggers awakening. Latent stats plus conduct inside decide the awakened profile. | One day |
 | **The ten days** | A hard countdown. Awakened but untrained, with a fixed deadline and everything still to lose. | Exactly ten in-game days |
 | **The examination** | The tower climb. Then the results, and the doors they open or close. | One event, then consequences |
@@ -44,6 +44,8 @@ Creation-point traits set the starting position. They are a head start of roughl
 ## The Aptitude Projection
 
 At school there is a terminal — bureaucratic, unglamorous, queued for — that reads a student's latent stats and prints a projected awakened profession.
+
+**Note, 2026-09-23.** "Prints a projected awakened profession" describes this document's original single-outcome framing. `PATHS_AND_PROGRESSION.md`'s legibility section supersedes it: the projection reports evidence per path, including which paths it has not yet observed enough to speak to, rather than collapsing to one most-likely profession. The confidence-band behaviour described below is unchanged; what changed is that the output is a per-path evidence picture, not a single named profession.
 
 This is the game's most important interface, and it is deliberately imperfect:
 
@@ -114,7 +116,7 @@ There is no losing the game. There is only a life that went differently.
 - **The examination cannot be failed out of existence.** A poor rank closes prestigious doors and opens humbler ones. There is always a next thing.
 - **Soft failures are real and cost time**, which is the only resource that never comes back: a failed subject, an injury that removes training days, a friendship strained past easy repair.
 - **Real-world danger can genuinely harm the player**, up to hospitalisation and lasting consequence, but not permadeath. The existing rule stands.
-- **World disasters are not the player's fault and cannot be prevented by them.** They are weather, not punishment.
+- **World disasters are not the player's fault.** They are weather, not punishment. *(Refined, 2026-09-23: the scheduled **onset** of a hazard cannot be prevented — the fixed timeline in "The world runs on its own" above stands. Its **consequences** — damage, casualties, response effectiveness, fallout — are not fixed, and can be changed by preparation, expertise and the player's own action. The event happening is weather; how much it costs is not.)*
 
 ## What this changes in existing documents
 
@@ -129,10 +131,10 @@ These are corrections to be made, not open questions:
 
 ## Open questions
 
-Recorded so they are not silently decided by whoever implements first:
+Recorded so they are not silently decided by whoever implements first. **`GAME_PLAN.md` §12 is the master list of open owner questions.** This list keeps only the awakening- and examination-specific detail, and anything still open here is to be raised through §12. The biggest related question — whether the awakening itself can be refused — is `GAME_PLAN.md` §12 question A.
 
-- Is the examination annual and repeatable, or once per student?
-- How many in-game days of latent life precede the tutorial dungeon?
-- Does the awakened profession harden at the examination, or stay fluid for life?
-- What happens socially and mechanically to students who rank at the very bottom?
-- Are there students who were awakened early, illegally or by accident, and is that a story?
+- ~~Is the examination annual and repeatable, or once per student?~~ **Answered, 2026-09-23:** annual and repeatable, up to age twenty; the examination can also be deferred or declined, with apprenticeships and adult bridges as alternative qualification routes. See `GAME_PLAN.md` §1 (the freedom acceptance rule) and the ladder rules in `PATHS_AND_PROGRESSION.md`.
+- How many in-game days of latent life precede the tutorial dungeon? *(Answered by `GAME_PLAN.md` §4 Phase 2: the Class XI year, roughly thirty-four weeks, Monday 2 June 2042 to Friday 23 January 2043.)*
+- ~~Does the awakened profession harden at the examination, or stay fluid for life?~~ **Answered, 2026-09-23:** it does not harden into one profession. Results produce a portfolio of discipline credentials, scholarship and licence eligibility, and a public national rank — plural and revisable, not a single hardened outcome. See `GAME_PLAN.md` §4 Phase 5 and `PATHS_AND_PROGRESSION.md`.
+- What happens socially and mechanically to students who rank at the very bottom? *(Partly answered, 2026-09-23: `GAME_PLAN.md` §4 Phase 5 requires that results always show actionable offers and "a usable future after a poor result". The specific social and institutional consequences are still open.)*
+- Are there students who were awakened early, illegally or by accident, and is that a story? *(Partly answered: `GLOBAL_WORLD.md` §6 tension 3, "the awakening-age dispute", makes covert early awakening by some nations a live geopolitical scandal. Whether an individual early-awakened student appears as a character is still open.)*

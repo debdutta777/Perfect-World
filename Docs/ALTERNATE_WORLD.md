@@ -141,7 +141,9 @@ The model. Four granularities, player-controlled, always droppable.
 - **Interrupts have a budget.** At most one unplanned interrupt per routine week, or the plan means nothing.
 - **Mastery buys compression.** Routine work you have mastered resolves without foreground play at full value, per `SCHOOL_AND_PROGRESSION.md`.
 
-**Budget for a full life, 16 → 60:** ~176 seasons, ~2,300 weeks, of which the player plays perhaps **250–400 scene days** across 60–120 hours. The rest is planned, resolved and read.
+**Budget for a full life, 16 → 60:** ~176 seasons and ~2,300 weeks, of which the player plays perhaps **150–250 scene days averaging 15–25 minutes**. The rest is planned, resolved and read.
+
+*Corrected 2026-09-23.* An earlier figure of 250–400 scene days at 20–60 minutes each came to 83–400 hours before any routine planning, which cannot fit a 60–120 hour life. The authoritative playtime budget, split by scenes, routine resolution, travel, reading and administration, is in `GAME_PLAN.md` §7 and gets reconciled against measured runs rather than assumed.
 
 **Ageing** is calendar-driven. Physical peak ~22–32, declining slowly; cognitive and social capacity rising into the 50s; accumulated relationships and standing rising throughout. **An older character is not a worse character — they are a different one.** The endgame of a life is not a stat total; it is what exists because you were here.
 
@@ -153,16 +155,20 @@ Four tiers. This is what makes thirty nations affordable.
 |---|---:|---|---|
 | **0 — Named cast** | ~50 | Full records: schedule, career, relationships, goals, health, finances | Weekly |
 | **1 — Significant** | ~500 | Career track, key stats, location, major life events | Monthly |
-| **2 — Cohort** | ~50k / nation | Statistical distributions only. **No individual exists until met** | Seasonally, in aggregate |
+| **2 — Cohort** | ~50k / nation | Statistical distributions only. **No individual exists until first consequential reference** | Seasonally, in aggregate |
 | **3 — Population** | millions | Aggregate numbers: employment, migration, casualties, sentiment | Annually |
+
+*Clarified 2026-09-23.* These tiers measure **simulation fidelity**, which rises and falls. They do not measure identity. Separately, about 240 persistent global notables (3–8 per nation, `GLOBAL_WORLD.md` §5) hold stable identities at significant fidelity even though the player never meets most of them.
 
 ### Crystallisation
 
-The critical trick. A Tier 2 person does not exist until the player meets them. At that moment the game **generates them consistent with the distribution they were drawn from**, backfills a plausible history from the world's actual event log — *this district flooded in year three, so she moved; that school closed, so she transferred* — and promotes them to Tier 1.
+The critical trick. A cohort member does not exist as an individual until their **first consequential reference**: named in dialogue, a news story, a ranking table, a letter, a family history, or any record the player can see. At that moment the game **generates them consistent with the distribution they were drawn from**, backfills a plausible history from the world's actual event log — *this district flooded in year three, so she moved; that school closed, so she transferred* — and records a permanent identity.
 
-They then persist forever. The world is therefore **consistent in retrospect** without ever having been simulated in full.
+*Corrected 2026-09-23.* This used to say crystallisation happens when the player *meets* someone. That is too late. Competition result tables and news name people remotely, and a champion named in yesterday's rankings must not pick up a contradictory history when the player later meets them.
 
-Promotion and demotion are automatic: an NPC the player has not interacted with for two years demotes to Tier 2 with their state summarised, and re-crystallises identically if met again, because the summary is deterministic.
+**Identity is permanent; fidelity is not.** Once recorded, a person's identity and history never change. The world is therefore **consistent in retrospect** without ever having been simulated in full.
+
+Fidelity changes automatically. Someone the player has not dealt with for two years drops to a summarised state. Their recorded identity and history stay intact, and they return to full fidelity with the same history when they matter again, because the summary is deterministic.
 
 ### Cost
 

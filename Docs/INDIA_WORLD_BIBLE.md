@@ -167,7 +167,7 @@ Create a modular 4 m structural bay, corridor railing, classroom wall/door, scie
 
 ### Character lineup
 
-Produce the player at age sixteen plus the eight named cast members in neutral front/side/back, five expression busts, school/work outfit, rain variant, footwear, bag/held items, and skin/hair material references. Show variation in height, frame, complexion, facial structure, hair texture, age, and economic context without exaggeration. Final anatomy must work at the isometric camera and portrait crop.
+Produce the player at age sixteen plus the eight named cast members in neutral front/side/back, five expression busts, school/work outfit, rain variant, footwear, bag/held items, and skin/hair material references. Show variation in height, frame, complexion, facial structure, hair texture, age, and economic context without exaggeration. Final anatomy must work in first person (faces readable at conversation distance, hands and held items as a viewmodel), in the switchable third-person view, and in portrait crop. *(Updated 2026-09-23: the camera is first person by default, switchable to third, per `GAME_PLAN.md` §3; this line previously said isometric. The references here are for the final art at milestone M9; development-time characters are block characters per `ASSET_PIPELINE.md`.)*
 
 ### Gate kit: fractured infrastructure
 

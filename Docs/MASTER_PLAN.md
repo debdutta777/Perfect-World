@@ -9,6 +9,8 @@
 > The concern that a solo part-time developer cannot build a thirty-nation open world was raised once and the owner decided against it. It is not restated further; the global documents are written to make that vision work rather than to argue with it.
 >
 > **What survives from this document unchanged and still binding:** every architecture decision in section 4, the AI capability split in section 5, the five risks in section 6, and the immediate build order in section 7. Those are independent of scope and become *more* important as scope grows, not less. Sections 2 and 3 — the district caps, the 6–8 hour target, the "end at the examination" cut list — are superseded and are kept only as the record of a rejected alternative.
+>
+> **Addendum, 2026-09-23.** `GAME_PLAN.md` is now the master plan and the single entry point; where anything here conflicts with it, `GAME_PLAN.md` wins. Section 4's architecture decisions are restated as binding on everything in `GAME_PLAN.md` §6, and their full detail is migrating to `Docs/SYSTEMS.md` — this document is no longer their sole home, only their original record. The "Characters" row of section 4 anticipated "low-poly placeholders until the rig exists"; the owner has since made that concrete as voxel block visuals for the whole of development (`GAME_PLAN.md` §3, §8 M9), specified in `Docs/ASSET_PIPELINE.md`. Section 7's immediate build order is superseded by `Docs/ROADMAP.md`, which breaks the current milestones (`GAME_PLAN.md` §8) into bounded steps.
 
 ## 1. The honest position
 

@@ -1,5 +1,13 @@
 # Perfect World: Awakening — Game Design
 
+> **Superseded, 2026-09-23.** `Docs/GAME_PLAN.md` is now the master plan and the single entry point; where anything below conflicts with it, `GAME_PLAN.md` wins and this document is to be read as history, not as the current plan. Specifically superseded:
+>
+> - **The opening arc, "The First Door"** (accidental Gate survival, below) — replaced by the Unified Awakening and the school tutorial dungeon. See `Docs/AWAKENING_AND_EXAM.md`, which is the authority, and `GAME_PLAN.md` §4 Phase 3.
+> - **Presentation** — the "stylized 3D geometry... fixed isometric camera" description below (see "Art and audio direction") and the "mobile-first" framing (see "Product statement") are both superseded by `GAME_PLAN.md` §3: voxel block visuals for the whole of development, first-person camera by default and switchable to third person, Windows first with Android as a later target. Final art direction is in `ART_DIRECTION.md`; development-time visuals are in `Docs/ASSET_PIPELINE.md`.
+> - **World and lifecycle scope** — the "Vertical slice content contract" numbers below (6–8 hour slice, 0.35–0.5 km² district, 8 named NPCs, "out of slice" list) described an earlier, smaller-scope plan. `GAME_PLAN.md` §1, §4 and §7 supersede it with the current world-level, full-life scope (60–120 hours, thirty nations, ten paths).
+>
+> **Still valid**, as detail underneath `GAME_PLAN.md`'s concepts and pending confirmation in `Docs/SYSTEMS.md`: the design pillars' intent (folded into `GAME_PLAN.md`'s six pillars); the needs/condition mechanics (energy, hunger, health, stress); the attributes-and-skills split; the Tattva definitions (now also in `GAME_PLAN.md` §2); household and money detail, including the ₹ price ranges; the relationships/reputation model; the Gate mission grammar and the combat control set, weapon families and the Broken Guardian boss concept; and the Nabapara district layout sketch as a reference for later level design. Detailed, current system specs going forward belong in `Docs/SYSTEMS.md`.
+
 **Document status:** production plan and target design. It describes the intended game and vertical slice. A code scaffold may demonstrate data structures, validation, saving, or a small playable room; that scaffold is not evidence that the systems below are content-complete.
 
 ## Product statement
@@ -115,7 +123,9 @@ The desktop control set supports move, camera/aim, light action, heavy/context a
 
 The first boss, the Broken Guardian, has three mechanics: telegraphed sweeps, breakable arena anchors, and a stability phase where fighting alone fails. The player must read the space and use an environmental stabilizer taught earlier. A no-damage clear is optional; understanding is required.
 
-## Opening arc: The First Door
+## Opening arc: The First Door (superseded, 2026-09-23 — see notice at top of document)
+
+**This entire arc is superseded by the Unified Awakening and the school tutorial dungeon in `Docs/AWAKENING_AND_EXAM.md`.** It is kept below as the historical record of the accidental-Gate opening, not as a current design.
 
 The revised opening is school-centered:
 

@@ -33,3 +33,9 @@ Licence text for the Kenney pack is inside the archive as `License.txt` and was 
 No footlocker or trunk mesh was found in either pack. The children's home dormitory needs one, so it is either a substitute (a drawer cabinet or crate) or the first bespoke mesh to author.
 
 These are **placeholder greybox props, not final art**. They are Western-styled low-poly furniture and do not depict a Kolkata home. They exist to prove the room-loading and traversal systems before any setting-accurate art is commissioned, and every one of them is expected to be replaced. Do not treat their look as art direction; ART_DIRECTION.md remains authoritative.
+
+## Superseded — 2026-09-23: block placeholders replace the downloaded packs as the development look
+
+The owner decided the whole game is developed with voxel block visuals — cuboids with pixel textures, generated from data — until the game is complete (GAME_PLAN.md §3, §8 M9). This supersedes the two downloaded CC0 packs above as the development-time look: greyboxing now uses generated block placeholders, not this Western-styled furniture. `ASSET_PIPELINE.md` decides whether the packs are kept as local reference material or removed; this document is not the authority on that call.
+
+Provenance rules for the real art that eventually replaces the blocks — Blender/FBX/GLB sources and AI-generated sources, arriving through a drop folder or editor import — live in `ASSET_PIPELINE.md`, not here. Future entries in this file should record specific delivered images and models, the way the entries above do; the pipeline-level provenance policy belongs in `ASSET_PIPELINE.md`.

@@ -1,6 +1,8 @@
 # Small, testable development steps
 
-Latest working preference: GPT-5.6 Sol for ordinary work, Claude Sonnet for design and selective review, Claude Opus only for the hardest issues. Each step should produce a reviewable change and one clear verification result. Stop expanding scope when its acceptance criterion is met.
+> **Superseded, 2026-09-23.** `Docs/ROADMAP.md` is now the only live step queue — it fully replaces the table below, which is kept as history and is no longer to be worked from. `Docs/GAME_PLAN.md` is the master plan behind it. The model-routing line immediately below this notice is also superseded: the current routing (`GAME_PLAN.md` §9) is Claude integrating and implementing in the repository, GPT-6 (`gpt-6-astra` via Codex) critiquing design, and GPT-5.6 Sol handling routine implementation when used — not the "GPT-5.6 Sol default, Sonnet for design/review, Opus for hardest issues" split this document originally recorded. `Docs/DEVELOPMENT_WORKFLOW.md` is authoritative on how work gets done.
+
+Latest working preference (superseded — see notice above): GPT-5.6 Sol for ordinary work, Claude Sonnet for design and selective review, Claude Opus only for the hardest issues. Each step should produce a reviewable change and one clear verification result. Stop expanding scope when its acceptance criterion is met.
 
 **Queue rewritten 2026-09-20** to match the owner's new game-flow decision: Title screen (New Game / Load Game / Settings / Exit) → New Game opens the appearance editor → point allocation including household → play starts in the room the confirmed household template and Household Resources rank determine. This reorders and re-scopes steps 02–04 below; steps 05 onward are renumbered but otherwise unchanged in intent.
 

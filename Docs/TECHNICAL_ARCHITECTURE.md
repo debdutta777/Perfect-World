@@ -2,11 +2,13 @@
 
 Status: target architecture plus a deliberately small implemented creation core. Read BUILD_GUIDE.md for actual build evidence. This document does not claim the simulation, combat, school, rendering pipeline or platform ports already exist.
 
+**Notice, 2026-09-23.** `Docs/GAME_PLAN.md` is the master plan and its authority table does not list this document by name; system design detail is now owned by `Docs/SYSTEMS.md`, and the binding architecture decisions live in `MASTER_PLAN.md` §4 and `GAME_PLAN.md` §6. This document is kept for platform, engine-version and packaging notes, and its presentation-layer and camera sections below are updated to match `GAME_PLAN.md` §3. Where this document's system-design content and `SYSTEMS.md` diverge, `SYSTEMS.md` wins.
+
 ## Decision and constraints
 
 Use the installed Unreal Engine 5.7 release and C++ for authoritative rules, state transitions and budget validation. Use Blueprints for presentation, authored events and rapid tuning after their underlying interfaces stabilize. The portable creation rules can run in a small standalone test executable; Unreal exposes the same rules to UI. Do not duplicate budget math in widgets.
 
-Windows is the initial development and test host. Android is an early performance acceptance target because the supplied concept is mobile-first. iOS and consoles are future feasibility milestones requiring platform tooling, device testing and distribution access. C++ portability helps reuse rules but does not make a game automatically cross-platform. No multiplayer, cross-save service, account system or live-service dependency is included in the first slice.
+Windows is the initial development and test host, per the owner's decision log (`GAME_PLAN.md` §10, 2026-09-20: "Windows first, Android eventually"). Android remains a later performance-acceptance target, but it is not the primary design driver — the "mobile-first" framing of earlier drafts is superseded. iOS and consoles are future feasibility milestones requiring platform tooling, device testing and distribution access. C++ portability helps reuse rules but does not make a game automatically cross-platform. No multiplayer, cross-save service, account system or live-service dependency is included in the first slice.
 
 ## Layers and ownership
 
@@ -23,20 +25,26 @@ Windows is the initial development and test host. Android is an early performanc
 
 First keep these as folders and clean interfaces in one game module. Extract plugins only when a boundary has independent content, tests and ownership. Splitting every feature into a plugin now increases build and asset-management overhead without proving a benefit.
 
-## Presentation layer: 2D now, 3D later (design decision, 2026-09-20)
+## Presentation layer: block now, final stylised 3D later (updated 2026-09-23; superseded "2D now, 3D later" decision of 2026-09-20)
 
-This extends, rather than replaces, the target architecture: gameplay, simulation, and world state stay in 3D world space and stay authoritative, exactly as before. What changes is that **how a character is displayed is a separate, replaceable layer**, not an assumption baked into the simulation. Today that layer composes a 2D anime-styled sprite/paper representation (driven by the appearance parameter set described in CHARACTER_CREATION.md) positioned and oriented in the 3D world; later it can be a fully skeletal 3D mesh rig driven by the same parameter set, with no change to anything below the presentation layer.
+**Superseded, 2026-09-23.** The 2D-now/3D-later decision this section originally recorded is replaced by the owner's voxel-block decision (`GAME_PLAN.md` §3): every visual, characters included, is built from blocks — ordinary Unreal static and instanced meshes with nearest-filtered pixel textures — for the whole of development, and real stylised 3D art is integrated only after the game is complete, at milestone M9. There was never a shipped 2D sprite implementation to retire; this section is updated in place rather than kept as a superseded subsection, because the architectural principle below is unchanged and still binding, only its two concrete endpoints changed.
 
-The rule this buys, stated plainly so it cannot be silently violated: **nothing in the rules or simulation may depend on whether a character is currently drawn as a sprite or a mesh.** Concretely:
+This extends, rather than replaces, the target architecture: gameplay, simulation, and world state stay in 3D world space and stay authoritative, exactly as before. What changes is that **how a character is displayed is a separate, replaceable layer**, not an assumption baked into the simulation. During development that layer is a block character — cuboid body parts attached to the bones of the standard Unreal humanoid skeleton — driven by the appearance parameter set described in CHARACTER_CREATION.md; at M9 it becomes the final stylised, skinned 3D mesh rig driven by the same parameter set, on the same skeleton, with no change to anything below the presentation layer. Because both the block and final characters share one skeleton from day one, animations authored during development play on both without rework.
 
-- Position, collision, navigation, interaction, and simulation state live in 3D world space regardless of display mode.
-- A `ICharacterDisplay`-style interface (name indicative, not yet implemented) sits between world presentation and the actual drawn representation. Simulation and gameplay code call through this interface (e.g. "play this animation state," "face this direction") and never touch a sprite component or a skeletal mesh component directly.
+The rule this buys, stated plainly so it cannot be silently violated: **nothing in the rules or simulation may depend on whether a character is currently drawn in blocks or in final art.** Concretely:
+
+- Position, collision, navigation, interaction, and simulation state live in 3D world space regardless of display mode, and are defined in data against the asset ID — never inferred from the block mesh geometry itself (`GAME_PLAN.md` §3, rule 3).
+- A `ICharacterDisplay`-style interface (name indicative, not yet implemented) sits between world presentation and the actual drawn representation. Simulation and gameplay code call through this interface (e.g. "play this animation state," "face this direction") and never touch a mesh component directly.
 - The appearance parameter set (CHARACTER_CREATION.md) is the only appearance data gameplay code is allowed to read. It is display-mode-neutral by construction.
-- Save data stores the appearance parameter set and world-space transforms, never a sprite asset reference or a mesh asset reference as the source of truth.
+- Save data stores the appearance parameter set and world-space transforms, never a specific mesh asset reference as the source of truth; gameplay references the stable asset ID, never a file (`GAME_PLAN.md` §2, "Asset ID").
 
-What this buys later: moving to full 3D character display becomes a presentation-layer swap — implement the interface against skeletal meshes and retire the sprite implementation — not a rewrite of simulation, saves, or rules. It also means the two can coexist during a transition (some characters shown as sprites, others as meshes) without branching gameplay logic, since gameplay never queries which one is active.
+What this buys at M9: moving to final character display becomes a presentation-layer swap — point the same asset IDs at final meshes and retire the block placeholders — not a rewrite of simulation, saves, or rules. It also means the two can coexist during the swap (some assets replaced, others still block) without branching gameplay logic, since gameplay never queries which one is active. `Docs/ASSET_PIPELINE.md` is authoritative on the block style guide, the placeholder generator and the swap contract.
 
 This decision does not change the "World presentation, planned" row above; it specifies what that row's ownership boundary must look like once built.
+
+## Camera: first person, switchable to third (added 2026-09-23)
+
+Per `GAME_PLAN.md` §3: first person is the default for walking, interacting, working, studying and fighting, and third person is available at any time by toggle — it is how the player sees their own character, so it must be fully supported rather than a debug view. Some contexts choose the camera deliberately (an orbit camera for the appearance editor; authored-scene framing; mirrors and shop windows rendering the player in first person). **Any earlier reference in this project's documents to a fixed isometric camera or an isometric pawn is superseded.** First person requires a viewmodel (block arms and hands, held items, later final-art arms and hands), full interiors with ceilings, NPC faces readable at conversation distance, and a look-at interaction model. Comfort options — field-of-view slider, head bob off by default, reduced camera motion, crosshair/interaction-prompt options, subtitles — are in scope from the start, not a later accessibility pass.
 
 ## Creation transaction
 
@@ -54,7 +62,7 @@ A scheduled event has stable ID, due minute, priority, prerequisite, payload and
 
 ## NPC and city scaling (planned)
 
-Only near-camera NPCs need a full display representation (2D composed sprite today, skeletal mesh later — see the presentation-layer decision above), animation/state, path following and interaction components. Other residents have schedule records, coarse location, relationship state and story flags. Upgrade a resident to an Actor when relevant and reconcile back to its record when released. A named character keeps the same stable identity through both representations, and through a future swap from sprite to mesh display.
+Only near-camera NPCs need a full display representation (block character today, final stylised skeletal mesh later — see the presentation-layer decision above), animation/state, path following and interaction components. Other residents have schedule records, coarse location, relationship state and story flags. Upgrade a resident to an Actor when relevant and reconcile back to its record when released. A named character keeps the same stable identity through both representations, and through the future swap at M9 from block to final mesh display.
 
 Prototype a modest district with level instances/interior loads and explicit travel transitions. Gate maps are separate encounter spaces. Evaluate World Partition when actual district size and streaming measurements justify it, rather than using a national continuous map as the starting architecture. India expands by authored cities, regional event packs and a national travel graph. Trains or flights can be time-and-money transitions, not kilometers of empty terrain.
 
@@ -78,7 +86,7 @@ Save includes schema version, build identifier, origin and draft distinction, ga
 
 ## Rendering and cross-platform plan
 
-Art target: stylized low-poly 3D environments and characters, fixed isometric camera, painted portraits, restrained material complexity. Prototype baked/precomputed light for the smallest mobile tier with controllable time-of-day variants; use a simplified dynamic light only where tested. Day/night art may require separate lighting states or a hybrid solution, so do not silently promise both fully baked lighting and arbitrary dynamic sun positions.
+**Updated 2026-09-23.** Art target during development: voxel block environments and characters (see the presentation-layer decision above and `Docs/ASSET_PIPELINE.md`), painted/pixel textures at low resolution, restrained material complexity, camera first person by default and switchable to third person (see "Camera" above) — not the fixed isometric camera this section previously named. Painted portraits stay as before. The final stylised low-poly 3D art at M9 inherits this same rendering plan; only the meshes and textures change, per the swap contract. Prototype baked/precomputed light for the smallest mobile tier with controllable time-of-day variants; use a simplified dynamic light only where tested. Day/night art may require separate lighting states or a hybrid solution, so do not silently promise both fully baked lighting and arbitrary dynamic sun positions.
 
 Epic documents Mobile Forward as a suitable path for precomputed lighting; Mobile Deferred has a different feature/performance trade-off. Select through target-device measurements, not a blanket claim that one is always faster. Do not require desktop ray tracing, Lumen, dense Nanite scenery or high-end volumetrics for the baseline. See [Epic's UE5.7 mobile rendering guidance](https://dev.epicgames.com/documentation/en-us/unreal-engine/mobile-rendering-and-shading-modes-for-unreal-engine?application_version=5.7).
 

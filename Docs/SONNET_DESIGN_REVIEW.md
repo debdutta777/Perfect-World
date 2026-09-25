@@ -1,3 +1,5 @@
+> **Archived review, 2026-09-23.** This is a historical record of an early Claude Sonnet design review, made when the game was a mobile-first, isometric, single-district project ending at the examination. It is not an authority on anything. Where it differs from `GAME_PLAN.md` (world-level scope, first-person camera, voxel block visuals, full life to old age), `GAME_PLAN.md` is current. It is kept because `REVIEW_DECISIONS.md` records which of its suggestions were adopted.
+
 # Perfect World: Awakening — Design Review
 
 ## 1. Balancing 1000 Points Without Wealth Dominance

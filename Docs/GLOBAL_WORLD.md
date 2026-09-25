@@ -1,6 +1,8 @@
 # The global world: thirty nations
 
-**Document status:** core design, 2026-09-20. Authoritative on nations, country level, rankings, the competition calendar and global tension. Answers to `VISION.md`. Nothing here is implemented. All nations, institutions and figures are fictional; real countries are referenced only as the geography the player's own life sits in.
+**Document status:** core design, 2026-09-20. Authoritative on nations, country level, rankings, the competition calendar and global tension. Answers to `VISION.md`. Nothing here is implemented.
+
+*National fiction, pending owner decision, 2026-09-23 (`GAME_PLAN.md` §12 question B).* The recommended reading, which the rest of this document already follows: **real countries exist as alternate-world versions of themselves; every institution, organisation, company, person, power bloc and incident is fictional; no real-world conflict is depicted directly.** An earlier line here said "all nations are fictional" while the examples used India, Korea, Brazil and Singapore. Both can't be true, and the owner's decision settles which one is.
 
 ## 1. The governing principle
 
@@ -131,7 +133,7 @@ Per nation, per season, the simulation updates:
 
 - **Tier 0 named figures** — 3–8 per nation. World-ranked individuals in a few disciplines. Full records.
 - **Tier 1 significant** — ~20 per nation. Rising contenders, officials, institution heads.
-- **Tier 2 cohorts** — statistical distributions per discipline, per age band. Individuals crystallise on contact (see `ALTERNATE_WORLD.md` §7).
+- **Tier 2 cohorts** — statistical distributions per discipline, per age band. An individual crystallises at their **first consequential reference**, which in this layer is usually being named in a published result table or a news story, not meeting the player (see `ALTERNATE_WORLD.md` §7). A name that appears in a Brazilian championship result is a permanent person from that moment on.
 - **Tier 3 aggregates** — population, economy, casualties, sentiment, migration flows.
 
 **Competition results are resolved statistically, not simulated.** A national championship in Brazil samples its cohort distribution, applies field strength, and produces a result table with plausible names. Only events the player attends are played.
