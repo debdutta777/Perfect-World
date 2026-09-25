@@ -306,6 +306,7 @@ Every milestone is playable and ends with a gate. `ROADMAP.md` breaks each into 
 | 2026-09-23 | **First-person camera by default, switchable to third person** |
 | 2026-09-23 | **Real art from Blender/FBX/GLB and AI-generated sources**, through both a drop folder and editor import |
 | 2026-09-23 | No `Co-Authored-By` trailers on commits |
+| 2026-09-25 | **Upgrade from Unreal Engine 5.7 to 5.8** to use Epic's official, in-editor Unreal MCP server (experimental, localhost only). Migrate now, before any world content exists, while it is cheapest. `ROADMAP.md` M0-12a to M0-12c |
 | 2026-09-23 | GPT-6 review adopted: time contract, persistent identity at first reference, hazard onset versus consequence, presentation contracts, M9 as a three-part validation, early lifecycle proof, repetition gate, phase completeness rule, freedom acceptance rule |
 
 ---
