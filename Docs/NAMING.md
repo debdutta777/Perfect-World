@@ -35,6 +35,8 @@ Rural Bengal, the Sundarbans, the western plateau districts, and hill regions ar
 
 ## Fully fictional city alternatives
 
+*Owner decision, 2026-09-25: cities are real (`GLOBAL_WORLD.md` §8), so these alternatives are retired and kept only as a record.*
+
 If production later decides that a real Kolkata anchor creates too many geographic or clearance constraints, evaluate these fictional-city options:
 
 | Proposed name | Strengths | Risks and checks |

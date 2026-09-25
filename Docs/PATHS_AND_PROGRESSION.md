@@ -6,7 +6,7 @@
 
 **Every path needs its own definition of world supremacy, the mechanics to earn it, and consequences large enough to justify it.**
 
-A researcher does not reach the top by becoming useful to an S-rank hunter. They reach it by discovering something that changes what all thirty nations can do.
+A researcher does not reach the top by becoming useful to an S-rank hunter. They reach it by discovering something that changes what all fifty nations can do.
 
 Attributes and learned skills stay separate. Intelligence supports research; experimental design must still be learned. **Tattva affinity changes the method, never the ceiling** — an Agni clinician learns precise ablation, a Prithvi athlete excels at force transfer. Every affinity can reach every endgame.
 
@@ -20,9 +20,9 @@ Attributes and learned skills stay separate. Intelligence supports research; exp
 | **Entrepreneur / executive / cooperative founder** | Bid, bargain, finance, insure, allocate, restructure | World-leading enterprise in a sector, having survived a full adverse cycle. Victory changes access, price or quality across nations — not merely the largest balance |
 | **Athlete** | Pace, feint, position, combine, execute, recover | World No. 1, champion, record holder. Precision, endurance, team and power sports have independent prestige. Retirement is not required for the career to matter |
 | **Clinician / rehabilitation specialist** | Triage, differentiate, stabilise, intervene, monitor, rehabilitate | A reproducible treatment for an otherwise disabling Gate syndrome. World Clinical Laureate, judged on sustained outcomes, not spectacular cases |
-| **Public leader / diplomat / advocate** | Represent, investigate, bargain, legislate, adjudicate, ratify | Broker **and implement** a thirty-nation Gate compact. A famous speech without durable implementation does not count |
+| **Public leader / diplomat / advocate** | Represent, investigate, bargain, legislate, adjudicate, ratify | Broker **and implement** a fifty-nation Gate compact. A famous speech without durable implementation does not count |
 | **Logistician / emergency coordinator** | Sequence, buffer, route, prioritise, dispatch, recover | Operate the world's most resilient essential network, or coordinate an international evacuation preserving services across several countries |
-| **Artist / performer / cultural director** | Compose, interpret, stage, improvise, transform, connect | A work entering the international canon, or a touring institution across thirty nations. Sales, critical recognition and cultural influence are separate success routes |
+| **Artist / performer / cultural director** | Compose, interpret, stage, improvise, transform, connect | A work entering the international canon, or a touring institution across fifty nations. Sales, critical recognition and cultural influence are separate success routes |
 | **Ecologist / cultivator / restoration steward** | Survey, cultivate, graft, balance, restore, steward | A staple resilient to Gate contamination; a restoration method adopted across nations. The climax can be the first harvest feeding millions |
 
 Each path supports salaried, independent and institution-leading careers. **Becoming a manager is never the compulsory final promotion.**
@@ -97,7 +97,7 @@ Major commitments state their loss envelope beforehand:
 
 Ten independent world championships annually. Winning any grants the same formal status: **world champion**. A championship tests current excellence; a laureateship recognises durable contribution — so research never becomes a quiz show.
 
-**World finals: sixty entries per discipline — one guaranteed representative from each of thirty nations, plus thirty merit qualifiers, capped at three per nation.** All thirty nations participate at world level without guaranteed medals. **Nationality grants no innate stat bonus.**
+**World finals: eighty entries per discipline — one guaranteed representative from each of fifty nations, plus thirty merit qualifiers, capped at three per nation.** All fifty nations participate at world level without guaranteed medals. **Nationality grants no innate stat bonus.**
 
 Sample events, all using the school's four interaction structures at higher stakes:
 

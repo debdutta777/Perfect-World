@@ -173,7 +173,7 @@ Each recipe assumes the step loop (§2) and stops at the rung its kind requires 
 
 **Add an authored world event.** Define it as data: trigger condition, the GameClock schedule it fires against, its effect, and its news/route-consequence presentation, per `GLOBAL_WORLD.md`/`ALTERNATE_WORLD.md`. Register and validate. Add a CTest that schedules it and asserts it fires exactly once at the right instant (reuse the clock's exactly-once-delivery pattern from `GameClockTests.cpp`).
 
-**Add a nation.** Add its record per `GLOBAL_WORLD.md`'s nation schema (Country Level composite, the ten paths' contributions, its seasonal-update fields). Validate against the content validator; add/extend CTest for any new aggregation rule (e.g., a new path affecting the composite formula).
+**Add a nation.** The roster of fifty in `GLOBAL_WORLD.md` §8 is an owner decision, so a nation outside it needs the owner first. Add its record per `GLOBAL_WORLD.md`'s nation schema (Country Level composite, the ten paths' contributions, its seasonal-update fields). Validate against the content validator; add/extend CTest for any new aggregation rule (e.g., a new path affecting the composite formula).
 
 **Add an asset ID with its block placeholder.** Register the stable asset ID in the asset registry (never reference a file path from gameplay code — `GAME_PLAN.md` §2). Generate its block placeholder from data per `ASSET_PIPELINE.md`'s style guide and generator; confirm the asset resolver returns the placeholder for that ID; add it to the content validator's coverage check so a missing placeholder is caught, not silently absent.
 

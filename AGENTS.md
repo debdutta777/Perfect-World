@@ -12,11 +12,11 @@ This file is project guidance, not a global app model setting. Do not enable per
 
 ## Product truth
 
-Current scope, decided 2026-09-20 and 2026-09-23 (the full decision log is in `GAME_PLAN.md` §10):
+Current scope, decided 2026-09-20, 2026-09-23 and 2026-09-25 (the full decision log is in `GAME_PLAN.md` §10):
 
-- **A fully alternate near-future world at world level**: thirty nations, national and world competitions, public rankings, Country Level. The player starts at exactly 16 in Class XI in Kolkata, West Bengal, and may live an entire life.
+- **A fully alternate near-future world at world level**: fifty real countries with real cities and invented people (`Docs/GLOBAL_WORLD.md` §8), national and world competitions, public rankings, Country Level. The player starts at exactly 16 in Class XI in Kolkata, West Bengal, and may live an entire life.
 - **Full life freedom. The supernatural is optional.** A player who never fights has a complete game. No path is the lesser path.
-- **Unified Awakening** ten days before a virtual-tower national examination, through a school tutorial dungeon.
+- **Unified Awakening** ten days before a virtual-tower national examination, through a school tutorial dungeon. **It cannot be refused**; everything after it is optional.
 - **1,000 creation points.** Identity and appearance are free. No paid point purchases and no bought supernatural class. Household Resources rank 0 means growing up in institutional care.
 - **First-person camera by default, switchable to third person.**
 - **Voxel block visuals for the whole of development.** Real art is integrated only after the game is complete (milestone M9). Gameplay never depends on meshes; everything visual is referenced by asset ID (`Docs/ASSET_PIPELINE.md`).

@@ -149,7 +149,7 @@ The model. Four granularities, player-controlled, always droppable.
 
 ## 7. The world running without you
 
-Four tiers. This is what makes thirty nations affordable.
+Four tiers. This is what makes fifty nations affordable.
 
 | Tier | Count | Fidelity | Update |
 |---|---:|---|---|
@@ -158,7 +158,7 @@ Four tiers. This is what makes thirty nations affordable.
 | **2 — Cohort** | ~50k / nation | Statistical distributions only. **No individual exists until first consequential reference** | Seasonally, in aggregate |
 | **3 — Population** | millions | Aggregate numbers: employment, migration, casualties, sentiment | Annually |
 
-*Clarified 2026-09-23.* These tiers measure **simulation fidelity**, which rises and falls. They do not measure identity. Separately, about 240 persistent global notables (3–8 per nation, `GLOBAL_WORLD.md` §5) hold stable identities at significant fidelity even though the player never meets most of them.
+*Clarified 2026-09-23.* These tiers measure **simulation fidelity**, which rises and falls. They do not measure identity. Separately, up to about 400 persistent global notables (3–8 per nation, `GLOBAL_WORLD.md` §5) hold stable identities at significant fidelity even though the player never meets most of them.
 
 ### Crystallisation
 
@@ -172,7 +172,7 @@ Fidelity changes automatically. Someone the player has not dealt with for two ye
 
 ### Cost
 
-Tier 0 and 1 are ~550 records updated weekly or monthly — trivial. Tier 2 is distribution maths per nation per season. Tier 3 is a few dozen numbers per nation per year. **Thirty nations of living world costs less than one Unreal particle system.**
+Tier 0 and 1 are ~550 records updated weekly or monthly — trivial. Tier 2 is distribution maths per nation per season. Tier 3 is a few dozen numbers per nation per year. **Fifty nations of living world costs less than one Unreal particle system.**
 
 ## 8. Where story comes from when there is no hero
 
@@ -198,7 +198,7 @@ Each layer independently playable and satisfying. Layer 1 must already feel like
 | **2. The awakening and examination** | Tutorial dungeon, awakened profile, ten-day countdown, one tower floor with three routes, results | The complete central arc |
 | **3. Adult life** | Careers, money, housing, ageing, the week/season/year compression, the ordinary-career catalogue | A whole life, not a school game |
 | **4. The living nation** | Tier 0–3 NPC simulation, national rankings, competition calendar, the twelve world mechanisms, news | A country that exists without you |
-| **5. The world** | Thirty nations, country level, World Convergence, international competition, geopolitical threads | The global vision |
+| **5. The world** | Fifty nations, country level, World Convergence, international competition, geopolitical threads | The global vision |
 | **6. Depth** | Remaining paths, more districts, more scene content, richer tower | The full game |
 
 **Layer 1 is achievable and already contains the soul.** Everything after adds reach, not meaning.

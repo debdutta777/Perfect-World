@@ -227,7 +227,7 @@ flowchart TD
 | **M4** | Tutorial dungeon → awakening → combat → tower → countdown → exam rank → credentials |
 | **M5** | Careers → full money and economy → housing → full relationships → life events → season and year compression → ageing → Class XII, board examinations, university → local competitions and rankings |
 | **M6** | NPC tiers 1–3 and crystallisation → national competitions and rankings → generated events and the twelve mechanisms → Gates live → changing world (institutions, businesses) |
-| **M7** | Thirty nations and Country Level live → the Convergence → tensions → first foreign location → global notable figures |
+| **M7** | Fifty nations and Country Level live → the Convergence → tensions → first foreign location → global notable figures |
 | **M8** | All paths → enterprises → retirement → changing world across decades → the epilogue |
 | **M9** | Resolver swap only |
 | **M10** | Performance, accessibility, localisation (`Data/Text`) |
@@ -297,11 +297,11 @@ All schemas and a JSON example for each are in **`SYSTEMS_DATA.md`**: problem fa
 | M2 | ≤ 100 KB |
 | M4 | ≤ 400 KB |
 | Age 30 | ≤ 3 MB |
-| Age 80 | ≤ 8 MB |
+| Age 80 | ≤ 9 MB |
 | Hard failure | 16 MB |
 
-- **At age 80, by section:** identities ≤ 2 MB, npcs ≤ 1.5 MB, relationships ≤ 0.8 MB, receipts ≤ 0.6 MB, events and news together ≤ 1.2 MB, rankings ≤ 0.5 MB, nations ≤ 0.4 MB, everything else ≤ 1 MB.
-- **Timing:** serialising 8 MB takes ≤ 80 ms at a checkpoint, hidden by its transition, and the file write runs on a background thread. Loading takes ≤ 400 ms.
+- **At age 80, by section:** identities ≤ 2 MB, npcs ≤ 1.5 MB, relationships ≤ 0.8 MB, receipts ≤ 0.6 MB, events and news together ≤ 1.2 MB, rankings ≤ 0.8 MB, nations ≤ 0.7 MB, everything else ≤ 1 MB, leaving 0.4 MB unallocated. *(Raised from 8 MB on 2026-09-25, when fifty nations replaced thirty and the rankings and nations sections grew by 5/3.)*
+- **Timing:** serialising 9 MB takes ≤ 90 ms at a checkpoint, hidden by its transition, and the file write runs on a background thread. Loading takes ≤ 400 ms.
 
 ---
 
@@ -313,21 +313,21 @@ The reference PC is for the owner to nominate. These budgets assume a 6-core 201
 |---|---|---|---|---|
 | Tier 0, active local cast | ≈50 (hard cap 64) | Weekly, plus live `WhereIs` in the player's hub | ≤ 6 ms a week | ≤ 8 KB each |
 | Tier 1, significant | ≈500 (soft cap 500; hard cap 1,000 by LRU demotion) | Monthly | ≤ 15 ms a month | ≤ 1.5 KB each |
-| Global notable figures | ≈240 (3–8 × 30) | Seasonal | ≤ 5 ms a season | ≤ 1 KB each |
-| Tier 2, cohorts | 1,800 parametric cells (30 × 10 × 6) | Seasonal | ≤ 3 ms a season | ≤ 60 KB |
-| Tier 3, aggregates | 30 × ~24 series | Continuous inputs, quarterly publication | ≤ 1 ms a quarter | ≤ 300 KB by age 80 |
+| Global notable figures | ≈400 (3–8 × 50) | Seasonal | ≤ 8 ms a season | ≤ 1 KB each |
+| Tier 2, cohorts | 3,000 parametric cells (50 × 10 × 6) | Seasonal | ≤ 5 ms a season | ≤ 100 KB |
+| Tier 3, aggregates | 50 × ~24 series | Continuous inputs, quarterly publication | ≤ 2 ms a quarter | ≤ 500 KB by age 80 |
 | Identity registry | ≤ 25,000 people by age 80 | Append-only | ≤ 50 µs per registration | ≤ 80 B each |
 
-**Thirty-nation seasonal update: ≤ 40 ms in total, single-threaded.**
+**Fifty-nation seasonal update: ≤ 65 ms in total, single-threaded.** *(Every nation-scaled figure in this section was scaled by 5/3 on 2026-09-25, when the roster rose from thirty to fifty.)*
 
 | Part | Budget |
 |---|---|
-| Cohort drift | 3 ms |
-| Notable figures | 5 ms |
-| Statistical championships (30 × 10 × 3 × 64 = 57,600 draws) | 10 ms |
-| Rankings recompute | 10 ms |
-| Country Level and aggregates | 5 ms |
-| Hazards | 5 ms |
+| Cohort drift | 5 ms |
+| Notable figures | 8 ms |
+| Statistical championships (50 × 10 × 3 × 64 = 96,000 draws) | 17 ms |
+| Rankings recompute | 17 ms |
+| Country Level and aggregates | 8 ms |
+| Hazards | 8 ms |
 
 **Compression:** a routine week ≤ 150 ms, a season ≤ 400 ms, a year ≤ 1.5 s. A non-time command averages ≤ 50 µs. The clock queue holds at most 5,000 events. The CTest soak — ages 16 to 80 under a scripted policy — must finish in ≤ 120 s in Release.
 
@@ -374,7 +374,7 @@ The reference PC is for the owner to nominate. These budgets assume a 6-core 201
 |---|---|
 | The reducer becomes a monolith: ~150 commands in one variant, slow compiles, merge conflicts | Per-system command headers; the variant is assembled in one generated file; CMake layer libraries; include-lint |
 | CTest and UE builds hash differently (compiler flags, floats, containers, std distributions) | Integer-only simulation; in-house RNG; a banned-token lint over core sources; cross-build replay hashes at rung 2 |
-| Save growth and migration debt across 64 in-game years | Per-section versions; fold rules defined with each system; the 8 MB soak gate; permanent fixtures |
+| Save growth and migration debt across 64 in-game years | Per-section versions; fold rules defined with each system; the 9 MB soak gate; permanent fixtures |
 | Content renames silently break old saves | The alias table; the validator fails when an ID referenced by any fixture disappears; `contentHash` in every save |
 | Presentation drifts from truth (an NPC in the wrong place, the player's transform disagreeing with their zone) | Presenters rebuild from views on events; zone triggers are commands; a debug overlay shows the reducer's truth; a PIE reconciliation test |
 | Direct-control results become an unvalidated input channel | Metrics bounded by the definition and the character's envelope; performances are transient; results are logged and replayed |

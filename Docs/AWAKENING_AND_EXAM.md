@@ -63,6 +63,7 @@ Every school runs one. It is safe, supervised, F-rank, and the single most conse
 Design requirements:
 
 - **It cannot be failed.** Every student awakens; that is the point of the policy. What varies is how.
+- **It cannot be refused** (owner decision, 2026-09-25). A student who hangs back or withdraws to the supervised safe area still awakens, and that choice is read as conduct like any other. A student absent on the day is awakened at a supervised make-up session before the examination. Everything after the awakening, the examination included, stays optional.
 - **It tests character, not capability.** The instance presents situations with no correct answer: a classmate who freezes, a shortcut that abandons someone, an objective that competes with a rescue. The player has no powers inside it. They can only observe, evade, assist and improvise.
 - **It reads what the player actually did**, not what they said. This is the one moment where the hidden behavioural ledger surfaces and matters.
 - **It is the same dungeon for everyone**, which makes it a fair test and a clean point of comparison between the player and named classmates.
@@ -131,7 +132,7 @@ These are corrections to be made, not open questions:
 
 ## Open questions
 
-Recorded so they are not silently decided by whoever implements first. **`GAME_PLAN.md` §12 is the master list of open owner questions.** This list keeps only the awakening- and examination-specific detail, and anything still open here is to be raised through §12. The biggest related question — whether the awakening itself can be refused — is `GAME_PLAN.md` §12 question A.
+Recorded so they are not silently decided by whoever implements first. **`GAME_PLAN.md` §12 is the master list of open owner questions.** This list keeps only the awakening- and examination-specific detail, and anything still open here is to be raised through §12. The biggest related question, whether the awakening itself can be refused, was `GAME_PLAN.md` §12 question A. **Answered, 2026-09-25: it cannot.** See "The tutorial dungeon" above.
 
 - ~~Is the examination annual and repeatable, or once per student?~~ **Answered, 2026-09-23:** annual and repeatable, up to age twenty; the examination can also be deferred or declined, with apprenticeships and adult bridges as alternative qualification routes. See `GAME_PLAN.md` §1 (the freedom acceptance rule) and the ladder rules in `PATHS_AND_PROGRESSION.md`.
 - How many in-game days of latent life precede the tutorial dungeon? *(Answered by `GAME_PLAN.md` §4 Phase 2: the Class XI year, roughly thirty-four weeks, Monday 2 June 2042 to Friday 23 January 2043.)*

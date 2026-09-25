@@ -1,14 +1,14 @@
-# The global world: thirty nations
+# The global world: fifty nations
 
 **Document status:** core design, 2026-09-20. Authoritative on nations, country level, rankings, the competition calendar and global tension. Answers to `VISION.md`. Nothing here is implemented.
 
-*National fiction, pending owner decision, 2026-09-23 (`GAME_PLAN.md` §12 question B).* The recommended reading, which the rest of this document already follows: **real countries exist as alternate-world versions of themselves; every institution, organisation, company, person, power bloc and incident is fictional; no real-world conflict is depicted directly.** An earlier line here said "all nations are fictional" while the examples used India, Korea, Brazil and Singapore. Both can't be true, and the owner's decision settles which one is.
+*National fiction, owner decision 2026-09-25 (`GAME_PLAN.md` §12 question B).* **Fifty real countries exist as alternate-world versions of themselves, with real cities and places. People are invented, or inspired by real roles and archetypes, never real. Institutions, organisations, companies, power blocs and incidents are fictional, and no real-world conflict is depicted directly.** The count was thirty until that date. The roster and the full rules are in §8.
 
 ## 1. The governing principle
 
 **A world feels global through rankings, news and consequence — not through walkable geography.**
 
-The player will never visit twenty-nine of the thirty nations, and does not need to. What makes a world planetary is knowing where you stand in it, hearing what happened elsewhere, and feeling it arrive in your street four months later.
+The player will never visit forty-nine of the fifty nations, and does not need to. What makes a world planetary is knowing where you stand in it, hearing what happened elsewhere, and feeling it arrive in your street four months later.
 
 This is also what makes the scope tractable: **global reach is mostly data.** Data is cheap, deep, testable, and exactly what AI agents build well.
 
@@ -19,7 +19,7 @@ Every element of the world sits in exactly one category. This line is load-beari
 | Category | What it is | Cost | Examples |
 |---|---|---|---|
 | **Playable space** | Places the player physically occupies | Very expensive — art, level design, navigation, audio | Nabapara, the school, home interiors, the tower, one or two later cities |
-| **Simulated data** | State that updates, that the player reads and is affected by | Cheap — records and maths | All thirty nations' ratings, rankings, economies, NPC cohorts, competition results, migration, prices |
+| **Simulated data** | State that updates, that the player reads and is affected by | Cheap — records and maths | All fifty nations' ratings, rankings, economies, NPC cohorts, competition results, migration, prices |
 | **Authored event** | Fixed dramatic beats on the world timeline | Moderate — writing, not geometry | The disasters, treaty crises, the Convergence, named incidents |
 
 **The rule: a nation becomes playable space only when the story requires the player's body to be there.** Everything else about it is data and authored event. Brazil can matter enormously to a player who never leaves Kolkata.
@@ -84,7 +84,7 @@ One year, repeating, with the World Convergence as its spine.
 | **Apr–Jun** | University & open | University championships in all ten disciplines; open national qualifiers; junior national championships |
 | **Jul–Sep** | National | **National Championships** — junior, university and open divisions in each of the ten disciplines. National team selection |
 | **Oct** | Continental | Regional meetings. Asia, Europe, Africa, Americas, Oceania circuits |
-| **Nov–Dec** | World | **The World Convergence.** Ten world finals, sixty entries each: one guaranteed representative per nation plus thirty merit qualifiers, capped at three per nation |
+| **Nov–Dec** | World | **The World Convergence.** Ten world finals, eighty entries each: one guaranteed representative per nation plus thirty merit qualifiers, capped at three per nation |
 
 **Every discipline has the same shape**, so a researcher's year and a hunter's year have identical rhythm and identical prestige. This is the calendar-level expression of "no path is the lesser path."
 
@@ -96,7 +96,7 @@ A 19-year-old university researcher in Kolkata:
 - **April** — university championship. Places 4th nationally in the Unknown Law Challenge. Qualifies for open.
 - **July** — national championship. 2nd. Selected as India's guaranteed representative.
 - **October** — Asia circuit in Singapore. **First time leaving the country.** This is a playable scene because the story requires their body there.
-- **November** — World Convergence. 31st of 60. The commentary mentions her name once.
+- **November** — World Convergence. 31st of 80. The commentary mentions her name once.
 - **December** — a laboratory in Seoul emails about her method.
 
 That year contains travel, ranking, international recognition and a thread that will run for a decade — and required exactly one new playable location.
@@ -127,7 +127,7 @@ Student development is measured as *improvement relative to intake projection* �
 
 Country Level as in section 2. Published quarterly. **Arguing about the methodology is part of the world's culture** — commentators, politicians and academics dispute the weightings, and the game lets them, because a contested number is more alive than an authoritative one.
 
-## 5. Thirty nations without simulating thirty nations
+## 5. Fifty nations without simulating fifty nations
 
 Per nation, per season, the simulation updates:
 
@@ -138,7 +138,7 @@ Per nation, per season, the simulation updates:
 
 **Competition results are resolved statistically, not simulated.** A national championship in Brazil samples its cohort distribution, applies field strength, and produces a result table with plausible names. Only events the player attends are played.
 
-**Cost:** thirty nations × ~28 tracked individuals = ~840 records on a seasonal update, plus distribution maths. This runs in milliseconds and saves in kilobytes.
+**Cost:** fifty nations × ~28 tracked individuals = ~1,400 records on a seasonal update, plus distribution maths. This runs in milliseconds and saves in kilobytes.
 
 ## 6. Five global tensions
 
@@ -169,7 +169,43 @@ Mapped to `ALTERNATE_WORLD.md` §9. Each layer is globally-flavoured from the st
 | **1** | News feed, Country Level displayed, other nations named in broadcasts | You know India is 58th-percentile and that a Korean team won. You have never left Nabapara |
 | **2** | The examination is explicitly national and simultaneous worldwide | Your climb is one of millions happening at the same hour |
 | **3** | Rankings visible, Convergence watched annually, price and migration effects live | The world visibly moves past you, and you feel it in your rent |
-| **4** | Full thirty-nation simulation, competition calendar, the five tensions escalating | A living planet that argues about itself |
+| **4** | Full fifty-nation simulation, competition calendar, the five tensions escalating | A living planet that argues about itself |
 | **5** | First international travel; one or two foreign locations as playable space | You finally stand somewhere else, and it has been real to you for years |
 
 **Layer 1 already feels global** — through a news feed and one number. That is the proof the principle works.
+
+## 8. The fifty nations
+
+**Owner decision, 2026-09-25:** fifty real countries, up from thirty. The rules below are binding. The roster is **proposed**: the owner confirms it before M3-10 turns it into data. Swapping a nation costs nothing until then; after that, its ID is permanent.
+
+### What is real and what is invented
+
+| Real | Invented |
+|---|---|
+| Countries, under their common English short names | Every person who appears as a character |
+| Geography, cities, regions, landmarks, climate | Governments in office, leaders, parties and laws of the Gate era |
+| Languages, festivals, food, dress, cultural calendars | Institutions: agencies, universities, schools, companies, teams, leagues, media |
+| History, broadly, up to the Gates | Power blocs, treaties and incidents, including every Gate event |
+
+1. **People are invented, or inspired, never real.** A character may draw on a real role, era or archetype: a veteran cricket captain, a reforming chief minister, a famous physicist. They never carry a real person's name or biography and are never identifiable as a particular person. Real historical and cultural figures may be *referred to* as part of history and culture, such as a song, a statue or a festival, but never appear as characters. No real person is assigned a fictional scandal, crime or Gate casualty. This extends `INDIA_WORLD_BIBLE.md`'s rule to every nation.
+2. **Institutions follow the National Gate Authority pattern:** invented, plausible and locally legible. A real university, company or government body never appears under its real name.
+3. **No real-world conflict is depicted directly.** Wars, territorial disputes and atrocities are not the game's material. Tension between nations runs through the five fictional tensions (§6) and fictional power blocs.
+4. **Maps show nations as named regions and cities, not drawn borders**, so the game never rules on a disputed boundary. Any drawn world map is checked against the law of every market it ships in, India's included.
+5. **No nation is a caricature.** Nationality grants no innate stat bonus (`PATHS_AND_PROGRESSION.md`), and every nation's cast includes ordinary people living ordinary lives. The dignity rule in `VISION.md` applies to countries as well as to individuals.
+6. **Selection:** UN member states only, so the roster never rules on recognition disputes. Nations are chosen for population, economic and cultural weight, and so that each continental circuit (§3) has a real field.
+
+### The roster
+
+Stable IDs are `nation_` plus the lowercase ISO 3166-1 alpha-3 code. Display names can change without a save migration; IDs cannot.
+
+| Circuit | Count | Nations and IDs |
+|---|---:|---|
+| **Asia** | 20 | India `nation_ind` · Pakistan `nation_pak` · Bangladesh `nation_bgd` · Sri Lanka `nation_lka` · Nepal `nation_npl` · China `nation_chn` · Japan `nation_jpn` · South Korea `nation_kor` · Indonesia `nation_idn` · Vietnam `nation_vnm` · Thailand `nation_tha` · Philippines `nation_phl` · Malaysia `nation_mys` · Singapore `nation_sgp` · Kazakhstan `nation_kaz` · Uzbekistan `nation_uzb` · Saudi Arabia `nation_sau` · United Arab Emirates `nation_are` · Iran `nation_irn` · Israel `nation_isr` |
+| **Europe** | 12 | United Kingdom `nation_gbr` · France `nation_fra` · Germany `nation_deu` · Italy `nation_ita` · Spain `nation_esp` · Netherlands `nation_nld` · Poland `nation_pol` · Sweden `nation_swe` · Switzerland `nation_che` · Russia `nation_rus` · Ukraine `nation_ukr` · Türkiye `nation_tur` |
+| **Africa** | 9 | Egypt `nation_egy` · Nigeria `nation_nga` · South Africa `nation_zaf` · Kenya `nation_ken` · Ethiopia `nation_eth` · Morocco `nation_mar` · Ghana `nation_gha` · Tanzania `nation_tza` · DR Congo `nation_cod` |
+| **Americas** | 7 | United States `nation_usa` · Canada `nation_can` · Mexico `nation_mex` · Brazil `nation_bra` · Argentina `nation_arg` · Colombia `nation_col` · Chile `nation_chl` |
+| **Oceania** | 2 | Australia `nation_aus` · New Zealand `nation_nzl` |
+
+Türkiye and Russia compete in the Europe circuit, and Egypt in Africa. Oceania's two nations make a thin field, so the owner may choose to merge it with Asia into an Asia-Pacific circuit.
+
+**Starting data is authored at M3-10:** each nation's Country Level, band, cohorts, aggregates and 3–8 notables. Only India's starting band is fixed here: Developing (§2).

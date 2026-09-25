@@ -6,7 +6,7 @@
 
 **A fully alternate world, lived from the inside, in which the supernatural is optional.**
 
-Near-future Earth. Gates are a normalised hazard that society has adapted around — with insurance, cordons, licensing, research, politics and rumour — the way it adapted to fire and flood. Thirty major nations matter. Nations are rated, ranked and compete. The world is genuinely global.
+Near-future Earth. Gates are a normalised hazard that society has adapted around — with insurance, cordons, licensing, research, politics and rumour — the way it adapted to fire and flood. Fifty major nations matter: real countries, with invented people *(fifty since 2026-09-25, `GLOBAL_WORLD.md` §8)*. Nations are rated, ranked and compete. The world is genuinely global.
 
 The player begins at sixteen in Kolkata and may live an entire life. **They may never fight anything.**
 
@@ -35,13 +35,13 @@ The concern about solo scope was raised once and decided against. It is not rest
 What follows from that premise, practically:
 
 - **Plan at full scope, build in layers.** Every layer must be independently playable, so the project is never a half-finished monument.
-- **Architecture matters more, not less.** A thirty-nation, multi-decade simulation is only tractable on clean foundations: one clock, one command reducer, stable-ID versioned saves, data-driven content, deterministic RNG. Those decisions are cheap now and impossible to retrofit. See `MASTER_PLAN.md` section 4, which survives unchanged.
+- **Architecture matters more, not less.** A fifty-nation, multi-decade simulation is only tractable on clean foundations: one clock, one command reducer, stable-ID versioned saves, data-driven content, deterministic RNG. Those decisions are cheap now and impossible to retrofit. See `MASTER_PLAN.md` section 4, which survives unchanged.
 - **Content must be data, not code.** Careers, competitions, events, nations and schedules are authored data validated by tools. This is what lets future tooling — or future collaborators — scale the content without touching the rules.
 - **Write everything down.** A multi-year project with gaps between sessions runs on its documents.
 
 ## What must never be compromised
 
-1. **You can opt out of the supernatural entirely and still have a full game.**
+1. **You can opt out of the supernatural entirely and still have a full game.** *(Clarified by owner decision, 2026-09-25: the awakening itself happens to everyone and cannot be refused. Opting out means never practising, fighting or entering a Gate. See `GAME_PLAN.md` §1.)*
 2. **No path is the lesser path.** A world-renowned researcher, a respected teacher, a shrewd shopkeeper and an S-rank hunter are all legitimate endgames with comparable weight.
 3. **Ordinary life is played, not skipped.** The mundane is the subject, not the loading screen before the good part.
 4. **The world runs without the player.** NPCs have careers, families, ambitions and deaths whether or not the player is watching.

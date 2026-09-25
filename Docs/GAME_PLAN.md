@@ -26,7 +26,7 @@
 
 ## 1. The game
 
-**Perfect World: Awakening** is a first-person life simulation and role-playing game, switchable to third person, set in a fully alternate near-future Earth. The player begins at sixteen in Kolkata and may live an entire life, in any direction they choose, inside a world where Gates — rifts to hostile spaces — are a normalised hazard that thirty nations have organised their societies around.
+**Perfect World: Awakening** is a first-person life simulation and role-playing game, switchable to third person, set in a fully alternate near-future Earth. The player begins at sixteen in Kolkata and may live an entire life, in any direction they choose, inside a world where Gates — rifts to hostile spaces — are a normalised hazard that fifty nations have organised their societies around.
 
 **The one rule: the Gates are the setting, not the job.** A player may never fight anything and still have a complete, deep, dramatic game as a teacher, a clerk, a nurse, a shopkeeper, a parent.
 
@@ -43,9 +43,9 @@
 
 ### The freedom acceptance rule
 
-**A complete life must remain available without combat, supernatural practice, competitive ambition, management, marriage or children.** Every supported choice leads to playable opportunities, never an empty calendar. The flow specifies participation, refusal, absence and withdrawal for the awakening and the examination, with their consequences and alternative qualification routes.
+**A complete life must remain available without combat, supernatural practice, competitive ambition, management, marriage or children.** Every supported choice leads to playable opportunities, never an empty calendar. The flow specifies participation, refusal, absence and withdrawal for the examination, and participation, absence and withdrawal for the awakening, with their consequences and alternative qualification routes.
 
-**Pending owner decision (§12, question A):** the recommended reading is that the awakening itself is universal and involuntary — it is the world's rule, and it happens to the player as to everyone — while everything after it is optional. The player may never use their ability, never enter a Gate, never fight. They may sit the examination by non-combat routes only, defer it to a later year (allowed to age twenty), or decline it and qualify through apprenticeships and adult bridges. Under this reading `VISION.md`'s "opt out of the supernatural entirely" means *opt out of supernatural practice*.
+**Owner decision, 2026-09-25 (§12 question A): the awakening cannot be refused.** It is universal and involuntary: it is the world's rule, and it happens to the player as it does to everyone. Everything after it is optional. The player may never use their ability, never enter a Gate, never fight. They may sit the examination by non-combat routes only, defer it to a later year (allowed up to age twenty), or decline it and qualify through apprenticeships and adult bridges. `VISION.md`'s "opt out of the supernatural entirely" therefore means *opt out of supernatural practice*, not out of being awakened.
 
 ### What it is not
 
@@ -77,7 +77,7 @@ Defined once here; detailed in the documents named.
 | **Opportunity receipt** | What a commitment displaced — only alternatives the player knew about |
 | **Thread** | A persistent unresolved tension that escalates on a clock. The story engine |
 | **Country Level** | A nation's public 1–100 composite. Each of the ten paths contributes exactly 10%. Inputs update continuously, it is **published quarterly**, and reviewed annually |
-| **World Convergence** | The annual world championships: ten disciplines, sixty entries each |
+| **World Convergence** | The annual world championships: ten disciplines, eighty entries each (one per nation plus thirty on merit) |
 | **Persistent identity** | Every person gets a stable identity at their **first consequential reference** — named in dialogue, news, rankings, correspondence, family history, or any record the player can see. Identity and history never change afterward |
 | **Simulation fidelity** | How closely a person is currently simulated: active local cast, significant, cohort, population. Fidelity rises and falls; identity does not |
 | **Crystallisation** | A cohort member with no identity yet is generated consistent with their cohort and the world's event log at first consequential reference, then persists |
@@ -146,7 +146,7 @@ Under **eight minutes with a preset**, twenty to thirty from scratch; drafts pre
 
 ### Phase 3 — Awakening Day (1–2 hours)
 
-**Friday 23 January 2043.** The tutorial dungeon with the player's own classmates, carrying existing relationships through. Three conduct tests whose consequences are differentiated, not ranked. The awakening explains what conduct contributed without passing a verdict on the player's personality. Refusal, absence and withdrawal are supported per §1.
+**Friday 23 January 2043.** The tutorial dungeon with the player's own classmates, carrying existing relationships through. Three conduct tests whose consequences are differentiated, not ranked. The awakening explains what conduct contributed without passing a verdict on the player's personality. **It cannot be refused (§1).** Hanging back or withdrawing to the supervised safe area inside the dungeon is conduct like any other and still ends in awakening. A student absent on the day is awakened at a supervised make-up session before the examination; M4-06 specifies what that costs.
 
 ### Phase 4 — The ten days (2–4 hours)
 
@@ -245,8 +245,8 @@ Specified in `SYSTEMS.md`.
 |---|---|
 | Playable city | Nabapara and surrounding Kolkata districts; further cities in later milestones; foreign locations only where the story needs the player's body there |
 | Home presentation | 3 family shells × 5 templates × **4** family resource tiers, plus the children's-home dormitory |
-| People | ~50 active local cast · ~500 significant · ~240 persistent global notables (3–8 per nation) · cohorts · aggregates |
-| Nations simulated | 30 |
+| People | ~50 active local cast · ~500 significant · up to ~400 persistent global notables (3–8 per nation) · cohorts · aggregates |
+| Nations simulated | 50 real countries (`GLOBAL_WORLD.md` §8) |
 | Paths | 10 world-summit paths + ~13 ordinary careers |
 | Problem families | ~40 at the vertical slice, ~300 for the full game |
 | Authored world events | ~60 across a full life |
@@ -268,7 +268,7 @@ Every milestone is playable and ends with a gate. `ROADMAP.md` breaks each into 
 | **M0** | Foundation | Every built screen verified in a launched window, including damaged saves, controller focus, settings persistence and recovery. First cooked Windows build |
 | **M1** | Walkable block world: controller in both cameras, one home, a street, the school gate; asset registry, placeholder generator, presentation contracts, performance budgets, comfort options | In **both** camera modes: sit, read, select a small item, use a tool, speak to someone, pass through a furnished room, switch camera |
 | **M2** | One school day: condition, activities, all four structures prototyped, two classmates, a teacher, schedules, receipts, persistent identity | A full day saved and resumed mid-day. **The forty-exposure classroom test** passes with abbreviation available |
-| **M3** | The Class XI year: time modes, week compression, calendar, projection, threads, all six origins, a lightweight thirty-nation data model feeding news and rankings | A short period played manually and compressed yields equivalent state and understanding, **then** thirty-four weeks. **Adult-task probe:** one established adult work week built on the shared structures |
+| **M3** | The Class XI year: time modes, week compression, calendar, projection, threads, all six origins, a lightweight fifty-nation data model feeding news and rankings | A short period played manually and compressed yields equivalent state and understanding, **then** thirty-four weeks. **Adult-task probe:** one established adult work week built on the shared structures |
 | **M4** | Awakening and examination | Vertical slice. ≥6 of 8 blind testers explain their own awakening and a sacrificed obligation; each tower route is independently discovered; non-combat routes are substantive; a poor result leads somewhere worth playing |
 | **M5** | Adult life, plus a **skeletal later life and epilogue** | A non-hunter lives 16 → 30 and holds up; an established worker's week holds up; a whole life runs end to end |
 | **M6** | The living nation | Demotion, re-encounter, cohort replacement and causal attribution hold across decades |
@@ -299,7 +299,7 @@ Every milestone is playable and ends with a gate. `ROADMAP.md` breaks each into 
 | 2026-09-20 | Fully 3D; stylised final art, **not** MetaHuman; Windows first, Android eventually |
 | 2026-09-20 | Free-roam world; one real minute is one game hour |
 | 2026-09-20 | Unified Awakening ten days before a virtual-tower national examination, through a school tutorial dungeon |
-| 2026-09-20 | World-level scope: thirty nations, national and world competitions, rankings, Country Level |
+| 2026-09-20 | World-level scope: thirty nations, national and world competitions, rankings, Country Level *(raised to fifty on 2026-09-25)* |
 | 2026-09-20 | Full life freedom; the supernatural is optional; plan at full scope and build in layers while tooling improves |
 | 2026-09-20 | Appearance: colour sliders plus discrete part pickers, stored as engine-neutral data |
 | 2026-09-23 | **Voxel block visuals for the whole of development**; real art integrated only after the game is complete |
@@ -307,6 +307,8 @@ Every milestone is playable and ends with a gate. `ROADMAP.md` breaks each into 
 | 2026-09-23 | **Real art from Blender/FBX/GLB and AI-generated sources**, through both a drop folder and editor import |
 | 2026-09-23 | No `Co-Authored-By` trailers on commits |
 | 2026-09-25 | **Upgrade from Unreal Engine 5.7 to 5.8** to use Epic's official, in-editor Unreal MCP server (experimental, localhost only). Migrate now, before any world content exists, while it is cheapest. `ROADMAP.md` M0-12a to M0-12c |
+| 2026-09-25 | **§12 A: the awakening cannot be refused.** It is universal and involuntary; everything after it, including the examination and all supernatural practice, stays optional (§1) |
+| 2026-09-25 | **§12 B: fifty real countries**, up from thirty. Countries, cities and places are real; people are invented, or inspired by real roles and archetypes without being identifiable as any real person. The roster and rules are in `GLOBAL_WORLD.md` §8 |
 | 2026-09-23 | GPT-6 review adopted: time contract, persistent identity at first reference, hazard onset versus consequence, presentation contracts, M9 as a three-part validation, early lifecycle proof, repetition gate, phase completeness rule, freedom acceptance rule |
 
 ---
@@ -321,9 +323,9 @@ Built, compiling and covered by the portable test suite (225,374 creation assert
 
 ## 12. Open questions for the owner
 
-**A. Supernatural participation.** Is the awakening universal and involuntary, with everything after it optional (recommended; §1)? Or may a student legally refuse awakening itself?
+~~**A. Supernatural participation.**~~ **Answered, 2026-09-25:** the awakening is universal and involuntary and cannot be refused; everything after it is optional (§1, §4 Phase 3).
 
-**B. The thirty nations.** Recommended: real countries as alternate-world versions, with every institution, organisation, company, person, power bloc and incident fictional, and no real-world conflict depicted directly. The alternative is fictional states on real geography. This governs naming, maps, cultural review and geopolitical writing.
+~~**B. The thirty nations.**~~ **Answered, 2026-09-25:** fifty real countries as alternate-world versions of themselves, with real cities and places. People are invented or inspired, never real. Institutions, organisations, companies, power blocs and incidents stay fictional, and no real-world conflict is depicted directly. See `GLOBAL_WORLD.md` §8. **The owner still confirms the proposed roster of fifty** before M3-10 authors it as data.
 
 **C. Legacy play.** When the character's life ends, may the player continue as a child or successor?
 

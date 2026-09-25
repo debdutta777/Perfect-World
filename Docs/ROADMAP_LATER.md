@@ -48,14 +48,14 @@
 
 ## M7 — The world
 
-**Goal:** give the thin thirty-nation model from M3-10 its behaviour: Country Level, the Convergence, the tensions, first travel. The world must reach ordinary lives as well as champions. **Gate:** *"The player's standing moves India's rating understandably — and a player with negligible influence still feels the world."* **Playable result:** a life in which the world visibly moves, whether or not the player moves it.
+**Goal:** give the thin fifty-nation model from M3-10 its behaviour: Country Level, the Convergence, the tensions, first travel. The world must reach ordinary lives as well as champions. **Gate:** *"The player's standing moves India's rating understandably — and a player with negligible influence still feels the world."* **Playable result:** a life in which the world visibly moves, whether or not the player moves it.
 
 | ID | Deliverable | Touches | Pass condition | Rung | Deps |
 |---|---|---|---|---|---|
-| M7-01 | Nation behaviour: seasonal updates for thirty nations; notables' careers advance | Core/Nations | CTest: over 20 years every nation stays valid and every notable persists | CTest | M3-10, M6-01 |
+| M7-01 | Nation behaviour: seasonal updates for fifty nations; notables' careers advance | Core/Nations | CTest: over 20 years every nation stays valid and every notable persists | CTest | M3-10, M6-01 |
 | M7-02 | Country Level: each path contributes exactly 10%; inputs change continuously, the value is published quarterly and reviewed annually | Core/CountryLevel | CTest: the composite formula holds; the published value changes only at quarter boundaries | CTest | M7-01 |
 | M7-03 | Country Level in daily life: prices, travel, recognition, pressure | Core; Game | CTest: effects stay bounded. PIE: a band change shows up in rent and in the news | PIE | M7-02, M5-02 |
-| M7-04 | World Convergence: ten disciplines, sixty entries each, every year | Core/Convergence; Data | CTest: entries are allocated by rating. PIE: it is broadcast on the phone | PIE | M7-02 |
+| M7-04 | World Convergence: ten disciplines, eighty entries each (fifty guaranteed plus thirty merit), every year | Core/Convergence; Data | CTest: entries are allocated by rating. PIE: it is broadcast on the phone | PIE | M7-02 |
 | M7-05 | Five global tensions with authored states and thresholds | Core/Tensions; Data | CTest: transitions fire on dates or thresholds, never from player action alone | CTest | M7-01 |
 | M7-06 | Making the player's contribution readable: their standing moves the rating, with an explanation the player can follow | Game; Core/Attribution | A tester can explain why India's rating moved | PIE +owner | M7-02, M6-05 |
 | M7-07 | First travel: one foreign location as playable space | Data/Layouts; Game | Travel costs time and money; the location passes a cultural review | PIE +owner | M7-03, §12 B |

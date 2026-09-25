@@ -4,7 +4,7 @@
 
 **Owner's stated goal:** a generational game at AAAA scale, 2–3 years acceptable, artists hired later, free or generated art until then. Working part-time, most evenings.
 
-> **Scope superseded, 2026-09-20.** After this plan was written the owner decided the main story must be **world level, not one district**: thirty major nations relevant, yearly country competitions at several hunter levels, open and university-level tower competitions, worldwide individual, university and national rankings, and a national "country level" that scales rewards. See `GLOBAL_WORLD.md` and `PATHS_AND_PROGRESSION.md`, which are authoritative on scope.
+> **Scope superseded, 2026-09-20.** After this plan was written the owner decided the main story must be **world level, not one district**: thirty major nations relevant (fifty since 2026-09-25), yearly country competitions at several hunter levels, open and university-level tower competitions, worldwide individual, university and national rankings, and a national "country level" that scales rewards. See `GLOBAL_WORLD.md` and `PATHS_AND_PROGRESSION.md`, which are authoritative on scope.
 >
 > The concern that a solo part-time developer cannot build a thirty-nation open world was raised once and the owner decided against it. It is not restated further; the global documents are written to make that vision work rather than to argue with it.
 >

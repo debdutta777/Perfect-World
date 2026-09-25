@@ -251,8 +251,8 @@
 
 ### 3.5 Global
 
-**Nations and Country Level** — Core · M3 static display; M6 India live; M7 all thirty. Continuous inputs, quarterly publication, annual review.
-- **Owns:** `NationState{map<NationId, {...}>}`, where each nation holds:
+**Nations and Country Level** — Core · M3 static display; M6 India live; M7 all fifty. Continuous inputs, quarterly publication, annual review.
+- **Owns:** `NationState{map<NationId, {...}>}`, keyed by the `GLOBAL_WORLD.md` §8 roster IDs (`nation_` plus the ISO 3166-1 alpha-3 code), where each nation holds:
   - `LevelMilli`;
   - `PathScores array<Milli,10>` — exactly 10% each; within a path, 70% senior/open and 30% junior/university;
   - `Modifiers{Containment24m, CasualtyRate, ResearchAdoption, Stability, Compact}`;
@@ -285,7 +285,7 @@
 
 - **Owns:** `CompetitionState{Instances[{Def, Year, Nation, Level, Discipline, Division, OpenAt, State, ResultsRef}], PlayerEntries[]}`.
   - An event the player does not attend resolves statistically; one they attend is played through the tower or the structures.
-  - World finals have 60 entries: 30 guaranteed plus 30 merit, capped at 3 per nation.
+  - World finals have 80 entries: 50 guaranteed plus 30 merit, capped at 3 per nation.
 - **Commands:** `competition.enter|withdraw`. **Events:** `CompetitionResolved`, `Qualified`, `SelectedForTeam`.
 - **Save:** `competitions` v1. **Tests:** entry rules; result distributions over 10,000 seeds.
 
