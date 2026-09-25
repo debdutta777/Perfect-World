@@ -1,6 +1,22 @@
 # Build guide
 
-Use the installed Unreal Engine5.7 and Visual Studio2022 C++ Build Tools. The standalone core uses CMake3.20+ and C++20. Python3 is used only to invoke repeatable build commands with a normalized Windows environment; it is not a runtime game dependency.
+Use the installed Unreal Engine 5.8 and the Visual Studio 2026 C++ Build Tools (MSVC 14.50, Epic's preferred toolset for 5.8; the build tool finds it on its own). The project moved from 5.7 to 5.8 on 2026-09-25. The portable suite configures a fresh build folder with the newest Visual Studio installed, and an existing folder keeps its original generator. The standalone core uses CMake 3.20+ (4.2+ to generate for VS 2026) and C++20. Python 3 is used only to invoke repeatable build commands with a normalized Windows environment; it is not a runtime game dependency.
+
+## Setting up a new machine, such as a cloud PC
+
+**The machine needs:** 64-bit Windows 10 22H2 or Windows 11; **a GPU with DirectX 12**, because the editor is unusable without one and basic cloud PCs have none, so choose a GPU instance; 32 GB of RAM recommended (16 GB works, but builds then compile one file at a time); and about 150 GB free for the engine, the build tools and the shader cache.
+
+1. Git, Git LFS, Python and CMake: `winget install Git.Git GitHub.GitLFS Python.Python.3.13 Kitware.CMake`, then `git lfs install`.
+2. Clone the private repository after signing in to GitHub: `git clone https://github.com/debdutta777/Perfect-World.git`.
+3. The C++ toolchain, approving the administrator prompt yourself:
+   `winget install --id Microsoft.VisualStudio.BuildTools --exact --override "--passive --wait --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --add Microsoft.VisualStudio.Component.VC.14.50.18.0.x86.x64"`
+4. The Epic Games Launcher (`winget install EpicGames.EpicGamesLauncher`), then **Unreal Engine 5.8** from it with an Epic login. For an install outside `C:/Program Files/Epic Games/UE_5.8`, pass `--engine-root` to the build script.
+5. Rung 1: `python Scripts/build_core.py --build-dir <a short path>`. Both test executables must pass.
+6. Rung 2: `python Scripts/build_unreal.py`. The result must be Succeeded.
+7. Open `PerfectWorld.uproject` with 5.8. About 35 seconds after launch, the editor's MCP server listens on `127.0.0.1:8000`. The first launch also compiles shaders, which takes a while.
+8. Install Claude Code (`irm https://claude.ai/install.ps1 | iex` in PowerShell) and start it in the project folder. It reads `.mcp.json` and asks once to approve the `unreal` server; after that, `claude mcp list` shows it connected. Start Claude Code after the editor, or reconnect with `/mcp`.
+
+Nothing under `Binaries/`, `Intermediate/`, `Saved/` or `DerivedDataCache/` is in the repository, so a new machine always builds from source. Saved games stay on the machine that wrote them.
 
 ## Portable rules
 
@@ -23,12 +39,12 @@ python Scripts/build_unreal.py
 For a different engine location:
 
 ```powershell
-python Scripts/build_unreal.py --engine-root 'D:/Epic/UE_5.7'
+python Scripts/build_unreal.py --engine-root 'D:/Epic/UE_5.8'
 ```
 
-The target uses BuildSettingsVersion.V6 for the installed5.7 engine. Engine header tools generate reflection code. The portable module exports its public API when linked as an Unreal DLL; CMake builds use the same source with no engine dependency.
+Both targets use `BuildSettingsVersion.V7`, which 5.8 requires: with V6 the editor target changes warning levels shared with the installed `UnrealEditor` and the build tool refuses it. V7 also makes missing return values, dangling references and unreachable code errors, and uses precise floating point for the editor. Engine header tools generate reflection code. The portable module exports its public API when linked as an Unreal DLL; CMake builds use the same source with no engine dependency.
 
-After a successful build, open PerfectWorld.uproject with Unreal5.7. The engine Entry map is the default. Play In Editor should instantiate PerfectWorldMenuGameMode and show the creator. This is a development menu, not a finished title screen. Test in a viewport with input focus.
+After a successful build, open PerfectWorld.uproject with Unreal 5.8. The engine Entry map is the default. Play In Editor should instantiate PerfectWorldMenuGameMode and show the creator. This is a development menu, not a finished title screen. Test in a viewport with input focus.
 
 Manual smoke checklist, to be completed in the next small step unless STATUS explicitly records otherwise:
 

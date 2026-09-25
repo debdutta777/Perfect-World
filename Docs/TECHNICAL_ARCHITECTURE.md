@@ -6,7 +6,7 @@ Status: target architecture plus a deliberately small implemented creation core.
 
 ## Decision and constraints
 
-Use the installed Unreal Engine 5.7 release and C++ for authoritative rules, state transitions and budget validation. Use Blueprints for presentation, authored events and rapid tuning after their underlying interfaces stabilize. The portable creation rules can run in a small standalone test executable; Unreal exposes the same rules to UI. Do not duplicate budget math in widgets.
+Use the installed Unreal Engine 5.8 release (5.7 until 2026-09-25) and C++ for authoritative rules, state transitions and budget validation. Use Blueprints for presentation, authored events and rapid tuning after their underlying interfaces stabilize. The portable creation rules can run in a small standalone test executable; Unreal exposes the same rules to UI. Do not duplicate budget math in widgets.
 
 Windows is the initial development and test host, per the owner's decision log (`GAME_PLAN.md` §10, 2026-09-20: "Windows first, Android eventually"). Android remains a later performance-acceptance target, but it is not the primary design driver — the "mobile-first" framing of earlier drafts is superseded. iOS and consoles are future feasibility milestones requiring platform tooling, device testing and distribution access. C++ portability helps reuse rules but does not make a game automatically cross-platform. No multiplayer, cross-save service, account system or live-service dependency is included in the first slice.
 

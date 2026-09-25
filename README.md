@@ -6,7 +6,7 @@
 
 ## What is included
 
-- Unreal Engine5.7 C++ project and a small native Slate character-creation menu.
+- Unreal Engine 5.8 C++ project and a small native Slate character-creation menu.
 - Portable C++20 rules:20 traits, ranks0–4, cumulative costs0/25/60/110/180,1,000-point budget, maximum four rank-4 traits, exact age16, free identity/cosmetics, reversible draft edits and validation.
 - One implemented1,000-point Balanced Scholar preset. Other documented presets and all trait gameplay effects are design specifications for future work.
 - Five free, point-cost-free household templates (parent, extended family, grandparent, adult sibling, appointed guardian), selected at Household Resources Ranks 1–4 and locked once the prologue starts. As of a 2026-09-20 design decision, Household Resources Rank 0 now means institutional care (a children's home) instead of an ordinary baseline — see Docs/CHARACTER_CREATION.md and Docs/STATUS.md. The home scenes and art for every one of these six outcomes do not exist yet.

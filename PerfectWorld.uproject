@@ -1,6 +1,6 @@
 {
   "FileVersion": 3,
-  "EngineAssociation": "5.7",
+  "EngineAssociation": "5.8",
   "Category": "Games",
   "Description": "Perfect World: Awakening - India-first life simulation action RPG foundation",
   "Modules": [
@@ -13,6 +13,18 @@
       "Name": "PerfectWorld",
       "Type": "Runtime",
       "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins": [
+    {
+      "Name": "ModelContextProtocol",
+      "Enabled": true,
+      "TargetAllowList": [ "Editor" ]
+    },
+    {
+      "Name": "AllToolsets",
+      "Enabled": true,
+      "TargetAllowList": [ "Editor" ]
     }
   ]
 }

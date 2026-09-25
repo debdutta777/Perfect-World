@@ -1,10 +1,10 @@
 # Unreal Quick Start
 
-This guide opens the Perfect World creator prototype in Unreal Engine 5.7. It does not create a playable school or city.
+This guide opens the Perfect World creator prototype in Unreal Engine 5.8. It does not create a playable school or city.
 
 ## Build and open the project
 
-1. Use Unreal Engine **5.7** and Visual Studio 2022 with the C++ game development tools. Both were found on this PC, and the Desktop project compiled successfully on 19 September 2026.
+1. Use Unreal Engine **5.8** and the Visual Studio 2026 Build Tools with the C++ workload. Both are on this PC, and the project compiled on 5.8 on 25 September 2026. (It was a 5.7 project until then.)
 2. Open PowerShell and go to the project folder:
    ```powershell
    Set-Location 'C:\Users\DEBDUTTA\Desktop\PerfectWorld'
@@ -14,7 +14,7 @@ This guide opens the Perfect World creator prototype in Unreal Engine 5.7. It do
    python Scripts/build_unreal.py
    ```
    Wait for the command to finish. If Python is not found, install Python 3 and reopen PowerShell.
-4. In File Explorer, double-click `PerfectWorld.uproject`. If Windows asks which Unreal version to use, choose **Unreal Engine 5.7**. If asked to convert or upgrade the project, cancel and reopen with 5.7. First launch can take time while shaders are prepared.
+4. In File Explorer, double-click `PerfectWorld.uproject`. If Windows asks which Unreal version to use, choose **Unreal Engine 5.8**. If asked to convert or upgrade the project, cancel and reopen with 5.7. First launch can take time while shaders are prepared.
 5. Unreal opens the default **Entry** map, a blank engine map. In the top toolbar, click **Play** (or press **Alt+P**) to use **Play Selected Viewport**. The expected result is the character creator menu in the viewport.
 
 ## Try the creator
@@ -43,8 +43,8 @@ This uses CMake to configure and build the C++20 core, then runs CTest. It does 
 
 ## If something goes wrong
 
-- **Missing modules** dialog: close Unreal, run `python Scripts/build_unreal.py` from the project folder, wait for a successful build, then reopen the `.uproject` with Unreal 5.7. If compilation fails, install/repair Visual Studio 2022 C++ Build Tools and the Windows SDK, then run the build again.
-- **Wrong engine version**: close the project and reopen it with Unreal 5.7. Decline conversion/upgrade prompts; do not open and save it in another engine version.
+- **Missing modules** dialog: close Unreal, run `python Scripts/build_unreal.py` from the project folder, wait for a successful build, then reopen the `.uproject` with Unreal 5.8. If compilation fails, install/repair Visual Studio 2022 C++ Build Tools and the Windows SDK, then run the build again.
+- **Wrong engine version**: close the project and reopen it with Unreal 5.8. Decline conversion/upgrade prompts; do not open and save it in another engine version.
 - **Entry opens without the creator**: in **Edit → Project Settings → Maps & Modes**, set **Default GameMode** to `PerfectWorldMenuGameMode`, then restart Play In Editor.
 - **Build failure**: use the full compiler output from PowerShell or the build log to diagnose it. Red messages in the Unreal editor alone may be stale or unrelated; check the full compiler errors before changing code.
 

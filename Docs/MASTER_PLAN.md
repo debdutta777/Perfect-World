@@ -112,7 +112,7 @@ These all have machine-observable feedback: the compiler, CTest, validators, UHT
 2. **3D content throughput exceeds solo capacity.** Complete the full greybox loop before any bespoke art. One modular environment kit, one character rig, one animation library. Budget contractors for hero characters, animation cleanup, UI, audio and at least two Bengali cultural reviews.
 3. **The life-to-awakening promise is not legible or fun.** Make the slice the sole priority and hold the blind-test gate. If it fails, redesign — do not add content.
 4. **Simulation and saves become unreproducible.** One clock, one reducer, stable ordering, persisted RNG, record-based NPCs, checkpoint saves, migration tests, replay hashes.
-5. **Tooling and QA load overwhelm one person.** Pin UE 5.7 and the compiler. Ship Windows. One Android spike. No MetaHuman, Lumen, Nanite or World Partition. No broad agent refactors. Regular cooked builds.
+5. **Tooling and QA load overwhelm one person.** Pin UE 5.7 and the compiler (moved to 5.8 by owner decision, 2026-09-25). Ship Windows. One Android spike. No MetaHuman, Lumen, Nanite or World Partition. No broad agent refactors. Regular cooked builds.
 
 **On the existing test suite:** 225,000 assertions are evidence about core rules only. They say nothing about gameplay, packaging, art, performance or whether the game is any good. Do not let that number create false confidence.
 

@@ -97,3 +97,24 @@ Propagated to `GAME_PLAN.md` (§1, §4, §7, §8, §10, §12), `GLOBAL_WORLD.md`
 **Engine move (M0-12a):** the owner is installing Unreal Engine 5.8 through the Epic Launcher; the download was under way on 2026-09-25. An agent tried twice to install VS 2026 Build Tools with MSVC 14.50, Epic's recommended toolset for 5.8. Both attempts ended at the Windows administrator prompt (installer exit code 1602, cancelled), so nothing was installed. The machine has VS 2022 Build Tools 17.14.13 with MSVC 14.44.35207, which meets 5.8's stated minimum (VS 2022 17.14). 5.7's own configuration lists 14.44.35207 as a banned version, so 5.8's `Windows_SDK.json` must be checked in M0-12b.
 
 No code changed. Nothing was built or run in this checkpoint.
+
+## Checkpoint — Unreal Engine 5.8 and the Unreal MCP server, 2026-09-25
+
+M0-12a, M0-12b and M0-12c are done.
+
+| Check | Result |
+|---|---|
+| Unreal Engine 5.8 installed (owner, Epic Launcher) | PASS: `UE_5.8/Engine/Build/BatchFiles/Build.bat` and `UnrealEditor.exe` present |
+| VS 2026 Build Tools 18.10.2 (owner) | PASS: MSVC 14.50 (compiler 14.50.35739) and 14.51.36231 installed beside VS 2022 17.14 |
+| Editor build on 5.8 | PASS: `PerfectWorldEditor Win64 Development`, 22/22 actions, no warnings, MSVC 14.50.35739 (Epic's preferred toolset) |
+| Portable suite | PASS: 2/2 test executables (`PerfectWorldCoreTests`, `PerfectWorldClockTests`) |
+| Editor opens the project on 5.8 | PASS: launched, and the front end ran in Play In Editor (the Appearance screen was on screen). This is not the M0-13 smoke test |
+| Unreal MCP server | PASS: listening on `127.0.0.1:8000` only; `initialize`, `tools/list` and a read-only `list_toolsets` call succeeded; `claude mcp list` shows `unreal` connected |
+
+**What changed.** `EngineAssociation` is 5.8. Both targets moved from `BuildSettingsVersion.V6` to `V7`, because under V6 the editor target changes warning levels it shares with the installed `UnrealEditor` and the build tool refuses it. The `ModelContextProtocol` and `AllToolsets` plugins are enabled for the Editor target only. `Config/DefaultEditorPerProjectUserSettings.ini` auto-starts the server on port 8000.
+
+**Known issue.** `AllToolsets` pulls in `GameFeaturesToolset`, and at startup the editor logs *"Asset Manager settings do not include an entry for assets of type GameFeatureData"* under `LoadErrors`. It is harmless to this project, which uses no game features. The fix is either an asset-manager rule in `DefaultGame.ini` or an explicit toolset list instead of `AllToolsets`; this is for the owner to choose.
+
+**Portability, for a second machine such as a cloud PC.** `Scripts/build_core.py` no longer hardcodes the Visual Studio 2022 generator, so a fresh build folder uses the newest Visual Studio installed. Verified: a fresh folder generated for VS 2026 (MSBuild 18.10) passes 2/2, and the existing VS 2022 folder still passes 2/2. `.mcp.json` registers the `unreal` server for any clone. `BUILD_GUIDE.md` gains a new-machine checklist.
+
+**Not verified.** No M0-13 smoke check has been run. The six built features remain unverified in a launched window, apart from the Appearance screen being visible.
