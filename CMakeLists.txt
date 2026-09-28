@@ -10,6 +10,7 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/GameClock.cpp
     Source/PerfectWorldCore/Private/CharacterCreation.cpp
     Source/PerfectWorldCore/Private/CreationSaveSerialization.cpp
+    Source/PerfectWorldCore/Private/RealmCoordinate.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -28,3 +29,7 @@ add_test(NAME PerfectWorldCoreTests COMMAND PerfectWorldCoreTests)
 add_executable(PerfectWorldClockTests Tests/GameClockTests.cpp)
 target_link_libraries(PerfectWorldClockTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldClockTests COMMAND PerfectWorldClockTests)
+
+add_executable(PerfectWorldRealmTests Tests/RealmCoordinateTests.cpp)
+target_link_libraries(PerfectWorldRealmTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldRealmTests COMMAND PerfectWorldRealmTests)

@@ -42,7 +42,7 @@ Earth's surface is about 510 million km². The realm is **at least ten times tha
 
 ### 4.2 Coordinates
 
-- The portable core never stores a realm position as a single float. A position is a **64-bit integer chunk coordinate plus a local offset in metres** inside the chunk (`Core/RealmCoordinate`).
+- The portable core never stores a realm position as a single float. A position is a **floor index, a 64-bit integer chunk coordinate, and a local offset in metres** inside the chunk (`Core/RealmCoordinate`). Floor 1 is the ten-Earths surface; deeper floors are smaller (§7, W4).
 - Unreal only ever sees a local window around the player. When the player crosses a sector boundary the world is **re-origined**, so rendering precision is always centimetre-accurate. Unreal 5.8's large-world coordinates would reach far enough, but the design does not depend on them.
 - Distances, directions and travel times are computed in the core with integer chunks, so they are identical on every machine.
 
@@ -86,11 +86,13 @@ The steps are in `ROADMAP.md` §5a (M1-25 to M1-31). The portable steps need no 
 6. The Kolkata hero district (Nabapara) with one generated neighbouring district.
 7. A synthetic-load measurement against the budgets.
 
-## 7. Open owner questions
+## 7. World-scale decisions
 
-| ID | Question |
-|---|---|
-| **W1** | Which real cities, in what order, after Kolkata? |
-| **W2** | May real street layouts come from OpenStreetMap? It is free but requires ODbL attribution in the credits. The alternative is hand-approximated layouts |
-| **W3** | Is there one Deep Realm shared by every nation, or does each nation's Gates lead to its own region of it? |
-| **W4** | The realm's look: one continuous surface, or stacked layers (floors) going down like a true dungeon? |
+The owner delegated these four answers to Claude on 2026-09-28 ("do it yourself"). They are working decisions: the owner can override any of them, and the data is shaped so that each can change without a save-schema break.
+
+| ID | Question | Working decision |
+|---|---|---|
+| **W1** | Which real cities, in what order, after Kolkata? | Kolkata, then Delhi, Mumbai, Bengaluru and Chennai (the Indian cities the school years and the national examination need), then a first foreign wave chosen for Convergence hosting and story: Tokyo, Seoul, Singapore, Dubai, London, Paris, Berlin, New York, São Paulo, Lagos, Cairo and Sydney. The list is data (`Data/Cities`), so the order is cheap to change |
+| **W2** | Real street layouts from OpenStreetMap? | **Not yet.** Early cities use archetype-generated layouts with a few authored landmarks, so there is no licence obligation and no import pipeline to maintain. OpenStreetMap (ODbL, credited) stays an option for M8 breadth, as an owner call |
+| **W3** | One shared realm, or one per nation? | **One shared Deep Realm.** Each nation's Gates open into its own home region, so nations explore, compete and meet in the same place, which feeds rankings and global tension (`GLOBAL_WORLD.md`) |
+| **W4** | One continuous surface, or stacked floors? | **Stacked floors, like a true dungeon.** Floor 1 alone is at least ten times Earth's surface; deeper floors are smaller, rarer to reach and more dangerous (ranks rise with depth). A realm position therefore carries a floor index as well as its chunk coordinate |

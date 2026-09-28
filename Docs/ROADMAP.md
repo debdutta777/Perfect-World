@@ -88,7 +88,7 @@ M5 -- M6 -- M7 -- M8 -- M9 -- M10  (ROADMAP_LATER.md)
 
 | Decision | Needed before | Question |
 |---|---|---|
-| **W1–W4** | M1-29, M1-30 | World-scale questions: which cities in what order, OpenStreetMap layouts, one shared realm or per-nation regions, surface or stacked floors (`WORLD_SCALE.md` §7) |
+| ~~W1–W4~~ | M1-25, M1-29 | **Working decisions 2026-09-28 (delegated by the owner):** Kolkata, four Indian cities, then twelve foreign cities · no OpenStreetMap yet · one shared Deep Realm with a home region per nation · stacked floors, floor 1 at least ten Earths (`WORLD_SCALE.md` §7). The owner may override |
 | **R1** | M1-23 | Creation screen order. GAME_PLAN lists household, stream, traits, but the deleted flat panel combined household and traits. Proposed: Appearance → Identity → Household and traits → Stream → Review |
 | **R2** | M0-18 | Migration defaults for saves older than v5, which have no date of birth or stream. Proposed: 1 January 2026 and `science`, marked as migrated |
 | **R3** | M1-21 | The code has five template home kits (`compact_family_flat`, `row_house`, `cooperative_flat`, `rented_flat`, `staff_quarters`) plus the dormitory. GAME_PLAN §7 has three shells. Which templates share which shell? |
@@ -185,7 +185,7 @@ The M0-13 smoke-test checklist (S1–S32) tested the deleted screens and was rem
 
 | ID | Deliverable | Touches | Pass condition | Rung | Deps | Status |
 |---|---|---|---|---|---|---|
-| M1-25 | Realm coordinates: 64-bit chunk coordinate plus local offset, arithmetic, distance, sector of a chunk, and the realm extents (≥ 10 × 510.1 million km²) | Core/RealmCoordinate | CTest: normalisation round trips at the far corners; distance symmetric and exact across sector boundaries; the realm area is at least 5.101 × 10⁹ km²; no float ever holds a whole-realm position | CTest | — | not started |
+| M1-25 | Realm coordinates: floor index, 64-bit chunk coordinate plus local offset, arithmetic, distance, sector of a chunk, and per-floor extents (floor 1 ≥ 10 × 510.1 million km²; deeper floors smaller) | Core/RealmCoordinate | CTest: normalisation round trips at the far corners; distance symmetric and exact across sector boundaries; floor 1's area is at least 5.101 × 10⁹ km²; positions outside a floor are refused; no float ever holds a whole-realm position | CTest | W4 | done 2026-09-28 · 772,551 checks; Rung 1 3/3 |
 | M1-26 | Counter-based realm generator: terrain height, region theme and danger rank (F–S) for any chunk from the realm seed alone | Core/RealmGenerator | CTest: golden values for a fixed seed; generating chunks in any order gives identical results; neighbouring chunk edges match; it never touches the life RNG streams; 10,000 chunks generate within the documented time | CTest | M1-25 | not started |
 | M1-27 | Chunk delta store: sparse, versioned edits keyed by chunk coordinate, with a cap and revert rule | Core/ChunkDeltaStore | CTest: round trip; an unchanged chunk stores nothing; every truncation refused; the cap reverts the documented deltas | CTest | M1-25 | not started |
 | M1-28 | Realm streamer: instanced block chunks built on worker threads in a radius around the player, with re-origin at sector boundaries | Game/RealmStreamer; Content/Maps/MAP_Test_Realm | PIE: walk 5 km in one direction; no hitch above the frame budget; the player's precision stays within 1 cm after 100 re-origins; collision matches the generated data | PIE | M1-26, M1-13 | not started |

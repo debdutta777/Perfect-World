@@ -145,3 +145,23 @@ New machine: a Windows 11 cloud PC with an RTX-class GPU (DirectX 12), 19–22 G
 **Remaining limitation:** nothing is on screen: Play In Editor shows an empty Entry map until the 3D front end (M1-23) exists. The deleted screens were never verified in a launched window. Owner questions W1–W4 (`WORLD_SCALE.md` §7) are open.
 
 **Next smallest action:** connect the Unreal MCP server on this machine (the editor must be running), then start the portable lanes: M1-01 (command reducer) and M1-25 (realm coordinates), neither of which needs the editor.
+
+## Checkpoint — W1–W4 working decisions; M1-25 realm coordinates; Unreal MCP over HTTP, 2026-09-28
+
+**World-scale decisions.** The owner delegated W1–W4 ("do it yourself"). Working decisions, recorded in `WORLD_SCALE.md` §7 and open to the owner's override: Kolkata, then Delhi, Mumbai, Bengaluru and Chennai, then twelve foreign cities; no OpenStreetMap import yet; one shared Deep Realm with a home region per nation; stacked floors, floor 1 alone at least ten times Earth's surface.
+
+**Unreal MCP.** The editor started from `D:\Epic Games\UE_5.8` and, after about 7.5 minutes of first-launch shader compilation, answered an MCP `initialize` on `127.0.0.1:8000` (bound to localhost only). `tools/list` returned `list_toolsets`, `describe_toolset` and `call_tool`; read-only calls to `list_toolsets`, `EditorAppToolset.IsPIERunning` (false) and `LogsToolset.GetLogEntries` succeeded over plain JSON-RPC. The Claude session's own `unreal` tools stayed unloaded: the session started before the editor, and only the owner can reconnect it with `/mcp`. The editor later shut down cleanly on its own (log ends in a normal `Exiting.`, no crash), which stopped the listener; it was relaunched. The startup `LoadErrors` line about GameFeatureData appeared again, as recorded above. `claude mcp list` was not run: the Claude Code CLI is not installed on the cloud PC.
+
+**M1-25 — realm coordinates.**
+
+**Intent:** a Deep Realm position that is exact everywhere on a floor ten times Earth's surface, with integers only.
+
+**Files changed:** added `Source/PerfectWorldCore/Public/RealmCoordinate.h`, `Source/PerfectWorldCore/Private/RealmCoordinate.cpp`, `Tests/RealmCoordinateTests.cpp`; `CMakeLists.txt` registers them and the new `PerfectWorldRealmTests` executable.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwcore`.
+
+**Result:** PASS, 3/3 test executables: 225,395 creation checks, 16,857 clock checks and **772,551 realm checks**. The first run failed on a wrong constant in the test itself (71,434.24 km written as 71,434,240,000,000 mm instead of 71,434,240,000 mm); the code was right. Floor 1 is 2,180 sectors of 32.768 km, 71,434.24 km a side, about 5.103 billion km², which is at least ten times Earth. Twelve floors, each a quarter of the one above, the deepest one sector.
+
+**Remaining limitation:** Rung 2 was not run for this step, because the editor was open and locks the module DLLs. The core module compiles into Unreal as well, so the next editor build must include it. Nothing uses realm coordinates yet: the generator (M1-26) and delta store (M1-27) come next.
+
+**Next smallest action:** M1-26, the counter-based realm generator, in the portable lane.
