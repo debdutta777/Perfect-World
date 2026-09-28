@@ -15,6 +15,7 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/Json.cpp
     Source/PerfectWorldCore/Private/ContentRegistry.cpp
     Source/PerfectWorldCore/Private/ContentSchemas.cpp
+    Source/PerfectWorldCore/Private/RealmGenerator.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -37,6 +38,10 @@ add_test(NAME PerfectWorldClockTests COMMAND PerfectWorldClockTests)
 add_executable(PerfectWorldRealmTests Tests/RealmCoordinateTests.cpp)
 target_link_libraries(PerfectWorldRealmTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldRealmTests COMMAND PerfectWorldRealmTests)
+
+add_executable(PerfectWorldRealmGeneratorTests Tests/RealmGeneratorTests.cpp)
+target_link_libraries(PerfectWorldRealmGeneratorTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldRealmGeneratorTests COMMAND PerfectWorldRealmGeneratorTests)
 
 add_executable(PerfectWorldAwakenedTests Tests/AwakenedProgressionTests.cpp)
 target_link_libraries(PerfectWorldAwakenedTests PRIVATE PerfectWorldCore)

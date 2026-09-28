@@ -197,3 +197,17 @@ The owner authorised pushing to GitHub for this session ("push to github and con
 **Remaining limitation:** the schemas are written in C++ (`ContentSchemas.cpp`) because `SYSTEMS_DATA.md`, which `SYSTEMS.md` names as the schema authority, was never written; the C++ tables are the working schema until it is. The validator does not yet run at game boot or as the editor commandlet (`SYSTEMS.md` §5); it has not been compiled inside Unreal (the editor is open for MCP). No bundle for cooked builds yet.
 
 **Next smallest action:** M1-26 (realm generator), then M1-01 (command reducer); a Rung 2 build at the next convenient editor restart.
+
+## Checkpoint — M1-26 realm generator, 2026-09-28
+
+**Intent:** any Deep Realm chunk's terrain, theme, danger and landmark from the realm seed alone, identical on every machine and in any order.
+
+**Files changed:** added `Source/PerfectWorldCore/Public/RealmGenerator.h`, `Source/PerfectWorldCore/Private/RealmGenerator.cpp`, `Tests/RealmGeneratorTests.cpp`; changed `CMakeLists.txt`, `Docs/WORLD_SCALE.md` §4.3 (havens, danger bands, terrain), `Docs/ROADMAP.md`.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwcore`; golden values captured once with `PW_PRINT_GOLDEN=1` and pinned.
+
+**Result:** PASS, 15/15 CTest entries; 20,240 generator checks: golden height at two columns and a fingerprint over six chunks on floors 1, 3 and 12; any generation order gives identical chunks; chunk edges equal the global height field and the step across a boundary is no larger than steps inside; heights within ±560 m everywhere; region (0, 0) is a haven on every floor, its centre is F on floor 1 and E on floor 3, floor 12 is S; floor 1 spans at least four ranks and regions at least five themes; landmarks about one per sixteen 8 × 8 cells, towers only at C or above; chunks off a floor refused. **10,000 chunks in 1.73 s** (limit 5 s). One design fix before the first build: depth now scales to six ranks so the deepest floor is S (one rank per two floors had left floor 12 at A).
+
+**Remaining limitation:** terrain is height only: no caves, water, surface materials or theme-specific shapes yet; nations' Gate anchors are not yet placed in havens (M1-35 and the realm-anchor data); not compiled inside Unreal yet (editor open for MCP); nothing streams or renders (M1-28).
+
+**Next smallest action:** M1-01, the command reducer, so the world state has its single path of change; then M1-27 (chunk deltas).

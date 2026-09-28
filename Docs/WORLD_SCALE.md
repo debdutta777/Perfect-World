@@ -49,7 +49,9 @@ Earth's surface is about 510 million km². The realm is **at least ten times tha
 ### 4.3 Generation
 
 - **Counter-based, not sequential.** Each chunk is generated from `hash(realmSeed, chunkX, chunkY, layer)`, so any chunk can be built alone, in any order, on any thread, with the same result. This is separate from the life's RNG streams (`SYSTEMS.md`), which it never advances.
-- **Layers of meaning above the terrain:** regions (thousands of km, a theme and a danger rank F to S), sectors (tens of km, a re-origin cell and a travel node), and chunks (32 m, the unit of building and saving). Danger generally rises with distance from the Gate anchors that connect the realm to Earth.
+- **Layers of meaning above the terrain:** regions (64 × 64 sectors, about 2,097 km, one of eight themes), sectors (32.768 km, a re-origin cell and a travel node), and chunks (32 m, the unit of building and saving).
+- **Havens and danger (implemented, M1-26):** some regions are **havens**, safe ground where nations' Gates anchor; region (0, 0) of every floor always is one. A chunk is rank F within 50 km of a haven's centre and one rank higher for each doubling of that distance (E from 50 km, D 100, C 200, B 400, A 800, S from 1,600 km). Depth adds up to six more ranks: none on floors 1–2, and all of floor 12 is S.
+- **Terrain (implemented, M1-26):** five octaves of integer value noise from 4 km hills to 16 m bumps, at most about ±560 m, a pure function of the block column. 10,000 chunks generate in 1.7 s on the cloud PC (Release).
 - **Landmarks and dungeons inside the dungeon** (ruins, towers, lairs, settlements of other explorers) are placed by a sparse hashed grid per region, so they exist before anyone visits them and never move.
 
 ### 4.4 Travel and time
