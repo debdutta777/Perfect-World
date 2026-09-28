@@ -118,3 +118,30 @@ M0-12a, M0-12b and M0-12c are done.
 **Portability, for a second machine such as a cloud PC.** `Scripts/build_core.py` no longer hardcodes the Visual Studio 2022 generator, so a fresh build folder uses the newest Visual Studio installed. Verified: a fresh folder generated for VS 2026 (MSBuild 18.10) passes 2/2, and the existing VS 2022 folder still passes 2/2. `.mcp.json` registers the `unreal` server for any clone. `BUILD_GUIDE.md` gains a new-machine checklist.
 
 **Not verified.** No M0-13 smoke check has been run. The six built features remain unverified in a launched window, apart from the Appearance screen being visible.
+
+## Checkpoint — cloud PC set up; M0-12 baseline, 2026-09-25 to 2026-09-28
+
+New machine: a Windows 11 cloud PC with an RTX-class GPU (DirectX 12), 19–22 GB RAM, an 80 GB C: and a 420 GB D:. Because C: is small, the repository is at `D:\Dev\PerfectWorld`, Unreal 5.8.3 at `D:\Epic Games\UE_5.8` (launcher at `D:\Epic Games\Launcher`), VS 2026 Build Tools 18.10 at `D:\VS\BuildTools`, and gh, Python 3.13 and CMake under `D:\Tools`.
+
+| Check | Result |
+|---|---|
+| Rung 1: `python Scripts/build_core.py --build-dir D:/pwcore` | PASS: 2/2 executables; 225,395 creation checks (GAME_PLAN §11 had recorded 225,374) and 16,857 clock checks. Generator Visual Studio 18 2026, MSVC 19.51.36260 |
+| Rung 2: `python Scripts/build_unreal.py --engine-root "D:\Epic Games\UE_5.8"` on HEAD `a6b0ac4` | PASS on the second run: exit 0, `Result: Succeeded`, 22/22 actions. The first run failed with `Result: Failed (RulesError)`: "Could not find NetFxSDK install dir". Fixed by adding `Microsoft.Net.Component.4.8.1.SDK` and `.TargetingPack` to the Build Tools |
+| Compiler against `BannedVisualCppVersions` | PASS: the build tool used MSVC **14.50.35739** (from the `14.50.35717` folder). Banned for 14.50 is `14.50.0–14.50.35722`; preferred is `14.50.35717–14.50.99999` |
+| Warnings | One: "Unable to find Visual Studio SDK. Editor integration will be disabled", which only affects Visual Studio IDE integration |
+
+**Environment findings, now in `BUILD_GUIDE.md`:** the .NET Framework SDK is required; winget `--location` is ignored by the Git and Epic Launcher installers (the launcher needs `msiexec ... INSTALLDIR=`); Epic's install helper quits with `ih_early_exit` when the disk stalls for more than about 45 s, which happened while Steam was downloading to the same disk; the final phase of a 5.8 install (moving and hashing 269,489 files) takes about 15 minutes with no network traffic.
+
+## Checkpoint — M0-13a: the flat front end removed; world scale planned, 2026-09-28
+
+**Intent:** Remove the flat Slate front end, the 2D concept art and the superseded documents on the owner's instruction, keep the portable rules and their Unreal bridge, and record the new world-scale direction.
+
+**Files changed:** deleted `Source/PerfectWorld/{Public,Private}/PerfectWorld{AppearancePanel,CreatorPanel,MenuGameMode}.{h,cpp}`, `Art/kolkata-nabapara.png`, `Art/student-lineup.png`, and `Docs/{ART_DIRECTION,GAME_DESIGN,NEXT_SMALL_STEPS,PRODUCTION_PLAN,REVIEW_DECISIONS,SONNET_DESIGN_REVIEW,TECHNICAL_ARCHITECTURE,MENU_SMOKE_TEST,UNREAL_QUICKSTART}.md`. Changed `Config/DefaultEngine.ini` (no global menu game mode), `Source/PerfectWorld/PerfectWorld.Build.cs` (no Slate), `README.md`, and in `Docs/`: `GAME_PLAN.md` (§3 generated-terrain exception, §4, §6, §7, §8 M0 gate, §10 two decisions, §11), `ROADMAP.md` (M0 rewritten, M0-13a added, front-end steps dropped, M1-04 and M1-23 revised, new §5a world-scale lane M1-25 to M1-31), `BUILD_GUIDE.md`, `SYSTEMS_CATALOGUE.md`, `ASSET_PIPELINE.md`, `CHARACTER_CREATION.md`, `AWAKENING_AND_EXAM.md`, `MASTER_PLAN.md`, `DEVELOPMENT_WORKFLOW.md`, `ART_PROVENANCE.md`. Added `Docs/WORLD_SCALE.md`.
+
+**Exact check:** Rung 1 as above: PASS, 2/2, 225,395 + 16,857 checks. Rung 2 as above after the removal: PASS, exit 0, `Result: Succeeded`, 7/7 actions. A search of `Docs/`, `README.md`, `AGENTS.md`, `Source/` and `Config/` finds no live reference to a removed file (history rows in `ROADMAP.md` and this file keep their original wording).
+
+**Result:** PASS at Rung 2. The owner's decisions are logged in `GAME_PLAN.md` §10. The world-scale build approach in `WORLD_SCALE.md` is Claude's proposal; the GPT-6 critique `AGENTS.md` asks for was **not run**, because Codex is not installed on the cloud PC.
+
+**Remaining limitation:** nothing is on screen: Play In Editor shows an empty Entry map until the 3D front end (M1-23) exists. The deleted screens were never verified in a launched window. Owner questions W1–W4 (`WORLD_SCALE.md` §7) are open.
+
+**Next smallest action:** connect the Unreal MCP server on this machine (the editor must be running), then start the portable lanes: M1-01 (command reducer) and M1-25 (realm coordinates), neither of which needs the editor.

@@ -1,6 +1,6 @@
 # The Unified Awakening and the Tower Examination
 
-**Document status:** core design, established by the owner on 2026-09-20. This document is the authority on how awakening, the examination and profession freedom work. Where it contradicts `GAME_DESIGN.md`, this document wins and `GAME_DESIGN.md` is to be corrected. Nothing here is implemented yet.
+**Document status:** core design, established by the owner on 2026-09-20. This document is the authority on how awakening, the examination and profession freedom work. It replaced the old game-design document, which was deleted on 2026-09-28. Nothing here is implemented yet.
 
 ## The premise
 
@@ -123,8 +123,8 @@ There is no losing the game. There is only a life that went differently.
 
 These are corrections to be made, not open questions:
 
-1. `GAME_DESIGN.md` says the first Gate encounter is an accident and awakening emerges gradually and personally. It is now **universal, scheduled and state-administered**, via a school tutorial dungeon. The accidental-Gate opening arc must be rewritten.
-2. `GAME_DESIGN.md` describes awakening paths as discovered at authored thresholds and never previewed. The **Aptitude Projection now previews them**, deliberately, with a confidence band.
+1. The old game-design document said the first Gate encounter is an accident and awakening emerges gradually and personally. It is now **universal, scheduled and state-administered**, via a school tutorial dungeon. The accidental-Gate opening arc must be rewritten.
+2. The old game-design document described awakening paths as discovered at authored thresholds and never previewed. The **Aptitude Projection now previews them**, deliberately, with a confidence band.
 3. The five-band lifecycle plan stands, but the **examination becomes the hinge** between Higher Secondary and everything after.
 4. The `Tattva` system stands unchanged and now attaches to the awakened profile.
 5. Time scale is confirmed unchanged: **one real minute is one game hour**, matching the existing one-real-second-to-one-game-minute rate.

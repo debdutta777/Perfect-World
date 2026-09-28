@@ -83,7 +83,7 @@ Runs `Build.bat PerfectWorldEditor Win64 Development` with `-NoUBA`. **Close the
 
 ### Rung 3 — Play In Editor (PIE) smoke — visible behaviour
 
-Manual. Open the project (`"C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/Win64/UnrealEditor.exe" "C:/Users/DEBDUTTA/Desktop/PerfectWorld/PerfectWorld.uproject"`), Play In Editor with input focus in the viewport, and exercise the specific behaviour the step claims. `Docs/BUILD_GUIDE.md`'s manual smoke checklist and `Docs/MENU_SMOKE_TEST.md` are the model for how to write this down: numbered, specific, falsifiable steps, not "looks fine."
+Manual. Open the project (`"C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/Win64/UnrealEditor.exe" "C:/Users/DEBDUTTA/Desktop/PerfectWorld/PerfectWorld.uproject"`), Play In Editor with input focus in the viewport, and exercise the specific behaviour the step claims. The old menu smoke checklist (in git history before ROADMAP M0-13a) is the model for how to write this down: numbered, specific, falsifiable steps, not "looks fine."
 
 This rung needs the owner, or a documented manual script an agent can execute against a description of expected results and report faithfully (an agent cannot judge "does this feel right," but it can confirm "does clicking X produce Y").
 

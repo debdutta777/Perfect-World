@@ -92,7 +92,7 @@ Defined once here; detailed in the documents named.
 
 Every visual is built from blocks — cuboids with low-resolution pixel textures — until the game is complete. Real art arrives at M9. The block look is the game's working identity for years, so it is designed, not improvised.
 
-1. **Voxel is a look, not an engine.** Ordinary Unreal static and instanced meshes with nearest-filtered pixel textures. No voxel terrain, destruction or plugin, so real FBX and GLB art drops into the standard pipeline.
+1. **Voxel is a look, not an engine.** Ordinary Unreal static and instanced meshes with nearest-filtered pixel textures. No voxel destruction or plugin, so real FBX and GLB art drops into the standard pipeline. **Exception (2026-09-28):** the Deep Realm and the generated districts of world cities are too large to author by hand, so their terrain and massing are built at runtime from a deterministic seeded generator as instanced block chunks (`WORLD_SCALE.md`). Authored places stay authored layouts.
 2. **Real metric scale.** A door is 2.1 m tall whatever it is made of. Gameplay never depends on the block grid.
 3. **Gameplay data lives in data, not meshes.** Collision, interaction anchors, seats, sockets and navigation belong to the asset ID.
 4. **Characters use the final skeleton from day one.** Block characters are cuboid parts on the standard Unreal humanoid skeleton. Skeleton version and proportions policy are frozen early.
@@ -132,11 +132,11 @@ The phone is the primary interface and exists in the world: calendar, planner, r
 
 ### Phase 0 — Front end
 
-Title: **Continue**, **New Game**, **Load Game**, **Settings**, **Credits**, **Exit**. Slots show character, age, date, location, current commitments and last action. Life slots are distinct from recovery checkpoints. Returning after a long absence offers an optional **"since you last played"** recap. *Built:* title, load, settings, three slots, resume point, migrating saves. *Not built:* Continue, Credits, slot detail, recovery checkpoints, recap.
+Title: **Continue**, **New Game**, **Load Game**, **Settings**, **Credits**, **Exit**. Slots show character, age, date, location, current commitments and last action. Life slots are distinct from recovery checkpoints. Returning after a long absence offers an optional **"since you last played"** recap. *Built:* the portable save rules (three slots, resume point, migrating saves). *Removed 2026-09-28:* the flat Slate title, load and settings screens; the front end returns as part of the 3D block game (§10). *Not built:* everything on screen.
 
 ### Phase 1 — New Life (creation)
 
-Under **eight minutes with a preset**, twenty to thirty from scratch; drafts preserved. Appearance (block character, orbit camera), identity, household and resources (rank 0 is a children's home), school stream, 1,000 trait points, review. The review previews a representative day and concrete trade-offs, explaining choices through likely circumstances rather than future builds. *Built:* appearance, household, traits, confirm. *Not built:* identity, stream, review, presets beyond one.
+Under **eight minutes with a preset**, twenty to thirty from scratch; drafts preserved. Appearance (block character, orbit camera), identity, household and resources (rank 0 is a children's home), school stream, 1,000 trait points, review. The review previews a representative day and concrete trade-offs, explaining choices through likely circumstances rather than future builds. *Built:* the portable rules for appearance, household, traits and confirm. *Removed 2026-09-28:* the flat Slate appearance and creator panels; creation is rebuilt in 3D around the block character. *Not built:* identity, stream, review, presets beyond one, and every creation screen.
 
 ### Phase 2 — Latent life: the Class XI year (~age 16, 12–20 hours)
 
@@ -233,7 +233,7 @@ Specified in `SYSTEMS.md`.
 | **World** | Locations and interiors · NPC fidelity tiers and crystallisation · schedules · hazards, onset and consequence · news · **a changing world** (new generations, evolving institutions, business turnover, technology adoption) |
 | **Global** | Nations and Country Level · rankings · competitions and the Convergence · geopolitical tensions |
 | **Supernatural** | Gates · tutorial dungeon · tower · combat |
-| **Presentation** | First/third-person camera · player controller · interaction and targeting · phone view · block renderer and asset resolver · audio · accessibility and comfort · front end *(built)* |
+| **Presentation** | First/third-person camera · player controller · interaction and targeting · phone view · block renderer and asset resolver · audio · accessibility and comfort · front end *(flat version removed 2026-09-28; rebuilt in 3D, M1-23)* |
 
 **Binding architecture rules:** one clock; portable commands transform validated state and Unreal actors only present it; versioned snapshots keyed by stable IDs; content as validated data; declarative NPC schedules resolved at event boundaries; separated, persisted RNG streams; no persistent mutation from a frame tick.
 
@@ -243,7 +243,9 @@ Specified in `SYSTEMS.md`.
 
 | Content | Target |
 |---|---|
-| Playable city | Nabapara and surrounding Kolkata districts; further cities in later milestones; foreign locations only where the story needs the player's body there |
+| Playable city | Nabapara and surrounding Kolkata districts first; then many real world cities as block cities, each an authored hero district inside generated districts (`WORLD_SCALE.md` §2) |
+| Fictional places | Invented towns, academies, Gate sites and hidden districts placed inside or between real cities (`WORLD_SCALE.md` §3) |
+| The Deep Realm | One generated dungeon realm of at least ten times Earth's surface area (≈ 5.1 billion km²), reached through Gates; seeded, streamed in chunks, only visited or changed chunks saved (`WORLD_SCALE.md` §4) |
 | Home presentation | 3 family shells × 5 templates × **4** family resource tiers, plus the children's-home dormitory |
 | People | ~50 active local cast · ~500 significant · up to ~400 persistent global notables (3–8 per nation) · cohorts · aggregates |
 | Nations simulated | 50 real countries (`GLOBAL_WORLD.md` §8) |
@@ -265,7 +267,7 @@ Every milestone is playable and ends with a gate. `ROADMAP.md` breaks each into 
 
 | # | Milestone | Gate |
 |---|---|---|
-| **M0** | Foundation | Every built screen verified in a launched window, including damaged saves, controller focus, settings persistence and recovery. First cooked Windows build |
+| **M0** | Foundation | Both build rungs green on Unreal 5.8; the flat front end removed (2026-09-28); the packaged game boots into a block test map and quits cleanly. First cooked Windows build |
 | **M1** | Walkable block world: controller in both cameras, one home, a street, the school gate; asset registry, placeholder generator, presentation contracts, performance budgets, comfort options | In **both** camera modes: sit, read, select a small item, use a tool, speak to someone, pass through a furnished room, switch camera |
 | **M2** | One school day: condition, activities, all four structures prototyped, two classmates, a teacher, schedules, receipts, persistent identity | A full day saved and resumed mid-day. **The forty-exposure classroom test** passes with abbreviation available |
 | **M3** | The Class XI year: time modes, week compression, calendar, projection, threads, all six origins, a lightweight fifty-nation data model feeding news and rankings | A short period played manually and compressed yields equivalent state and understanding, **then** thirty-four weeks. **Adult-task probe:** one established adult work week built on the shared structures |
@@ -309,15 +311,17 @@ Every milestone is playable and ends with a gate. `ROADMAP.md` breaks each into 
 | 2026-09-25 | **Upgrade from Unreal Engine 5.7 to 5.8** to use Epic's official, in-editor Unreal MCP server (experimental, localhost only). Migrate now, before any world content exists, while it is cheapest. `ROADMAP.md` M0-12a to M0-12c |
 | 2026-09-25 | **§12 A: the awakening cannot be refused.** It is universal and involuntary; everything after it, including the examination and all supernatural practice, stays optional (§1) |
 | 2026-09-25 | **§12 B: fifty real countries**, up from thirty. Countries, cities and places are real; people are invented, or inspired by real roles and archetypes without being identifiable as any real person. The roster and rules are in `GLOBAL_WORLD.md` §8 |
+| 2026-09-28 | **Full shift to 3D block gameplay.** The flat Slate front end (title, load, settings, appearance and creator panels), the 2D concept art and the superseded documents are deleted. The portable rules (creation, appearance record, saves, clock) stay. Menus return later as part of the 3D game |
+| 2026-09-28 | **World scale:** many real world cities built as block cities, plus fictional places, plus a dungeon realm ten times bigger than Earth's total surface. Real art is still added after the game is complete (M9). Detail and the proposed build approach in `WORLD_SCALE.md` |
 | 2026-09-23 | GPT-6 review adopted: time contract, persistent identity at first reference, hazard onset versus consequence, presentation contracts, M9 as a three-part validation, early lifecycle proof, repetition gate, phase completeness rule, freedom acceptance rule |
 
 ---
 
 ## 11. What exists today
 
-Built, compiling and covered by the portable test suite (225,374 creation assertions, 16,857 clock assertions), pushed to `debdutta777/Perfect-World`: character-creation rules (ledger, households, rank-0 care, opening-home plan); an engine-neutral appearance record; three JSON save slots at schema version 4 with migration from 1–3 and resume points; the game clock; the front end (title, load, settings, appearance editor, household and points panel).
+**As of 2026-09-28**, built, compiling on Unreal 5.8 and covered by the portable test suite (225,395 creation checks, 16,857 clock checks): character-creation rules (ledger, households, rank-0 care, opening-home plan); an engine-neutral appearance record; save rules for three JSON slots at schema version 4 with migration from 1–3 and resume points; the game clock; and the `UPWCharacterCreatorSubsystem` bridge that reads and writes the slot files.
 
-**Not one screen has been exercised in a launched window.** Six features are built and unverified; closing that is the first step of M0 and of all work after this plan. No world, room, character model, NPC, activity or gameplay exists yet. The CC0 furniture packs in `Content/Fab/Downloads/` are superseded by the block approach.
+**Nothing is on screen.** The flat Slate front end was deleted on 2026-09-28 (§10) before it was ever verified in a launched window. No world, room, character model, NPC, activity or gameplay exists yet. The CC0 furniture packs in `Content/Fab/Downloads/` are superseded by the block approach.
 
 ---
 

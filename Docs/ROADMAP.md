@@ -1,8 +1,8 @@
 # Roadmap
 
-**Document status:** execution plan, 2026-09-23. It answers to `GAME_PLAN.md`, whose milestone gates (§8, as revised the same day after the GPT-6 review) it copies word for word. It **replaces** the step queue in `NEXT_SMALL_STEPS.md` and the build order in `MASTER_PLAN.md` §7 (the mapping is in §1.5). Process lives in `DEVELOPMENT_WORKFLOW.md`, system data and commands in `SYSTEMS.md`, and the block style, asset IDs, contracts, baker, resolver and import routes in `ASSET_PIPELINE.md` (its §12 is the per-milestone pipeline schedule these steps follow). **If this roadmap names a type, file or command differently from `SYSTEMS.md` or `ASSET_PIPELINE.md`, those documents win.** M0–M4 are detailed here. M5–M10 are detailed in [`ROADMAP_LATER.md`](ROADMAP_LATER.md).
+**Document status:** execution plan, 2026-09-23. It answers to `GAME_PLAN.md`, whose milestone gates (§8, as revised the same day after the GPT-6 review) it copies word for word. It **replaces** the old step queue (deleted 2026-09-28) and the build order in `MASTER_PLAN.md` §7 (the mapping is in §1.5). Process lives in `DEVELOPMENT_WORKFLOW.md`, system data and commands in `SYSTEMS.md`, and the block style, asset IDs, contracts, baker, resolver and import routes in `ASSET_PIPELINE.md` (its §12 is the per-milestone pipeline schedule these steps follow). **If this roadmap names a type, file or command differently from `SYSTEMS.md` or `ASSET_PIPELINE.md`, those documents win.** M0–M4 are detailed here. M5–M10 are detailed in [`ROADMAP_LATER.md`](ROADMAP_LATER.md).
 
-**Where things stand:** 11 steps built. 6 have passed their rung. 5 are code-complete but have never run in a launched window, and that is what M0-13 tests. Everything after M0-11 is not started.
+**Where things stand (2026-09-28):** the portable rules (M0-01, M0-03, M0-05, M0-06, M0-08, M0-10 rules, M0-11) pass CTest, and both build rungs are green on Unreal 5.8. The flat Slate front end was **deleted** by owner decision (M0-13a), so every step that only built or tested those screens is *dropped*. Work continues on the 3D block game: M1 and the world-scale lane (§5a).
 
 ---
 
@@ -35,7 +35,7 @@ Every milestone opens with its **goal**, its **gate** and the **playable result*
 1. Read the row, every row in its Deps, and the `SYSTEMS.md` or `ASSET_PIPELINE.md` section for the system it names.
 2. Write the intent and the pass condition into `STATUS.md` before writing code.
 3. Change only what **Touches** allows. If more is needed, stop and split the step.
-4. Run the rung with the exact commands in `DEVELOPMENT_WORKFLOW.md` §3. The CTest build directory is `C:/Users/DEBDUTTA/AppData/Local/Temp/pwcore`. The cooked command is added by M0-15.
+4. Run the rung with the exact commands in `DEVELOPMENT_WORKFLOW.md` §3. The CTest build directory must be a short path: `C:/Users/DEBDUTTA/AppData/Local/Temp/pwcore` on the owner's desktop, `D:/pwcore` on the cloud PC. The cooked command is added by M0-15.
 5. Record the six-field `STATUS.md` entry. Update this row's Status only when the rung has passed.
 
 ### 1.4 Standing rules for every step
@@ -50,22 +50,20 @@ Every milestone opens with its **goal**, its **gate** and the **playable result*
 
 | Old item | Now |
 |---|---|
-| `NEXT_SMALL_STEPS` 01–05 | M0-01 to M0-10, verified by M0-13 |
-| `NEXT_SMALL_STEPS` 06 (six greybox rooms, isometric pawn) | Superseded by first person: M1-21 (one home), M3-13 (six origins) |
-| `NEXT_SMALL_STEPS` 07, 08, 10, 11, 12 | M1-20, M2-16 · M1-22 · M2-03, M2-15 · M2-18 · M3-11 |
-| `NEXT_SMALL_STEPS` 09 (Android proof) | M10-04, or earlier if the owner pulls it forward (R7) |
-| `MASTER_PLAN` §7 A–H | A = M0-13 · B = M0-11 (done) · C = M2-01 · D = M2-03, M2-04 · E = M3-05 · F = M1-05 · G = M1-21 · H = M2-24 |
+| Old step queue (deleted 2026-09-28) | Its steps live on as M0-01 to M0-11, M1-20 to M1-22, M2-03, M2-15 to M2-18, M3-11, M3-13 and M10-04 |
+| `MASTER_PLAN` §7 A–H | A = dropped with the flat front end (M0-13a) · B = M0-11 (done) · C = M2-01 · D = M2-03, M2-04 · E = M3-05 · F = M1-05 · G = M1-21 · H = M2-24 |
 
 ---
 
 ## 2. Critical path
 
 ```
-M0-12 -- M0-13 smoke test (owner) -- M0-14 fixes -- M0-15 first cooked build ==> M0 GATE
-                                          \-- front-end lane M0-16..M0-24 (runs alongside M1)
+M0-12 -- M0-13a flat front end removed -- M0-15 first cooked build ==> M0 GATE
 M1-01 reducer -- M1-02 RNG -- M1-03 hash --+        <- portable lane: start now, needs no UI
 M0-18 identity/stream schema v5 -----------+-- M1-05 world save v6
-M0-14 -- M1-04 slot store -----------------+
+M0-13a -- M1-04 slot store ----------------+
+M1-25 realm coordinate -- M1-26 generator -- M1-27 deltas -- M1-28 streamer -- M1-29 city data
+  -- M1-30 hero district -- M1-31 load measurement      <- world-scale lane (§5a)
 M1-06 validator -- M1-07 contracts -- M1-08 style kit -- M1-09 baker -- M1-10 resolver
   -- M1-11 block character -- M1-13 controller -- M1-15 world entry -- M1-16 clock
   -- M1-17 interaction -- M1-18 hands -- M1-21 home -- M1-22 street -- M1-24 ==> M1 GATE (owner)
@@ -86,17 +84,18 @@ M5 -- M6 -- M7 -- M8 -- M9 -- M10  (ROADMAP_LATER.md)
 
 ## 3. Owner gates and decisions
 
-**Playtests and judgements only the owner can do** (tagged +owner in the tables): M0-12 (approve the commit), M0-13, M0-14, M0-15, M0-23, M0-24 · M1-08, M1-12, M1-13, M1-18, M1-22, M1-24 · M2-14, M2-18, M2-21, M2-23, M2-24 · M3-03, M3-04, M3-08, M3-12, M3-13, M3-17, M3-18, M3-20, M3-21 · M4-05, M4-07, M4-13, M4-18 to M4-21.
+**Playtests and judgements only the owner can do** (tagged +owner in the tables): M0-12 (approve the commit), M0-15 · M1-08, M1-12, M1-13, M1-18, M1-22, M1-24 · M2-14, M2-18, M2-21, M2-23, M2-24 · M3-03, M3-04, M3-08, M3-12, M3-13, M3-17, M3-18, M3-20, M3-21 · M4-05, M4-07, M4-13, M4-18 to M4-21.
 
 | Decision | Needed before | Question |
 |---|---|---|
-| **R1** | M0-19 | Creation screen order. GAME_PLAN lists household, stream, traits, but the built panel combines household and traits. Proposed: Appearance → Identity → Household and traits → Stream → Review |
+| **W1–W4** | M1-29, M1-30 | World-scale questions: which cities in what order, OpenStreetMap layouts, one shared realm or per-nation regions, surface or stacked floors (`WORLD_SCALE.md` §7) |
+| **R1** | M1-23 | Creation screen order. GAME_PLAN lists household, stream, traits, but the deleted flat panel combined household and traits. Proposed: Appearance → Identity → Household and traits → Stream → Review |
 | **R2** | M0-18 | Migration defaults for saves older than v5, which have no date of birth or stream. Proposed: 1 January 2026 and `science`, marked as migrated |
 | **R3** | M1-21 | The code has five template home kits (`compact_family_flat`, `row_house`, `cooperative_flat`, `rented_flat`, `staff_quarters`) plus the dormitory. GAME_PLAN §7 has three shells. Which templates share which shell? |
 | **R4** | M1-12 (asked for in M0) | Target hardware and the budget table (`ASSET_PIPELINE.md` §4 and §12, decision 1) |
 | **R5** | M2-23 | Pass thresholds for the forty-exposure test: how much decisions must change, voluntary foreground rate, comprehension score |
 | **R6** | M4-16 | Where the blind test starts. Eight testers cannot play 12–20 hours of latent life. A prepared late-year save, or a compressed latent span? |
-| **R7** | any time | When to run the Android feasibility spike. `TECHNICAL_ARCHITECTURE.md` wanted it early; GAME_PLAN has no Android step before M10 |
+| **R7** | any time | When to run the Android feasibility spike. The earlier architecture document (deleted 2026-09-28) wanted it early; GAME_PLAN has no Android step before M10 |
 | **R8** | M3-20 | A Bengali cultural reviewer booked early enough, given the lead time |
 | **R9** | M3-13 | Who writes the presentation bible (GAME_PLAN §3), and where it lives |
 | **AP 2–5** | M1-08 to M1-11 | `ASSET_PIPELINE.md` §12 decisions: procedural or Epic mannequin animation; AppearanceRecord gaps (lower garment, casual colour, height; accepting them means a schema bump); forward with MSAA or deferred with TSR; delete the CC0 packs |
@@ -110,51 +109,40 @@ M5 -- M6 -- M7 -- M8 -- M9 -- M10  (ROADMAP_LATER.md)
 
 ## 4. M0 — Foundation
 
-**Goal:** prove everything already built in a launched window, get a first cooked Windows build, then finish the Phase 0–1 front end. **Gate (GAME_PLAN §8):** *"Every built screen verified in a launched window, including damaged saves, controller focus, settings persistence and recovery. First cooked Windows build."* The gate is reached at M0-15. M0-16 to M0-24 finish the front end alongside M1. **Playable result:** a packaged game that boots to the title, creates a character, saves, quits, and resumes.
+**Goal:** a green baseline on Unreal 5.8, the flat front end removed, and a first cooked Windows build that boots into the block world. **Gate (GAME_PLAN §8, revised 2026-09-28):** *"Both build rungs green on Unreal 5.8; the flat front end removed (2026-09-28); the packaged game boots into a block test map and quits cleanly. First cooked Windows build."* **Playable result:** a packaged game that opens a block test map. Creation, saving and the title return in 3D during M1.
 
 | ID | Deliverable | Touches | Pass condition | Rung | Deps | Status |
 |---|---|---|---|---|---|---|
-| M0-01 | Creation ledger (20 traits, 1,000 points, rank-4 cap, Balanced Scholar) and Slate creator | Core/CharacterCreation; Game/CharacterCreatorSubsystem, MenuGameMode | CTest ledger suite; mouse PIE check of 20 Sep (`MENU_SMOKE_TEST.md`) | PIE | — | done `f948f1f`, `fee9b4b` |
-| M0-02 | Larger menu text and controls | Game/CreatorPanel | Compiles; legibility rechecked in M0-13 | Editor | M0-01 | done `aab1e5c` |
+| M0-01 | Creation ledger (20 traits, 1,000 points, rank-4 cap, Balanced Scholar) and Slate creator | Core/CharacterCreation; Game/CharacterCreatorSubsystem, MenuGameMode | CTest ledger suite; mouse PIE check of 20 Sep (record deleted 2026-09-28) | PIE | — | done `f948f1f`, `fee9b4b` · Slate creator removed by M0-13a; rules kept |
+| M0-02 | Larger menu text and controls | Game/CreatorPanel | Compiles; legibility rechecked in M0-13 | Editor | M0-01 | dropped 2026-09-28: flat front end removed (M0-13a) |
 | M0-03 | Household templates, stable-ID JSON save, schema v2 with v1 migration | Core/CharacterCreation, CreationSaveSerialization | CTest round trip, truncation, migration | CTest | M0-01 | done `bf91db6` |
-| M0-04 | Household picker and three save-slot buttons | Game/CreatorPanel, CharacterCreatorSubsystem | S14, S20, S21 | PIE | M0-03 | in progress: code `bf0636c`, PIE in M0-13 |
+| M0-04 | Household picker and three save-slot buttons | Game/CreatorPanel, CharacterCreatorSubsystem | S14, S20, S21 | PIE | M0-03 | done for the rules and slot files (`bf0636c`); picker and buttons dropped with M0-13a |
 | M0-05 | Opening-home plan (template × resources rank) | Core/CharacterCreation | CTest | CTest | M0-03 | done `32bca1b` |
-| M0-06 | Household Resources rank 0 means institutional care (rule and creator message) | Core/CharacterCreation; Game/CreatorPanel | CTest passed; message is S19 | PIE | M0-05 | in progress: code `c081998`, PIE in M0-13 |
-| M0-07 | Title, Load Game and Settings screens | Game/MenuGameMode | S1–S8, S32 | PIE | M0-04 | in progress: code `19af96c`, PIE in M0-13 |
+| M0-06 | Household Resources rank 0 means institutional care (rule and creator message) | Core/CharacterCreation; Game/CreatorPanel | CTest passed; message is S19 | PIE | M0-05 | done for the rule (`c081998`, CTest); the creator message dropped with M0-13a |
+| M0-07 | Title, Load Game and Settings screens | Game/MenuGameMode | S1–S8, S32 | PIE | M0-04 | dropped 2026-09-28: flat front end removed (M0-13a) |
 | M0-08 | Engine-neutral appearance record, schema v3 | Core/Appearance | CTest | CTest | M0-03 | done `aaf0529` |
-| M0-09 | Appearance editor, placed before points | Game/AppearancePanel, MenuGameMode | S9–S13 | PIE | M0-08 | in progress: code `e47d283`, PIE in M0-13 |
-| M0-10 | Resume points, schema v4 | Core/CharacterCreation; Game/MenuGameMode | CTest passed; S21–S24 | PIE | M0-09 | in progress: code `c8cc9a3`, PIE in M0-13 |
+| M0-09 | Appearance editor, placed before points | Game/AppearancePanel, MenuGameMode | S9–S13 | PIE | M0-08 | dropped 2026-09-28: flat front end removed (M0-13a) |
+| M0-10 | Resume points, schema v4 | Core/CharacterCreation; Game/MenuGameMode | CTest passed; S21–S24 | PIE | M0-09 | done for the rule (`c8cc9a3`, CTest); screens dropped with M0-13a |
 | M0-11 | Game clock (MASTER_PLAN step B) | Core/GameClock | 16,857 assertions pass | CTest | — | done `00e5425` |
-| M0-12 | Baseline: both rungs run on HEAD; owner reviews and commits the planning documents; config churn handled per `DEVELOPMENT_WORKFLOW.md` §4; `.gitignore` and `.gitattributes` extended per `ASSET_PIPELINE.md` §11, plus `.claude-flow/` | STATUS.md, .gitignore, .gitattributes | Both test executables pass, with assertion counts recorded; editor build passes; `git status` shows only intentional churn | Editor +owner | — | not started |
+| M0-12 | Baseline: both rungs run on HEAD; owner reviews and commits the planning documents; config churn handled per `DEVELOPMENT_WORKFLOW.md` §4; `.gitignore` and `.gitattributes` extended per `ASSET_PIPELINE.md` §11, plus `.claude-flow/` | STATUS.md, .gitignore, .gitattributes | Both test executables pass, with assertion counts recorded; editor build passes; `git status` shows only intentional churn | Editor +owner | — | done 2026-09-28 on the cloud PC · both rungs green on HEAD `a6b0ac4`: 225,395 + 16,857 checks; editor build 22/22 |
 | M0-12a | **Install Unreal Engine 5.8** through the Epic Launcher (owner decision 2026-09-25: upgrade for Epic's official Unreal MCP) | — | `C:/Program Files/Epic Games/UE_5.8/Engine/Build/BatchFiles/Build.bat` exists | — | — | done 2026-09-25 · owner installed 5.8.0 and VS 2026 Build Tools 18.10.2 |
 | M0-12b | Migrate the project to 5.8: check the installed MSVC against 5.8's `Engine/Config/Windows/Windows_SDK.json` (preferred and banned versions), set `EngineAssociation` to 5.8, regenerate, rebuild, fix deprecations. Epic recommends MSVC 14.50 from VS 2026 Build Tools; VS 2022 17.14 is the stated minimum | PerfectWorld.uproject; Source/ | `build_unreal.py` succeeds on 5.8 (it reads the engine version from the project); both CTest executables pass; the editor opens the project | Editor | M0-12a | done 2026-09-25 · targets moved to `BuildSettingsVersion.V7`; editor build 22/22 with MSVC 14.50 (14.50.35739), no warnings; both CTest executables pass; the editor opens the project |
 | M0-12c | Enable Epic's **Unreal MCP** plugin with **All Toolsets**; auto-start the server; run `ModelContextProtocol.GenerateClientConfig ClaudeCode` in the editor console | Config/; .mcp.json | `claude mcp list` shows `unreal` connected at `http://127.0.0.1:8000/mcp`; one read-only tool call succeeds. Localhost only: no authentication, never exposed off the machine. Experimental in 5.8 | Editor | M0-12b | done 2026-09-25 · config in `Config/DefaultEditorPerProjectUserSettings.ini`; plugins limited to the Editor target; `claude mcp list` shows `unreal` connected; `list_toolsets` answered. The user-scope registration already existed, so no `.mcp.json` was generated |
-| M0-13 | Launched-window smoke test: checks S1–S32 below, in PIE and in a standalone `-game -windowed` window, with a screenshot of each screen | Docs/MENU_SMOKE_TEST.md (new dated section) | Every check has PASS or FAIL recorded; every FAIL has a defect line (D1, D2, ...) with steps to reproduce | PIE +owner | M0-12 | not started |
-| M0-14 | Fix every M0-13 defect, one commit each. Includes the known gap: add Delete per slot on Load Game, with an in-screen confirmation | Game/MenuGameMode, panels, CharacterCreatorSubsystem as each defect needs | Each failed check re-runs PASS; S1, S12, S20, S21 re-run as regression; STATUS marks the six features verified | PIE +owner | M0-13 | not started |
-| M0-15 | Packaging script and **first cooked Windows build** | Scripts/package_windows.py (RunUAT BuildCookRun, Development, `-NoUBA`, log to `Saved/Logs`); rung-4 command added to `DEVELOPMENT_WORKFLOW.md` | Script exits 0; the packaged exe passes S1, S5, S6, S9, S15, S20, S21, S26, S27, S30, S32 | Cooked +owner | M0-14 | not started |
-| M0-16 | Continue on the title: loads the most recently written slot and goes to its resume point; disabled when no slot exists | Game/MenuGameMode, CharacterCreatorSubsystem | Save slot 3, then slot 1: Continue loads slot 1. With no slots, Continue is disabled. Same result after a relaunch | PIE | M0-14 | not started |
-| M0-17 | Credits screen: project, engine notice, and every entry in `ART_PROVENANCE.md` | Game/CreditsPanel, MenuGameMode | Opened and closed by mouse, keyboard and controller; every provenance entry is listed | PIE | M0-14 | not started |
+| M0-13 | Launched-window smoke test: checks S1–S32 below, in PIE and in a standalone `-game -windowed` window, with a screenshot of each screen | Docs/MENU_SMOKE_TEST.md (new dated section) | Every check has PASS or FAIL recorded; every FAIL has a defect line (D1, D2, ...) with steps to reproduce | PIE +owner | M0-12 | dropped 2026-09-28: flat front end removed (M0-13a) |
+| M0-13a | **Remove the flat Slate front end** (owner decision 2026-09-28): the title, load, settings, appearance and creator panels, the menu game mode, the 2D concept art and nine superseded documents | Game/MenuGameMode, AppearancePanel, CreatorPanel; Config/DefaultEngine.ini; Art/; Docs/ | Both rungs still pass; no code or config refers to the removed classes; no current document links to a removed file | Editor | M0-12 | done 2026-09-28 · editor build 7/7 Succeeded; CTest 2/2 |
+| M0-14 | Fix every M0-13 defect, one commit each. Includes the known gap: add Delete per slot on Load Game, with an in-screen confirmation | Game/MenuGameMode, panels, CharacterCreatorSubsystem as each defect needs | Each failed check re-runs PASS; S1, S12, S20, S21 re-run as regression; STATUS marks the six features verified | PIE +owner | M0-13 | dropped 2026-09-28: flat front end removed (M0-13a) |
+| M0-15 | Packaging script and **first cooked Windows build** that boots into a block test map | Scripts/package_windows.py (RunUAT BuildCookRun, Development, `-NoUBA`, log to `Saved/Logs`); rung-4 command added to `DEVELOPMENT_WORKFLOW.md`; Content/Maps/MAP_Test_Block | Script exits 0; the packaged exe opens the test map, the player can look around, and Alt+F4 or the quit key closes it with no crash reporter | Cooked +owner | M0-13a | not started |
+| M0-16 | Continue on the title: loads the most recently written slot and goes to its resume point; disabled when no slot exists | Game/MenuGameMode, CharacterCreatorSubsystem | Save slot 3, then slot 1: Continue loads slot 1. With no slots, Continue is disabled. Same result after a relaunch | PIE | M0-14 | dropped 2026-09-28: flat front end removed (M0-13a) |
+| M0-17 | Credits screen: project, engine notice, and every entry in `ART_PROVENANCE.md` | Game/CreditsPanel, MenuGameMode | Opened and closed by mouse, keyboard and controller; every provenance entry is listed | PIE | M0-14 | dropped 2026-09-28: flat front end removed (M0-13a) |
 | M0-18 | Identity and stream in the record, **schema v5**: date of birth (exactly 16 on 2 Jun 2042), pronouns, languages, `SchoolStreamId` and reason, resume points `identity`, `stream` and `review` | Core/CharacterCreation, CreationSaveSerialization | CTest: born 2 Jun 2025 refused; 3 Jun 2025 and 2 Jun 2026 accepted; 3 Jun 2026 refused. The stream changes no cost or stat. v1–v4 fixtures migrate to the R2 defaults. An unknown stream is refused | CTest | M0-12, R2 | not started |
-| M0-19 | Identity screen after Appearance | Game/IdentityPanel, MenuGameMode | An invalid date cannot be entered; values survive save/load and Back/Continue | PIE | M0-18, R1 | not started |
-| M0-20 | Stream screen: Science, Commerce or Humanities, plus a reason. States that it sets a timetable, not a destiny | Game/StreamPanel | The choice survives save/load; points and stats are unchanged | PIE | M0-18, R1 | not started |
-| M0-21 | Review screen; Confirm moves here from the creator panel | Game/ReviewPanel, CreatorPanel | Shows home, stream, identity, 1,000/1,000 and every nonzero trait in words. Confirm is enabled only when valid. After Confirm, every creation screen is read-only | PIE | M0-19, M0-20 | not started |
-| M0-22 | The four other verified presets from `CHARACTER_CREATION.md` (only `balanced_scholar` is accepted today), with a preset picker | Core/CharacterCreation; Game/CreatorPanel | CTest: each preset totals exactly 1,000 and respects the cap. PIE: each one applies | PIE | M0-14 | not started |
-| M0-23 | Creation timing check | — | The owner creates a character with a preset in under 8 minutes and from scratch in 20–30; the draft survives Back on every screen | PIE +owner | M0-21, M0-22 | not started |
-| M0-24 | Cooked build of the finished front end | Scripts/package_windows.py | M0-15's checks, plus identity, stream, review, Continue and Credits, pass in the packaged exe | Cooked +owner | M0-16 to M0-23 | not started |
+| M0-19 | Identity screen after Appearance | Game/IdentityPanel, MenuGameMode | An invalid date cannot be entered; values survive save/load and Back/Continue | PIE | M0-18, R1 | dropped 2026-09-28: flat front end removed (M0-13a) |
+| M0-20 | Stream screen: Science, Commerce or Humanities, plus a reason. States that it sets a timetable, not a destiny | Game/StreamPanel | The choice survives save/load; points and stats are unchanged | PIE | M0-18, R1 | dropped 2026-09-28: flat front end removed (M0-13a) |
+| M0-21 | Review screen; Confirm moves here from the creator panel | Game/ReviewPanel, CreatorPanel | Shows home, stream, identity, 1,000/1,000 and every nonzero trait in words. Confirm is enabled only when valid. After Confirm, every creation screen is read-only | PIE | M0-19, M0-20 | dropped 2026-09-28: flat front end removed (M0-13a) |
+| M0-22 | The four other verified presets from `CHARACTER_CREATION.md` (only `balanced_scholar` is accepted today), with a preset picker (the picker returns with the 3D creator, M1-23) | Core/CharacterCreation | CTest: each preset totals exactly 1,000 and respects the cap. CTest only until M1-23 | CTest | M0-13a | not started |
+| M0-23 | Creation timing check | — | The owner creates a character with a preset in under 8 minutes and from scratch in 20–30; the draft survives Back on every screen | PIE +owner | M0-21, M0-22 | dropped 2026-09-28: flat front end removed (M0-13a) |
+| M0-24 | Cooked build of the finished front end | Scripts/package_windows.py | M0-15's checks, plus identity, stream, review, Continue and Credits, pass in the packaged exe | Cooked +owner | M0-16 to M0-23 | dropped 2026-09-28: flat front end removed (M0-13a) |
 
-### M0-13 smoke-test checks
-
-**Setup:** close the editor. Delete `Saved/SaveGames/creation_slot_*` (the temp and backup files too). Launch the project and Play In Editor from the Entry map with the viewport focused. For the standalone run, use `UnrealEditor.exe PerfectWorld.uproject -game -windowed`. Record PASS or FAIL for each check.
-
-- **Title and focus:** **S1** The title shows *PERFECT WORLD: AWAKENING* and New Game, Load Game, Settings, Exit. Continue and Credits are not built yet, so their absence is expected. **S2** Every title button responds to the mouse. **S3** Keyboard: Tab or the arrows move a visible focus across every button, and Enter activates it. **S4** Controller: the D-pad or stick moves focus on every screen, the bottom face button activates, and the right face button goes back.
-- **Settings:** **S5** Display mode switches between windowed and fullscreen (standalone), and the resolution-scale slider changes both the percentage and the image. **S6** Change both settings, Exit, relaunch: both are kept. **S7** Back returns to the title.
-- **Empty load:** **S8** With no files, Load Game shows three disabled rows reading "Slot n: Empty slot", and Back returns.
-- **Appearance:** **S9** New Game opens the appearance editor, not the creator, and shows the no-art notice. **S10** Each of the four pickers moves its `[x]`, and every R, G and B slider for skin, hair and eyes changes the preview line. **S11** Back goes to the title; New Game again starts from default appearance.
-- **Household and points:** **S12** Continue shows "Kolkata, West Bengal \| Nabapara Vidyalaya \| Class XI \| Age 16" and 1000 / 1000 remaining. **S13** Back to appearance keeps the edits, and Continue keeps the ranks. **S14** Five households are listed; clicking each moves `[x]` and changes the opening-home line, and the remaining points do not change. **S15** Balanced Scholar leaves 0 remaining and enables Confirm Origin. **S16** Raising a trait with 0 remaining shows an error, and nothing changes. **S17** Lowering a rank refunds exactly its cost difference, and raising it again restores it. **S18** A fifth rank 4 is refused with the cap message while points remain. **S19** Household Resources at 0 names the children's-home dormitory and says the template does not apply; setting it back to 1 restores the chosen home.
-- **Save and resume:** **S20** Save the unconfirmed draft to slot 1; the slot line updates. **S21** Title, then Load Game, then slot 1: the game lands on the creator with the ranks, household and appearance restored. **S22** Change slot 1's `"resumePoint"` to `"appearance"` in a text editor; loading it lands on the appearance editor.
-- **Confirm locking:** **S23** Confirm Origin shows the confirmation, and ranks, presets and household rows then refuse changes. **S24** Save the confirmed character to slot 2, go to the title and load it: it is still confirmed and locked. **S25** New Game after that starts a fresh, unlocked draft.
-- **Damaged saves and recovery:** **S26** Fill slot 3 with random bytes. Its row reads as unreadable, loading it shows a plain message, and the other slots still work. **S27** Put each of these into slot 3 in turn: `schemaVersion` 99, an unknown household, a trait at rank 5, ranks totalling more than 1,000, an empty file, a file cut off halfway. Each is refused with a specific message and no crash. **S28** After a failed load, the draft in progress is unchanged, saves to slot 1, and reloads. **S29** A stale temp file (whatever name `SaveToSlot` writes) next to a good slot 1: slot 1 still loads, and the next save succeeds. **S30** Relaunch: slots 1 and 2 load as they were saved. **S31** Delete a slot. There is no UI for this yet, so this is expected to fail; it becomes D-known for M0-14.
-- **Exit:** **S32** In standalone, Exit closes cleanly with no crash reporter. In PIE, Exit ends the session.
+The M0-13 smoke-test checklist (S1–S32) tested the deleted screens and was removed with them; it is in git history before commit M0-13a if the checks are wanted for the 3D menus.
 
 ---
 
@@ -167,7 +155,7 @@ M5 -- M6 -- M7 -- M8 -- M9 -- M10  (ROADMAP_LATER.md)
 | M1-01 | Command reducer: `WorldState` and `Reduce(state, command)`, which returns new state and events, or a refusal. `AdvanceTime` is the only way the clock moves | Core/WorldState, Commands, WorldReducer | CTest: a refused command leaves the state identical; the same input gives the same output; `AdvanceTime` fires events in order and reports days crossed | CTest | M0-11 | not started |
 | M1-02 | Deterministic RNG streams (`opportunity`, `tower`, `ambience`, `crystallisation`), one fixed algorithm, seeded from a per-life seed | Core/RandomStreams | CTest: golden values for a fixed seed; drawing from one stream never moves another; restoring mid-sequence continues identically | CTest | M1-01 | not started |
 | M1-03 | State hash and command-log replay | Core/WorldHash | CTest: 10,000 seeded random command sequences replay to identical hashes; changing any single field changes the hash | CTest | M1-02 | not started |
-| M1-04 | Portable slot store: temp write, parse-back check, atomic replace, one `.bak`. The subsystem calls the core only | Core/SaveStore; Game/CharacterCreatorSubsystem | CTest in a temp folder: a stale temp is ignored; a corrupt primary falls back to `.bak` with a message; missing and corrupt are told apart. S20–S30 still pass | PIE | M0-14 | not started |
+| M1-04 | Portable slot store: temp write, parse-back check, atomic replace, one `.bak`. The subsystem calls the core only | Core/SaveStore; Game/CharacterCreatorSubsystem | CTest in a temp folder: a stale temp is ignored; a corrupt primary falls back to `.bak` with a message; missing and corrupt are told apart | CTest | M0-13a | not started |
 | M1-05 | World save, **schema v6**: the slot holds the creation record plus a world snapshot (clock, RNG states, player zone and transform, camera mode, world flags by stable ID). Saves from v1–v5 start at 2 Jun 2042 06:00 in the origin home | Core/WorldSave | CTest: round trip; every truncation refused; every older fixture migrates; the loaded hash equals the saved hash | CTest | M1-03, M1-04, M0-18 | not started |
 | M1-06 | Content registry and a validator executable that CTest runs over `Data/` and over bad fixtures | Core/ContentRegistry; Tools/ContentCheck; Tests/Fixtures | Real data passes. Fixtures with a duplicate ID, a dangling reference, an unknown field and a bad unit each fail, naming the file and ID | CTest | M1-01 | not started |
 | M1-07 | Registry schema `pw.asset/1`, contracts for the M1 families, and about 40–50 IDs (home shell, furniture, small items, one tool, street, gate) | Data/Contracts/*.json; Data/Assets/<category>/<subcategory>/*.json; validator rules | Validator passes; every anchor lies inside its bounds; seated and camera clearance are declared for both modes; doors are 2.10 m | CTest | M1-06 | not started |
@@ -186,8 +174,24 @@ M5 -- M6 -- M7 -- M8 -- M9 -- M10  (ROADMAP_LATER.md)
 | M1-20 | Speak to someone: one household adult (a guardian or care worker, depending on origin). Speaker shown, subtitles, framing the player can leave, clock paused | Game/Conversation; Data/Dialogue | In both modes the exchange plays, can be left at any line, and records a choice that survives save/load | PIE | M1-17, M1-11 | not started |
 | M1-21 | One furnished block home (the `compact_family_flat` kit) at realistic furniture density, with ceilings, as a layout | Data/Layouts | Audit 0; every room walked in both modes without camera clipping; within budgets | PIE | M1-18, M1-12, R3 | not started |
 | M1-22 | The Nabapara lane from the home door to the Nabapara Vidyalaya gate: one crossing, the gate as an interaction point, a route preview | Data/Layouts; navmesh bounds | The walk takes 1–3 real minutes; no stuck spots in either mode; audit 0; within budgets; the owner accepts the layout | PIE +owner | M1-21 | not started |
-| M1-23 | Appearance editor preview: the block character in an orbit camera | Game/AppearancePanel | Every picker and slider change shows within one frame; stats and review unchanged | PIE | M1-11, M0-14 | not started |
+| M1-23 | **3D creation and title (replaces the deleted flat front end):** New Game / Continue / Load / Settings / Quit, then the block character in an orbit camera with every appearance picker and slider, household and traits, and Confirm, all driving `UPWCharacterCreatorSubsystem` | Game/FrontEnd, CreationStage; Content/Maps/MAP_FrontEnd | Every picker and slider change shows within one frame; 1,000 points and the rank-4 cap enforced by the core; save, quit, load returns to the same resume point; keyboard, mouse and controller alone each work | PIE | M1-11, M1-13 | not started |
 | M1-24 | M1 gate run on a cooked build | STATUS.md | In both modes: sit, read, pick up a small item, use the tool, speak to the household adult, pass through the furnished home, switch camera. Bed to gate walked. Save and resume on the street. Audit 0; budgets recorded with blocks and proxies | Cooked +owner | M1-01 to M1-23 | not started |
+
+---
+
+## 5a. World-scale lane (owner decision 2026-09-28)
+
+**Goal:** the machinery for many real cities, fictional places and a Deep Realm ten times Earth's surface (`WORLD_SCALE.md`). The portable steps start now and never wait for the editor. **Playable result:** walk out of Nabapara into a generated Kolkata district, and step through a test Gate onto streamed realm terrain.
+
+| ID | Deliverable | Touches | Pass condition | Rung | Deps | Status |
+|---|---|---|---|---|---|---|
+| M1-25 | Realm coordinates: 64-bit chunk coordinate plus local offset, arithmetic, distance, sector of a chunk, and the realm extents (≥ 10 × 510.1 million km²) | Core/RealmCoordinate | CTest: normalisation round trips at the far corners; distance symmetric and exact across sector boundaries; the realm area is at least 5.101 × 10⁹ km²; no float ever holds a whole-realm position | CTest | — | not started |
+| M1-26 | Counter-based realm generator: terrain height, region theme and danger rank (F–S) for any chunk from the realm seed alone | Core/RealmGenerator | CTest: golden values for a fixed seed; generating chunks in any order gives identical results; neighbouring chunk edges match; it never touches the life RNG streams; 10,000 chunks generate within the documented time | CTest | M1-25 | not started |
+| M1-27 | Chunk delta store: sparse, versioned edits keyed by chunk coordinate, with a cap and revert rule | Core/ChunkDeltaStore | CTest: round trip; an unchanged chunk stores nothing; every truncation refused; the cap reverts the documented deltas | CTest | M1-25 | not started |
+| M1-28 | Realm streamer: instanced block chunks built on worker threads in a radius around the player, with re-origin at sector boundaries | Game/RealmStreamer; Content/Maps/MAP_Test_Realm | PIE: walk 5 km in one direction; no hitch above the frame budget; the player's precision stays within 1 cm after 100 re-origins; collision matches the generated data | PIE | M1-26, M1-13 | not started |
+| M1-29 | City data and district archetypes: city records (stable ID, nation, districts) and a generated-district builder for at least three archetypes | Core/CityData, DistrictGenerator; Data/Cities | CTest: the validator accepts Kolkata and rejects a dangling nation or duplicate ID; a district regenerates identically from its seed; streets connect with no dead cells | CTest | M1-06 | not started |
+| M1-30 | Nabapara as the authored hero district, plus one generated neighbouring Kolkata district, streamed together | Data/Layouts; Data/Cities/kolkata.json; Game/DistrictStreamer | PIE: walk from the school gate into the generated district and back; audit 0; within budgets | PIE +owner | M1-22, M1-28, M1-29 | not started |
+| M1-31 | Synthetic-load measurement for the streamers against the budgets | Content/Maps/MAP_Test_Load; `WORLD_SCALE.md` §5 numbers | Numbers recorded on the target hardware with a repeatable capture procedure | Cooked +owner | M1-28, M1-30, R4 | not started |
 
 ---
 

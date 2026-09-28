@@ -329,6 +329,6 @@
 | **Phone interface** | M2 calendar, receipt; M3 news, messages, projection; M5 folio; M6 rankings | A flat, screen-aligned Slate overlay (not an in-world render target), fully navigable by keyboard and controller, with scalable text. Opening it enters `ui_paused` |
 | **Block renderer and asset resolver** | M1; M9 swap | **Resolution:** `UPWAssetResolver` maps an asset ID to the soft path of its current representation per `ASSET_PIPELINE.md`, loading asynchronously at transitions. **Rendering:** HISM for repeated props; block characters rigidly skinned to the UE humanoid skeleton. **Coverage** report for M9 |
 | **Audio** | M3 ambience; M4 tower | Sounds referenced by asset ID. Ambience follows location, hour and weather; barks follow events |
-| **Front end** | **built** | **Adds:** Continue (the newest save across slots), Credits, and the Identity, Stream and Review screens. **Routing:** loading follows the resume record. **Modes:** `APerfectWorldMenuGameMode` stays front-end only, and `APWGameplayGameMode` runs world maps. **Creator:** its subsystem becomes a façade over `UPWSimSubsystem` |
+| **Front end** | **removed 2026-09-28; rebuilt in 3D (ROADMAP M1-23)** | **Adds:** title, Continue (the newest save across slots), Credits, and the creation stage with Identity, Stream and Review. **Routing:** loading follows the resume record. **Modes:** a front-end game mode runs `MAP_FrontEnd` only, and `APWGameplayGameMode` runs world maps. **Creator:** its subsystem becomes a façade over `UPWSimSubsystem` |
 
 ---

@@ -1,6 +1,6 @@
 # Asset pipeline
 
-**Document status:** plan, 2026-09-23. Authoritative, under `GAME_PLAN.md`, for the block style, asset IDs, presentation contracts, the asset registry, placeholder generation, the resolver, both import routes, provenance and the M9 art validation. **Nothing here is implemented.** Where `ART_DIRECTION.md`, `TECHNICAL_ARCHITECTURE.md` or `ART_PROVENANCE.md` describe 2D layered sprites, an isometric camera, baked lighting or `CH_`/`ENV_` prefixes, this document supersedes them for development-time assets.
+**Document status:** plan, 2026-09-23. Authoritative, under `GAME_PLAN.md`, for the block style, asset IDs, presentation contracts, the asset registry, placeholder generation, the resolver, both import routes, provenance and the M9 art validation. **Nothing here is implemented.** Where `ART_PROVENANCE.md` or the art-direction and architecture documents deleted on 2026-09-28 describe 2D layered sprites, an isometric camera, baked lighting or `CH_`/`ENV_` prefixes, this document supersedes them for development-time assets.
 
 **The contract in one paragraph.** Gameplay names every visual and sound by asset ID. The ID's registry entry holds real-metric dimensions, a presentation contract, gameplay data (collision, anchors, seats, sockets) and a block model, so every ID is visible and playable the moment it is defined. Real art fills empty slots at M9, through a drop folder or the editor, under one validator. Stable IDs preserve references; contracts preserve perception; M9 proves both by test rather than assumption.
 
@@ -74,7 +74,7 @@ The palette has 32 ramps × 4 steps and is stored as one 32 × 4 px PNG (`Art/Bl
 
 ### 1.5 Lighting that keeps blocks readable
 
-- There is no Lumen, ray tracing or lightmap baking in the baseline (`Config/DefaultEngine.ini` already disables GI and reflections; `MASTER_PLAN.md` rules them out). The clock moves the sun 15° per game hour, which is one real minute, so lighting is fully dynamic and `TECHNICAL_ARCHITECTURE.md`'s baked-light prototype no longer applies.
+- There is no Lumen, ray tracing or lightmap baking in the baseline (`Config/DefaultEngine.ini` already disables GI and reflections; `MASTER_PLAN.md` rules them out). The clock moves the sun 15° per game hour, which is one real minute, so lighting is fully dynamic and the old baked-light prototype no longer applies.
 - **Sun and sky.** A movable directional light with 3 shadow cascades to 80 m, the first ending at 8 m, and a 0.5° source angle for crisp block shadows. SkyAtmosphere with a movable real-time-capture sky light. Height fog for monsoon haze, so distant silhouettes step back.
 - **Face shading.** The block material multiplies each face by a fixed factor from its world normal: top 1.00, ±X 0.90, ±Y 0.80, bottom 0.65 *(tune)*. Every edge reads even in flat light.
 - **Baked corner AO.** The baker writes per-vertex occlusion from neighbouring cuboids into vertex colour (0.70 at a closed corner), standing in for the missing GI in corners and under furniture.
@@ -154,7 +154,7 @@ Expression channels live in `Data/Presentation/expressions_v1.json` and are refe
 | head angle | yaw ±70°, pitch ±35°, roll ±15° across neck_01, neck_02 and head | look-at, expression |
 | posture | upright, relaxed, slumped, guarded, leaning in, arms crossed | expression, condition |
 
-- **Named expressions** are channel tuples: neutral, warm, concerned and determined (the four in `ART_DIRECTION.md`), plus surprised, sad, angry, tired, laughing and embarrassed. Each uses at least two channels, one of them head angle or posture, so it reads at 5 m and when the face is small.
+- **Named expressions** are channel tuples: neutral, warm, concerned and determined (the original four), plus surprised, sad, angry, tired, laughing and embarrassed. Each uses at least two channels, one of them head angle or posture, so it reads at 5 m and when the face is small.
 - **Multi-channel meaning.** Consequential information never depends only on a small facial change, a colour, precise aiming or forced camera movement. It is always also carried by dialogue text, sound, posture or UI.
 - **Identity kit** for tier 0 and tier 1 NPCs: a silhouette (hair, height band, build and one silhouette accessory — glasses, dupatta, cap, apron, bag, walking stick); a clothing signature of two ramps; and habitual movement (gait speed, arm swing, posture preset, one idle habit).
 - **Identity checks.** The validator requires any two named cast members to differ in at least two of hair, height band, build, accessory and primary ramp. Playtest: after one in-game day, with nameplates off, testers identify at least 7 of the 8 slice cast at 12 m and in back-lit silhouette.

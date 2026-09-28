@@ -13,6 +13,6 @@ public class PerfectWorld : ModuleRules
             "Engine",
             "PerfectWorldCore"
         });
-        PrivateDependencyModuleNames.AddRange(new[] { "Slate", "SlateCore", "InputCore" });
+        PrivateDependencyModuleNames.AddRange(new[] { "InputCore" });
     }
 }

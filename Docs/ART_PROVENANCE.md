@@ -1,11 +1,11 @@
 # Concept art provenance
 
-Generated with the built-in Imagegen tool on 19 September 2026. All subjects are original fictional people and scenes. These are visual development references, not ready-to-use meshes or playable environments.
+Generated with the built-in Imagegen tool on 19 September 2026. All subjects are original fictional people and scenes. These are visual development references, not ready-to-use meshes or playable environments. **Both images were deleted on 2026-09-28** when the project moved fully to 3D block gameplay (`GAME_PLAN.md` §10); their provenance is kept here, and the files remain in git history.
 
 | Delivered file | Purpose | Generation source |
 |---|---|---|
-| Art/kolkata-nabapara.png | Canonical setting direction: fictional para within Kolkata, school commute, river warehouse Gate | exec-699b4232-7392-4e00-acc9-57885ec75e11.png |
-| Art/student-lineup.png | Age-16 student silhouette and outfit exploration | exec-695537ab-8987-4b9b-bf17-abd850f64dc3.png |
+| Art/kolkata-nabapara.png (removed 2026-09-28) | Canonical setting direction: fictional para within Kolkata, school commute, river warehouse Gate | exec-699b4232-7392-4e00-acc9-57885ec75e11.png |
+| Art/student-lineup.png (removed 2026-09-28) | Age-16 student silhouette and outfit exploration | exec-695537ab-8987-4b9b-bf17-abd850f64dc3.png |
 
 Kolkata prompt summary: wide stylized3D isometric production concept, Nabapara fictional neighborhood, shuttered older houses, balconies, courtyard secondary school, books/stationery, tea in clay cups, yellow taxi, monsoon puddles, river warehouse containing a teal-violet Gate. Distant river and bridge are atmospheric references, not a geographically reliable sightline. Generated decorative religious imagery and tiny signage are not approved environment assets and require art review.
 
@@ -15,7 +15,7 @@ An earlier western-Deccan environment draft was superseded by the user's West Be
 
 ## Owner-supplied reference sheet — 20 September 2026
 
-The owner supplied a new reference character sheet on 2026-09-20 showing anime-styled school students in navy/light-blue uniforms. This sheet is usable for **character style reference only** — uniform colour direction, anime-styled proportions and rendering, and the general costume/silhouette approach for the character editor described in CHARACTER_CREATION.md and ART_DIRECTION.md.
+The owner supplied a new reference character sheet on 2026-09-20 showing anime-styled school students in navy/light-blue uniforms. This sheet is usable for **character style reference only** — uniform colour direction, anime-styled proportions and rendering, and the general costume/silhouette approach for the character editor described in CHARACTER_CREATION.md.
 
 Its backdrop shows a South Indian gopuram temple and a hill fort. This background is **noncanonical**: it is not the game's Kolkata / West Bengal setting and must not guide environment, temple, or fort production. This follows the same handling already applied to `student-lineup.png` above, whose faint background buildings are likewise flagged noncanonical — only the foreground character/costume study is retained from either sheet.
 
@@ -32,7 +32,7 @@ Licence text for the Kenney pack is inside the archive as `License.txt` and was 
 
 No footlocker or trunk mesh was found in either pack. The children's home dormitory needs one, so it is either a substitute (a drawer cabinet or crate) or the first bespoke mesh to author.
 
-These are **placeholder greybox props, not final art**. They are Western-styled low-poly furniture and do not depict a Kolkata home. They exist to prove the room-loading and traversal systems before any setting-accurate art is commissioned, and every one of them is expected to be replaced. Do not treat their look as art direction; ART_DIRECTION.md remains authoritative.
+These are **placeholder greybox props, not final art**. They are Western-styled low-poly furniture and do not depict a Kolkata home. They exist to prove the room-loading and traversal systems before any setting-accurate art is commissioned, and every one of them is expected to be replaced. Do not treat their look as art direction; `GAME_PLAN.md` §3 and `ASSET_PIPELINE.md` are authoritative.
 
 ## Superseded — 2026-09-23: block placeholders replace the downloaded packs as the development look
 

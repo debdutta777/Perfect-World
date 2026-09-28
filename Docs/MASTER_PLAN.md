@@ -1,6 +1,6 @@
 # Master production plan
 
-**Document status:** production authority, 2026-09-20. Synthesised from a GPT-6 (`gpt-6-astra`) design critique and a GPT-5.6 Sol production review, reconciled against the owner's stated goal. Supersedes `PRODUCTION_PLAN.md` where they conflict.
+**Document status:** production authority, 2026-09-20. Synthesised from a GPT-6 (`gpt-6-astra`) design critique and a GPT-5.6 Sol production review, reconciled against the owner's stated goal. It superseded the old production plan, which was deleted on 2026-09-28.
 
 **Owner's stated goal:** a generational game at AAAA scale, 2–3 years acceptable, artists hired later, free or generated art until then. Working part-time, most evenings.
 
