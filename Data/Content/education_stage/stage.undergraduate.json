@@ -1,0 +1,8 @@
+{
+  "type": "education_stage",
+  "id": "stage.undergraduate",
+  "name": "Undergraduate",
+  "ageFrom": 18,
+  "ageTo": 22,
+  "playable": true
+}

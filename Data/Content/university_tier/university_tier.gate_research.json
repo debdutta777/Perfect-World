@@ -1,0 +1,6 @@
+{
+  "type": "university_tier",
+  "id": "university_tier.gate_research",
+  "name": "Gate research university",
+  "selectivity": "high"
+}

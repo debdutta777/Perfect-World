@@ -1,0 +1,14 @@
+{
+  "type": "realm_region",
+  "id": "realm.region.india",
+  "floor": 1,
+  "note": "India's region of the shared Deep Realm (Docs/WORLD_SCALE.md §7, W3). Each city's major Gate is a surveyed anchor here.",
+  "anchors": [
+    "gate.kolkata.river_warehouse",
+    "gate.delhi.ridge_forest",
+    "gate.mumbai.harbour_works",
+    "gate.bengaluru.quarry_ridge",
+    "gate.chennai.salt_pans"
+  ],
+  "name": "India's home region"
+}

@@ -1,0 +1,9 @@
+{
+  "type": "institution",
+  "id": "institution.bhagirathi_state_university",
+  "name": "Bhagirathi State University",
+  "kind": "university",
+  "universityTier": "university_tier.state",
+  "city": "city.kolkata",
+  "district": "district.kolkata.north_core"
+}

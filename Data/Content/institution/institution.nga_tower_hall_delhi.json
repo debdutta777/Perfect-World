@@ -1,0 +1,7 @@
+{
+  "type": "institution",
+  "id": "institution.nga_tower_hall_delhi",
+  "name": "NGA Central Examination Hall",
+  "kind": "examination_hall",
+  "city": "city.delhi"
+}

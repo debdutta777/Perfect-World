@@ -1,0 +1,16 @@
+{
+  "type": "institution",
+  "id": "institution.nilgagan_school",
+  "name": "Nilgagan Public School",
+  "kind": "school",
+  "schoolType": "school_type.private_premium",
+  "stages": [
+    "stage.primary",
+    "stage.upper_primary",
+    "stage.secondary",
+    "stage.higher_secondary"
+  ],
+  "city": "city.delhi",
+  "district": "district.delhi.apartment_belt",
+  "tutorialDungeon": true
+}

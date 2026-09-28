@@ -1,0 +1,8 @@
+{
+  "type": "stratum",
+  "id": "stratum.precarious",
+  "householdResourcesRank": 1,
+  "name": "Precarious",
+  "housing": "one_room_or_shared_flat",
+  "buffer": "none"
+}

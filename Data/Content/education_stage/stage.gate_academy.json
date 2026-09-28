@@ -1,0 +1,9 @@
+{
+  "type": "education_stage",
+  "id": "stage.gate_academy",
+  "name": "Gate academy",
+  "ageFrom": 17,
+  "ageTo": null,
+  "playable": true,
+  "requiresAwakening": true
+}

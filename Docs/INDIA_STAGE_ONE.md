@@ -1,6 +1,6 @@
 # India, stage one: cities, Gates, education and society
 
-**Document status:** design, 2026-09-28, on the owner's instruction to "build India and its cities, dungeon, schools of various levels and universities, resources and social classes". It sits under `GAME_PLAN.md`, `WORLD_SCALE.md` (how cities and the Deep Realm are built), `INDIA_WORLD_BIBLE.md` (Kolkata and Nabapara, the cultural authority) and `GLOBAL_WORLD.md` (nations and rankings). **The lists live as data in `Data/India/`; this document gives the rules those files follow.** Every institution, school, company and person is **fictional**; cities, rivers and neighbourhoods are real. All of it needs the cultural review `INDIA_WORLD_BIBLE.md` requires before any of it appears as fact in the game. Not yet reviewed by GPT-6.
+**Document status:** design, 2026-09-28, on the owner's instruction to "build India and its cities, dungeon, schools of various levels and universities, resources and social classes". It sits under `GAME_PLAN.md`, `WORLD_SCALE.md` (how cities and the Deep Realm are built), `INDIA_WORLD_BIBLE.md` (Kolkata and Nabapara, the cultural authority) and `GLOBAL_WORLD.md` (nations and rankings). **The lists live as data in `Data/Content/<type>/<id>.json`, checked by the content validator (M1-06); this document gives the rules those files follow.** Every institution, school, company and person is **fictional**; cities, rivers and neighbourhoods are real. All of it needs the cultural review `INDIA_WORLD_BIBLE.md` requires before any of it appears as fact in the game. Not yet reviewed by GPT-6.
 
 ---
 
@@ -18,7 +18,7 @@ Travel between them is by rail and air, as scenes with declared time costs (`WOR
 
 ## 2. Gates and India's dungeon
 
-- **City Gates.** Each city has registered Gate sites (`Data/India/cities.json`), each with a rank from F to S. Most are F–D and contained by the National Gate Authority; a few higher-rank sites are sealed zones. Onsets are scheduled world events; consequences depend on preparation (`GAME_PLAN.md` §2).
+- **City Gates.** Each city has registered Gate sites (`Data/Content/city/`), each with a rank from F to S. Most are F–D and contained by the National Gate Authority; a few higher-rank sites are sealed zones. Onsets are scheduled world events; consequences depend on preparation (`GAME_PLAN.md` §2).
 - **India's home region of the Deep Realm.** Under the shared-realm decision (`WORLD_SCALE.md` §7, W3), India's Gates open into one home region of floor 1. Each city's major Gate is an **anchor**: a fixed, surveyed entry point in the realm. Anchors are close to each other in the realm even though the cities are far apart on Earth, which makes the realm India's fastest shared frontier and a reason for inter-city rivalry.
 - **Every school's tutorial dungeon** is a supervised F-rank instance, the same for every student (`AWAKENING_AND_EXAM.md`). It is not part of the Deep Realm.
 - **The Tower Examination** is virtual and run centrally from Delhi, with a certified hall in every stage-one city.
@@ -101,6 +101,6 @@ Every Class XI student in the country awakens on the same day through their scho
 
 The steps are in `ROADMAP.md` (M1-32 onward, with M1-25 to M1-31 for the world-scale machinery):
 
-1. India data: the nation, the five cities with districts and Gate sites, institutions, education stages, strata (`Data/India/`, M1-32).
+1. India data: the nation, the five cities with districts and Gate sites, institutions, education stages, strata (`Data/Content/`, M1-32).
 2. The awakened-grade rules in the portable core (M1-33).
 3. A validator over `Data/` (M1-06), then Nabapara in 3D (M1-21, M1-22, M1-30).

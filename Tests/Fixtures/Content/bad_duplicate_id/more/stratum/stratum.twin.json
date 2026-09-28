@@ -1,0 +1,8 @@
+{
+  "type": "stratum",
+  "id": "stratum.twin",
+  "householdResourcesRank": 1,
+  "name": "Twin",
+  "housing": "small_flat",
+  "buffer": "small"
+}

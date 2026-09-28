@@ -1,0 +1,6 @@
+{
+  "type": "resource",
+  "id": "resource.money_personal",
+  "scope": "personal",
+  "currency": "INR"
+}

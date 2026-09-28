@@ -1,0 +1,8 @@
+{
+  "type": "education_stage",
+  "id": "stage.pre_primary",
+  "name": "Pre-primary",
+  "ageFrom": 3,
+  "ageTo": 6,
+  "playable": false
+}

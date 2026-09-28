@@ -1,0 +1,8 @@
+{
+  "type": "stratum",
+  "id": "stratum.middle",
+  "householdResourcesRank": 3,
+  "name": "Middle",
+  "housing": "own_flat",
+  "buffer": "one_emergency"
+}

@@ -1,0 +1,6 @@
+{
+  "type": "school_type",
+  "id": "school_type.private_premium",
+  "name": "Private premium school",
+  "fees": "high"
+}

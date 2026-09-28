@@ -1,0 +1,6 @@
+{
+  "type": "university_tier",
+  "id": "university_tier.national_institute",
+  "name": "National institute",
+  "selectivity": "very_high"
+}

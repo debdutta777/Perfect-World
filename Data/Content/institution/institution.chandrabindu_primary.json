@@ -1,0 +1,13 @@
+{
+  "type": "institution",
+  "id": "institution.chandrabindu_primary",
+  "name": "Chandrabindu Primary School",
+  "kind": "school",
+  "schoolType": "school_type.government",
+  "stages": [
+    "stage.primary",
+    "stage.upper_primary"
+  ],
+  "city": "city.kolkata",
+  "district": "district.kolkata.nabapara"
+}

@@ -1,0 +1,9 @@
+{
+  "type": "education_stage",
+  "id": "stage.secondary",
+  "name": "Secondary (Classes IX-X)",
+  "ageFrom": 14,
+  "ageTo": 16,
+  "playable": false,
+  "endsWith": "class_x_board"
+}

@@ -1,0 +1,7 @@
+{
+  "type": "resource",
+  "id": "resource.household_budget",
+  "scope": "household",
+  "currency": "INR",
+  "lootable": false
+}

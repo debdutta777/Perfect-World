@@ -1,0 +1,5 @@
+{
+  "type": "resource",
+  "id": "resource.public_goods",
+  "scope": "city"
+}

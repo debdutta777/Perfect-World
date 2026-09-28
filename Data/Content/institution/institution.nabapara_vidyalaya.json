@@ -1,0 +1,14 @@
+{
+  "type": "institution",
+  "id": "institution.nabapara_vidyalaya",
+  "name": "Nabapara Vidyalaya",
+  "kind": "school",
+  "schoolType": "school_type.government_aided",
+  "stages": [
+    "stage.higher_secondary"
+  ],
+  "city": "city.kolkata",
+  "district": "district.kolkata.nabapara",
+  "location": "loc_nhss",
+  "tutorialDungeon": true
+}

@@ -1,0 +1,8 @@
+{
+  "type": "stratum",
+  "id": "stratum.seven",
+  "householdResourcesRank": 7,
+  "name": "Seven",
+  "housing": "small_flat",
+  "buffer": "small"
+}

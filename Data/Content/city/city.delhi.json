@@ -1,0 +1,62 @@
+{
+  "type": "city",
+  "id": "city.delhi",
+  "name": "Delhi",
+  "nation": "nation.india",
+  "state": "National Capital Territory of Delhi",
+  "role": "National capital: NGA headquarters, the central tower examination hall, the national Gate academy",
+  "districts": [
+    {
+      "id": "district.delhi.civic_quarter",
+      "name": "NGA civic quarter",
+      "kind": "authored",
+      "fictional": true
+    },
+    {
+      "id": "district.delhi.government",
+      "name": "Government quarter",
+      "kind": "generated",
+      "archetype": "government_quarter",
+      "seed": 2001
+    },
+    {
+      "id": "district.delhi.old_core",
+      "name": "Old core",
+      "kind": "generated",
+      "archetype": "old_dense_core",
+      "seed": 2002
+    },
+    {
+      "id": "district.delhi.apartment_belt",
+      "name": "Apartment belt",
+      "kind": "generated",
+      "archetype": "apartment_belt",
+      "seed": 2003
+    },
+    {
+      "id": "district.delhi.campus",
+      "name": "University campus",
+      "kind": "generated",
+      "archetype": "campus",
+      "seed": 2004
+    }
+  ],
+  "gateSites": [
+    {
+      "id": "gate.delhi.ridge_forest",
+      "name": "Ridge Forest Gate",
+      "district": "district.delhi.government",
+      "rank": "C",
+      "status": "contained",
+      "realmAnchor": true
+    },
+    {
+      "id": "gate.delhi.old_canal",
+      "name": "Old Canal Gate",
+      "district": "district.delhi.old_core",
+      "rank": "E",
+      "status": "contained",
+      "realmAnchor": false
+    }
+  ]
+}

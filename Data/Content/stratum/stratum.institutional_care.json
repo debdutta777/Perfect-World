@@ -1,0 +1,9 @@
+{
+  "type": "stratum",
+  "id": "stratum.institutional_care",
+  "householdResourcesRank": 0,
+  "name": "Institutional care",
+  "housing": "children_home_shared_room",
+  "buffer": "none",
+  "leavingCareAge": 18
+}

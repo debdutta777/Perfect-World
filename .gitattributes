@@ -6,6 +6,8 @@
 *.md text eol=lf
 *.ini text eol=lf
 *.uproject text eol=lf
+*.json text eol=lf
+*.txt text eol=lf
 *.png binary
 
 # Unreal binary content is stored with Git LFS. Added ahead of importing any

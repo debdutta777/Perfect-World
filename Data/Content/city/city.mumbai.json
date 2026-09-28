@@ -1,0 +1,62 @@
+{
+  "type": "city",
+  "id": "city.mumbai",
+  "name": "Mumbai",
+  "nation": "nation.india",
+  "state": "Maharashtra",
+  "role": "Enterprise and port: Gate-materials trade, finance, the coastal Gate belt",
+  "districts": [
+    {
+      "id": "district.mumbai.harbour_works",
+      "name": "Harbour works",
+      "kind": "authored",
+      "fictional": true
+    },
+    {
+      "id": "district.mumbai.port",
+      "name": "Port",
+      "kind": "generated",
+      "archetype": "port",
+      "seed": 3001
+    },
+    {
+      "id": "district.mumbai.dense_core",
+      "name": "Dense core",
+      "kind": "generated",
+      "archetype": "old_dense_core",
+      "seed": 3002
+    },
+    {
+      "id": "district.mumbai.apartment_belt",
+      "name": "Apartment belt",
+      "kind": "generated",
+      "archetype": "apartment_belt",
+      "seed": 3003
+    },
+    {
+      "id": "district.mumbai.informal",
+      "name": "Informal settlement",
+      "kind": "generated",
+      "archetype": "informal_settlement",
+      "seed": 3004
+    }
+  ],
+  "gateSites": [
+    {
+      "id": "gate.mumbai.harbour_works",
+      "name": "Harbour Works Gate",
+      "district": "district.mumbai.harbour_works",
+      "rank": "D",
+      "status": "contained",
+      "realmAnchor": true
+    },
+    {
+      "id": "gate.mumbai.offshore_shoal",
+      "name": "Offshore Shoal Gate",
+      "district": "district.mumbai.port",
+      "rank": "B",
+      "status": "sealed",
+      "realmAnchor": false
+    }
+  ]
+}

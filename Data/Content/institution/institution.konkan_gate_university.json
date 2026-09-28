@@ -1,0 +1,9 @@
+{
+  "type": "institution",
+  "id": "institution.konkan_gate_university",
+  "name": "Konkan Coast Gate Research University",
+  "kind": "university",
+  "universityTier": "university_tier.gate_research",
+  "city": "city.mumbai",
+  "district": "district.mumbai.harbour_works"
+}

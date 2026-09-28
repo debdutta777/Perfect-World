@@ -1,0 +1,6 @@
+{
+  "type": "school_type",
+  "id": "type.wrong",
+  "name": "Wrong prefix",
+  "fees": "low"
+}

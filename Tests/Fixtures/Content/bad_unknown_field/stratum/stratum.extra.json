@@ -1,0 +1,9 @@
+{
+  "type": "stratum",
+  "id": "stratum.extra",
+  "householdResourcesRank": 2,
+  "name": "Extra",
+  "housing": "small_flat",
+  "buffer": "small",
+  "wealthScore": 9
+}

@@ -1,0 +1,9 @@
+{
+  "type": "institution",
+  "id": "institution.yamuna_institute",
+  "name": "Yamuna National Institute of Gate Sciences",
+  "kind": "university",
+  "universityTier": "university_tier.national_institute",
+  "city": "city.delhi",
+  "district": "district.delhi.campus"
+}

@@ -1,0 +1,20 @@
+{
+  "type": "nation",
+  "id": "nation.india",
+  "name": "India",
+  "capitalCity": "city.delhi",
+  "gateAuthority": "institution.nga",
+  "realmHomeRegion": "realm.region.india",
+  "stageOneCities": [
+    "city.kolkata",
+    "city.delhi",
+    "city.mumbai",
+    "city.bengaluru",
+    "city.chennai"
+  ],
+  "towerExamination": {
+    "centralHall": "institution.nga_tower_hall_delhi",
+    "certifiedHallPerCity": true,
+    "note": "Virtual tower; defeat costs rank, not life (Docs/AWAKENING_AND_EXAM.md)"
+  }
+}

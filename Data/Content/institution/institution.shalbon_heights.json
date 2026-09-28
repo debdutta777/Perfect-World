@@ -1,0 +1,16 @@
+{
+  "type": "institution",
+  "id": "institution.shalbon_heights",
+  "name": "Shalbon Heights School",
+  "kind": "school",
+  "schoolType": "school_type.private_premium",
+  "stages": [
+    "stage.primary",
+    "stage.upper_primary",
+    "stage.secondary",
+    "stage.higher_secondary"
+  ],
+  "city": "city.kolkata",
+  "district": "district.kolkata.apartment_belt",
+  "tutorialDungeon": true
+}

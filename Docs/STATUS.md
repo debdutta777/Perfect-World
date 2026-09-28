@@ -181,3 +181,19 @@ The owner asked for India, its cities and dungeon, schools of every level and un
 **Remaining limitation:** Rung 2 was not run: the editor is open for MCP work and locks the module DLLs, so `RealmCoordinate` and `AwakenedProgression` have not yet compiled inside Unreal. The data check is a one-off script, not a CTest, until the M1-06 validator exists. Every institution name is fictional but unchecked against real institutions; caste and religion are deliberately not mechanics; all of it awaits the cultural review. Nothing is visible in 3D yet. The GPT-6 critique did not run (Codex not installed).
 
 **Next smallest action:** close the editor once for a Rung 2 build of the two new core files; then M1-06 (content validator over `Data/`), M1-26 (realm generator) and M1-01 (command reducer).
+
+## Checkpoint — M1-06 content registry and validator; India data moved to Data/Content, 2026-09-28
+
+The owner authorised pushing to GitHub for this session ("push to github and continue"); `5971618` was pushed to `origin/main` before this step.
+
+**Intent:** one C++ validator for all content, run by CTest over the real data and over deliberately broken fixtures, so the India data is checked on every build instead of by a one-off script.
+
+**Files changed:** added `Source/PerfectWorldCore/Public/{Json,ContentRegistry}.h`, `Source/PerfectWorldCore/Private/{Json,ContentRegistry,ContentSchemas}.cpp`, `Source/PerfectWorldCore/Private/ContentSchemas.h`, `Tools/ContentCheck/main.cpp` (`pwcontent`), `Tests/ContentRegistryTests.cpp`, `Tests/Fixtures/Content/` (8 cases); moved `Data/India/*.json` to 63 files under `Data/Content/<type>/<id>.json`, the layout `SYSTEMS.md` §5 prescribes (IDs of education stages, school types and university tiers gained type prefixes); changed `CMakeLists.txt`, `.gitattributes` (`*.json` and `*.txt` as LF), `Docs/BUILD_GUIDE.md`, `Docs/INDIA_STAGE_ONE.md`, `Docs/ROADMAP.md` (M1-06 and M1-32 done).
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwcore`; then `pwcontent validate Data/Content` and each fixture by hand to read the messages.
+
+**Result:** PASS, 14/14 CTest entries: the four earlier executables unchanged (225,395 + 16,857 + 772,551 + 71 checks), 37 content-registry unit checks, the real data (63 files, 99 records: nation 1, realm region 1, city 5, institution 23, education stage 10, school type 5, university tier 5, stratum 5, resource 8, and nested district 26, Gate site 10), and eight fixtures each failing for their own reason. Every issue names its file and ID. A fixture checked against the wrong expected reason makes the test fail, as it should.
+
+**Remaining limitation:** the schemas are written in C++ (`ContentSchemas.cpp`) because `SYSTEMS_DATA.md`, which `SYSTEMS.md` names as the schema authority, was never written; the C++ tables are the working schema until it is. The validator does not yet run at game boot or as the editor commandlet (`SYSTEMS.md` §5); it has not been compiled inside Unreal (the editor is open for MCP). No bundle for cooked builds yet.
+
+**Next smallest action:** M1-26 (realm generator), then M1-01 (command reducer); a Rung 2 build at the next convenient editor restart.

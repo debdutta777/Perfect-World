@@ -1,0 +1,54 @@
+{
+  "type": "city",
+  "id": "city.bengaluru",
+  "name": "Bengaluru",
+  "nation": "nation.india",
+  "state": "Karnataka",
+  "role": "Research and engineering: Tattva instrumentation and the largest research university",
+  "districts": [
+    {
+      "id": "district.bengaluru.research_campus",
+      "name": "Research campus",
+      "kind": "authored",
+      "fictional": true
+    },
+    {
+      "id": "district.bengaluru.campus",
+      "name": "Campus",
+      "kind": "generated",
+      "archetype": "campus",
+      "seed": 4001
+    },
+    {
+      "id": "district.bengaluru.apartment_belt",
+      "name": "Apartment belt",
+      "kind": "generated",
+      "archetype": "apartment_belt",
+      "seed": 4002
+    },
+    {
+      "id": "district.bengaluru.industrial",
+      "name": "Industrial",
+      "kind": "generated",
+      "archetype": "industrial",
+      "seed": 4003
+    },
+    {
+      "id": "district.bengaluru.market",
+      "name": "Market",
+      "kind": "generated",
+      "archetype": "market",
+      "seed": 4004
+    }
+  ],
+  "gateSites": [
+    {
+      "id": "gate.bengaluru.quarry_ridge",
+      "name": "Quarry Ridge Gate",
+      "district": "district.bengaluru.industrial",
+      "rank": "D",
+      "status": "contained",
+      "realmAnchor": true
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "type": "school_type",
+  "id": "school_type.government",
+  "name": "Government school",
+  "fees": "none_or_nominal"
+}

@@ -1,0 +1,78 @@
+{
+  "type": "city",
+  "id": "city.kolkata",
+  "name": "Kolkata",
+  "nation": "nation.india",
+  "state": "West Bengal",
+  "role": "The opening: Nabapara, home, school and the tutorial dungeon",
+  "districts": [
+    {
+      "id": "district.kolkata.nabapara",
+      "name": "Nabapara",
+      "kind": "authored",
+      "fictional": true
+    },
+    {
+      "id": "district.kolkata.north_core",
+      "name": "Old north core",
+      "kind": "generated",
+      "archetype": "old_dense_core",
+      "seed": 1001
+    },
+    {
+      "id": "district.kolkata.riverfront",
+      "name": "Riverfront",
+      "kind": "generated",
+      "archetype": "riverfront",
+      "seed": 1002
+    },
+    {
+      "id": "district.kolkata.market_belt",
+      "name": "Market belt",
+      "kind": "generated",
+      "archetype": "market",
+      "seed": 1003
+    },
+    {
+      "id": "district.kolkata.apartment_belt",
+      "name": "Apartment belt",
+      "kind": "generated",
+      "archetype": "apartment_belt",
+      "seed": 1004
+    },
+    {
+      "id": "district.kolkata.rail_yard",
+      "name": "Rail yard",
+      "kind": "generated",
+      "archetype": "rail_yard",
+      "seed": 1005
+    }
+  ],
+  "gateSites": [
+    {
+      "id": "gate.kolkata.river_warehouse",
+      "name": "River Warehouse Gate",
+      "district": "district.kolkata.riverfront",
+      "rank": "D",
+      "status": "contained",
+      "realmAnchor": true
+    },
+    {
+      "id": "gate.kolkata.canal_works",
+      "name": "Cordoned Canal Works",
+      "district": "district.kolkata.nabapara",
+      "location": "loc_canal_works",
+      "rank": "F",
+      "status": "contained",
+      "realmAnchor": false
+    },
+    {
+      "id": "gate.kolkata.dockyard",
+      "name": "Old Dockyard Gate",
+      "district": "district.kolkata.riverfront",
+      "rank": "B",
+      "status": "sealed",
+      "realmAnchor": false
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "type": "institution",
+  "id": "institution.coromandel_gate_clinic",
+  "name": "Coromandel Gate-Syndrome Clinic",
+  "kind": "hospital",
+  "city": "city.chennai",
+  "district": "district.chennai.medical"
+}

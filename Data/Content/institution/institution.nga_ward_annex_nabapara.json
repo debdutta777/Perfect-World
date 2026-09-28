@@ -1,0 +1,9 @@
+{
+  "type": "institution",
+  "id": "institution.nga_ward_annex_nabapara",
+  "name": "NGA Ward Annex, Nabapara",
+  "kind": "gate_authority_office",
+  "city": "city.kolkata",
+  "district": "district.kolkata.nabapara",
+  "location": "loc_authority_annex"
+}

@@ -1,0 +1,10 @@
+{
+  "type": "institution",
+  "id": "institution.aravalli_gate_academy",
+  "name": "Aravalli National Gate Academy",
+  "kind": "gate_academy",
+  "city": "city.delhi",
+  "district": "district.delhi.government",
+  "certifiesUpToGrade": "C",
+  "national": true
+}

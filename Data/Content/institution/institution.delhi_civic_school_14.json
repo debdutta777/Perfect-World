@@ -1,0 +1,14 @@
+{
+  "type": "institution",
+  "id": "institution.delhi_civic_school_14",
+  "name": "Civic Senior Secondary School No. 14",
+  "kind": "school",
+  "schoolType": "school_type.government",
+  "stages": [
+    "stage.secondary",
+    "stage.higher_secondary"
+  ],
+  "city": "city.delhi",
+  "district": "district.delhi.old_core",
+  "tutorialDungeon": true
+}

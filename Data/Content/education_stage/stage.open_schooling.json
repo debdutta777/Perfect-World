@@ -1,0 +1,8 @@
+{
+  "type": "education_stage",
+  "id": "stage.open_schooling",
+  "name": "Open schooling",
+  "ageFrom": 14,
+  "ageTo": null,
+  "playable": true
+}

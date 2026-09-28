@@ -1,0 +1,6 @@
+{
+  "type": "school_type",
+  "id": "school_type.private_budget",
+  "name": "Private budget school",
+  "fees": "low_to_moderate"
+}

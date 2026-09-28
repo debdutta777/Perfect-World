@@ -1,0 +1,9 @@
+{
+  "type": "institution",
+  "id": "institution.hooghly_tide_academy",
+  "name": "Hooghly Tide Gate Academy",
+  "kind": "gate_academy",
+  "city": "city.kolkata",
+  "district": "district.kolkata.riverfront",
+  "certifiesUpToGrade": "C"
+}

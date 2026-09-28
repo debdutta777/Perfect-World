@@ -1,0 +1,16 @@
+{
+  "type": "institution",
+  "id": "institution.sagar_kinara_school",
+  "name": "Sagar Kinara Municipal School",
+  "kind": "school",
+  "schoolType": "school_type.government",
+  "stages": [
+    "stage.primary",
+    "stage.upper_primary",
+    "stage.secondary",
+    "stage.higher_secondary"
+  ],
+  "city": "city.mumbai",
+  "district": "district.mumbai.informal",
+  "tutorialDungeon": true
+}

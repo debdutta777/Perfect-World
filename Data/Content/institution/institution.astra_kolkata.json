@@ -1,0 +1,8 @@
+{
+  "type": "institution",
+  "id": "institution.astra_kolkata",
+  "name": "Astra Research Institute, Kolkata unit",
+  "kind": "research_institute",
+  "city": "city.kolkata",
+  "district": "district.kolkata.riverfront"
+}

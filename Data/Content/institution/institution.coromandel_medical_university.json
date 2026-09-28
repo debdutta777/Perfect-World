@@ -1,0 +1,9 @@
+{
+  "type": "institution",
+  "id": "institution.coromandel_medical_university",
+  "name": "Coromandel Medical University",
+  "kind": "university",
+  "universityTier": "university_tier.central",
+  "city": "city.chennai",
+  "district": "district.chennai.medical"
+}

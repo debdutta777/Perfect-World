@@ -31,6 +31,8 @@ This configures CMake, builds Release and runs CTest. The included runner remove
 
 The standalone suite checks age16, budget totals, default preset, invalid IDs/ranks, exact refunds, over-budget atomic rejection, four-premium cap, immutable started origin, reset and versioned in-memory record validation. It also exercises10,000 deterministic edit sequences, the household rules, and the save text format: an escaped round trip, every truncation of a record, a renamed trait, corrupt text, an unknown household, version-1 migration and out-of-range slots. It does not test the Unreal UI or school gameplay, and it does not touch the file system. Reading and writing slot files lives in the Unreal subsystem and has no automated coverage yet.
 
+The suite also runs the content validator: `pwcontent validate Data/Content` must pass, and each broken fixture under `Tests/Fixtures/Content/` must fail for the reason it was written to show (ROADMAP M1-06). Run it directly with `D:/pwcore/Release/pwcontent.exe validate Data/Content` after a build.
+
 ## Unreal Editor module
 
 ```powershell

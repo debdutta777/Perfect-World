@@ -1,0 +1,8 @@
+{
+  "type": "education_stage",
+  "id": "stage.postgraduate",
+  "name": "Postgraduate and doctoral",
+  "ageFrom": 21,
+  "ageTo": null,
+  "playable": true
+}

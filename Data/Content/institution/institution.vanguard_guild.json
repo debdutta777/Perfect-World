@@ -1,0 +1,8 @@
+{
+  "type": "institution",
+  "id": "institution.vanguard_guild",
+  "name": "Vanguard Guild",
+  "kind": "guild",
+  "city": "city.mumbai",
+  "note": "National private guild; contracts licensed adult hunters (Docs/INDIA_WORLD_BIBLE.md)"
+}

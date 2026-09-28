@@ -1,0 +1,8 @@
+{
+  "type": "institution",
+  "id": "institution.ananta_instrument_park",
+  "name": "Ananta Industries Instrument Park",
+  "kind": "enterprise",
+  "city": "city.bengaluru",
+  "district": "district.bengaluru.industrial"
+}

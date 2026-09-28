@@ -1,0 +1,8 @@
+{
+  "type": "stratum",
+  "id": "stratum.comfortable",
+  "householdResourcesRank": 4,
+  "name": "Comfortable",
+  "housing": "property_with_help",
+  "buffer": "large"
+}

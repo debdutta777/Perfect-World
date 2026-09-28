@@ -1,0 +1,11 @@
+{
+  "type": "institution",
+  "id": "institution.kadal_polytechnic",
+  "name": "Kadal Polytechnic",
+  "kind": "polytechnic",
+  "stages": [
+    "stage.vocational"
+  ],
+  "city": "city.chennai",
+  "district": "district.chennai.industrial"
+}

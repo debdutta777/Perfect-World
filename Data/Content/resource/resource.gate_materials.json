@@ -1,0 +1,7 @@
+{
+  "type": "resource",
+  "id": "resource.gate_materials",
+  "scope": "economy",
+  "gradedBy": "gate_rank",
+  "collection": "licensed_only"
+}

@@ -1,0 +1,11 @@
+{
+  "type": "resource",
+  "id": "resource.condition",
+  "scope": "personal",
+  "parts": [
+    "energy",
+    "hunger",
+    "health",
+    "stress"
+  ]
+}

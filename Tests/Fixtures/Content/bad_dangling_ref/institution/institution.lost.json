@@ -1,0 +1,7 @@
+{
+  "type": "institution",
+  "id": "institution.lost",
+  "name": "Lost Guild",
+  "kind": "guild",
+  "city": "city.nowhere"
+}

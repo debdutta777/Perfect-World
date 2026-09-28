@@ -1,0 +1,9 @@
+{
+  "type": "institution",
+  "id": "institution.harbourline_university",
+  "name": "Harbourline University of Commerce",
+  "kind": "university",
+  "universityTier": "university_tier.private",
+  "city": "city.mumbai",
+  "district": "district.mumbai.dense_core"
+}

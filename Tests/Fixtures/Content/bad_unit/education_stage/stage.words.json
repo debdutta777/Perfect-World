@@ -1,0 +1,8 @@
+{
+  "type": "education_stage",
+  "id": "stage.words",
+  "name": "Words for numbers",
+  "ageFrom": "sixteen",
+  "ageTo": 18,
+  "playable": true
+}

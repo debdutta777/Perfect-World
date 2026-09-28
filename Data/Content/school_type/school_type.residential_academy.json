@@ -1,0 +1,6 @@
+{
+  "type": "school_type",
+  "id": "school_type.residential_academy",
+  "name": "Residential academy",
+  "fees": "scholarship_or_high"
+}

@@ -1,0 +1,62 @@
+{
+  "type": "city",
+  "id": "city.chennai",
+  "name": "Chennai",
+  "nation": "nation.india",
+  "state": "Tamil Nadu",
+  "role": "Medicine and manufacturing: Gate-syndrome clinics, heavy industry, the eastern coastal Gates",
+  "districts": [
+    {
+      "id": "district.chennai.medical",
+      "name": "Medical district",
+      "kind": "authored",
+      "fictional": true
+    },
+    {
+      "id": "district.chennai.industrial",
+      "name": "Industrial",
+      "kind": "generated",
+      "archetype": "industrial",
+      "seed": 5001
+    },
+    {
+      "id": "district.chennai.port",
+      "name": "Port",
+      "kind": "generated",
+      "archetype": "port",
+      "seed": 5002
+    },
+    {
+      "id": "district.chennai.dense_core",
+      "name": "Dense core",
+      "kind": "generated",
+      "archetype": "old_dense_core",
+      "seed": 5003
+    },
+    {
+      "id": "district.chennai.suburb",
+      "name": "Suburb",
+      "kind": "generated",
+      "archetype": "suburb",
+      "seed": 5004
+    }
+  ],
+  "gateSites": [
+    {
+      "id": "gate.chennai.salt_pans",
+      "name": "Northern Salt Pans Gate",
+      "district": "district.chennai.industrial",
+      "rank": "C",
+      "status": "contained",
+      "realmAnchor": true
+    },
+    {
+      "id": "gate.chennai.breakwater",
+      "name": "Harbour Breakwater Gate",
+      "district": "district.chennai.port",
+      "rank": "E",
+      "status": "contained",
+      "realmAnchor": false
+    }
+  ]
+}

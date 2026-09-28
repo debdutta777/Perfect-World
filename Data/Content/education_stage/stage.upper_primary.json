@@ -1,0 +1,8 @@
+{
+  "type": "education_stage",
+  "id": "stage.upper_primary",
+  "name": "Upper primary (Classes VI-VIII)",
+  "ageFrom": 11,
+  "ageTo": 14,
+  "playable": false
+}

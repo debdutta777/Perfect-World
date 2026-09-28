@@ -1,0 +1,14 @@
+{
+  "type": "institution",
+  "id": "institution.mallige_high_school",
+  "name": "Mallige Government High School",
+  "kind": "school",
+  "schoolType": "school_type.government",
+  "stages": [
+    "stage.secondary",
+    "stage.higher_secondary"
+  ],
+  "city": "city.bengaluru",
+  "district": "district.bengaluru.apartment_belt",
+  "tutorialDungeon": true
+}

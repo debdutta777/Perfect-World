@@ -1,0 +1,8 @@
+{
+  "type": "education_stage",
+  "id": "stage.vocational",
+  "name": "Vocational and polytechnic",
+  "ageFrom": 16,
+  "ageTo": null,
+  "playable": true
+}

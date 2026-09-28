@@ -1,0 +1,8 @@
+{
+  "type": "education_stage",
+  "id": "stage.primary",
+  "name": "Primary (Classes I-V)",
+  "ageFrom": 6,
+  "ageTo": 11,
+  "playable": false
+}
