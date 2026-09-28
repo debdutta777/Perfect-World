@@ -16,6 +16,9 @@
 | `ROADMAP.md` + `ROADMAP_LATER.md` | Every milestone broken into bounded, verifiable steps (M0–M4, then M5–M10) |
 | `ALTERNATE_WORLD.md` | Ordinary life, whole-life time, the world running without the player |
 | `GLOBAL_WORLD.md` | Nations, Country Level, rankings, competitions, global tension |
+| `WORLD_SCALE.md` | Real cities, fictional places and the Deep Realm: how they are generated, streamed and saved |
+| `INDIA_STAGE_ONE.md` | India's first five cities, their Gates, the education ladder, social strata and resources |
+| `AWAKENED_GRADES.md` | Grades F–S, stages, power dimensions, practice ceilings, assessments |
 | `PATHS_AND_PROGRESSION.md` | The ten paths and their ladders |
 | `AWAKENING_AND_EXAM.md` | Awakening, tutorial dungeon, tower examination |
 | `SCHOOL_AND_PROGRESSION.md` | Classroom, assessment, latent growth |
@@ -313,6 +316,7 @@ Every milestone is playable and ends with a gate. `ROADMAP.md` breaks each into 
 | 2026-09-25 | **§12 B: fifty real countries**, up from thirty. Countries, cities and places are real; people are invented, or inspired by real roles and archetypes without being identifiable as any real person. The roster and rules are in `GLOBAL_WORLD.md` §8 |
 | 2026-09-28 | **Full shift to 3D block gameplay.** The flat Slate front end (title, load, settings, appearance and creator panels), the 2D concept art and the superseded documents are deleted. The portable rules (creation, appearance record, saves, clock) stay. Menus return later as part of the 3D game |
 | 2026-09-28 | **World scale:** many real world cities built as block cities, plus fictional places, plus a dungeon realm ten times bigger than Earth's total surface. Real art is still added after the game is complete (M9). Detail and the proposed build approach in `WORLD_SCALE.md` |
+| 2026-09-28 | **India first, defined properly:** five cities (Kolkata, Delhi, Mumbai, Bengaluru, Chennai) with Gates and dungeon anchors, schools of every level and universities, social strata and resources (`INDIA_STAGE_ONE.md`); awakened grades F–S with ten stages each, promotion only by assessment (`AWAKENED_GRADES.md`). The owner delegated the world-scale answers W1–W4 (`WORLD_SCALE.md` §7) |
 | 2026-09-23 | GPT-6 review adopted: time contract, persistent identity at first reference, hazard onset versus consequence, presentation contracts, M9 as a three-part validation, early lifecycle proof, repetition gate, phase completeness rule, freedom acceptance rule |
 
 ---

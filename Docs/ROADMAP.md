@@ -193,6 +193,17 @@ The M0-13 smoke-test checklist (S1–S32) tested the deleted screens and was rem
 | M1-30 | Nabapara as the authored hero district, plus one generated neighbouring Kolkata district, streamed together | Data/Layouts; Data/Cities/kolkata.json; Game/DistrictStreamer | PIE: walk from the school gate into the generated district and back; audit 0; within budgets | PIE +owner | M1-22, M1-28, M1-29 | not started |
 | M1-31 | Synthetic-load measurement for the streamers against the budgets | Content/Maps/MAP_Test_Load; `WORLD_SCALE.md` §5 numbers | Numbers recorded on the target hardware with a repeatable capture procedure | Cooked +owner | M1-28, M1-30, R4 | not started |
 
+## 5b. India, stage one (owner instruction 2026-09-28)
+
+**Goal:** India's first five cities, their Gates and dungeon anchors, the education ladder, social strata, resources, and awakened grades, defined as data and portable rules before any of it is built in 3D (`INDIA_STAGE_ONE.md`, `AWAKENED_GRADES.md`).
+
+| ID | Deliverable | Touches | Pass condition | Rung | Deps | Status |
+|---|---|---|---|---|---|---|
+| M1-32 | India stage-one data: nation, five cities with authored and generated districts and Gate sites, realm anchors, institutions, education stages, school and university types, strata, resources | Data/India/*.json | Every file parses; every ID is unique; every reference resolves; each city has exactly one realm anchor listed by the nation. Formal check moves into the M1-06 validator | CTest (after M1-06) | W1–W4 | done 2026-09-28 as data · 71 IDs, 71 references resolved by a one-off script; the M1-06 validator will make it a CTest |
+| M1-33 | Awakened grades F–S, stages 1–10, six power dimensions, practice with daily and weekly ceilings, assessment-only promotion, rest decay | Core/AwakenedProgression | CTest: requirement table climbs; awakening never exceeds F; daily limit and weekly ceiling hold; stage 10 does not promote; every blocking reason reported; grades never decay; maximum-effort S takes over 2.5 game years | CTest | — | done 2026-09-28 · 71 checks; maximum-effort S at day 1,079 |
+| M1-34 | Awakening turns the tutorial-dungeon conduct and latent stats into the starting profile (affinity and six ratings) | Core/AwakenedProgression, a new awakening reader | CTest: the same life gives the same profile; conduct moves the profile within documented bounds | CTest | M1-33, M4-01 | not started |
+| M1-35 | Gate sites in the world state: onset schedule, rank, status, containment by the NGA | Core/GateSites; Data/India | CTest: onsets fire from the clock exactly once; status changes only through commands | CTest | M1-01, M1-32 | not started |
+
 ---
 
 ## 6. M2 — One school day

@@ -165,3 +165,19 @@ New machine: a Windows 11 cloud PC with an RTX-class GPU (DirectX 12), 19–22 G
 **Remaining limitation:** Rung 2 was not run for this step, because the editor was open and locks the module DLLs. The core module compiles into Unreal as well, so the next editor build must include it. Nothing uses realm coordinates yet: the generator (M1-26) and delta store (M1-27) come next.
 
 **Next smallest action:** M1-26, the counter-based realm generator, in the portable lane.
+
+## Checkpoint — India stage one defined; M1-32 data and M1-33 awakened grades, 2026-09-28
+
+The owner asked for India, its cities and dungeon, schools of every level and universities, resources, social classes and an awakening grade and levelling system, "properly". The session's own Unreal MCP tools are now connected (`mcp__unreal__call_tool` answered `IsPIERunning`: false).
+
+**Intent:** define India's first stage as design, data and portable rules before building it in 3D.
+
+**Files changed:** added `Docs/INDIA_STAGE_ONE.md`, `Docs/AWAKENED_GRADES.md`, `Data/India/{nation,cities,institutions,society}.json`, `Source/PerfectWorldCore/Public/AwakenedProgression.h`, `Source/PerfectWorldCore/Private/AwakenedProgression.cpp`, `Tests/AwakenedProgressionTests.cpp`; changed `CMakeLists.txt`, `Docs/ROADMAP.md` (new §5b, M1-32 to M1-35), `Docs/GAME_PLAN.md` (document table, decision log).
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwcore`, and a one-off Python check over `Data/India/` (parse, unique IDs, references, one realm anchor per city).
+
+**Result:** PASS. CTest 4/4: 225,395 creation, 16,857 clock, 772,551 realm and 71 awakened-progression checks. The whole-career simulation reaches S at game day 1,079 at maximum effort (four hours on every dimension every day, every assessment passed at first chance). Two test mistakes were found and fixed on the way (a luxury session that hit the weekly ceiling, and a cramming loop that hit the daily limit first); one code fix: recovery doubles the gain after the weekly ceiling, not before. Data: 4 files, 71 unique IDs, 71 references resolved.
+
+**Remaining limitation:** Rung 2 was not run: the editor is open for MCP work and locks the module DLLs, so `RealmCoordinate` and `AwakenedProgression` have not yet compiled inside Unreal. The data check is a one-off script, not a CTest, until the M1-06 validator exists. Every institution name is fictional but unchecked against real institutions; caste and religion are deliberately not mechanics; all of it awaits the cultural review. Nothing is visible in 3D yet. The GPT-6 critique did not run (Codex not installed).
+
+**Next smallest action:** close the editor once for a Rung 2 build of the two new core files; then M1-06 (content validator over `Data/`), M1-26 (realm generator) and M1-01 (command reducer).

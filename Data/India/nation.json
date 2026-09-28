@@ -1,0 +1,35 @@
+{
+  "schema": "pw.india.nation/1",
+  "note": "Stage one of India (Docs/INDIA_STAGE_ONE.md). Real country and cities; every institution and person is fictional.",
+  "nation": {
+    "id": "nation.india",
+    "name": "India",
+    "capitalCity": "city.delhi",
+    "gateAuthority": "institution.nga",
+    "realmHomeRegion": "realm.region.india",
+    "stageOneCities": [
+      "city.kolkata",
+      "city.delhi",
+      "city.mumbai",
+      "city.bengaluru",
+      "city.chennai"
+    ],
+    "towerExamination": {
+      "centralHall": "institution.nga_tower_hall_delhi",
+      "certifiedHallPerCity": true,
+      "note": "Virtual tower; defeat costs rank, not life (Docs/AWAKENING_AND_EXAM.md)"
+    }
+  },
+  "realmHomeRegion": {
+    "id": "realm.region.india",
+    "floor": 1,
+    "note": "India's region of the shared Deep Realm (Docs/WORLD_SCALE.md §7, W3). Each city's major Gate is a surveyed anchor here.",
+    "anchors": [
+      "gate.kolkata.river_warehouse",
+      "gate.delhi.ridge_forest",
+      "gate.mumbai.harbour_works",
+      "gate.bengaluru.quarry_ridge",
+      "gate.chennai.salt_pans"
+    ]
+  }
+}
