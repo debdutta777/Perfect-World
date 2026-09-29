@@ -227,3 +227,19 @@ The owner authorised pushing to GitHub for this session ("push to github and con
 **Remaining limitation:** only three commands exist; no state hash or replay check (M1-03), no RNG streams (M1-02), no save of the world (M1-05). Not yet compiled inside Unreal (Rung 2 follows now that the editor is closed).
 
 **Next smallest action:** Rung 2 for all core files added since 2026-09-28; M1-02, M1-27, M1-29 and M1-04's portable store in parallel.
+
+## Checkpoint — Rung 2 for every core file since 2026-09-28; core module built without unity, 2026-09-29
+
+**Intent:** compile the seven core files added since the last editor build (realm coordinates, awakened progression, JSON, content registry and schemas, realm generator, world reducer) inside Unreal, and stop Unreal's unity build from merging core files.
+
+**Files changed:** `Source/PerfectWorldCore/PerfectWorldCore.Build.cs` (`bUseUnity = false`). A scan found no duplicate file-private names across `Source/PerfectWorldCore/Private/*.cpp`, but `ContentRegistry.cpp` has `using namespace ContentSchema;` at file scope, which inside a unity blob would leak into every later file; compiling each file alone keeps the Unreal build identical to the CMake build that CTest checks.
+
+**Exact check:** `python Scripts/build_unreal.py --engine-root "D:\Epic Games\UE_5.8"` with the editor closed.
+
+**Result:** PASS: exit 0, `Result: Succeeded`, 10/10 actions (seven compiles, two links, metadata), MSVC 14.50.35739.
+
+**Remaining limitation:** nothing new is exercised at runtime in Unreal; the subsystem still uses only the creation rules.
+
+**Parallel agents.** On the owner's instruction, six Sonnet subagents (the Agent tool's `sonnet` alias) work in separate git worktrees with separate build folders and explicit file ownership: M1-02 RNG streams, M1-03 state hash and replay, M1-04 portable save store, M1-27 chunk deltas, M1-29 city data and district generator, M1-35 Gate sites in the world state. They do not commit; each diff is reviewed, merged and re-verified here. A Claude Code restart on 2026-09-29 stopped the first four before they had written anything; they were resumed from their transcripts.
+
+**Next smallest action:** review and merge each agent's diff; M0-15 packaging script.
