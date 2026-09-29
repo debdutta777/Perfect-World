@@ -243,3 +243,19 @@ The owner authorised pushing to GitHub for this session ("push to github and con
 **Parallel agents.** On the owner's instruction, six Sonnet subagents (the Agent tool's `sonnet` alias) work in separate git worktrees with separate build folders and explicit file ownership: M1-02 RNG streams, M1-03 state hash and replay, M1-04 portable save store, M1-27 chunk deltas, M1-29 city data and district generator, M1-35 Gate sites in the world state. They do not commit; each diff is reviewed, merged and re-verified here. A Claude Code restart on 2026-09-29 stopped the first four before they had written anything; they were resumed from their transcripts.
 
 **Next smallest action:** review and merge each agent's diff; M0-15 packaging script.
+
+## Checkpoint — M0-15 in progress: block test scene and packaging script, 2026-09-29
+
+**Intent:** a first packaged Windows build that boots into a block test scene, before real maps exist.
+
+**Files changed:** added `Source/PerfectWorld/{Public,Private}/PerfectWorldBlockTestGameMode.{h,cpp}` (a temporary game mode that builds an 81 × 81 field of one-metre engine cubes with block towers, a sky atmosphere, a sun and a real-time sky light at start; the engine's default flying pawn), `Scripts/package_windows.py` (RunUAT BuildCookRun, Development, `-ubtargs=-NoUBA`, log in `Saved/Logs/Package.log`); changed `Config/DefaultEngine.ini` (`GlobalDefaultGameMode` set to the test mode until M1-15; the editor's Android-settings churn was discarded) and `Config/DefaultGame.ini` (always cook `/Engine/BasicShapes`).
+
+**Exact check:** `python Scripts/build_unreal.py --engine-root "D:\Epic Games\UE_5.8"`.
+
+**Result:** Rung 2 PASS: exit 0, `Result: Succeeded`, 5/5 actions. **Rung 3 (PIE) and rung 4 (packaging) NOT RUN**: the owner's usage limit was reached while the editor was starting for an MCP check of the scene.
+
+**Remaining limitation:** the scene has not been seen; `package_windows.py` has never run; the test map is built in code in the engine Entry map rather than as `Content/Maps/MAP_Test_Block`.
+
+**Parallel agents stopped.** The six Sonnet agents (M1-02, M1-03, M1-04, M1-27, M1-29, M1-35) were stopped to stay within the usage limit. Partial work is uncommitted in `.claude/worktrees/agent-*`; nothing from them is merged or verified. Resume each from its transcript, then review, merge and run Rung 1 and Rung 2.
+
+**Next smallest action:** Play In Editor via MCP (StartPIE, CaptureViewport, the "Block test scene" log line); then close the editor and run `python Scripts/package_windows.py --engine-root "D:\Epic Games\UE_5.8"`.
