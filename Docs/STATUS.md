@@ -211,3 +211,19 @@ The owner authorised pushing to GitHub for this session ("push to github and con
 **Remaining limitation:** terrain is height only: no caves, water, surface materials or theme-specific shapes yet; nations' Gate anchors are not yet placed in havens (M1-35 and the realm-anchor data); not compiled inside Unreal yet (editor open for MCP); nothing streams or renders (M1-28).
 
 **Next smallest action:** M1-01, the command reducer, so the world state has its single path of change; then M1-27 (chunk deltas).
+
+## Checkpoint — M1-01 command reducer; Claude Code CLI updated, 2026-09-29
+
+**Tooling.** The owner installed the Claude Code CLI (`C:\Users\Administrator\.local\bin\claude.exe`, not on PATH). On the owner's request it was updated with its own updater: `claude update`, exit 0, **2.1.282 → 2.1.284**. The desktop app (Claude 2.9939.2.0, a Microsoft Store package) carries its own Claude Code 2.1.281, which the app manages and updates itself.
+
+**Intent:** one mutation entry point for the world: validate (pure), apply, advance time event by event, commit.
+
+**Files changed:** added `Source/PerfectWorldCore/Public/{Commands,WorldState,WorldReducer}.h`, `Source/PerfectWorldCore/Private/WorldReducer.cpp`, `Tests/WorldReducerTests.cpp`; changed `CMakeLists.txt`, `Docs/ROADMAP.md`.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwcore`.
+
+**Result:** PASS, 16/16 CTest entries; **69 reducer checks**: eleven invalid commands each refused with its stable code (`time.non_positive`, `time.too_long`, `schedule.source`, `schedule.bad_id`, `schedule.in_past`, `flag.bad_id`) and the state byte-for-byte unchanged; a three-day advance fires every scheduled event once, in time order, with each midnight's `DayStarted` before an event at that same instant; an event due at the starting instant precedes the midnight after it (a bug found by review before the first build and fixed); the event cap stops an advance as `Partial` and resubmission fires every remaining event exactly once; flags emit a change only when the value changes; 3,000 random commands, valid and invalid, replay to an identical transcript and state. The first run of this step was cut off with no output when the session ended; this rerun is the recorded result.
+
+**Remaining limitation:** only three commands exist; no state hash or replay check (M1-03), no RNG streams (M1-02), no save of the world (M1-05). Not yet compiled inside Unreal (Rung 2 follows now that the editor is closed).
+
+**Next smallest action:** Rung 2 for all core files added since 2026-09-28; M1-02, M1-27, M1-29 and M1-04's portable store in parallel.
