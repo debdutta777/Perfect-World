@@ -26,7 +26,8 @@ namespace PerfectWorld
  * Bump WorldHashVersion whenever the encoding or the set of sections changes;
  * the version is part of the world hash, so old and new hashes never compare equal.
  */
-constexpr std::uint32_t WorldHashVersion = 1;
+/** 1: meta, clock, flags. 2 (2026-10-05): adds the gates section (ROADMAP M1-35). */
+constexpr std::uint32_t WorldHashVersion = 2;
 
 struct WorldSectionHash
 {

@@ -9,10 +9,41 @@
 
 namespace PerfectWorld
 {
+/** Gate rank, lowest to highest. The numeric order is the rank order. */
+enum class GateRank : std::uint8_t
+{
+    F,
+    E,
+    D,
+    C,
+    B,
+    A,
+    S
+};
+
+/** Content data's "open" is Active here. Contained means the NGA holds it. */
+enum class GateStatus : std::uint8_t
+{
+    Contained,
+    Active,
+    Sealed
+};
+
+/** One Gate site (ROADMAP M1-35). Changed only by the gate system, through commands and scheduled onsets. */
+struct GateSiteState
+{
+    GateRank Rank = GateRank::F;
+    GateStatus Status = GateStatus::Contained;
+    /** The instant the current status began. */
+    GameInstant StatusSince = 0;
+    /** Scheduled onsets that have fired for this Gate. */
+    std::int32_t OnsetCount = 0;
+};
+
 /**
  * The authoritative world (SYSTEMS.md §2). Each member is one save section,
  * mutated only by the reducer through its owning system. This first version
- * holds the clock and world flags; systems add their slices as they arrive.
+ * holds the clock, world flags and Gate sites; systems add their slices as they arrive.
  */
 struct WorldState
 {
@@ -21,6 +52,8 @@ struct WorldState
     std::uint64_t Seq = 0;
     GameClock Clock;
     std::map<std::string, bool, std::less<>> Flags;
+    /** Gate sites by stable ID (the gate system's slice). */
+    std::map<std::string, GateSiteState, std::less<>> Gates;
 };
 
 /** Things that happened, in the order they happened. Presentation rebuilds from these. */
@@ -48,7 +81,41 @@ struct WorldFlagChanged
     bool Value = false;
 };
 
-using EventPayload = std::variant<TimeAdvanced, DayStarted, ScheduledEventFired, WorldFlagChanged>;
+struct GateRegistered
+{
+    std::string GateId;
+    GateRank Rank = GateRank::F;
+    GateStatus Status = GateStatus::Contained;
+};
+
+/** A scheduled onset fired and the Gate is now active. Emitted right after that event's ScheduledEventFired. */
+struct GateOnset
+{
+    std::string GateId;
+    GateRank Rank = GateRank::F;
+    GateStatus Previous = GateStatus::Contained;
+    /** Onsets fired for this Gate, this one included. */
+    std::int32_t OnsetCount = 0;
+};
+
+/** A scheduled onset fired at a sealed Gate: the seal held and the Gate is unchanged. */
+struct GateOnsetHeld
+{
+    std::string GateId;
+};
+
+struct GateContained
+{
+    std::string GateId;
+};
+
+struct GateSealed
+{
+    std::string GateId;
+};
+
+using EventPayload = std::variant<TimeAdvanced, DayStarted, ScheduledEventFired, WorldFlagChanged, GateRegistered, GateOnset,
+                                  GateOnsetHeld, GateContained, GateSealed>;
 
 struct DomainEvent
 {

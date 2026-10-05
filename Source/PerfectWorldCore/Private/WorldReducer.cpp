@@ -1,5 +1,7 @@
 #include "WorldReducer.h"
 
+#include "GateSites.h"
+
 #include <algorithm>
 
 namespace PerfectWorld
@@ -79,6 +81,8 @@ std::optional<Rejection> WorldSim::Validate(const Command& command) const
             return Reject("flag.bad_id", "Flag IDs are lowercase letters, digits, '_', '-' and '.'.");
         return std::nullopt;
     }
+    if (IsGateCommand(command.Payload))
+        return ValidateGateCommand(State_, command);
     return Reject("command.unknown", "Unknown command.");
 }
 
@@ -115,6 +119,9 @@ void WorldSim::RunTimeTo(GameInstant target, CommandResult& result)
                 dayAnnounced = true;
             }
             result.Events.push_back({0, event.When, ScheduledEventFired{event.Handle, event.Id}});
+            // Owning systems follow the fired event: "gates/..." goes to the gate system.
+            if (IsGateEventId(event.Id))
+                RouteGateEvent(State_, event, result.Events);
             ++fired;
         }
         if (!dayAnnounced)
@@ -146,6 +153,10 @@ void WorldSim::Apply(const Command& command, CommandResult& result)
             State_.Flags[flag->FlagId] = flag->Value;
             result.Events.push_back({0, State_.Clock.Now(), WorldFlagChanged{flag->FlagId, flag->Value}});
         }
+    }
+    else if (IsGateCommand(command.Payload))
+    {
+        ApplyGateCommand(State_, command, result.Events);
     }
 }
 

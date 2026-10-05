@@ -283,3 +283,19 @@ Both rebuilt by Sonnet 5.5 subagents after the D: wipe (the first attempts had p
 **Result:** PASS, 18/18. `PASS: 1156337 world hash checks` (golden hashes for a hand-built and an edge-case world, an in-test reference encoder checked against FNV-1a vectors, every single-field edit changes the hash and only its section's hash, 10,000 random sequences replay to identical hashes and results). `PASS: 527 save store checks` (stale temp ignored, corrupt primary falls back to `.bak` with a message, Missing and Corrupt told apart, crash-between-renames state recovers, non-ASCII folder, 100 round trips).
 
 **Remaining limitation:** the hash covers meta, clock and flags; RNG streams (M1-02) and Gate sites (M1-35) must be added as sections when they merge (one line each plus a `WorldHashVersion` bump). The character-creator subsystem still writes slots itself; switching it to `WriteSaveFile`/`ReadSaveFile` needs Rung 2, which waits for Unreal Engine to be reinstalled. Neither file has been compiled inside Unreal.
+
+## Checkpoint — M1-02 RNG streams, M1-27 chunk deltas, M1-35 Gate sites merged; world hash version 2, 2026-10-05
+
+Rebuilt by Sonnet 5.5 subagents after the D: wipe, reviewed and merged here.
+
+**Intent:** in-house deterministic RNG streams (M1-02); sparse, capped, versioned Deep Realm edits (M1-27); Gate sites in the world state with onsets from the clock and NGA containment (M1-35).
+
+**Files changed:** added `Source/PerfectWorldCore/{Public,Private}/{RandomStreams,ChunkDeltaStore,GateSites}.{h,cpp}` and their tests; changed `WorldState.h` (Gate slice and five Gate events), `Commands.h` (four Gate commands), `WorldReducer.cpp` (forwarding and "gates/" routing), `WorldHash.{h,cpp}` (gates section, `WorldHashVersion` 2), `Tests/WorldHashTests.cpp` (reference encoder and re-pinned goldens), `Tests/GateSitesTests.cpp` (hash covers every Gate field), `CMakeLists.txt`.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwi`. **Result:** PASS, 21/21: 1,156,474 hash, 79,559 Gate, 206,396 RNG, 2,247 chunk-delta checks; the 69 reducer checks unchanged.
+
+**Trap found:** `Copy-Item` keeps a file's original modified time, so files copied from a worktree can be older than an existing object file and MSBuild silently links the stale object. The first merged build failed that way ("register emits GateRegistered"); touching the merged files fixed it. Merge by copying, then refresh timestamps, before building.
+
+**Design question for the owner (M1-35):** an onset that fires at a Gate sealed after it was scheduled currently leaves the Gate unchanged and emits `GateOnsetHeld` ("the seal held"). That lets a seal prevent an onset, which `GAME_PLAN.md` §2 says cannot be prevented. The alternative is to count the onset without changing the sealed status.
+
+**Remaining limitation:** RNG streams are not yet part of `WorldState` or the hash; nothing generates onsets from content schedules yet; none of this has been compiled inside Unreal (the engine must be reinstalled).

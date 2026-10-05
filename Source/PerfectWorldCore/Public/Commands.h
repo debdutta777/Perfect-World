@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GameClock.h"
+#include "WorldState.h"
 
 #include <cstdint>
 #include <string>
@@ -47,7 +48,38 @@ struct SetWorldFlag
     bool Value = true;
 };
 
-using CommandPayload = std::variant<AdvanceTime, ScheduleWorldEvent, SetWorldFlag>;
+/** Register a Gate site. System and debug only. */
+struct GateRegister
+{
+    static constexpr std::string_view TypeId = "gate.register";
+    std::string Id;
+    GateRank Rank = GateRank::F;
+    GateStatus Status = GateStatus::Contained;
+};
+
+/** Schedule a Gate's onset on the clock as "gates/onset/<id>". System and debug only. */
+struct GateScheduleOnset
+{
+    static constexpr std::string_view TypeId = "gate.schedule_onset";
+    std::string Id;
+    GameInstant When = 0;
+};
+
+/** The NGA contains an active Gate. System and debug only. */
+struct GateContain
+{
+    static constexpr std::string_view TypeId = "gate.contain";
+    std::string Id;
+};
+
+/** Seal a contained Gate for good. System and debug only. */
+struct GateSeal
+{
+    static constexpr std::string_view TypeId = "gate.seal";
+    std::string Id;
+};
+
+using CommandPayload = std::variant<AdvanceTime, ScheduleWorldEvent, SetWorldFlag, GateRegister, GateScheduleOnset, GateContain, GateSeal>;
 
 struct Command
 {

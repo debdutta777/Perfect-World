@@ -68,19 +68,17 @@ std::vector<std::pair<std::string, std::uint64_t>> RefSections(const WorldState&
     clock.I(save.NextHandle);
     clock.N(save.Pending.size());
     for (const ScheduledEvent& e : save.Pending)
-    {
-        clock.I(e.Handle);
-        clock.I(e.When);
-        clock.S(e.Id);
-    }
+        clock.I(e.Handle), clock.I(e.When), clock.S(e.Id);
     RefBytes flags;
     flags.N(w.Flags.size());
     for (const auto& kv : w.Flags)
-    {
-        flags.S(kv.first);
-        flags.B(kv.second);
-    }
-    return {{"meta", RefFnv1a(meta.Data)}, {"clock", RefFnv1a(clock.Data)}, {"flags", RefFnv1a(flags.Data)}};
+        flags.S(kv.first), flags.B(kv.second);
+    RefBytes gates;
+    gates.N(w.Gates.size());
+    for (const auto& [id, g] : w.Gates)
+        gates.S(id), gates.U(static_cast<std::uint64_t>(g.Rank)), gates.U(static_cast<std::uint64_t>(g.Status)), gates.I(g.StatusSince),
+            gates.I(g.OnsetCount);
+    return {{"meta", RefFnv1a(meta.Data)}, {"clock", RefFnv1a(clock.Data)}, {"flags", RefFnv1a(flags.Data)}, {"gates", RefFnv1a(gates.Data)}};
 }
 
 std::uint64_t RefWorld(const WorldState& w)
@@ -140,9 +138,9 @@ WorldState EdgeWorld()
                      {{"", false}, {std::string("a\0b", 3), true}, {"\xc3\xa9.unicode", true}});
 }
 
-// Pinned with PW_PRINT_GOLDEN=1 on 2026-10-05 (WorldHashVersion 1). A change here means the encoding changed.
-constexpr std::uint64_t GoldenHandBuilt = 0x87cde87957086958ULL;
-constexpr std::uint64_t GoldenEdge = 0xc22513816911b59cULL;
+// Pinned with PW_PRINT_GOLDEN=1 on 2026-10-05 (WorldHashVersion 2, gates section added). A change here means the encoding changed.
+constexpr std::uint64_t GoldenHandBuilt = 0x2f13757a256d0806ULL;
+constexpr std::uint64_t GoldenEdge = 0x0ec3679190f0dbc2ULL;
 
 // ---- Reducer output rendering, as in WorldReducerTests ----
 
@@ -235,8 +233,9 @@ void TestGolden()
     Check(HashWorldState(hand) == GoldenHandBuilt, "the hand-built world hashes to its pinned value");
     Check(HashWorldState(edge) == GoldenEdge, "the edge-case world hashes to its pinned value");
     const std::vector<WorldSectionHash> sections = HashWorldSections(hand);
-    Check(sections.size() == 3 && sections[0].Name == "meta" && sections[1].Name == "clock" && sections[2].Name == "flags",
-          "sections come in the order meta, clock, flags");
+    Check(sections.size() == 4 && sections[0].Name == "meta" && sections[1].Name == "clock" && sections[2].Name == "flags" &&
+              sections[3].Name == "gates",
+          "sections come in the order meta, clock, flags, gates");
     Check(HashWorldState(hand) == HashWorldState(HandBuiltWorld()), "hashing is repeatable");
     Check(HashWorldState(hand) != HashWorldState(WorldState{}), "different worlds differ");
 }

@@ -19,6 +19,9 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/WorldReducer.cpp
     Source/PerfectWorldCore/Private/WorldHash.cpp
     Source/PerfectWorldCore/Private/SaveStore.cpp
+    Source/PerfectWorldCore/Private/GateSites.cpp
+    Source/PerfectWorldCore/Private/RandomStreams.cpp
+    Source/PerfectWorldCore/Private/ChunkDeltaStore.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -57,6 +60,18 @@ add_test(NAME PerfectWorldWorldHashTests COMMAND PerfectWorldWorldHashTests)
 add_executable(PerfectWorldSaveStoreTests Tests/SaveStoreTests.cpp)
 target_link_libraries(PerfectWorldSaveStoreTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldSaveStoreTests COMMAND PerfectWorldSaveStoreTests)
+
+add_executable(PerfectWorldGateTests Tests/GateSitesTests.cpp)
+target_link_libraries(PerfectWorldGateTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldGateTests COMMAND PerfectWorldGateTests)
+
+add_executable(PerfectWorldRandomTests Tests/RandomStreamsTests.cpp)
+target_link_libraries(PerfectWorldRandomTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldRandomTests COMMAND PerfectWorldRandomTests)
+
+add_executable(PerfectWorldChunkDeltaTests Tests/ChunkDeltaStoreTests.cpp)
+target_link_libraries(PerfectWorldChunkDeltaTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldChunkDeltaTests COMMAND PerfectWorldChunkDeltaTests)
 
 add_executable(PerfectWorldAwakenedTests Tests/AwakenedProgressionTests.cpp)
 target_link_libraries(PerfectWorldAwakenedTests PRIVATE PerfectWorldCore)

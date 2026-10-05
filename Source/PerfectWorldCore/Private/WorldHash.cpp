@@ -98,6 +98,21 @@ std::uint64_t WorldHashFlagsSection(const WorldState& state)
     return out.Result();
 }
 
+std::uint64_t WorldHashGatesSection(const WorldState& state)
+{
+    WorldHashWriter out;
+    out.Count(state.Gates.size());
+    for (const auto& [gateId, gate] : state.Gates) // std::map: ID order
+    {
+        out.Text(gateId);
+        out.Unsigned(static_cast<std::uint64_t>(gate.Rank));
+        out.Unsigned(static_cast<std::uint64_t>(gate.Status));
+        out.Signed(gate.StatusSince);
+        out.Signed(gate.OnsetCount);
+    }
+    return out.Result();
+}
+
 void WorldHashAddSection(std::vector<WorldSectionHash>& sections, const char* name, std::uint64_t hash)
 {
     sections.push_back(WorldSectionHash{name, hash});
@@ -118,6 +133,7 @@ std::vector<WorldSectionHash> HashWorldSections(const WorldState& state)
     WorldHashAddSection(sections, "meta", WorldHashMetaSection(state));
     WorldHashAddSection(sections, "clock", WorldHashClockSection(state));
     WorldHashAddSection(sections, "flags", WorldHashFlagsSection(state));
+    WorldHashAddSection(sections, "gates", WorldHashGatesSection(state));
     return sections;
 }
 
