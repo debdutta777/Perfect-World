@@ -259,3 +259,13 @@ The owner authorised pushing to GitHub for this session ("push to github and con
 **Parallel agents stopped.** The six Sonnet agents (M1-02, M1-03, M1-04, M1-27, M1-29, M1-35) were stopped to stay within the usage limit. Partial work is uncommitted in `.claude/worktrees/agent-*`; nothing from them is merged or verified. Resume each from its transcript, then review, merge and run Rung 1 and Rung 2.
 
 **Next smallest action:** Play In Editor via MCP (StartPIE, CaptureViewport, the "Block test scene" log line); then close the editor and run `python Scripts/package_windows.py --engine-root "D:\Epic Games\UE_5.8"`.
+
+## Checkpoint — D: drive wiped and the cloud PC restored, 2026-10-05
+
+**What happened.** On 2026-10-05 the D: drive came back freshly formatted (only `System Volume Information`, created that day). Lost: the D: clone, Unreal Engine 5.8, the Epic launcher, VS 2026 Build Tools, gh/Python/CMake under `D:\Tools`, and all unpushed work: six agent worktrees (M1-03 and M1-04 were finished and verified at Rung 1, the other four partial) and `Source/PerfectWorld/Private/Tests/PerfectWorldCoreParityTests.cpp` (which had compiled at Rung 2 on 2026-09-30, never run). Everything pushed was safe on GitHub (`33128b0`).
+
+**Restored.** gh and CMake with `winget install --force --location D:\Tools\...`; Python 3.13.15 by repairing from a downloaded installer (uninstall failed with 1603 because its files were gone); VS Build Tools 18.10 by recreating `D:\VS\BuildTools`, `setup.exe repair` (cancelled midway by a concurrent MSI install, leaving `tracker.exe` missing) and `setup.exe resume` (exit 0; MSVC 14.50.35717 and 14.51.36231, .NET 4.8.1 SDK confirmed with `vswhere -requires`). GitHub sign-in survived in the Windows credential store. Fresh clone at `D:\Dev\PerfectWorld`; the C: copy fast-forwarded to `33128b0`.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwb` (the old `D:/pwcore` folder held a failed compiler detection and is protected from deletion). **Result:** PASS, 16/16, MSVC 19.51.36260.
+
+**Remaining limitation:** Unreal Engine 5.8 is not installed; the owner must reinstall it from the Epic launcher to `D:\Epic Games\UE_5.8`, so Rung 2, PIE and packaging are unavailable until then. The parity tests are re-added unchanged and unbuilt. The six agent steps are being rebuilt by fresh Sonnet 5.5 agents (the API recorded `claude-sonnet-5-5` for this session's subagents). D: may be temporary storage: push every verified step immediately.
