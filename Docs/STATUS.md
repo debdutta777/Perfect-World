@@ -364,3 +364,29 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 - The subsystem still writes creation-only slots.
 - The new files have not been compiled inside Unreal; the next Rung 2 covers them.
 
+## Checkpoint — M2-01 condition module, 2026-10-05
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:** new `Public/Condition.h`, `Private/Condition.cpp`, `Tests/ConditionTests.cpp`; `CMakeLists.txt`.
+
+**Design:**
+- Four meters on 0..100000, the catalogue's milli scale: energy and health are high-is-good, hunger and stress high-is-bad.
+- One pure `StepCondition` per game minute, and `AdvanceCondition` for N minutes, which stops at a fixed point.
+- Meals in four sizes, `AdjustStress`, and activities Sleeping, Resting, LightExertion and HeavyExertion.
+- Bounded effects as permille multipliers, never below 500.
+- Neglect drains health only down to the floor of 20,000 (`SYSTEMS_CATALOGUE.md`) and flags a care scene. There is no death path, since death comes only from later-life ageing.
+- Rates, start values, thresholds and bands not given by the docs are named constants in `Condition.h`; each is marked as chosen.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwi`. **Result:** PASS, 24/24, `ConditionTests passed (909857 checks)`. The tests cover:
+- 30 days awake unfed, stepped by the minute, by the hour and as one jump, with identical results and health exactly at the floor
+- 30 days asleep unfed, and 30 days of heavy exertion
+- documented recovery rates
+- 10,000 random sequences, with every meter in range and health never below the floor
+- additivity and determinism
+
+**Remaining limitation:**
+- Not yet part of `WorldState`, the reducer or the world hash.
+- The catalogue's injuries, `LastIntegratedAt`, and threshold events predicted to the minute are for the integration step.
+- Trait recovery bonuses from `CHARACTER_CREATION.md` are not applied yet; they may belong in `Data/` tuning.
+

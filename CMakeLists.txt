@@ -8,6 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/Appearance.cpp
     Source/PerfectWorldCore/Private/GameClock.cpp
+    Source/PerfectWorldCore/Private/Condition.cpp
     Source/PerfectWorldCore/Private/CharacterCreation.cpp
     Source/PerfectWorldCore/Private/CreationSaveSerialization.cpp
     Source/PerfectWorldCore/Private/RealmCoordinate.cpp
@@ -46,6 +47,10 @@ add_test(NAME PerfectWorldCoreTests COMMAND PerfectWorldCoreTests)
 add_executable(PerfectWorldClockTests Tests/GameClockTests.cpp)
 target_link_libraries(PerfectWorldClockTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldClockTests COMMAND PerfectWorldClockTests)
+
+add_executable(PerfectWorldConditionTests Tests/ConditionTests.cpp)
+target_link_libraries(PerfectWorldConditionTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldConditionTests COMMAND PerfectWorldConditionTests)
 
 add_executable(PerfectWorldRealmTests Tests/RealmCoordinateTests.cpp)
 target_link_libraries(PerfectWorldRealmTests PRIVATE PerfectWorldCore)
