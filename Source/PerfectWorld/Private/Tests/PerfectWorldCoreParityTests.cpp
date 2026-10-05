@@ -15,6 +15,7 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "RealmGenerator.h"
+#include "SaveStore.h"
 
 #include <cstdint>
 #include <string>
@@ -140,6 +141,50 @@ bool FPerfectWorldContentParityTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Data/Content validates inside Unreal"), Result.Ok());
     TestEqual(TEXT("63 content files, as pwcontent reports"), static_cast<int32>(Files.size()), 63);
     TestEqual(TEXT("99 records, as pwcontent reports"), static_cast<int32>(Result.Db.Count()), 99);
+    return true;
+}
+
+// The slot store as the game uses it: an absolute UTF-8 path from Unreal's
+// project folders, here under a Bengali folder name (Tests/SaveStoreTests.cpp
+// covers the same mechanics in CTest).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPerfectWorldSaveStoreParityTest, "PerfectWorld.Core.SaveStoreWorksInEngine",
+                                 EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FPerfectWorldSaveStoreParityTest::RunTest(const FString& Parameters)
+{
+    using namespace PerfectWorld;
+    const FString Folder = FPaths::ConvertRelativePathToFull(
+        FPaths::ProjectIntermediateDir() / TEXT("AutomationSaves") / TEXT("কলকাতা"));
+    IFileManager::Get().DeleteDirectory(*Folder, false, true);
+    const FString PrimaryPath = Folder / TEXT("slot_test.json");
+    const std::string Primary = TCHAR_TO_UTF8(*PrimaryPath);
+    const SaveValidator Validator = [](std::string_view Text, std::string& Error) {
+        if (Text.substr(0, 3) != "pw:")
+        {
+            Error = "not a test record";
+            return false;
+        }
+        return true;
+    };
+
+    TestTrue(TEXT("first write"), WriteSaveFile(Primary, "pw:first", Validator).Ok);
+    TestTrue(TEXT("second write"), WriteSaveFile(Primary, "pw:second", Validator).Ok);
+    const SaveReadResult Loaded = ReadSaveFile(Primary, Validator);
+    TestTrue(TEXT("the primary loads"), Loaded.Status == SaveReadStatus::Loaded && Loaded.Text == "pw:second");
+    TestTrue(TEXT("the previous version is kept as .bak"), IFileManager::Get().FileExists(*(PrimaryPath + TEXT(".bak"))));
+
+    TestFalse(TEXT("an invalid record is refused"), WriteSaveFile(Primary, "garbage", Validator).Ok);
+    TestEqual(TEXT("a refused write leaves the slot alone"), FString(UTF8_TO_TCHAR(ReadSaveFile(Primary, Validator).Text.c_str())),
+              FString(TEXT("pw:second")));
+
+    FFileHelper::SaveStringToFile(TEXT("garbage"), *PrimaryPath);
+    const SaveReadResult Recovered = ReadSaveFile(Primary, Validator);
+    TestTrue(TEXT("a corrupt primary falls back to .bak"),
+             Recovered.Status == SaveReadStatus::RecoveredFromBackup && Recovered.Text == "pw:first" && !Recovered.Message.empty());
+
+    TestTrue(TEXT("delete"), DeleteSaveFiles(Primary).Ok);
+    TestTrue(TEXT("a deleted slot is missing"), ReadSaveFile(Primary, Validator).Status == SaveReadStatus::Missing);
+    IFileManager::Get().DeleteDirectory(*Folder, false, true);
     return true;
 }
 
