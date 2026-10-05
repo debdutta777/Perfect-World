@@ -1,0 +1,36 @@
+{
+  "schema": "pw.asset/1",
+  "id": "prop.street.lamp_post",
+  "display_name": "Street lamp post with amber lantern",
+  "status": "active", "contract": "prop.fixture@1", "milestone": "M1",
+  "tags": ["street", "light"],
+  "dimensions_mm": [300, 300, 4200], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-40, -40, 310], "max": [40, 40, 3990] },
+    "outer": { "min": [-170, -170, 0], "max": [170, 170, 4300] }
+  },
+  "block": {
+    "class": "P",
+    "cuboids": [
+      { "name": "base", "min_mm": [-150, -150, 0],   "size_mm": [300, 300, 300],  "tile": "tile.concrete_plain", "tint": "concrete" },
+      { "name": "pole", "min_mm": [-50, -50, 300],    "size_mm": [100, 100, 3700], "tile": "tile.steel_brushed", "tint": "ink" },
+      { "name": "lamp", "min_mm": [-150, -150, 4000], "size_mm": [300, 300, 200],  "tile": "tile.lamp_glass", "tint": "taxi_yellow" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.iron_painted",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 150],  "half_extent_mm": [150, 150, 150],  "channels": ["visibility", "camera", "pawn"] },
+      { "shape": "box", "center_mm": [0, 0, 2150], "half_extent_mm": [50, 50, 1850],   "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "obstacle" },
+    "sockets": [
+      { "id": "light", "location_mm": [0, 0, 4100] }
+    ],
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400] }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

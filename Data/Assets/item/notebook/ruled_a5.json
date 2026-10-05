@@ -1,0 +1,36 @@
+{
+  "schema": "pw.asset/1",
+  "id": "item.notebook.ruled_a5",
+  "display_name": "Ruled A5 exercise notebook",
+  "status": "active", "contract": "item.handheld@1", "milestone": "M1",
+  "tags": ["small_item", "study", "school"],
+  "dimensions_mm": [148, 210, 10], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-70, -100, 1], "max": [70, 100, 9] },
+    "outer": { "min": [-90, -125, 0], "max": [90, 125, 30] }
+  },
+  "block": {
+    "class": "S",
+    "cuboids": [
+      { "name": "cover", "min_mm": [-74, -105, 0], "size_mm": [148, 210, 10], "tile": "tile.notebook_cover", "tint": "chalk_blue" },
+      { "name": "pages", "min_mm": [-70, -100, 2], "size_mm": [140, 200, 6],  "tile": "tile.paper_pages", "tint": "paper", "faces": { "+z": "hidden" } }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.paper_book",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 5], "half_extent_mm": [74, 105, 5], "channels": ["visibility"] }
+    ],
+    "nav": { "area": "none" },
+    "interactions": [
+      { "id": "pick_up", "verb": "verb.pick_up", "stance_mm": [500, 0, 0], "facing_deg": 180, "grip": "grip.pinch", "anchor_mm": [0, 0, 5], "priority": 1 },
+      { "id": "write_in", "verb": "verb.write_in", "stance_mm": [500, 0, 0], "facing_deg": 180, "pose": "pose.write", "grip": "grip.pen", "anchor_mm": [0, 0, 10], "priority": 2 }
+    ],
+    "grip": "grip.pinch",
+    "target_radius_mm": 100,
+    "sockets": [
+      { "id": "grip", "location_mm": [0, -80, 5] }
+    ]
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

@@ -1,0 +1,26 @@
+{
+  "schema": "pw.asset/1",
+  "id": "ground.road.asphalt_lane",
+  "display_name": "Asphalt road lane, 4 m by 3.5 m",
+  "status": "active", "contract": "ground.surface@1", "milestone": "M1",
+  "tags": ["street", "road", "culture.kolkata"],
+  "dimensions_mm": [4000, 3500, 150], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-1900, -1650, 10], "max": [1900, 1650, 140] },
+    "outer": { "min": [-2010, -1760, 0], "max": [2010, 1760, 160] }
+  },
+  "block": {
+    "class": "A",
+    "cuboids": [
+      { "name": "surface", "min_mm": [-2000, -1750, 0], "size_mm": [4000, 3500, 150], "tile": "tile.asphalt", "tint": "asphalt" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.asphalt_dry",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 75], "half_extent_mm": [2000, 1750, 75], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "walkable" }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

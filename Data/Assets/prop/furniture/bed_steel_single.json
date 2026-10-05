@@ -1,0 +1,50 @@
+{
+  "schema": "pw.asset/1",
+  "id": "prop.furniture.bed_steel_single",
+  "display_name": "Steel-frame single bed",
+  "status": "active", "contract": "prop.bed@1", "milestone": "M1",
+  "tags": ["home", "sleep"],
+  "dimensions_mm": [900, 1900, 500], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-400, -880, 310], "max": [400, 880, 430] },
+    "outer": { "min": [-480, -980, 0], "max": [480, 980, 700] }
+  },
+  "block": {
+    "class": "P",
+    "cuboids": [
+      { "name": "frame",    "min_mm": [-450, -950, 300], "size_mm": [900, 1900, 40],  "tile": "tile.steel_frame", "tint": "steel" },
+      { "name": "leg_fl",   "min_mm": [390, -950, 0],    "size_mm": [60, 60, 300],    "tile": "tile.steel_frame", "tint": "steel" },
+      { "name": "leg_fr",   "min_mm": [390, 890, 0],     "size_mm": [60, 60, 300],    "tile": "tile.steel_frame", "tint": "steel" },
+      { "name": "leg_bl",   "min_mm": [-450, -950, 0],   "size_mm": [60, 60, 300],    "tile": "tile.steel_frame", "tint": "steel" },
+      { "name": "leg_br",   "min_mm": [-450, 890, 0],    "size_mm": [60, 60, 300],    "tile": "tile.steel_frame", "tint": "steel" },
+      { "name": "mattress", "min_mm": [-430, -930, 340], "size_mm": [860, 1860, 100], "tile": "tile.cotton_check", "tint": "plaster_mint", "faces": { "-z": "hidden" } },
+      { "name": "pillow",   "min_mm": [-250, -900, 440], "size_mm": [500, 300, 60],   "color": "paper.3", "soft": true }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.steel_painted",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 370], "half_extent_mm": [450, 950, 70],  "channels": ["visibility", "camera", "pawn"] },
+      { "shape": "box", "center_mm": [0, 0, 150], "half_extent_mm": [450, 950, 150], "channels": ["pawn"] }
+    ],
+    "nav": { "area": "obstacle" },
+    "interactions": [
+      { "id": "sleep", "verb": "verb.sleep", "stance_mm": [700, 0, 0],   "facing_deg": 180, "seat": "lie", "priority": 1 },
+      { "id": "sit",   "verb": "verb.sit",   "stance_mm": [700, 400, 0], "facing_deg": 180, "seat": "edge_right", "priority": 2 },
+      { "id": "store", "verb": "verb.store_under", "stance_mm": [750, 550, 0], "facing_deg": 180,
+        "pose": "pose.crouch", "grip": "grip.two_hand_carry", "anchor_mm": [300, 550, 100], "priority": 3 }
+    ],
+    "seats": [
+      { "id": "edge_right", "pose": "pose.sit_edge_45", "pelvis_mm": [300, 400, 450], "facing_deg": 0, "exit_mm": [700, 400, 0] },
+      { "id": "lie", "pose": "pose.lie_back", "pelvis_mm": [0, 50, 470], "head_mm": [0, -750, 500], "facing_deg": 0, "exit_mm": [700, 0, 0] }
+    ],
+    "sockets": [
+      { "id": "pillow_top", "location_mm": [0, -750, 500] }
+    ],
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150, "seated_headroom_mm": 1100 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400], "seated_headroom_mm": 1100 }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

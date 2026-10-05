@@ -1,0 +1,16 @@
+{
+  "schema": "pw.contract/1",
+  "family": "item.tool",
+  "version": 1,
+  "category": "item",
+  "subcategories": ["tool"],
+  "texel_class": "S",
+  "dimensions_mm": { "min": [10, 10, 10], "max": [100, 600, 300] },
+  "requires": {
+    "solid": false, "interactions": 1, "seats": 0,
+    "camera_clearance": false, "seated_clearance": false,
+    "grip_socket": true, "target_radius_mm": 100
+  },
+  "clearance": { "camera_probe_mm": 120, "min_camera_gap_mm": 150, "boom_mm": 2500, "room_mm": [2400, 2400], "min_seated_headroom_mm": 1100 },
+  "grips": ["grip.tool_twist", "grip.power"]
+}

@@ -409,3 +409,51 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 
 **Rung reached:** Rung 4, by boot and clean exit. **Owner check still open:** moving the mouse to look around in the packaged build, and Alt+F4. The scene loads through `/Engine/Maps/Entry` with the test game mode set globally, not a `MAP_Test_Block` asset; M1-15 moves the game mode per map.
 
+
+## Checkpoint — M1-07 asset registry `pw.asset/1`, 2026-10-05
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:**
+- New `Public/AssetRegistry.h` and `Private/{AssetInternal.h, AssetRegistry.cpp, AssetReader.cpp, AssetContractReader.cpp, AssetGeometry.cpp, AssetGameplay.cpp}`, all under 500 lines.
+- `Tests/AssetRegistryTests.cpp`.
+- `Tools/ContentCheck/main.cpp`: a new `pwcontent assets <dir>` subcommand; `validate` is unchanged.
+- `Data/Contracts/*.json` (14) and `Data/Assets/<category>/<subcategory>/*.json` (45).
+- `Tests/Fixtures/Assets/*` (six bad fixtures).
+- `CMakeLists.txt`.
+
+**Content:**
+- Contracts for walls, slabs, doors, windows, trim, gates, ground surfaces, beds, seats, desks, storage, fixtures, handheld items and tools.
+- Assets:
+  - a compact Kolkata flat's shell
+  - furniture (a taktaposh, an almirah)
+  - street pieces (lane, zebra crossing, pavement, drain cover, lamp post, post box, tea stall)
+  - small items (phone, textbooks, a clay bhar cup, tiffin box)
+  - one tool (an adjustable spanner)
+  - the school gate
+  - a Gate-rift frame placeholder
+
+All are voxel-block definitions, not meshes.
+
+**Rules enforced:**
+- ID format, and the path must match the ID.
+- No drawing-method words in IDs.
+- Unknown fields and duplicates refused.
+- Integer millimetres only.
+- Dimensions within the contract; doors exactly 2100 mm.
+- Every cuboid, collision box, anchor, socket and seat point inside the outer envelope; stances and seat exits outside it.
+- Seats and camera clearance declared for both first and third person.
+- Held items need a grip socket.
+- Palette ramps only, with Gate ramps only in `gatekit`.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwi`. **Result:** PASS, 32/32. `AssetRegistryTests: 316 checks passed`; `pwcontent assets Data`: `PASS: 59 files, 14 contracts, 45 assets`. Each of the six fixtures (anchor outside, missing clearance, door height, unknown family, duplicate ID, unknown field) fails for its stated reason.
+
+**Choices where `ASSET_PIPELINE.md` was silent (owner may revise):**
+- The doc's example uses centimetres with decimals; fields here are `*_mm` integers.
+- `bottom_center` is the only pivot, so X and Y dimensions must be even.
+- The cuboid union must equal the declared dimensions exactly.
+- Stance and exit points are floor points outside the asset.
+- Contracts carry limits, not overridable defaults.
+- Pose, grip and palette-ramp lists are hard-coded until M1-08 defines the tile list.
+
+**Remaining limitation:** nothing in Unreal reads the registry yet; that is M1-09 and M1-10.

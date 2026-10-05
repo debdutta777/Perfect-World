@@ -1,0 +1,37 @@
+{
+  "schema": "pw.asset/1",
+  "id": "item.bag.school_backpack",
+  "display_name": "School backpack",
+  "status": "active", "contract": "item.handheld@1", "milestone": "M1",
+  "tags": ["small_item", "school"],
+  "dimensions_mm": [300, 400, 450], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-140, -190, 20], "max": [140, 190, 430] },
+    "outer": { "min": [-170, -220, 0], "max": [170, 220, 500] }
+  },
+  "block": {
+    "class": "S",
+    "cuboids": [
+      { "name": "main",   "min_mm": [-150, -200, 0],   "size_mm": [300, 400, 380], "tile": "tile.canvas", "tint": "school_navy" },
+      { "name": "flap",   "min_mm": [-150, -200, 380], "size_mm": [300, 400, 70],  "tile": "tile.canvas", "tint": "school_navy" },
+      { "name": "pocket", "min_mm": [110, -150, 20],   "size_mm": [40, 300, 200],  "color": "school_sky.2" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.canvas_cloth",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 225], "half_extent_mm": [150, 200, 225], "channels": ["visibility", "pawn"] }
+    ],
+    "nav": { "area": "none" },
+    "interactions": [
+      { "id": "pick_up", "verb": "verb.pick_up", "stance_mm": [700, 0, 0], "facing_deg": 180, "grip": "grip.hook", "anchor_mm": [0, 0, 440], "priority": 1 }
+    ],
+    "grip": "grip.hook",
+    "target_radius_mm": 150,
+    "sockets": [
+      { "id": "grip", "location_mm": [0, 0, 440] },
+      { "id": "back_bag", "location_mm": [-150, 0, 250] }
+    ]
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

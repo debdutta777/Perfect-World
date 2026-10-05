@@ -1,0 +1,15 @@
+{
+  "schema": "pw.contract/1",
+  "family": "prop.seat",
+  "version": 1,
+  "category": "prop",
+  "subcategories": ["furniture", "street"],
+  "texel_class": "P",
+  "dimensions_mm": { "min": [250, 250, 10], "max": [2400, 2400, 1200] },
+  "requires": {
+    "solid": false, "interactions": 1, "seats": 1,
+    "camera_clearance": true, "seated_clearance": true
+  },
+  "clearance": { "camera_probe_mm": 120, "min_camera_gap_mm": 150, "boom_mm": 2500, "room_mm": [2400, 2400], "min_seated_headroom_mm": 1100 },
+  "seat_poses": ["pose.sit_chair_45", "pose.sit_bench_42", "pose.sit_stool_30", "pose.sit_floor"]
+}

@@ -1,0 +1,35 @@
+{
+  "schema": "pw.asset/1",
+  "id": "item.pen.ballpoint_blue",
+  "display_name": "Blue ballpoint pen",
+  "status": "active", "contract": "item.handheld@1", "milestone": "M1",
+  "tags": ["small_item", "study", "school"],
+  "dimensions_mm": [14, 150, 14], "pivot": "bottom_center", "front": "+y",
+  "envelope_mm": {
+    "inner": { "min": [-6, -70, 1], "max": [6, 70, 13] },
+    "outer": { "min": [-20, -90, 0], "max": [20, 90, 30] }
+  },
+  "block": {
+    "class": "S",
+    "cuboids": [
+      { "name": "barrel", "min_mm": [-7, -75, 0], "size_mm": [14, 120, 14], "color": "school_sky.2" },
+      { "name": "tip",    "min_mm": [-2, 45, 5],  "size_mm": [4, 30, 4],    "color": "ink.1" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.plastic_smooth",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 7], "half_extent_mm": [7, 75, 7], "channels": ["visibility"] }
+    ],
+    "nav": { "area": "none" },
+    "interactions": [
+      { "id": "pick_up", "verb": "verb.pick_up", "stance_mm": [400, 0, 0], "facing_deg": 180, "grip": "grip.pen", "anchor_mm": [0, 0, 7], "priority": 1 }
+    ],
+    "grip": "grip.pen",
+    "target_radius_mm": 100,
+    "sockets": [
+      { "id": "grip", "location_mm": [0, -20, 7] }
+    ]
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

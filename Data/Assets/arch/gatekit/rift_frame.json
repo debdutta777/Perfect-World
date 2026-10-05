@@ -1,0 +1,38 @@
+{
+  "schema": "pw.asset/1",
+  "id": "arch.gatekit.rift_frame",
+  "display_name": "Gate rift frame with threshold field",
+  "status": "active", "contract": "arch.gate@1", "milestone": "M1",
+  "tags": ["gate", "supernatural"],
+  "dimensions_mm": [200, 2400, 3000], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-20, -1000, 10], "max": [20, 1000, 2790] },
+    "outer": { "min": [-120, -1210, 0], "max": [120, 1210, 3100] }
+  },
+  "block": {
+    "class": "A",
+    "cuboids": [
+      { "name": "post_l", "min_mm": [-100, -1200, 0],    "size_mm": [200, 200, 3000],  "tile": "tile.gate_glass", "tint": "gate_violet" },
+      { "name": "post_r", "min_mm": [-100, 1000, 0],     "size_mm": [200, 200, 3000],  "tile": "tile.gate_glass", "tint": "gate_violet" },
+      { "name": "header", "min_mm": [-100, -1000, 2800], "size_mm": [200, 2000, 200],  "tile": "tile.gate_glass", "tint": "gate_violet" },
+      { "name": "field",  "min_mm": [-20, -1000, 0],     "size_mm": [40, 2000, 2800],  "color": "gate_teal.2", "soft": true }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.gate_field",
+    "collision": [
+      { "shape": "box", "center_mm": [0, -1100, 1500], "half_extent_mm": [100, 100, 1500], "channels": ["visibility", "camera", "pawn"] },
+      { "shape": "box", "center_mm": [0, 1100, 1500],  "half_extent_mm": [100, 100, 1500], "channels": ["visibility", "camera", "pawn"] },
+      { "shape": "box", "center_mm": [0, 0, 2900],     "half_extent_mm": [100, 1000, 100], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "passage" },
+    "interactions": [
+      { "id": "enter", "verb": "verb.enter_gate", "stance_mm": [900, 0, 0], "facing_deg": 180, "anchor_mm": [0, 0, 1100], "priority": 1 }
+    ],
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400] }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

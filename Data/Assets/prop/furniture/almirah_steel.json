@@ -1,0 +1,37 @@
+{
+  "schema": "pw.asset/1",
+  "id": "prop.furniture.almirah_steel",
+  "display_name": "Steel almirah (wardrobe cupboard)",
+  "status": "active", "contract": "prop.storage@1", "milestone": "M1",
+  "tags": ["home", "store", "culture.bengal_specific"],
+  "dimensions_mm": [500, 1000, 1800], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-240, -480, 50], "max": [240, 480, 1750] },
+    "outer": { "min": [-270, -520, 0], "max": [270, 520, 1850] }
+  },
+  "block": {
+    "class": "P",
+    "cuboids": [
+      { "name": "body",  "min_mm": [-250, -500, 0],  "size_mm": [490, 1000, 1800], "tile": "tile.steel_sheet", "tint": "steel" },
+      { "name": "doors", "min_mm": [240, -480, 50],  "size_mm": [10, 960, 1700],   "tile": "tile.steel_sheet", "tint": "school_navy" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.steel_painted",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 900], "half_extent_mm": [250, 500, 900], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "obstacle" },
+    "interactions": [
+      { "id": "open", "verb": "verb.open", "stance_mm": [800, 0, 0], "facing_deg": 180, "anchor_mm": [250, 0, 1200], "priority": 1 }
+    ],
+    "sockets": [
+      { "id": "contents", "location_mm": [0, 0, 900], "half_extent_mm": [200, 450, 800] }
+    ],
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400] }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

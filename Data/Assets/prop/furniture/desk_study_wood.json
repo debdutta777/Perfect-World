@@ -1,0 +1,44 @@
+{
+  "schema": "pw.asset/1",
+  "id": "prop.furniture.desk_study_wood",
+  "display_name": "Wooden study desk",
+  "status": "active", "contract": "prop.desk@1", "milestone": "M1",
+  "tags": ["home", "study"],
+  "dimensions_mm": [600, 1100, 750], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-250, -500, 710], "max": [250, 500, 740] },
+    "outer": { "min": [-320, -620, 0], "max": [320, 620, 850] }
+  },
+  "block": {
+    "class": "P",
+    "cuboids": [
+      { "name": "top",     "min_mm": [-300, -550, 700], "size_mm": [600, 1100, 50], "tile": "tile.wood_plank", "tint": "teak" },
+      { "name": "side_l",  "min_mm": [-300, -550, 0],   "size_mm": [600, 50, 700],   "tile": "tile.wood_plank", "tint": "teak" },
+      { "name": "side_r",  "min_mm": [-300, 500, 0],    "size_mm": [600, 50, 700],   "tile": "tile.wood_plank", "tint": "teak" },
+      { "name": "modesty", "min_mm": [-300, -500, 300], "size_mm": [30, 1000, 400],  "tile": "tile.wood_plank", "tint": "teak" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.wood_teak",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 725],    "half_extent_mm": [300, 550, 25],  "channels": ["visibility", "camera", "pawn"] },
+      { "shape": "box", "center_mm": [0, -525, 350], "half_extent_mm": [300, 25, 350],  "channels": ["visibility", "camera", "pawn"] },
+      { "shape": "box", "center_mm": [0, 525, 350],  "half_extent_mm": [300, 25, 350],  "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "obstacle" },
+    "interactions": [
+      { "id": "write", "verb": "verb.write", "stance_mm": [600, 0, 0], "facing_deg": 180, "pose": "pose.write", "grip": "grip.pen", "anchor_mm": [0, 0, 750], "priority": 1 },
+      { "id": "read",  "verb": "verb.read",  "stance_mm": [600, 0, 0], "facing_deg": 180, "pose": "pose.reach", "anchor_mm": [100, -200, 750], "priority": 2 }
+    ],
+    "knee_clearance_mm": [650, 500],
+    "sockets": [
+      { "id": "book_spot", "location_mm": [50, -200, 750], "half_extent_mm": [150, 120, 20] },
+      { "id": "pen_spot",  "location_mm": [50, 250, 750] }
+    ],
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400] }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

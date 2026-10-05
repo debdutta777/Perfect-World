@@ -1,0 +1,11 @@
+{
+  "schema": "pw.contract/1",
+  "family": "arch.trim",
+  "version": 1,
+  "category": "arch",
+  "subcategories": ["trim"],
+  "texel_class": "A",
+  "dimensions_mm": { "min": [50, 500, 50], "max": [1000, 6000, 1500] },
+  "requires": { "solid": false, "interactions": 0, "seats": 0, "camera_clearance": false, "seated_clearance": false },
+  "clearance": { "camera_probe_mm": 120, "min_camera_gap_mm": 150, "boom_mm": 2500, "room_mm": [2400, 2400], "min_seated_headroom_mm": 1100 }
+}

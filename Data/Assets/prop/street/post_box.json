@@ -1,0 +1,35 @@
+{
+  "schema": "pw.asset/1",
+  "id": "prop.street.post_box",
+  "display_name": "Red pillar-style post box",
+  "status": "active", "contract": "prop.fixture@1", "milestone": "M1",
+  "tags": ["street"],
+  "dimensions_mm": [400, 400, 1400], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-190, -190, 10], "max": [190, 190, 1390] },
+    "outer": { "min": [-220, -220, 0], "max": [220, 220, 1500] }
+  },
+  "block": {
+    "class": "P",
+    "cuboids": [
+      { "name": "body", "min_mm": [-200, -200, 0],    "size_mm": [400, 400, 1300], "tile": "tile.painted_metal", "tint": "signal_red" },
+      { "name": "cap",  "min_mm": [-200, -200, 1300], "size_mm": [400, 400, 100],  "tile": "tile.painted_metal", "tint": "signal_red" },
+      { "name": "slot", "min_mm": [150, -100, 1000],  "size_mm": [50, 200, 40],    "color": "ink.0" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.iron_painted",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 700], "half_extent_mm": [200, 200, 700], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "obstacle" },
+    "interactions": [
+      { "id": "post", "verb": "verb.post_letter", "stance_mm": [800, 0, 0], "facing_deg": 180, "pose": "pose.reach", "anchor_mm": [200, 0, 1020], "priority": 1 }
+    ],
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400] }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

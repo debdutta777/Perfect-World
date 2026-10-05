@@ -1,0 +1,17 @@
+{
+  "schema": "pw.contract/1",
+  "family": "prop.desk",
+  "version": 1,
+  "category": "prop",
+  "subcategories": ["furniture"],
+  "texel_class": "P",
+  "dimensions_mm": { "min": [400, 600, 600], "max": [1800, 2400, 900] },
+  "requires": {
+    "solid": true, "interactions": 1, "seats": 0, "standing_anchor": true,
+    "camera_clearance": true, "seated_clearance": false,
+    "knee_clearance_mm": [600, 450],
+    "anchor_height_mm": [350, 1850]
+  },
+  "clearance": { "camera_probe_mm": 120, "min_camera_gap_mm": 150, "boom_mm": 2500, "room_mm": [2400, 2400], "min_seated_headroom_mm": 1100 },
+  "seat_poses": ["pose.sit_chair_45", "pose.sit_bench_42"]
+}

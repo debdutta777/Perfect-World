@@ -1,0 +1,36 @@
+{
+  "schema": "pw.asset/1",
+  "id": "arch.school.gate_main",
+  "display_name": "School main gate, 4 m iron leaf",
+  "status": "active", "contract": "arch.gate@1", "milestone": "M1",
+  "tags": ["school", "street", "culture.kolkata"],
+  "dimensions_mm": [100, 4000, 2200], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-30, -1900, 110], "max": [30, 1900, 2090] },
+    "outer": { "min": [-60, -2010, 0], "max": [60, 2010, 2210] }
+  },
+  "block": {
+    "class": "A",
+    "cuboids": [
+      { "name": "post_l", "min_mm": [-50, -2000, 0],    "size_mm": [100, 100, 2200],  "tile": "tile.concrete_plain", "tint": "concrete" },
+      { "name": "post_r", "min_mm": [-50, 1900, 0],     "size_mm": [100, 100, 2200],  "tile": "tile.concrete_plain", "tint": "concrete" },
+      { "name": "top",    "min_mm": [-50, -1900, 2100], "size_mm": [100, 3800, 100],  "tile": "tile.concrete_plain", "tint": "concrete" },
+      { "name": "leaf",   "min_mm": [-20, -1900, 100],  "size_mm": [40, 3800, 2000],  "tile": "tile.iron_grill", "tint": "school_navy" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.iron_painted",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 1100], "half_extent_mm": [50, 2000, 1100], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "passage" },
+    "interactions": [
+      { "id": "open", "verb": "verb.open", "stance_mm": [800, 1500, 0], "facing_deg": 180, "anchor_mm": [30, 1500, 1100], "priority": 1 }
+    ],
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400] }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

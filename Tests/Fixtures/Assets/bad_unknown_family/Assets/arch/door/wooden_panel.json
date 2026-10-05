@@ -1,0 +1,26 @@
+{
+  "schema": "pw.asset/1",
+  "id": "arch.door.wooden_panel",
+  "display_name": "Fixture door naming a family that has no contract",
+  "status": "active", "contract": "arch.nothing@1", "milestone": "M1",
+  "tags": ["test"],
+  "dimensions_mm": [100, 1000, 2100], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-30, -390, 10], "max": [30, 390, 1990] },
+    "outer": { "min": [-60, -510, 0], "max": [60, 510, 2110] }
+  },
+  "block": {
+    "class": "A",
+    "cuboids": [
+      { "name": "leaf", "min_mm": [-50, -500, 0], "size_mm": [100, 1000, 2100], "tile": "tile.wood_panel", "tint": "teak" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.wood_teak",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 1050], "half_extent_mm": [50, 500, 1050], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "passage" }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

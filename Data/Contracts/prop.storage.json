@@ -1,0 +1,15 @@
+{
+  "schema": "pw.contract/1",
+  "family": "prop.storage",
+  "version": 1,
+  "category": "prop",
+  "subcategories": ["furniture"],
+  "texel_class": "P",
+  "dimensions_mm": { "min": [200, 300, 200], "max": [1000, 2400, 2400] },
+  "requires": {
+    "solid": true, "interactions": 1, "seats": 0, "standing_anchor": true,
+    "camera_clearance": true, "seated_clearance": false,
+    "anchor_height_mm": [350, 1850]
+  },
+  "clearance": { "camera_probe_mm": 120, "min_camera_gap_mm": 150, "boom_mm": 2500, "room_mm": [2400, 2400], "min_seated_headroom_mm": 1100 }
+}

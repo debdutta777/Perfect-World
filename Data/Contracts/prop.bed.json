@@ -1,0 +1,16 @@
+{
+  "schema": "pw.contract/1",
+  "family": "prop.bed",
+  "version": 1,
+  "category": "prop",
+  "subcategories": ["furniture"],
+  "texel_class": "P",
+  "dimensions_mm": { "min": [800, 1800, 350], "max": [1000, 2000, 600] },
+  "requires": {
+    "solid": true, "interactions": 2, "seats": 2, "standing_anchor": true,
+    "camera_clearance": true, "seated_clearance": true,
+    "anchor_height_mm": [350, 1850]
+  },
+  "clearance": { "camera_probe_mm": 120, "min_camera_gap_mm": 150, "boom_mm": 2500, "room_mm": [2400, 2400], "min_seated_headroom_mm": 1100 },
+  "seat_poses": ["pose.sit_edge_45", "pose.lie_back"]
+}

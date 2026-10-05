@@ -1,0 +1,26 @@
+{
+  "schema": "pw.asset/1",
+  "id": "arch.wall.plaster_corner",
+  "display_name": "Plastered brick wall, corner post",
+  "status": "active", "contract": "arch.wall@1", "milestone": "M1",
+  "tags": ["home", "shell", "culture.kolkata"],
+  "dimensions_mm": [250, 250, 3000], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-100, -100, 100], "max": [100, 100, 2900] },
+    "outer": { "min": [-135, -135, 0], "max": [135, 135, 3050] }
+  },
+  "block": {
+    "class": "A",
+    "cuboids": [
+      { "name": "post", "min_mm": [-125, -125, 0], "size_mm": [250, 250, 3000], "tile": "tile.plaster_wall", "tint": "plaster_cream" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.plaster_painted",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 1500], "half_extent_mm": [125, 125, 1500], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "obstacle" }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

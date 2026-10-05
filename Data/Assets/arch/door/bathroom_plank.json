@@ -1,0 +1,33 @@
+{
+  "schema": "pw.asset/1",
+  "id": "arch.door.bathroom_plank",
+  "display_name": "Plank bathroom door, 2.10 m",
+  "status": "active", "contract": "arch.door@1", "milestone": "M1",
+  "tags": ["home", "shell"],
+  "dimensions_mm": [80, 900, 2100], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-30, -400, 10], "max": [30, 400, 2090] },
+    "outer": { "min": [-50, -460, 0], "max": [50, 460, 2110] }
+  },
+  "block": {
+    "class": "A",
+    "cuboids": [
+      { "name": "leaf", "min_mm": [-40, -450, 0], "size_mm": [80, 900, 2100], "tile": "tile.wood_plank", "tint": "jute" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.wood_teak",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 1050], "half_extent_mm": [40, 450, 1050], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "passage" },
+    "interactions": [
+      { "id": "open", "verb": "verb.open", "stance_mm": [700, 0, 0], "facing_deg": 180, "anchor_mm": [40, 350, 1000], "priority": 1 }
+    ],
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400] }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

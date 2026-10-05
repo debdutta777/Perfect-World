@@ -1,0 +1,39 @@
+{
+  "schema": "pw.asset/1",
+  "id": "prop.fixture.tap_courtyard",
+  "display_name": "Courtyard water tap on a concrete base",
+  "status": "active", "contract": "prop.fixture@1", "milestone": "M1",
+  "tags": ["home", "water", "repair"],
+  "dimensions_mm": [400, 400, 900], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-190, -190, 10], "max": [190, 190, 890] },
+    "outer": { "min": [-220, -220, 0], "max": [220, 220, 960] }
+  },
+  "block": {
+    "class": "P",
+    "cuboids": [
+      { "name": "base",  "min_mm": [-200, -200, 0],  "size_mm": [400, 400, 100], "tile": "tile.concrete_plain", "tint": "concrete" },
+      { "name": "pipe",  "min_mm": [-30, -30, 100],  "size_mm": [60, 60, 800],    "tile": "tile.steel_brushed", "tint": "steel" },
+      { "name": "spout", "min_mm": [-30, -30, 860],  "size_mm": [230, 60, 40],    "tile": "tile.steel_brushed", "tint": "steel" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.concrete_rough",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 450], "half_extent_mm": [200, 200, 450], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "obstacle" },
+    "interactions": [
+      { "id": "repair", "verb": "verb.repair_tap", "stance_mm": [800, 0, 0], "facing_deg": 180, "pose": "pose.reach", "grip": "grip.tool_twist", "anchor_mm": [150, 0, 870], "priority": 1 },
+      { "id": "drink",  "verb": "verb.drink",      "stance_mm": [800, 0, 0], "facing_deg": 180, "pose": "pose.crouch", "anchor_mm": [190, 0, 820], "priority": 2 }
+    ],
+    "sockets": [
+      { "id": "spout_tip", "location_mm": [190, 0, 860] }
+    ],
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400] }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

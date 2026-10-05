@@ -1,0 +1,26 @@
+{
+  "schema": "pw.asset/1",
+  "id": "arch.ceiling.concrete_slab",
+  "display_name": "Concrete ceiling slab, 3 m square",
+  "status": "active", "contract": "arch.slab@1", "milestone": "M1",
+  "tags": ["home", "shell"],
+  "dimensions_mm": [3000, 3000, 150], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-1400, -1400, 10], "max": [1400, 1400, 140] },
+    "outer": { "min": [-1510, -1510, 0], "max": [1510, 1510, 160] }
+  },
+  "block": {
+    "class": "A",
+    "cuboids": [
+      { "name": "slab", "min_mm": [-1500, -1500, 0], "size_mm": [3000, 3000, 150], "tile": "tile.plaster_wall", "tint": "paper" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.plaster_painted",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 75], "half_extent_mm": [1500, 1500, 75], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "obstacle" }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

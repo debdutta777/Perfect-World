@@ -1,0 +1,26 @@
+{
+  "schema": "pw.asset/1",
+  "id": "ground.pavement.concrete_slab",
+  "display_name": "Concrete pavement slab, 2 m by 1.5 m",
+  "status": "active", "contract": "ground.surface@1", "milestone": "M1",
+  "tags": ["street", "pavement"],
+  "dimensions_mm": [2000, 1500, 150], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-900, -650, 10], "max": [900, 650, 140] },
+    "outer": { "min": [-1010, -760, 0], "max": [1010, 760, 160] }
+  },
+  "block": {
+    "class": "A",
+    "cuboids": [
+      { "name": "slab", "min_mm": [-1000, -750, 0], "size_mm": [2000, 1500, 150], "tile": "tile.pavers", "tint": "concrete" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.concrete_rough",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 75], "half_extent_mm": [1000, 750, 75], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "walkable" }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "pw.asset/1",
+  "id": "ground.road.zebra_crossing",
+  "display_name": "Asphalt lane with zebra crossing",
+  "status": "active", "contract": "ground.surface@1", "milestone": "M1",
+  "tags": ["street", "road"],
+  "dimensions_mm": [4000, 3500, 150], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-1900, -1650, 10], "max": [1900, 1650, 140] },
+    "outer": { "min": [-2010, -1760, 0], "max": [2010, 1760, 160] }
+  },
+  "block": {
+    "class": "A",
+    "cuboids": [
+      { "name": "surface",  "min_mm": [-2000, -1750, 0],  "size_mm": [4000, 3500, 140], "tile": "tile.asphalt", "tint": "asphalt" },
+      { "name": "stripe_1", "min_mm": [-1500, -1350, 140], "size_mm": [3000, 300, 10],  "color": "paper.3" },
+      { "name": "stripe_2", "min_mm": [-1500, -750, 140],  "size_mm": [3000, 300, 10],  "color": "paper.3" },
+      { "name": "stripe_3", "min_mm": [-1500, -150, 140],  "size_mm": [3000, 300, 10],  "color": "paper.3" },
+      { "name": "stripe_4", "min_mm": [-1500, 450, 140],   "size_mm": [3000, 300, 10],  "color": "paper.3" },
+      { "name": "stripe_5", "min_mm": [-1500, 1050, 140],  "size_mm": [3000, 300, 10],  "color": "paper.3" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.asphalt_dry",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 75], "half_extent_mm": [2000, 1750, 75], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "walkable" }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

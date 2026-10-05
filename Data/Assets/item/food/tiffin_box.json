@@ -1,0 +1,38 @@
+{
+  "schema": "pw.asset/1",
+  "id": "item.food.tiffin_box",
+  "display_name": "Three-tier steel tiffin carrier",
+  "status": "active", "contract": "item.handheld@1", "milestone": "M1",
+  "tags": ["small_item", "food", "school", "culture.bengal_specific"],
+  "dimensions_mm": [160, 160, 200], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-70, -70, 5], "max": [70, 70, 190] },
+    "outer": { "min": [-100, -100, 0], "max": [100, 100, 250] }
+  },
+  "block": {
+    "class": "S",
+    "cuboids": [
+      { "name": "tier_1", "min_mm": [-80, -80, 0],   "size_mm": [160, 160, 60], "tile": "tile.steel_brushed", "tint": "steel" },
+      { "name": "tier_2", "min_mm": [-80, -80, 60],  "size_mm": [160, 160, 60], "tile": "tile.steel_brushed", "tint": "steel" },
+      { "name": "tier_3", "min_mm": [-80, -80, 120], "size_mm": [160, 160, 50], "tile": "tile.steel_brushed", "tint": "steel" },
+      { "name": "handle", "min_mm": [-60, -8, 170],  "size_mm": [120, 16, 30],  "color": "steel.1" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.steel_polished",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 100], "half_extent_mm": [80, 80, 100], "channels": ["visibility"] }
+    ],
+    "nav": { "area": "none" },
+    "interactions": [
+      { "id": "pick_up", "verb": "verb.pick_up", "stance_mm": [500, 0, 0], "facing_deg": 180, "grip": "grip.hook", "anchor_mm": [0, 0, 185], "priority": 1 },
+      { "id": "eat", "verb": "verb.eat", "stance_mm": [500, 0, 0], "facing_deg": 180, "grip": "grip.eat_hand", "anchor_mm": [0, 0, 120], "priority": 2 }
+    ],
+    "grip": "grip.hook",
+    "target_radius_mm": 100,
+    "sockets": [
+      { "id": "grip", "location_mm": [0, 0, 185] }
+    ]
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

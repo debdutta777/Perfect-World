@@ -1,0 +1,41 @@
+{
+  "schema": "pw.asset/1",
+  "id": "prop.furniture.chair_dining_wood",
+  "display_name": "Wooden dining chair",
+  "status": "active", "contract": "prop.seat@1", "milestone": "M1",
+  "tags": ["home", "sit", "eat"],
+  "dimensions_mm": [450, 450, 900], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-200, -200, 440], "max": [200, 200, 460] },
+    "outer": { "min": [-260, -260, 0], "max": [260, 260, 1000] }
+  },
+  "block": {
+    "class": "P",
+    "cuboids": [
+      { "name": "seat",   "min_mm": [-225, -225, 430], "size_mm": [450, 450, 40], "tile": "tile.wood_plank", "tint": "teak" },
+      { "name": "back",   "min_mm": [-225, -225, 470], "size_mm": [40, 450, 430], "tile": "tile.wood_plank", "tint": "teak" },
+      { "name": "leg_fl", "min_mm": [185, -225, 0],    "size_mm": [40, 40, 430],   "tile": "tile.wood_grain", "tint": "teak" },
+      { "name": "leg_fr", "min_mm": [185, 185, 0],     "size_mm": [40, 40, 430],   "tile": "tile.wood_grain", "tint": "teak" },
+      { "name": "leg_bl", "min_mm": [-225, -225, 0],   "size_mm": [40, 40, 430],   "tile": "tile.wood_grain", "tint": "teak" },
+      { "name": "leg_br", "min_mm": [-225, 185, 0],    "size_mm": [40, 40, 430],   "tile": "tile.wood_grain", "tint": "teak" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.wood_teak",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 450], "half_extent_mm": [225, 225, 450], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "obstacle" },
+    "interactions": [
+      { "id": "sit", "verb": "verb.sit", "stance_mm": [500, 0, 0], "facing_deg": 180, "seat": "seat", "priority": 1 }
+    ],
+    "seats": [
+      { "id": "seat", "pose": "pose.sit_chair_45", "pelvis_mm": [-20, 0, 450], "facing_deg": 0, "exit_mm": [500, 0, 0] }
+    ],
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150, "seated_headroom_mm": 1100 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400], "seated_headroom_mm": 1100 }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

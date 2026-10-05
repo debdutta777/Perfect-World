@@ -1,0 +1,26 @@
+{
+  "schema": "pw.asset/1",
+  "id": "arch.wall.plaster_segment",
+  "display_name": "Plastered brick wall, 3 m segment",
+  "status": "active", "contract": "arch.wall@1", "milestone": "M1",
+  "tags": ["home", "shell", "culture.kolkata"],
+  "dimensions_mm": [250, 3000, 3000], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-100, -1400, 100], "max": [100, 1400, 2900] },
+    "outer": { "min": [-135, -1510, 0], "max": [135, 1510, 3050] }
+  },
+  "block": {
+    "class": "A",
+    "cuboids": [
+      { "name": "wall", "min_mm": [-125, -1500, 0], "size_mm": [250, 3000, 3000], "tile": "tile.plaster_wall", "tint": "plaster_cream" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.plaster_painted",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 1500], "half_extent_mm": [125, 1500, 1500], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "obstacle" }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "pw.asset/1",
+  "id": "prop.furniture.table_dining_four",
+  "display_name": "Four-seat dining table",
+  "status": "active", "contract": "prop.desk@1", "milestone": "M1",
+  "tags": ["home", "eat"],
+  "dimensions_mm": [800, 1200, 750], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-350, -550, 710], "max": [350, 550, 740] },
+    "outer": { "min": [-420, -620, 0], "max": [420, 620, 850] }
+  },
+  "block": {
+    "class": "P",
+    "cuboids": [
+      { "name": "top",    "min_mm": [-400, -600, 700], "size_mm": [800, 1200, 50], "tile": "tile.wood_plank", "tint": "teak" },
+      { "name": "leg_fl", "min_mm": [340, -600, 0],    "size_mm": [60, 60, 700],   "tile": "tile.wood_grain", "tint": "teak" },
+      { "name": "leg_fr", "min_mm": [340, 540, 0],     "size_mm": [60, 60, 700],   "tile": "tile.wood_grain", "tint": "teak" },
+      { "name": "leg_bl", "min_mm": [-400, -600, 0],   "size_mm": [60, 60, 700],   "tile": "tile.wood_grain", "tint": "teak" },
+      { "name": "leg_br", "min_mm": [-400, 540, 0],    "size_mm": [60, 60, 700],   "tile": "tile.wood_grain", "tint": "teak" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.wood_teak",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 725], "half_extent_mm": [400, 600, 25], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "obstacle" },
+    "interactions": [
+      { "id": "eat", "verb": "verb.eat", "stance_mm": [650, 0, 0], "facing_deg": 180, "pose": "pose.reach", "grip": "grip.eat_hand", "anchor_mm": [0, 0, 750], "priority": 1 }
+    ],
+    "knee_clearance_mm": [650, 500],
+    "sockets": [
+      { "id": "centre", "location_mm": [0, 0, 750] }
+    ],
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400] }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

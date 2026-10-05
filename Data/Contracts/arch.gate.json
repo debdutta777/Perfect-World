@@ -1,0 +1,11 @@
+{
+  "schema": "pw.contract/1",
+  "family": "arch.gate",
+  "version": 1,
+  "category": "arch",
+  "subcategories": ["school", "gatekit"],
+  "texel_class": "A",
+  "dimensions_mm": { "min": [100, 300, 1500], "max": [2000, 6000, 5000] },
+  "requires": { "solid": true, "interactions": 0, "seats": 0, "camera_clearance": true, "seated_clearance": false, "anchor_height_mm": [350, 1850] },
+  "clearance": { "camera_probe_mm": 120, "min_camera_gap_mm": 150, "boom_mm": 2500, "room_mm": [2400, 2400], "min_seated_headroom_mm": 1100 }
+}

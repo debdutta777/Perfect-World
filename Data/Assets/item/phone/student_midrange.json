@@ -1,0 +1,35 @@
+{
+  "schema": "pw.asset/1",
+  "id": "item.phone.student_midrange",
+  "display_name": "Mid-range student smartphone",
+  "status": "active", "contract": "item.handheld@1", "milestone": "M1",
+  "tags": ["small_item", "phone"],
+  "dimensions_mm": [76, 160, 8], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-30, -70, 1], "max": [30, 70, 7] },
+    "outer": { "min": [-48, -90, 0], "max": [48, 90, 20] }
+  },
+  "block": {
+    "class": "S",
+    "cuboids": [
+      { "name": "body",   "min_mm": [-38, -80, 0], "size_mm": [76, 160, 6], "tile": "tile.plastic_smooth", "tint": "ink" },
+      { "name": "screen", "min_mm": [-34, -76, 6], "size_mm": [68, 152, 2], "color": "ink.0" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.plastic_smooth",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 4], "half_extent_mm": [38, 80, 4], "channels": ["visibility"] }
+    ],
+    "nav": { "area": "none" },
+    "interactions": [
+      { "id": "pick_up", "verb": "verb.pick_up", "stance_mm": [400, 0, 0], "facing_deg": 180, "grip": "grip.phone", "anchor_mm": [0, 0, 4], "priority": 1 }
+    ],
+    "grip": "grip.phone",
+    "target_radius_mm": 100,
+    "sockets": [
+      { "id": "grip", "location_mm": [0, 0, 4] }
+    ]
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "pw.contract/1",
+  "family": "item.handheld",
+  "version": 1,
+  "category": "item",
+  "subcategories": ["phone", "book", "notebook", "pen", "cup", "bag", "food"],
+  "texel_class": "S",
+  "dimensions_mm": { "min": [10, 10, 5], "max": [600, 600, 600] },
+  "requires": {
+    "solid": false, "interactions": 1, "seats": 0,
+    "camera_clearance": false, "seated_clearance": false,
+    "grip_socket": true, "target_radius_mm": 100
+  },
+  "clearance": { "camera_probe_mm": 120, "min_camera_gap_mm": 150, "boom_mm": 2500, "room_mm": [2400, 2400], "min_seated_headroom_mm": 1100 },
+  "grips": ["grip.pinch", "grip.pen", "grip.cup", "grip.phone", "grip.hook", "grip.flat_support", "grip.two_hand_carry", "grip.power", "grip.eat_hand"]
+}

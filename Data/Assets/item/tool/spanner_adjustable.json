@@ -1,0 +1,36 @@
+{
+  "schema": "pw.asset/1",
+  "id": "item.tool.spanner_adjustable",
+  "display_name": "Adjustable spanner",
+  "status": "active", "contract": "item.tool@1", "milestone": "M1",
+  "tags": ["small_item", "tool", "repair"],
+  "dimensions_mm": [30, 250, 20], "pivot": "bottom_center", "front": "+y",
+  "envelope_mm": {
+    "inner": { "min": [-10, -120, 1], "max": [10, 120, 19] },
+    "outer": { "min": [-40, -140, 0], "max": [40, 140, 40] }
+  },
+  "block": {
+    "class": "S",
+    "cuboids": [
+      { "name": "handle", "min_mm": [-10, -125, 0], "size_mm": [20, 180, 20], "tile": "tile.steel_brushed", "tint": "steel" },
+      { "name": "jaw",    "min_mm": [-15, 55, 0],    "size_mm": [30, 70, 20],  "tile": "tile.steel_brushed", "tint": "steel" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.steel_polished",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 10], "half_extent_mm": [15, 125, 10], "channels": ["visibility"] }
+    ],
+    "nav": { "area": "none" },
+    "interactions": [
+      { "id": "pick_up", "verb": "verb.pick_up", "stance_mm": [400, 0, 0], "facing_deg": 180, "grip": "grip.tool_twist", "anchor_mm": [0, -30, 10], "priority": 1 }
+    ],
+    "grip": "grip.tool_twist",
+    "target_radius_mm": 100,
+    "sockets": [
+      { "id": "grip", "location_mm": [0, -30, 10] },
+      { "id": "jaw_mouth", "location_mm": [0, 100, 10] }
+    ]
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

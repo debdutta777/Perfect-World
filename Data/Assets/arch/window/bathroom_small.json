@@ -1,0 +1,27 @@
+{
+  "schema": "pw.asset/1",
+  "id": "arch.window.bathroom_small",
+  "display_name": "Small frosted bathroom window",
+  "status": "active", "contract": "arch.window@1", "milestone": "M1",
+  "tags": ["home", "shell"],
+  "dimensions_mm": [250, 600, 600], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-20, -250, 50], "max": [20, 250, 550] },
+    "outer": { "min": [-135, -310, 0], "max": [135, 310, 650] }
+  },
+  "block": {
+    "class": "A",
+    "cuboids": [
+      { "name": "frame", "min_mm": [-125, -300, 0], "size_mm": [250, 600, 600], "tile": "tile.window_frame", "tint": "chalk_blue" },
+      { "name": "glass", "min_mm": [-10, -250, 50],  "size_mm": [20, 500, 500],  "color": "paper.2" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.glass_frosted",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 300], "half_extent_mm": [125, 300, 300], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "obstacle" }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

@@ -29,6 +29,11 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/CityData.cpp
     Source/PerfectWorldCore/Private/WorldSave.cpp
     Source/PerfectWorldCore/Private/WorldSaveReader.cpp
+    Source/PerfectWorldCore/Private/AssetRegistry.cpp
+    Source/PerfectWorldCore/Private/AssetReader.cpp
+    Source/PerfectWorldCore/Private/AssetContractReader.cpp
+    Source/PerfectWorldCore/Private/AssetGeometry.cpp
+    Source/PerfectWorldCore/Private/AssetGameplay.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -100,6 +105,10 @@ add_executable(PerfectWorldContentTests Tests/ContentRegistryTests.cpp)
 target_link_libraries(PerfectWorldContentTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldContentTests COMMAND PerfectWorldContentTests)
 
+add_executable(PerfectWorldAssetTests Tests/AssetRegistryTests.cpp)
+target_link_libraries(PerfectWorldAssetTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldAssetTests COMMAND PerfectWorldAssetTests)
+
 # The content validator tool (ROADMAP M1-06): the real data must pass, and each
 # bad fixture must fail for the reason it was written to demonstrate.
 add_executable(pwcontent Tools/ContentCheck/main.cpp)
@@ -119,4 +128,21 @@ foreach(fixture_and_issue
     list(GET parts 1 issue)
     add_test(NAME PerfectWorldContentFixture_${fixture}
              COMMAND pwcontent validate ${CMAKE_SOURCE_DIR}/Tests/Fixtures/Content/${fixture} --expect-issue "${issue}")
+endforeach()
+
+# The asset registry (ROADMAP M1-07): the real contracts and assets must pass,
+# and each bad fixture must fail for the reason it was written to demonstrate.
+add_test(NAME PerfectWorldAssetData COMMAND pwcontent assets ${CMAKE_SOURCE_DIR}/Data)
+foreach(fixture_and_issue
+        "bad_anchor_outside|lies outside the outer envelope"
+        "bad_missing_clearance|missing required field"
+        "bad_door_height|must be exactly 2100 mm"
+        "bad_unknown_family|unknown family"
+        "bad_duplicate_id|duplicate ID"
+        "bad_unknown_field|unknown field")
+    string(REPLACE "|" ";" parts "${fixture_and_issue}")
+    list(GET parts 0 fixture)
+    list(GET parts 1 issue)
+    add_test(NAME PerfectWorldAssetFixture_${fixture}
+             COMMAND pwcontent assets ${CMAKE_SOURCE_DIR}/Tests/Fixtures/Assets/${fixture} --expect-issue "${issue}")
 endforeach()

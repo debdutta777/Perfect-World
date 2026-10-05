@@ -1,0 +1,33 @@
+{
+  "schema": "pw.asset/1",
+  "id": "arch.door.wooden_panel",
+  "display_name": "Fixture door, second definition of the same ID",
+  "status": "active", "contract": "arch.door@1", "milestone": "M1",
+  "tags": ["test"],
+  "dimensions_mm": [100, 1000, 2100], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-30, -390, 10], "max": [30, 390, 1990] },
+    "outer": { "min": [-60, -510, 0], "max": [60, 510, 2110] }
+  },
+  "block": {
+    "class": "A",
+    "cuboids": [
+      { "name": "leaf", "min_mm": [-50, -500, 0], "size_mm": [100, 1000, 2100], "tile": "tile.wood_panel", "tint": "teak" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.wood_teak",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 1050], "half_extent_mm": [50, 500, 1050], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "passage" },
+    "interactions": [
+      { "id": "open", "verb": "verb.open", "stance_mm": [700, 0, 0], "facing_deg": 180, "anchor_mm": [30, 300, 1000], "priority": 1 }
+    ],
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400] }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

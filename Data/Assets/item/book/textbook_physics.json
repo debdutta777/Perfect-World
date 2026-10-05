@@ -1,0 +1,36 @@
+{
+  "schema": "pw.asset/1",
+  "id": "item.book.textbook_physics",
+  "display_name": "Class XI physics textbook",
+  "status": "active", "contract": "item.handheld@1", "milestone": "M1",
+  "tags": ["small_item", "study", "school"],
+  "dimensions_mm": [210, 290, 30], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-100, -140, 2], "max": [100, 140, 28] },
+    "outer": { "min": [-120, -160, 0], "max": [120, 160, 50] }
+  },
+  "block": {
+    "class": "S",
+    "cuboids": [
+      { "name": "cover", "min_mm": [-105, -145, 0], "size_mm": [210, 290, 30], "tile": "tile.book_cover", "tint": "school_navy" },
+      { "name": "pages", "min_mm": [-100, -140, 3], "size_mm": [200, 280, 24], "tile": "tile.paper_pages", "tint": "paper", "faces": { "+z": "hidden" } }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.paper_book",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 15], "half_extent_mm": [105, 145, 15], "channels": ["visibility"] }
+    ],
+    "nav": { "area": "none" },
+    "interactions": [
+      { "id": "pick_up", "verb": "verb.pick_up", "stance_mm": [500, 0, 0], "facing_deg": 180, "grip": "grip.two_hand_carry", "anchor_mm": [0, 0, 15], "priority": 1 },
+      { "id": "read", "verb": "verb.read", "stance_mm": [500, 0, 0], "facing_deg": 180, "pose": "pose.reach", "anchor_mm": [0, 0, 28], "priority": 2 }
+    ],
+    "grip": "grip.two_hand_carry",
+    "target_radius_mm": 120,
+    "sockets": [
+      { "id": "grip", "location_mm": [0, -100, 15] }
+    ]
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

@@ -1,0 +1,39 @@
+{
+  "schema": "pw.asset/1",
+  "id": "arch.door.wooden_panel",
+  "display_name": "Teak panel door with frame, 2.10 m",
+  "status": "active", "contract": "arch.door@1", "milestone": "M1",
+  "tags": ["home", "shell", "culture.kolkata"],
+  "dimensions_mm": [100, 1000, 2100], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-30, -390, 10], "max": [30, 390, 1990] },
+    "outer": { "min": [-60, -510, 0], "max": [60, 510, 2110] }
+  },
+  "block": {
+    "class": "A",
+    "cuboids": [
+      { "name": "jamb_l", "min_mm": [-50, -500, 0],    "size_mm": [100, 100, 2100], "tile": "tile.wood_grain", "tint": "teak" },
+      { "name": "jamb_r", "min_mm": [-50, 400, 0],     "size_mm": [100, 100, 2100], "tile": "tile.wood_grain", "tint": "teak" },
+      { "name": "lintel", "min_mm": [-50, -400, 2000], "size_mm": [100, 800, 100],  "tile": "tile.wood_grain", "tint": "teak" },
+      { "name": "leaf",   "min_mm": [-20, -400, 0],    "size_mm": [40, 800, 2000],  "tile": "tile.wood_panel", "tint": "teak" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.wood_teak",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 1000], "half_extent_mm": [20, 400, 1000], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "passage" },
+    "interactions": [
+      { "id": "open", "verb": "verb.open", "stance_mm": [700, 0, 0], "facing_deg": 180, "anchor_mm": [30, 300, 1000], "priority": 1 }
+    ],
+    "sockets": [
+      { "id": "handle", "location_mm": [30, 320, 1000] }
+    ],
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400] }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

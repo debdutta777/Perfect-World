@@ -1,0 +1,38 @@
+{
+  "schema": "pw.asset/1",
+  "id": "prop.street.tea_stall_counter",
+  "display_name": "Roadside tea stall counter",
+  "status": "active", "contract": "prop.fixture@1", "milestone": "M1",
+  "tags": ["street", "food", "culture.kolkata"],
+  "dimensions_mm": [900, 2000, 1100], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-420, -980, 50], "max": [420, 980, 1050] },
+    "outer": { "min": [-470, -1020, 0], "max": [470, 1020, 1200] }
+  },
+  "block": {
+    "class": "P",
+    "cuboids": [
+      { "name": "body",  "min_mm": [-450, -1000, 0],   "size_mm": [900, 2000, 900], "tile": "tile.wood_plank", "tint": "teak" },
+      { "name": "top",   "min_mm": [-450, -1000, 900], "size_mm": [900, 2000, 50],  "tile": "tile.concrete_plain", "tint": "concrete" },
+      { "name": "stove", "min_mm": [-100, -300, 950],  "size_mm": [300, 600, 150],  "color": "ink.1" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.wood_teak",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 500], "half_extent_mm": [450, 1000, 500], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "obstacle" },
+    "interactions": [
+      { "id": "order_tea", "verb": "verb.order_tea", "stance_mm": [1100, 0, 0], "facing_deg": 180, "pose": "pose.stand", "grip": "grip.cup", "anchor_mm": [450, 0, 1000], "priority": 1 }
+    ],
+    "sockets": [
+      { "id": "cup_spot", "location_mm": [300, 400, 950] }
+    ],
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400] }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

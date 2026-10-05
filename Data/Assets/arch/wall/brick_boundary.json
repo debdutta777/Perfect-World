@@ -1,0 +1,27 @@
+{
+  "schema": "pw.asset/1",
+  "id": "arch.wall.brick_boundary",
+  "display_name": "Brick boundary wall with concrete coping",
+  "status": "active", "contract": "arch.wall@1", "milestone": "M1",
+  "tags": ["street", "school", "culture.kolkata"],
+  "dimensions_mm": [250, 4000, 2400], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-100, -1900, 100], "max": [100, 1900, 2300] },
+    "outer": { "min": [-135, -2010, 0], "max": [135, 2010, 2450] }
+  },
+  "block": {
+    "class": "A",
+    "cuboids": [
+      { "name": "wall",   "min_mm": [-125, -2000, 0],    "size_mm": [250, 4000, 2300], "tile": "tile.brick_common", "tint": "terracotta" },
+      { "name": "coping", "min_mm": [-125, -2000, 2300], "size_mm": [250, 4000, 100],  "tile": "tile.concrete_plain", "tint": "concrete" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.brick_plain",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 1200], "half_extent_mm": [125, 2000, 1200], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "obstacle" }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

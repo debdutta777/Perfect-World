@@ -1,0 +1,36 @@
+{
+  "schema": "pw.asset/1",
+  "id": "prop.furniture.mat_floor_sitting",
+  "display_name": "Cotton floor mat for sitting and eating",
+  "status": "active", "contract": "prop.seat@1", "milestone": "M1",
+  "tags": ["home", "sit", "eat", "culture.bengal_specific"],
+  "dimensions_mm": [800, 1200, 20], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-380, -580, 2], "max": [380, 580, 18] },
+    "outer": { "min": [-420, -620, 0], "max": [420, 620, 200] }
+  },
+  "block": {
+    "class": "P",
+    "cuboids": [
+      { "name": "mat", "min_mm": [-400, -600, 0], "size_mm": [800, 1200, 20], "tile": "tile.cotton_check", "tint": "marigold", "soft": true }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.cotton_mat",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 10], "half_extent_mm": [400, 600, 10], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "walkable" },
+    "interactions": [
+      { "id": "sit", "verb": "verb.sit_floor", "stance_mm": [700, 0, 0], "facing_deg": 180, "seat": "floor", "priority": 1 }
+    ],
+    "seats": [
+      { "id": "floor", "pose": "pose.sit_floor", "pelvis_mm": [0, 0, 30], "facing_deg": 0, "exit_mm": [700, 0, 0] }
+    ],
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150, "seated_headroom_mm": 1100 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400], "seated_headroom_mm": 1100 }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

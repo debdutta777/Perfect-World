@@ -1,0 +1,16 @@
+{
+  "schema": "pw.contract/1",
+  "family": "arch.door",
+  "version": 1,
+  "category": "arch",
+  "subcategories": ["door"],
+  "texel_class": "A",
+  "dimensions_mm": { "min": [50, 800, 2100], "max": [200, 1200, 2100] },
+  "exact_height_mm": 2100,
+  "requires": {
+    "solid": true, "interactions": 1, "seats": 0, "standing_anchor": true,
+    "camera_clearance": true, "seated_clearance": false,
+    "anchor_height_mm": [350, 1850]
+  },
+  "clearance": { "camera_probe_mm": 120, "min_camera_gap_mm": 150, "boom_mm": 2500, "room_mm": [2400, 2400], "min_seated_headroom_mm": 1100 }
+}

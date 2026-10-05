@@ -1,0 +1,31 @@
+{
+  "schema": "pw.asset/1",
+  "id": "arch.school.gate_pillar",
+  "display_name": "School gate pillar with name-board cap",
+  "status": "active", "contract": "arch.gate@1", "milestone": "M1",
+  "tags": ["school", "street", "culture.kolkata"],
+  "dimensions_mm": [600, 600, 2800], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-250, -250, 100], "max": [250, 250, 2700] },
+    "outer": { "min": [-320, -320, 0], "max": [320, 320, 2900] }
+  },
+  "block": {
+    "class": "A",
+    "cuboids": [
+      { "name": "shaft", "min_mm": [-300, -300, 0],    "size_mm": [600, 600, 2400], "tile": "tile.plaster_wall", "tint": "chalk_blue" },
+      { "name": "cap",   "min_mm": [-300, -300, 2400], "size_mm": [600, 600, 400],  "tile": "tile.concrete_plain", "tint": "concrete" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.plaster_painted",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 1400], "half_extent_mm": [300, 300, 1400], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "obstacle" },
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400] }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

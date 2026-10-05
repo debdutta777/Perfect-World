@@ -1,0 +1,41 @@
+{
+  "schema": "pw.asset/1",
+  "id": "prop.furniture.shelf_book_open",
+  "display_name": "Open wooden bookshelf",
+  "status": "active", "contract": "prop.storage@1", "milestone": "M1",
+  "tags": ["home", "study", "store"],
+  "dimensions_mm": [300, 900, 1500], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-140, -420, 30], "max": [140, 420, 1460] },
+    "outer": { "min": [-170, -470, 0], "max": [170, 470, 1550] }
+  },
+  "block": {
+    "class": "P",
+    "cuboids": [
+      { "name": "side_l",  "min_mm": [-150, -450, 0],   "size_mm": [300, 30, 1500], "tile": "tile.wood_plank", "tint": "teak" },
+      { "name": "side_r",  "min_mm": [-150, 420, 0],    "size_mm": [300, 30, 1500], "tile": "tile.wood_plank", "tint": "teak" },
+      { "name": "board_0", "min_mm": [-150, -420, 0],   "size_mm": [300, 840, 30],   "tile": "tile.wood_plank", "tint": "teak" },
+      { "name": "board_1", "min_mm": [-150, -420, 490], "size_mm": [300, 840, 30],   "tile": "tile.wood_plank", "tint": "teak" },
+      { "name": "board_2", "min_mm": [-150, -420, 980], "size_mm": [300, 840, 30],   "tile": "tile.wood_plank", "tint": "teak" },
+      { "name": "board_3", "min_mm": [-150, -420, 1470], "size_mm": [300, 840, 30],  "tile": "tile.wood_plank", "tint": "teak" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.wood_teak",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 750], "half_extent_mm": [150, 450, 750], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "obstacle" },
+    "interactions": [
+      { "id": "browse", "verb": "verb.browse", "stance_mm": [700, 0, 0], "facing_deg": 180, "pose": "pose.reach", "anchor_mm": [150, 0, 1100], "priority": 1 }
+    ],
+    "sockets": [
+      { "id": "shelf_mid", "location_mm": [0, 0, 1010], "half_extent_mm": [130, 400, 150] }
+    ],
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400] }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

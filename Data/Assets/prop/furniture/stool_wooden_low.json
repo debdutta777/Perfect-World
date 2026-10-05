@@ -1,0 +1,40 @@
+{
+  "schema": "pw.asset/1",
+  "id": "prop.furniture.stool_wooden_low",
+  "display_name": "Low wooden stool (30 cm seat)",
+  "status": "active", "contract": "prop.seat@1", "milestone": "M1",
+  "tags": ["home", "sit", "culture.bengal_specific"],
+  "dimensions_mm": [300, 300, 320], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-130, -130, 280], "max": [130, 130, 310] },
+    "outer": { "min": [-340, -340, 0], "max": [340, 340, 420] }
+  },
+  "block": {
+    "class": "P",
+    "cuboids": [
+      { "name": "top",    "min_mm": [-150, -150, 280], "size_mm": [300, 300, 40], "tile": "tile.wood_plank", "tint": "teak" },
+      { "name": "leg_fl", "min_mm": [110, -150, 0],    "size_mm": [40, 40, 280],   "tile": "tile.wood_grain", "tint": "teak" },
+      { "name": "leg_fr", "min_mm": [110, 110, 0],     "size_mm": [40, 40, 280],   "tile": "tile.wood_grain", "tint": "teak" },
+      { "name": "leg_bl", "min_mm": [-150, -150, 0],   "size_mm": [40, 40, 280],   "tile": "tile.wood_grain", "tint": "teak" },
+      { "name": "leg_br", "min_mm": [-150, 110, 0],    "size_mm": [40, 40, 280],   "tile": "tile.wood_grain", "tint": "teak" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.wood_teak",
+    "collision": [
+      { "shape": "box", "center_mm": [0, 0, 160], "half_extent_mm": [150, 150, 160], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "obstacle" },
+    "interactions": [
+      { "id": "sit", "verb": "verb.sit", "stance_mm": [400, 0, 0], "facing_deg": 180, "seat": "seat", "priority": 1 }
+    ],
+    "seats": [
+      { "id": "seat", "pose": "pose.sit_stool_30", "pelvis_mm": [0, 0, 300], "facing_deg": 0, "exit_mm": [400, 0, 0] }
+    ],
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150, "seated_headroom_mm": 1100 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400], "seated_headroom_mm": 1100 }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}

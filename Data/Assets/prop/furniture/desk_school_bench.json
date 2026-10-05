@@ -1,0 +1,47 @@
+{
+  "schema": "pw.asset/1",
+  "id": "prop.furniture.desk_school_bench",
+  "display_name": "School bench-desk with attached seat",
+  "status": "active", "contract": "prop.desk@1", "milestone": "M1",
+  "tags": ["school", "study", "sit"],
+  "dimensions_mm": [700, 1200, 750], "pivot": "bottom_center", "front": "+x",
+  "envelope_mm": {
+    "inner": { "min": [-300, -550, 400], "max": [300, 550, 740] },
+    "outer": { "min": [-380, -620, 0], "max": [380, 620, 850] }
+  },
+  "block": {
+    "class": "P",
+    "cuboids": [
+      { "name": "desk_top",  "min_mm": [-50, -600, 700],  "size_mm": [400, 1200, 50], "tile": "tile.wood_plank", "tint": "teak" },
+      { "name": "bench",     "min_mm": [-350, -600, 400], "size_mm": [250, 1200, 40], "tile": "tile.wood_plank", "tint": "teak" },
+      { "name": "desk_leg_l", "min_mm": [290, -600, 0],   "size_mm": [60, 60, 700],   "tile": "tile.wood_grain", "tint": "teak" },
+      { "name": "desk_leg_r", "min_mm": [290, 540, 0],    "size_mm": [60, 60, 700],   "tile": "tile.wood_grain", "tint": "teak" },
+      { "name": "bench_leg_l", "min_mm": [-350, -600, 0], "size_mm": [60, 60, 400],   "tile": "tile.wood_grain", "tint": "teak" },
+      { "name": "bench_leg_r", "min_mm": [-350, 540, 0],  "size_mm": [60, 60, 400],   "tile": "tile.wood_grain", "tint": "teak" }
+    ]
+  },
+  "gameplay": {
+    "surface": "mat.surface.wood_teak",
+    "collision": [
+      { "shape": "box", "center_mm": [150, 0, 725],  "half_extent_mm": [200, 600, 25], "channels": ["visibility", "camera", "pawn"] },
+      { "shape": "box", "center_mm": [-225, 0, 420], "half_extent_mm": [125, 600, 20], "channels": ["visibility", "camera", "pawn"] }
+    ],
+    "nav": { "area": "obstacle" },
+    "interactions": [
+      { "id": "sit",   "verb": "verb.sit",   "stance_mm": [-600, 0, 0], "facing_deg": 0, "seat": "bench", "priority": 1 },
+      { "id": "write", "verb": "verb.write", "stance_mm": [600, 0, 0],  "facing_deg": 180, "pose": "pose.write", "grip": "grip.pen", "anchor_mm": [200, 0, 750], "priority": 2 }
+    ],
+    "seats": [
+      { "id": "bench", "pose": "pose.sit_bench_42", "pelvis_mm": [-225, 0, 440], "facing_deg": 0, "exit_mm": [-600, 0, 0] }
+    ],
+    "knee_clearance_mm": [650, 450],
+    "sockets": [
+      { "id": "book_spot", "location_mm": [200, -250, 750], "half_extent_mm": [150, 120, 20] }
+    ],
+    "clearance": {
+      "first_person": { "camera_probe_mm": 120, "gap_mm": 150, "seated_headroom_mm": 1100 },
+      "third_person": { "camera_probe_mm": 120, "boom_mm": 2500, "room_mm": [2400, 2400], "seated_headroom_mm": 1100 }
+    }
+  },
+  "art": { "status": "block", "enabled": true, "mesh": null, "lods": [], "materials": [], "skeleton": null, "import": null, "provenance": null }
+}
