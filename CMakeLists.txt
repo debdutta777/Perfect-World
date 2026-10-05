@@ -23,6 +23,8 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/RandomStreams.cpp
     Source/PerfectWorldCore/Private/ChunkDeltaStore.cpp
     Source/PerfectWorldCore/Private/DistrictGenerator.cpp
+    Source/PerfectWorldCore/Private/DistrictLayouts.cpp
+    Source/PerfectWorldCore/Private/DistrictLayoutsLand.cpp
     Source/PerfectWorldCore/Private/CityData.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)

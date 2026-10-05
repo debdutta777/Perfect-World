@@ -27,10 +27,12 @@ namespace PerfectWorld
  *   - Every building lot has a 4-neighbour street cell.
  *   - The network touches all four edges of the grid, so districts join up.
  *
- * Implemented layouts: old_dense_core, apartment_belt and market. The other
- * nine archetypes fall back to one of those (see DistrictFallbackLayout), with
- * a different hash stream and a storey cap, until their own layouts are written.
- * Water and Rail cells exist in the format but no layout places them yet.
+ * All twelve archetypes have their own layout. Water appears only in riverfront
+ * and port, Rail only in rail_yard; a bridge, mole or level crossing is a run of
+ * Street cells, so the one street network still crosses them. Storeys per
+ * archetype: old_dense_core 2-5, apartment_belt 6-14, market 1-3, riverfront 2-6,
+ * rail_yard 1-3, port 1-5, campus 2-6, industrial 1-4, suburb 1-2,
+ * government_quarter 3-7, informal_settlement 1-3, park 1-2.
  */
 constexpr std::int32_t DistrictGridEdgeCells = 64;
 constexpr std::int32_t DistrictCellEdgeMetres = 8;
@@ -92,14 +94,12 @@ PERFECTWORLDCORE_API std::string_view DistrictArchetypeName(DistrictArchetype ar
 /** Nullopt for a name that is not one of the twelve. */
 PERFECTWORLDCORE_API std::optional<DistrictArchetype> ParseDistrictArchetype(std::string_view name);
 
-/** True for the three archetypes with their own layout. */
+/** True when the archetype has its own layout: all twelve do now. */
 PERFECTWORLDCORE_API bool IsDistrictLayoutImplemented(DistrictArchetype archetype);
 /**
- * The layout that builds an archetype: itself when implemented, otherwise
- *   riverfront, informal_settlement -> old_dense_core (storey cap 2 for informal_settlement)
- *   industrial, rail_yard, government_quarter -> apartment_belt (storey caps 3, 2, 6)
- *   suburb -> market (storey cap 2); campus, port, park -> market (caps 4, 5, 1)
- * A cap only lowers storeys; it never changes the street plan.
+ * The layout that builds an archetype: itself for all twelve. The fallback table is kept for any
+ * archetype added to the enum before its layout is written: that one would borrow an implemented
+ * layout, with a storey cap that only lowers storeys and never changes the street plan.
  */
 PERFECTWORLDCORE_API DistrictArchetype DistrictFallbackLayout(DistrictArchetype archetype);
 /** The storey cap of the fallback, or 255 when there is none. */

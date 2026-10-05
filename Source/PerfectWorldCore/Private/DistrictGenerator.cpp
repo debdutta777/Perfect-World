@@ -1,15 +1,16 @@
 #include "DistrictGenerator.h"
 
+#include "DistrictLayouts.h"
+
 #include <algorithm>
 #include <vector>
 
 namespace PerfectWorld
 {
+namespace DistrictInternal
+{
 namespace
 {
-constexpr std::int32_t DistrictN = DistrictGridEdgeCells;
-using DistrictCells = std::array<DistrictCell, DistrictCellCount>;
-
 // Salts keep each purpose's hash stream independent.
 constexpr std::uint64_t DistrictSaltKey = 0x44495354'4B455900ULL;
 constexpr std::uint64_t DistrictSaltLane = 0x44495354'4C414E00ULL;
@@ -26,6 +27,7 @@ std::uint64_t DistrictMix(std::uint64_t z)
     z = (z ^ (z >> 27)) * 0x94D049BB133111EBULL;
     return z ^ (z >> 31);
 }
+} // namespace
 
 std::uint64_t DistrictHash(std::uint64_t key, std::uint64_t salt, std::int64_t a, std::int64_t b)
 {
@@ -64,17 +66,6 @@ bool DistrictTouchesStreet(const DistrictCells& c, std::int32_t x, std::int32_t 
     return DistrictIs(c, x - 1, y, DistrictCellKind::Street) || DistrictIs(c, x + 1, y, DistrictCellKind::Street) ||
            DistrictIs(c, x, y - 1, DistrictCellKind::Street) || DistrictIs(c, x, y + 1, DistrictCellKind::Street);
 }
-
-/** Straight-ish lanes across the whole grid; neighbouring lanes are MinGap..MaxGap cells apart. */
-struct DistrictLanes
-{
-    std::int32_t MinGap;
-    std::int32_t MaxGap;
-    /** How far a lane may wander sideways from its base line, one cell per row at most. */
-    std::int32_t Drift;
-    /** Every n-th lane is two cells wide (an avenue); 0 for none. */
-    std::int32_t WideEvery;
-};
 
 std::int32_t DistrictLaneStart(std::uint64_t key, bool vertical, const DistrictLanes& lanes)
 {
@@ -131,6 +122,8 @@ void DistrictDrawLanes(DistrictCells& c, std::uint64_t key, bool vertical, const
     }
 }
 
+namespace
+{
 /** A square of open ground in the middle, ringed by a street, with the lanes cut off inside it. */
 void DistrictMakePlaza(DistrictCells& c, std::uint64_t key)
 {
@@ -152,6 +145,7 @@ void DistrictMakePlaza(DistrictCells& c, std::uint64_t key)
         DistrictSet(c, cx + half, cy - half + i, DistrictCellKind::Street);
     }
 }
+} // namespace
 
 /**
  * A lot that touches no street gets an alley straight through the block to the
@@ -183,6 +177,8 @@ void DistrictCarveAlleys(DistrictCells& c, std::uint64_t key)
     }
 }
 
+namespace
+{
 /** Safety net: keep only the largest street network, so no street cell is stranded. */
 void DistrictKeepLargestNetwork(DistrictCells& c)
 {
@@ -233,7 +229,28 @@ void DistrictKeepLargestNetwork(DistrictCells& c)
         }
     }
 }
+} // namespace
 
+void DistrictFinishPlan(DistrictCells& c)
+{
+    DistrictKeepLargestNetwork(c);
+    for (std::int32_t y = 0; y < DistrictN; ++y)
+    {
+        for (std::int32_t x = 0; x < DistrictN; ++x)
+        {
+            if (DistrictIs(c, x, y, DistrictCellKind::Building) && !DistrictTouchesStreet(c, x, y))
+            {
+                c[DistrictIndex(x, y)] = DistrictCell{DistrictCellKind::Open, 0};
+            }
+        }
+    }
+}
+} // namespace DistrictInternal
+
+using namespace DistrictInternal;
+
+namespace
+{
 std::uint8_t DistrictStoreys(DistrictArchetype layout, std::uint64_t key, std::int32_t x, std::int32_t y, std::int32_t startX,
                              std::int32_t startY)
 {
@@ -284,45 +301,14 @@ bool IsDistrictLayoutImplemented(DistrictArchetype archetype)
 
 DistrictArchetype DistrictFallbackLayout(DistrictArchetype archetype)
 {
-    using A = DistrictArchetype;
-    switch (archetype)
-    {
-    case A::OldDenseCore:
-    case A::Riverfront:
-    case A::InformalSettlement:
-        return A::OldDenseCore;
-    case A::ApartmentBelt:
-    case A::RailYard:
-    case A::GovernmentQuarter:
-    case A::Industrial:
-        return A::ApartmentBelt;
-    default:
-        return A::Market; // market, campus, port, suburb, park
-    }
+    // All twelve archetypes have their own layout now. A new archetype added to the enum without one would
+    // be mapped to an implemented layout here (and capped in DistrictFallbackStoreyCap) until it is written.
+    return archetype;
 }
 
-std::uint8_t DistrictFallbackStoreyCap(DistrictArchetype archetype)
+std::uint8_t DistrictFallbackStoreyCap(DistrictArchetype)
 {
-    using A = DistrictArchetype;
-    switch (archetype)
-    {
-    case A::RailYard:
-    case A::InformalSettlement:
-    case A::Suburb:
-        return 2;
-    case A::Industrial:
-        return 3;
-    case A::Campus:
-        return 4;
-    case A::Port:
-        return 5;
-    case A::GovernmentQuarter:
-        return 6;
-    case A::Park:
-        return 1;
-    default:
-        return 255;
-    }
+    return 255;
 }
 
 GeneratedDistrict GenerateDistrict(DistrictArchetype archetype, std::uint64_t seed)
@@ -332,12 +318,16 @@ GeneratedDistrict GenerateDistrict(DistrictArchetype archetype, std::uint64_t se
     district.Layout = DistrictFallbackLayout(archetype);
     district.Seed = seed;
 
-    // The requested archetype is part of the key, so a fallback does not copy the layout it borrows.
+    // The requested archetype is part of the key, so a fallback would not copy the layout it borrows.
     const std::uint64_t key = DistrictHash(seed, DistrictSaltKey, static_cast<std::int64_t>(archetype), 0);
     DistrictCells& c = district.Cells;
     for (DistrictCell& cell : c)
     {
         cell = DistrictCell{DistrictCellKind::Building, 0};
+    }
+    if (DistrictBuildLayout(district.Layout, key, c))
+    {
+        return district; // riverfront, port, rail_yard, campus, industrial, suburb, government_quarter, informal_settlement, park
     }
 
     DistrictLanes lanes{6, 9, 1, 0};
@@ -365,28 +355,14 @@ GeneratedDistrict GenerateDistrict(DistrictArchetype archetype, std::uint64_t se
     {
         DistrictCarveAlleys(c, key);
     }
-    DistrictKeepLargestNetwork(c);
+    DistrictFinishPlan(c);
 
     const std::int32_t startX = DistrictLaneStart(key, true, lanes);
     const std::int32_t startY = DistrictLaneStart(key, false, lanes);
     const std::uint8_t cap = DistrictFallbackStoreyCap(archetype);
-    for (std::int32_t y = 0; y < DistrictN; ++y)
-    {
-        for (std::int32_t x = 0; x < DistrictN; ++x)
-        {
-            DistrictCell& cell = c[DistrictIndex(x, y)];
-            if (cell.Kind != DistrictCellKind::Building)
-            {
-                continue;
-            }
-            if (!DistrictTouchesStreet(c, x, y))
-            {
-                cell = DistrictCell{DistrictCellKind::Open, 0};
-                continue;
-            }
-            cell.Storeys = std::min(DistrictStoreys(district.Layout, key, x, y, startX, startY), cap);
-        }
-    }
+    DistrictAssignStoreys(c,
+                          [&](std::int32_t x, std::int32_t y)
+                          { return std::min(DistrictStoreys(district.Layout, key, x, y, startX, startY), cap); });
     return district;
 }
 

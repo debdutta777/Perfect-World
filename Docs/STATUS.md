@@ -328,3 +328,13 @@ Rebuilt by a Sonnet 5.5 subagent after the D: wipe, reviewed and merged here.
 
 **Remaining limitation:** M1-05 will change the slot payload to the v6 world save, and the subsystem's validator must then accept v6 records.
 
+## Checkpoint — every district archetype has its own layout (M1-29 follow-up), 2026-10-05
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:** `DistrictGenerator.{h,cpp}` (shared helpers moved to `PerfectWorld::DistrictInternal`, a common finishing pass that keeps the street network connected and demotes lots touching no street); new `Private/DistrictLayouts.{h,cpp}` (riverfront, port, rail yard, dispatcher) and `Private/DistrictLayoutsLand.cpp` (campus, industrial, suburb, government quarter, informal settlement, park); `Tests/DistrictGeneratorTests.cpp` and new `Tests/DistrictTestSupport.h`; `CMakeLists.txt`.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwi`. **Result:** PASS, 22/22, `PASS: 37039388 district generator checks`. Every archetype is measured over 200 seeds for its own storey range and a property that tells it apart. Some examples: a 6 to 11 cell river band with promenade, ghat steps and a bridge; a sea at least 800 cells with pier tips; 6 to 8 rail lines with level crossings; a campus quad bigger than any market square; suburb cul-de-sacs; a government boulevard; informal-settlement dead-end lanes. Water appears only in riverfront and port, rail only in rail yards. The real `Data/Content` districts are each built by their own layout, with no fallback left.
+
+**Note:** the shared finishing pass can change the output of the three earlier layouts for a given seed. Nothing saved depends on district output yet. Once a save stores generated-district edits, layout changes need a version field.
+

@@ -25,232 +25,11 @@ void Check(bool condition, const char* message)
     }
 }
 
+// The measuring helpers (CheckGuarantees, Sweep, the range structs) live in the support header.
+#include "DistrictTestSupport.h"
+
 namespace
 {
-constexpr int N = DistrictGridEdgeCells;
-constexpr int SeedCount = 200;
-
-std::uint64_t SeedOf(int i)
-{
-    return static_cast<std::uint64_t>(i) * 40503ULL + 17ULL;
-}
-
-bool Is(const GeneratedDistrict& d, int x, int y, DistrictCellKind kind)
-{
-    return x >= 0 && y >= 0 && x < N && y < N && d.At(x, y).Kind == kind;
-}
-
-bool Same(const GeneratedDistrict& a, const GeneratedDistrict& b)
-{
-    for (int i = 0; i < DistrictCellCount; ++i)
-    {
-        if (a.Cells[static_cast<std::size_t>(i)].Kind != b.Cells[static_cast<std::size_t>(i)].Kind ||
-            a.Cells[static_cast<std::size_t>(i)].Storeys != b.Cells[static_cast<std::size_t>(i)].Storeys)
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
-/** Size of the 4-connected component of `kind` cells containing (x, y); fills `seen`. */
-int Flood(const GeneratedDistrict& d, int x, int y, DistrictCellKind kind, std::vector<char>& seen, int* minX = nullptr, int* maxX = nullptr,
-          int* minY = nullptr, int* maxY = nullptr)
-{
-    int size = 0;
-    std::vector<int> stack{y * N + x};
-    seen[static_cast<std::size_t>(y * N + x)] = 1;
-    while (!stack.empty())
-    {
-        const int at = stack.back();
-        stack.pop_back();
-        ++size;
-        const int cx = at % N;
-        const int cy = at / N;
-        if (minX != nullptr)
-        {
-            *minX = std::min(*minX, cx);
-            *maxX = std::max(*maxX, cx);
-            *minY = std::min(*minY, cy);
-            *maxY = std::max(*maxY, cy);
-        }
-        const int nx[4] = {cx - 1, cx + 1, cx, cx};
-        const int ny[4] = {cy, cy, cy - 1, cy + 1};
-        for (int k = 0; k < 4; ++k)
-        {
-            if (Is(d, nx[k], ny[k], kind) && seen[static_cast<std::size_t>(ny[k] * N + nx[k])] == 0)
-            {
-                seen[static_cast<std::size_t>(ny[k] * N + nx[k])] = 1;
-                stack.push_back(ny[k] * N + nx[k]);
-            }
-        }
-    }
-    return size;
-}
-
-struct Measure
-{
-    int Streets = 0;
-    int Buildings = 0;
-    int Open = 0;
-    int MinStoreys = 255;
-    int MaxStoreys = 0;
-    int FullStreetRows = 0;
-    int FullStreetColumns = 0;
-    int LargestOpen = 0;
-    int OpenCentreX2 = 0; // twice the centre of the largest open area's bounding box
-    int OpenCentreY2 = 0;
-};
-
-/** The guarantees every archetype makes; returns the figures the per-archetype ranges are about. */
-Measure CheckGuarantees(const GeneratedDistrict& d)
-{
-    Measure m;
-    for (int y = 0; y < N; ++y)
-    {
-        for (int x = 0; x < N; ++x)
-        {
-            const DistrictCell& cell = d.At(x, y);
-            Check(cell.Kind != DistrictCellKind::Water && cell.Kind != DistrictCellKind::Rail, "no layout places water or rail yet");
-            if (cell.Kind == DistrictCellKind::Building)
-            {
-                ++m.Buildings;
-                m.MinStoreys = std::min(m.MinStoreys, static_cast<int>(cell.Storeys));
-                m.MaxStoreys = std::max(m.MaxStoreys, static_cast<int>(cell.Storeys));
-                Check(cell.Storeys >= 1, "a building has at least one storey");
-                Check(Is(d, x - 1, y, DistrictCellKind::Street) || Is(d, x + 1, y, DistrictCellKind::Street) ||
-                          Is(d, x, y - 1, DistrictCellKind::Street) || Is(d, x, y + 1, DistrictCellKind::Street),
-                      "every building lot touches a street");
-            }
-            else
-            {
-                Check(cell.Storeys == 0, "only a building has storeys");
-            }
-            if (cell.Kind == DistrictCellKind::Open)
-            {
-                ++m.Open;
-            }
-            if (cell.Kind == DistrictCellKind::Street)
-            {
-                ++m.Streets;
-                Check(Is(d, x - 1, y, DistrictCellKind::Street) || Is(d, x + 1, y, DistrictCellKind::Street) ||
-                          Is(d, x, y - 1, DistrictCellKind::Street) || Is(d, x, y + 1, DistrictCellKind::Street),
-                      "no street cell is isolated");
-            }
-        }
-    }
-    Check(m.Streets + m.Buildings + m.Open == DistrictCellCount, "every cell is street, building or open");
-    Check(m.Streets == CountDistrictCells(d, DistrictCellKind::Street), "CountDistrictCells agrees");
-
-    // One 4-connected street network.
-    std::vector<char> seen(DistrictCellCount, 0);
-    bool found = false;
-    for (int i = 0; i < DistrictCellCount && !found; ++i)
-    {
-        if (d.Cells[static_cast<std::size_t>(i)].Kind == DistrictCellKind::Street)
-        {
-            found = true;
-            Check(Flood(d, i % N, i / N, DistrictCellKind::Street, seen) == m.Streets, "all street cells are 4-connected");
-        }
-    }
-    Check(found, "a district has streets");
-
-    // The network reaches all four edges.
-    bool edge[4] = {false, false, false, false};
-    for (int i = 0; i < N; ++i)
-    {
-        edge[0] |= Is(d, i, 0, DistrictCellKind::Street);
-        edge[1] |= Is(d, i, N - 1, DistrictCellKind::Street);
-        edge[2] |= Is(d, 0, i, DistrictCellKind::Street);
-        edge[3] |= Is(d, N - 1, i, DistrictCellKind::Street);
-    }
-    Check(edge[0] && edge[1] && edge[2] && edge[3], "streets reach all four edges");
-
-    for (int i = 0; i < N; ++i)
-    {
-        bool row = true;
-        bool column = true;
-        for (int k = 0; k < N; ++k)
-        {
-            row = row && Is(d, k, i, DistrictCellKind::Street);
-            column = column && Is(d, i, k, DistrictCellKind::Street);
-        }
-        m.FullStreetRows += row ? 1 : 0;
-        m.FullStreetColumns += column ? 1 : 0;
-    }
-
-    std::vector<char> openSeen(DistrictCellCount, 0);
-    for (int i = 0; i < DistrictCellCount; ++i)
-    {
-        if (d.Cells[static_cast<std::size_t>(i)].Kind == DistrictCellKind::Open && openSeen[static_cast<std::size_t>(i)] == 0)
-        {
-            int x0 = N, x1 = 0, y0 = N, y1 = 0;
-            const int size = Flood(d, i % N, i / N, DistrictCellKind::Open, openSeen, &x0, &x1, &y0, &y1);
-            if (size > m.LargestOpen)
-            {
-                m.LargestOpen = size;
-                m.OpenCentreX2 = x0 + x1;
-                m.OpenCentreY2 = y0 + y1;
-            }
-        }
-    }
-    return m;
-}
-
-struct Totals
-{
-    long Streets = 0;
-    long Buildings = 0;
-    long Open = 0;
-    long StoreySum = 0;
-    int MinStreets = 1 << 20, MaxStreets = 0;
-    int MinBuildings = 1 << 20, MaxBuildings = 0;
-    int MinOpen = 1 << 20, MaxOpen = 0;
-    int MinStoreys = 255, MaxStoreys = 0;
-    int MinFullRows = 1 << 20, MaxFullRows = 0;
-    int MinLargestOpen = 1 << 20, MaxLargestOpen = 0;
-    int MaxCentreOffset = 0;
-};
-
-Totals Sweep(DistrictArchetype archetype, bool printRanges)
-{
-    Totals t;
-    for (int i = 0; i < SeedCount; ++i)
-    {
-        const GeneratedDistrict d = GenerateDistrict(archetype, SeedOf(i));
-        Check(d.Archetype == archetype && d.Seed == SeedOf(i), "the district records its recipe");
-        Check(Same(d, GenerateDistrict(archetype, SeedOf(i))), "the same archetype and seed regenerate identically");
-        const Measure m = CheckGuarantees(d);
-
-        t.Streets += m.Streets;
-        t.Buildings += m.Buildings;
-        t.Open += m.Open;
-        t.StoreySum += static_cast<long>(m.MinStoreys + m.MaxStoreys);
-        t.MinStreets = std::min(t.MinStreets, m.Streets);
-        t.MaxStreets = std::max(t.MaxStreets, m.Streets);
-        t.MinBuildings = std::min(t.MinBuildings, m.Buildings);
-        t.MaxBuildings = std::max(t.MaxBuildings, m.Buildings);
-        t.MinOpen = std::min(t.MinOpen, m.Open);
-        t.MaxOpen = std::max(t.MaxOpen, m.Open);
-        t.MinStoreys = std::min(t.MinStoreys, m.MinStoreys);
-        t.MaxStoreys = std::max(t.MaxStoreys, m.MaxStoreys);
-        t.MinFullRows = std::min(t.MinFullRows, m.FullStreetRows);
-        t.MaxFullRows = std::max(t.MaxFullRows, m.FullStreetRows);
-        t.MinLargestOpen = std::min(t.MinLargestOpen, m.LargestOpen);
-        t.MaxLargestOpen = std::max(t.MaxLargestOpen, m.LargestOpen);
-        t.MaxCentreOffset = std::max({t.MaxCentreOffset, std::abs(m.OpenCentreX2 - N), std::abs(m.OpenCentreY2 - N)});
-    }
-    if (printRanges)
-    {
-        std::cout << DistrictArchetypeName(archetype) << ": streets " << t.MinStreets << ".." << t.MaxStreets << ", buildings "
-                  << t.MinBuildings << ".." << t.MaxBuildings << ", open " << t.MinOpen << ".." << t.MaxOpen << ", storeys "
-                  << t.MinStoreys << ".." << t.MaxStoreys << ", full street rows " << t.MinFullRows << ".." << t.MaxFullRows
-                  << ", largest open " << t.MinLargestOpen << ".." << t.MaxLargestOpen << ", centre offset x2 " << t.MaxCentreOffset
-                  << '\n';
-    }
-    return t;
-}
-
 const char* const SmallWorld[] = {
     R"({"type":"nation","id":"nation.t","name":"T","capitalCity":"city.t","gateAuthority":"institution.t_nga",
         "realmHomeRegion":"realm.region.t","stageOneCities":["city.t"],
@@ -283,19 +62,28 @@ int main(int argc, char** argv)
             Check(IsDistrictLayoutImplemented(DistrictFallbackLayout(a)), "a fallback is an implemented layout");
         }
         Check(!ParseDistrictArchetype("castle").has_value() && !ParseDistrictArchetype("").has_value(), "unknown names are refused");
-        Check(IsDistrictLayoutImplemented(DistrictArchetype::OldDenseCore) && IsDistrictLayoutImplemented(DistrictArchetype::ApartmentBelt) &&
-                  IsDistrictLayoutImplemented(DistrictArchetype::Market) && !IsDistrictLayoutImplemented(DistrictArchetype::Port),
-              "three layouts are implemented");
-        Check(DistrictFallbackLayout(DistrictArchetype::Riverfront) == DistrictArchetype::OldDenseCore &&
-                  DistrictFallbackLayout(DistrictArchetype::Industrial) == DistrictArchetype::ApartmentBelt &&
-                  DistrictFallbackLayout(DistrictArchetype::Port) == DistrictArchetype::Market,
-              "the documented fallbacks");
+        // Every archetype now has its own layout, so no fallback remains: each is its own layout, uncapped.
+        for (int i = 0; i < DistrictArchetypeCount; ++i)
+        {
+            const auto a = static_cast<DistrictArchetype>(i);
+            Check(IsDistrictLayoutImplemented(a) && DistrictFallbackLayout(a) == a && DistrictFallbackStoreyCap(a) == 255,
+                  "all twelve layouts are implemented and none falls back");
+        }
     }
 
-    // The three implemented archetypes: guarantees and per-archetype ranges over 200 seeds each.
+    // Every archetype: guarantees and per-archetype ranges over 200 seeds each.
     const Totals core = Sweep(DistrictArchetype::OldDenseCore, true);
     const Totals belt = Sweep(DistrictArchetype::ApartmentBelt, true);
     const Totals market = Sweep(DistrictArchetype::Market, true);
+    const Totals river = Sweep(DistrictArchetype::Riverfront, true);
+    const Totals rail = Sweep(DistrictArchetype::RailYard, true);
+    const Totals port = Sweep(DistrictArchetype::Port, true);
+    const Totals campus = Sweep(DistrictArchetype::Campus, true);
+    const Totals industrial = Sweep(DistrictArchetype::Industrial, true);
+    const Totals suburb = Sweep(DistrictArchetype::Suburb, true);
+    const Totals government = Sweep(DistrictArchetype::GovernmentQuarter, true);
+    const Totals informal = Sweep(DistrictArchetype::InformalSettlement, true);
+    const Totals park = Sweep(DistrictArchetype::Park, true);
 
     Check(core.MinStoreys >= 2 && core.MaxStoreys <= 5 && core.MaxStoreys == 5, "old dense core lots are 2 to 5 storeys");
     Check(belt.MinStoreys >= 6 && belt.MaxStoreys <= 14, "apartment belt lots are 6 to 14 storeys");
@@ -310,6 +98,73 @@ int main(int argc, char** argv)
     Check(market.MaxCentreOffset <= 6, "the square is within 3 cells of the centre");
     Check(core.MaxLargestOpen == 0, "old dense core has no square");
 
+    // Storey ranges of the nine layouts added after the first three (documented in DistrictGenerator.h).
+    Check(river.MinStoreys >= 2 && river.MaxStoreys <= 6 && river.MaxStoreys == 6, "riverfront lots are 2 to 6 storeys");
+    Check(rail.MinStoreys >= 1 && rail.MaxStoreys <= 3 && rail.MaxStoreys == 3, "rail yard sheds are 1 to 3 storeys");
+    Check(port.MinStoreys >= 1 && port.MaxStoreys <= 5 && port.MaxStoreys == 5, "port buildings are 1 to 5 storeys");
+    Check(campus.MinStoreys >= 2 && campus.MaxStoreys <= 6 && campus.MaxStoreys == 6, "campus halls are 2 to 6 storeys");
+    Check(industrial.MinStoreys >= 1 && industrial.MaxStoreys <= 4 && industrial.MaxStoreys == 4, "industrial sheds are 1 to 4 storeys");
+    Check(suburb.MinStoreys >= 1 && suburb.MaxStoreys <= 2 && suburb.MaxStoreys == 2, "suburban houses are 1 to 2 storeys");
+    Check(government.MinStoreys >= 3 && government.MaxStoreys <= 7 && government.MaxStoreys == 7, "government buildings are 3 to 7 storeys");
+    Check(informal.MinStoreys >= 1 && informal.MaxStoreys <= 3 && informal.MaxStoreys == 3, "informal settlement huts are 1 to 3 storeys");
+    Check(park.MinStoreys >= 1 && park.MaxStoreys <= 2 && park.MaxStoreys == 2, "park pavilions are 1 to 2 storeys");
+
+    // Riverfront: a river band 6 to 11 wide along one edge, with a promenade, ghat steps and a bridge.
+    Check(river.Water.Min >= 300 && river.Water.Max <= 700 && river.WaterOnOneEdge && river.WaterSpan.Max <= 12,
+          "riverfront water is one band, 6 to 11 cells wide, along one edge");
+    Check(river.StreetsByWater.Min >= 40, "riverfront has a promenade street along the water");
+    Check(river.OpenByWater.Min >= 20, "riverfront has ghat steps (open cells) going down to the water");
+    Check(river.Bridges.Min >= 4 && river.Rail.Max == 0, "riverfront has a bridge across the water to the edge");
+
+    // Port: a wider sea, piers with dead-end tips in it, big blocks of yards.
+    Check(port.Water.Min >= 800 && port.Water.Min > river.Water.Max && port.WaterOnOneEdge && port.WaterSpan.Min >= 14,
+          "port sea is 14 to 20 cells wide along one edge, wider than any river");
+    Check(port.PierTips.Min >= 4, "the port has piers whose tips are dead ends in the water");
+    Check(port.StreetsByWater.Min >= 90 && port.Open > 0 && port.MinOpen >= 1000, "the port has a quay and wide open yards");
+    Check(port.Rail.Max == 0 && river.PierTips.Max == 0, "piers belong to the port, not the riverfront");
+
+    // Rail yard: a band of rail right across, platforms, and level crossings that keep the streets joined.
+    Check(rail.Rail.Min >= 340 && rail.Rail.Max <= 500 && rail.RailLines.Min >= 6 && rail.RailLines.Max <= 8,
+          "the rail yard is a band of 6 to 8 rail lines right across the district");
+    Check(rail.Crossings.Min >= 6, "the rail yard has level crossings (street cells with rail either side)");
+    Check(rail.MinOpen >= 100, "the rail yard has platforms (open cells in the band)");
+
+    // Campus: a great quad, lawns.
+    Check(campus.MinLargestOpen >= 256 && campus.MaxLargestOpen <= 400 && campus.MaxCentreOffset <= 6,
+          "the campus quad is 256 to 400 cells at the centre, larger than any market square");
+    Check(campus.MinOpen > 1500 && campus.MaxStreets < market.MinStreets, "a campus is mostly lawn, with fewer streets than a market");
+
+    // Industrial: long sheds.
+    Check(industrial.LongestRun.Min >= 12 && industrial.LongestRun.Min > core.LongestRun.Max,
+          "industrial sheds run 12 or more cells in a straight line, longer than any old core block");
+    Check(industrial.MinOpen > 1500, "industrial blocks hold open yards");
+
+    // Suburb: cul-de-sacs, detached houses in gardens.
+    Check(suburb.DeadEnds.Min >= 3 && core.DeadEnds.Max == 0 && belt.DeadEnds.Max == 0 && market.DeadEnds.Max == 0,
+          "the suburb has cul-de-sac dead ends that the grid layouts never have");
+    Check(suburb.MinOpen >= 2500 && suburb.MaxBuildings <= 700, "a suburb is mostly open garden between few houses");
+
+    // Government quarter: a 3-wide boulevard and long lawns.
+    Check(government.BoulevardLines.Min >= 1 && belt.BoulevardLines.Max == 0 && core.BoulevardLines.Max == 0,
+          "the government quarter has a boulevard three cells wide running right across");
+    Check(government.MinLargestOpen >= 250, "the government quarter has a long lawn of at least 250 cells");
+
+    // Informal settlement: dense, narrow, dead-end nubs, nothing tall.
+    Check(informal.DeadEnds.Min >= 8, "the informal settlement has many dead-end nubs");
+    Check(informal.MaxLargestOpen <= 5 && informal.MinOpen >= 20 && informal.MaxOpen <= 100,
+          "the informal settlement has only small open yards");
+    Check(informal.MinStreets > belt.MaxStreets && informal.MaxStoreys < core.MaxStoreys, "informal lanes are tight and the roofs low");
+
+    // Park: nearly all open.
+    Check(park.MinOpen >= 3000 && park.MaxBuildings <= 120 && park.MinBuildings >= 20, "a park is nearly all open, with a few pavilions");
+
+    // Water and rail only where the archetype owns them.
+    for (const Totals* t : {&core, &belt, &market, &campus, &industrial, &suburb, &government, &informal, &park})
+    {
+        Check(t->Water.Max == 0 && t->Rail.Max == 0, "dry archetypes have no water or rail");
+    }
+    Check(river.Water.Min > 0 && port.Water.Min > 0 && rail.Rail.Min > 0 && rail.Water.Max == 0, "water and rail appear in their own archetypes");
+
     // Measurably different: street share, building share, height.
     Check(core.Streets > belt.Streets, "old dense core has more street than the apartment belt");
     Check(core.MinStreets > belt.MaxStreets, "the street share ranges of the two do not overlap");
@@ -317,46 +172,40 @@ int main(int argc, char** argv)
     Check(core.StoreySum > market.StoreySum, "old core lots are taller than market stalls");
 
     // Different seeds differ; different archetypes differ on the same seed.
-    for (const DistrictArchetype a : {DistrictArchetype::OldDenseCore, DistrictArchetype::ApartmentBelt, DistrictArchetype::Market})
+    for (int k = 0; k < DistrictArchetypeCount; ++k)
     {
+        const auto a = static_cast<DistrictArchetype>(k);
         for (int i = 0; i + 1 < SeedCount; ++i)
         {
             Check(!Same(GenerateDistrict(a, SeedOf(i)), GenerateDistrict(a, SeedOf(i + 1))), "different seeds give different districts");
         }
+        const GeneratedDistrict d = GenerateDistrict(a, SeedOf(3));
+        Check(d.Archetype == a && d.Layout == a, "every archetype reports its own layout");
     }
     for (int i = 0; i < SeedCount; ++i)
     {
-        const GeneratedDistrict a = GenerateDistrict(DistrictArchetype::OldDenseCore, SeedOf(i));
-        const GeneratedDistrict b = GenerateDistrict(DistrictArchetype::Market, SeedOf(i));
-        const GeneratedDistrict c = GenerateDistrict(DistrictArchetype::ApartmentBelt, SeedOf(i));
-        Check(!Same(a, b) && !Same(b, c) && !Same(a, c), "different archetypes give different districts");
-    }
-
-    // The nine fallbacks still keep every guarantee, name their layout, and honour their storey cap.
-    for (int i = 0; i < DistrictArchetypeCount; ++i)
-    {
-        const auto a = static_cast<DistrictArchetype>(i);
-        if (IsDistrictLayoutImplemented(a))
+        std::vector<GeneratedDistrict> all;
+        for (int k = 0; k < DistrictArchetypeCount; ++k)
         {
-            continue;
+            all.push_back(GenerateDistrict(static_cast<DistrictArchetype>(k), SeedOf(i)));
         }
-        for (int s = 0; s < 20; ++s)
+        for (std::size_t a = 0; a < all.size(); ++a)
         {
-            const GeneratedDistrict d = GenerateDistrict(a, SeedOf(s));
-            const Measure m = CheckGuarantees(d);
-            Check(d.Archetype == a && d.Layout == DistrictFallbackLayout(a), "a fallback reports the layout it used");
-            Check(m.MaxStoreys <= DistrictFallbackStoreyCap(a), "a fallback honours its storey cap");
-            Check(!Same(d, GenerateDistrict(DistrictFallbackLayout(a), SeedOf(s))), "a fallback does not copy the layout it borrows");
-            Check(Same(d, GenerateDistrict(a, SeedOf(s))), "a fallback is deterministic too");
+            for (std::size_t b = a + 1; b < all.size(); ++b)
+            {
+                Check(!Same(all[a], all[b]), "different archetypes give different districts");
+            }
         }
     }
 
     // Edge seeds.
     for (const std::uint64_t seed : {std::uint64_t{0}, std::uint64_t{4294967295ULL}, ~std::uint64_t{0}})
     {
-        for (const DistrictArchetype a : {DistrictArchetype::OldDenseCore, DistrictArchetype::ApartmentBelt, DistrictArchetype::Market})
+        for (int k = 0; k < DistrictArchetypeCount; ++k)
         {
-            CheckGuarantees(GenerateDistrict(a, seed));
+            const GeneratedDistrict d = GenerateDistrict(static_cast<DistrictArchetype>(k), seed);
+            CheckGuarantees(d);
+            Check(Same(d, GenerateDistrict(static_cast<DistrictArchetype>(k), seed)), "edge seeds are deterministic");
         }
     }
 
@@ -464,6 +313,7 @@ int main(int argc, char** argv)
                 if (const std::optional<GeneratedDistrict> grid = GenerateCityDistrict(district))
                 {
                     CheckGuarantees(*grid);
+                    Check(grid->Layout == grid->Archetype, "a real district is built by its own archetype's layout, not a fallback");
                 }
             }
             for (const GateSiteRecord& site : city.GateSites)
