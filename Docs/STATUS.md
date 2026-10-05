@@ -390,3 +390,22 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 - The catalogue's injuries, `LastIntegratedAt`, and threshold events predicted to the minute are for the integration step.
 - Trait recovery bonuses from `CHARACTER_CREATION.md` are not applied yet; they may belong in `Data/` tuning.
 
+## Checkpoint — M0-15 first cooked Windows build (Rung 4), 2026-10-05
+
+**Intent:** run the packaging script for the first time and boot the result.
+
+**Files changed:** `Config/DefaultGame.ini` (an editor-only `GameFeatureData` asset-manager rule); `Docs/DEVELOPMENT_WORKFLOW.md` (the Rung 4 command).
+
+**What happened:**
+1. The first run cooked all 503 packages but exited 25 (`Error_UnknownCookFailure`). The Unreal MCP plugin enables GameFeatures in the editor, and GameFeatures logs an error when the asset manager has no `GameFeatureData` rule. An error in the cook log fails the cook.
+2. Adding the usual rule fixed the cook, but the packaged game then hit a handled ensure at startup. The game has no GameFeatures module, so the base class failed to load, and symbolicating the callstack added about 16 s to boot.
+3. Marking the rule `bIsEditorOnly=True` fixed both.
+
+**Exact check:** `python Scripts/package_windows.py --engine-root "D:\Epic Games\UE_5.8" --output D:\PWBuilds` (in the D: clone, editor closed): **exit 0**, `BUILD SUCCESSFUL`, 902 MB. Then `D:\PWBuilds\Windows\PerfectWorld.exe -windowed`:
+- The window "PerfectWorld (64-bit Development PCD3D_SM5)" appeared within 15 s.
+- The log shows `Game class is 'PerfectWorldBlockTestGameMode'` and no `Error:` or ensure.
+- A screenshot showed the block columns on the grey floor under a sky.
+- Closing the window gave `RequestExit(0)` and `LogExit: Exiting.`, with no crash reporter.
+
+**Rung reached:** Rung 4, by boot and clean exit. **Owner check still open:** moving the mouse to look around in the packaged build, and Alt+F4. The scene loads through `/Engine/Maps/Entry` with the test game mode set globally, not a `MAP_Test_Block` asset; M1-15 moves the game mode per map.
+

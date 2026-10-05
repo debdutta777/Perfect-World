@@ -92,7 +92,13 @@ This rung needs the owner, or a documented manual script an agent can execute ag
 
 ### Rung 4 — Cooked Windows build — milestones
 
-A packaged, standalone build (not yet scripted; add the exact command here once `Scripts/` gains a packaging script). Reserved for milestone gates (`GAME_PLAN.md` §8) — not run per step.
+A packaged, standalone build, reserved for milestone gates (`GAME_PLAN.md` §8) — not run per step. Close the editor first, and never run it alongside another Unreal build:
+
+```
+python Scripts/package_windows.py --engine-root "D:\Epic Games\UE_5.8" --output D:\PWBuilds
+```
+
+This runs RunUAT BuildCookRun (Development, `-NoUBA`) and writes `D:\PWBuilds\Windows\PerfectWorld.exe`. Then boot it with `-windowed` and read `D:\PWBuilds\Windows\PerfectWorld\Saved\Logs\PerfectWorld.log`. Expected: `Game class is 'PerfectWorldBlockTestGameMode'`, no `Error:` or ensure, and a clean `LogExit: Exiting.` after closing. The first cook of a fresh checkout takes several minutes.
 
 - **Proves:** the game packages and runs outside the editor.
 - **Does not prove:** Android or other platforms (a named-device test is separately required, per `MASTER_PLAN.md` §5), or that a milestone's actual playable/gate condition is met — check the milestone's stated gate separately.
