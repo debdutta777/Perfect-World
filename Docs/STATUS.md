@@ -314,3 +314,17 @@ Rebuilt by a Sonnet 5.5 subagent after the D: wipe, reviewed and merged here.
 
 **Remaining limitation:** only three layouts are real; riverfront, rail yard, port, campus, industrial, suburb, government quarter and informal settlement borrow one. Nothing streams a district into Unreal yet (M1-30), and none of this has been compiled inside Unreal.
 
+## Checkpoint — Unreal 5.8.3 reinstalled, Rung 2 and engine parity green, M1-04 switch-over, 2026-10-05
+
+**Intent:** re-verify the Unreal side after the D: wipe, then finish M1-04 by moving the character-creator subsystem onto the portable slot store.
+
+**Files changed (commit `faa42fb`):** `Source/PerfectWorld/Private/PerfectWorldCharacterCreatorSubsystem.cpp` (save, load, describe and delete go through `WriteSaveFile`, `ReadSaveFile` and `DeleteSaveFiles` with a validator that parses the creation record; absolute paths via `FPaths::ConvertRelativePathToFull`; a slot whose primary is gone but whose `.bak` survives counts as occupied and reports the recovery); `Source/PerfectWorld/Private/Tests/PerfectWorldCoreParityTests.cpp` (new `PerfectWorld.Core.SaveStoreWorksInEngine`).
+
+**Exact checks:**
+- `python Scripts/build_unreal.py --engine-root "D:\Epic Games\UE_5.8"` (run in the D: clone) against engine 5.8.3, CL 58210709, with the MSVC 14.50.35739 toolchain, above the banned 14.50.0–14.50.35722 range: **Succeeded** before and after the change, no compiler warnings. That run included the M1-29 sources, so CityData and DistrictGenerator now compile inside Unreal too.
+- Editor opened, Unreal MCP `AutomationTestToolset`: `DiscoverTests`, then `RunTestsByFilter "StartsWith:PerfectWorld.Core"`: **4/4 Success** (`RealmGeneratorMatchesCTest`, `AwakenedCareerMatchesCTest`, `ContentLoadsInEngine`, `SaveStoreWorksInEngine`). The new test writes twice under a Bengali folder name in `Intermediate/`, checks the `.bak`, refuses an invalid record without touching the slot, recovers from a corrupted primary, and deletes.
+
+**Rung reached:** Rung 2 plus editor automation tests. The creator flow itself has not been driven in PIE; it is a flat-front-end subsystem awaiting the 3D creation scene (M1-23).
+
+**Remaining limitation:** M1-05 will change the slot payload to the v6 world save, and the subsystem's validator must then accept v6 records.
+
