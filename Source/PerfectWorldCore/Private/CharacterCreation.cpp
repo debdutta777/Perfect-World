@@ -85,6 +85,9 @@ std::string_view ResumePointId(ResumePoint point) noexcept
     case ResumePoint::Appearance: return "appearance";
     case ResumePoint::Allocation: return "allocation";
     case ResumePoint::InWorld: return "in_world";
+    case ResumePoint::Identity: return "identity";
+    case ResumePoint::Stream: return "stream";
+    case ResumePoint::Review: return "review";
     }
     return "appearance";
 }
@@ -94,6 +97,9 @@ bool ParseResumePoint(std::string_view id, ResumePoint& outPoint) noexcept
     if (id == "appearance") { outPoint = ResumePoint::Appearance; return true; }
     if (id == "allocation") { outPoint = ResumePoint::Allocation; return true; }
     if (id == "in_world") { outPoint = ResumePoint::InWorld; return true; }
+    if (id == "identity") { outPoint = ResumePoint::Identity; return true; }
+    if (id == "stream") { outPoint = ResumePoint::Stream; return true; }
+    if (id == "review") { outPoint = ResumePoint::Review; return true; }
     return false;
 }
 
@@ -248,6 +254,9 @@ OperationResult CharacterCreator::StartLife()
     }
     HasStarted_ = true;
     Resume_ = ResumePoint::InWorld;
+    // Confirming the origin confirms its review page, which states the date of
+    // birth and stream, so a migrated draft has nothing left to ask.
+    IdentityMigrated_ = false;
     return OperationResult::Success();
 }
 
@@ -256,6 +265,8 @@ void CharacterCreator::Reset()
     TraitRanks_.fill(0);
     HouseholdTemplateId_ = std::string(DefaultHouseholdTemplateId);
     Identity_ = {};
+    School_ = {};
+    IdentityMigrated_ = false;
     Appearance_ = AppearanceRecord::Default();
     Resume_ = ResumePoint::Appearance;
     HasStarted_ = false;
@@ -280,6 +291,10 @@ CreationReview CharacterCreator::Review() const
     const HouseholdDefinition& household = Household();
     review.HouseholdTemplateId = household.Id;
     review.HomeKitId = household.HomeKitId;
+    if (const SchoolStreamDefinition* stream = FindSchoolStream(School_.StreamId); stream != nullptr)
+    {
+        review.SchoolStreamId = stream->Id;
+    }
     review.Allocations.reserve(TraitCount);
     for (std::size_t index = 0; index < TraitCount; ++index)
     {
@@ -348,17 +363,6 @@ const HouseholdDefinition& CharacterCreator::Household() const noexcept
     return found != nullptr ? *found : *FindHousehold(DefaultHouseholdTemplateId);
 }
 
-OperationResult CharacterCreator::SetIdentity(IdentityProfile identity)
-{
-    if (HasStarted_)
-    {
-        return OperationResult::Failure(CreationError::CreationAlreadyStarted,
-                                        "Identity is locked after life begins.");
-    }
-    Identity_ = std::move(identity);
-    return OperationResult::Success();
-}
-
 OperationResult CharacterCreator::SetAppearance(AppearanceRecord appearance)
 {
     if (HasStarted_)
@@ -387,6 +391,8 @@ CharacterCreationSave CharacterCreator::CaptureSave() const
     save.TraitRanks = TraitRanks_;
     save.HouseholdTemplateId = HouseholdTemplateId_;
     save.Identity = Identity_;
+    save.School = School_;
+    save.IdentityMigrated = IdentityMigrated_;
     save.Appearance = Appearance_;
     save.Resume = Resume_;
     save.HasStarted = HasStarted_;
@@ -441,9 +447,21 @@ OperationResult CharacterCreator::RestoreSave(const CharacterCreationSave& save)
         }
     }
 
+    // Version 5 added the date of birth and stream. Older records migrate to
+    // the R2 defaults and are marked so the game can ask the player to confirm.
+    IdentityProfile identity;
+    SchoolChoice school;
+    bool migrated = false;
+    if (OperationResult resolved = ResolveRestoredIdentity(save, identity, school, migrated); !resolved)
+    {
+        return resolved;
+    }
+
     TraitRanks_ = save.TraitRanks;
     HouseholdTemplateId_ = std::move(household);
-    Identity_ = save.Identity;
+    Identity_ = std::move(identity);
+    School_ = std::move(school);
+    IdentityMigrated_ = migrated;
     Appearance_ = std::move(appearance);
     HasStarted_ = save.HasStarted;
     // Version 3 and older never recorded a resume point. Derive the best

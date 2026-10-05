@@ -7,9 +7,9 @@
 
 /**
  * Mirrors PerfectWorld::CreationError by value, so the entries up to and
- * including MalformedSaveText must stay in the same order as the core enum.
+ * including NothingToConfirm must stay in the same order as the core enum.
  * FileAccess has no core counterpart; only this subsystem reports it, for a
- * save file that could not be read or written at all.
+ * save file that could not be read or written at all, so it stays last.
  */
 UENUM(BlueprintType)
 enum class EPWCreationError : uint8
@@ -27,6 +27,11 @@ enum class EPWCreationError : uint8
     UnknownHousehold,
     MalformedSaveText,
     InvalidAppearance,
+    InvalidIdentity,
+    InvalidDateOfBirth,
+    UnknownSchoolStream,
+    InvalidSchoolReason,
+    NothingToConfirm,
     FileAccess
 };
 
@@ -39,7 +44,10 @@ enum class EPWResumePoint : uint8
 {
     Appearance,
     Allocation,
-    InWorld
+    InWorld,
+    Identity,
+    Stream,
+    Review
 };
 
 /**

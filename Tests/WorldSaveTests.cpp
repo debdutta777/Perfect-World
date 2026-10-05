@@ -195,7 +195,7 @@ std::string RanksText(const std::array<int, TraitCount>& ranks)
     return out + "  }\n}\n";
 }
 
-/** A creation-only file as the given version wrote it. Versions 1 to 4 are written out by hand, as those builds laid them out. */
+/** A creation-only file as the given version wrote it. Versions 1 to 5 are written out by hand, as those builds laid them out. */
 std::string LegacyText(int version, bool started, const std::array<int, TraitCount>& ranks)
 {
     std::string out = "{\n  \"schemaVersion\": " + std::to_string(version) + ",\n  \"age\": 16,\n  \"hasStarted\": " + (started ? "true" : "false") + ",\n";
@@ -203,7 +203,12 @@ std::string LegacyText(int version, bool started, const std::array<int, TraitCou
         out += std::string("  \"resumePoint\": \"") + (started ? "in_world" : "allocation") + "\",\n";
     if (version >= 2)
         out += "  \"householdTemplateId\": \"appointed_guardian\",\n";
-    out += "  \"identity\": {\n    \"givenName\": \"Ananya\",\n    \"familyName\": \"Sen\",\n    \"pronouns\": \"she/her\",\n    \"homeCity\": \"Kolkata\",\n    \"primaryLanguage\": \"Bengali\"\n  },\n";
+    out += "  \"identity\": {\n    \"givenName\": \"Ananya\",\n    \"familyName\": \"Sen\",\n    \"pronouns\": \"she/her\",\n    \"homeCity\": \"Kolkata\",\n    \"primaryLanguage\": \"Bengali\"";
+    if (version >= 5)
+        out += ",\n    \"additionalLanguages\": [\"Hindi\", \"English\"],\n    \"dateOfBirth\": \"2025-11-20\"";
+    out += "\n  },\n";
+    if (version >= 5)
+        out += "  \"school\": {\n    \"streamId\": \"humanities\",\n    \"reason\": \"I like history\"\n  },\n  \"identityMigrated\": false,\n";
     if (version < 3)
         out += "  \"cosmetics\": { \"hair\": \"long\", \"skin\": \"warm\" },\n";
     else
@@ -221,7 +226,8 @@ std::uint64_t RefFnv1a(const std::string& bytes)
     return h;
 }
 
-void CheckMigrated(const std::string& text, int version, bool started, bool care, const char* what)
+/** `handWrittenIdentity` is false for the current writer's own output, whose identity fields are not the fixture's. */
+void CheckMigrated(const std::string& text, int version, bool started, bool care, const char* what, bool handWrittenIdentity = true)
 {
     WorldSaveData data = Sentinel();
     const WorldSaveResult result = DeserializeWorldSave(text, data);
@@ -237,6 +243,14 @@ void CheckMigrated(const std::string& text, int version, bool started, bool care
     Check(data.Creation.HasStarted == started && data.Creation.Identity.GivenName == "Ananya" && data.Creation.HouseholdTemplateId == household, what);
     Check(data.Creation.Appearance.FaceShapeId == (version >= 3 ? "face_heart" : AppearanceRecord::Default().FaceShapeId), what);
     Check(data.Creation.Resume == (started ? ResumePoint::InWorld : ResumePoint::Allocation), what);
+    // Before v5 the date of birth and stream are the R2 defaults and the record says so; a v5 file keeps what it chose.
+    if (handWrittenIdentity)
+    {
+        Check(data.Creation.IdentityMigrated == (version < 5), what);
+        Check(data.Creation.Identity.Birth == (version >= 5 ? DateOfBirth{2025, 11, 20} : DefaultDateOfBirth), what);
+        Check(data.Creation.School.StreamId == (version >= 5 ? "humanities" : "science") && data.Creation.School.Reason == (version >= 5 ? "I like history" : ""), what);
+        Check(data.Creation.Identity.AdditionalLanguages.size() == (version >= 5 ? 2u : 0u), what);
+    }
 
     // Migrating the same file again gives the same world, and what it saves loads as a plain v6 file with the same hash.
     WorldSaveData again = Sentinel();
@@ -266,16 +280,30 @@ void TestMigration()
     Check(scholar.GetTraitRank("household_resources") >= 1, "the scholar preset lives in a family household");
     const std::array<int, TraitCount> noRanks{};
 
-    for (int version = 1; version <= 4; ++version)
+    for (int version = 1; version <= 5; ++version)
     {
         CheckMigrated(LegacyText(version, true, scholarRanks), version, true, false, "a started creation-only file migrates");
         CheckMigrated(LegacyText(version, false, noRanks), version, false, true, "an unstarted draft in care migrates to the children's home");
     }
-    // The current creation writer's output is the newest creation-only file; when M0-18 adds v5 this becomes the v5 fixture.
+    // The current creation writer's output is the newest creation-only file (v5); the hand-written v5 fixture above pins its layout.
     CharacterCreationSave current = MakeCreation("appointed_guardian", "Ananya");
     const std::string currentText = SerializeCreationSave(current);
-    CheckMigrated(currentText, SaveSchemaVersion, true, false, "a file from the current creation writer migrates");
+    CheckMigrated(currentText, SaveSchemaVersion, true, false, "a file from the current creation writer migrates", false);
     Check(SaveSchemaVersion <= WorldSaveLastCreationOnlyVersion, "creation-only versions stay below the world envelope");
+    Check(current.Identity.Birth == DefaultDateOfBirth && current.School.StreamId == "science" && !current.IdentityMigrated,
+          "a creation made in this build is not flagged as migrated");
+
+    // A v5 creation embedded in a world save keeps its identity, school and flag through save and load.
+    WorldSaveData chosen = Sentinel();
+    Check(DeserializeWorldSave(LegacyText(5, true, scholarRanks), chosen).Succeeded(), "the v5 fixture migrates");
+    chosen.Creation.IdentityMigrated = true;
+    WorldSaveData chosenBack = Sentinel();
+    const WorldSaveResult chosenResult = DeserializeWorldSave(SerializeWorldSave(chosen), chosenBack);
+    Check(chosenResult.Succeeded() && chosenResult.HashVerified && chosenBack.Creation.IdentityMigrated &&
+              chosenBack.Creation.Identity.Birth == DateOfBirth{2025, 11, 20} && chosenBack.Creation.School.StreamId == "humanities" &&
+              chosenBack.Creation.School.Reason == "I like history" && chosenBack.Creation.Identity.AdditionalLanguages.size() == 2,
+          "the v6 world save carries the v5 identity and the migrated flag");
+    Check(ErrorOf(ReplaceOnce(SerializeWorldSave(chosen), "2025-11-20", "2026-06-03")) == WorldSaveError::InvalidCreation, "a world save with a date of birth outside the window is refused");
 
     // The older shapes keep their meaning: v1 gets the default household, v1 and v2 the default appearance, a draft resumes at allocation.
     WorldSaveData v1;

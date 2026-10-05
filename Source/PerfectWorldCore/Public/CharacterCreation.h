@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Appearance.h"
+#include "CreationIdentity.h"
 
 #include <array>
 #include <cstdint>
@@ -24,8 +25,12 @@ constexpr std::int32_t CreationBudget = 1000;
 // the default appearance rather than a guessed one. Older records always
 // migrate explicitly and are never reinterpreted in place. Version 4 records
 // where the player had reached, so Load Game resumes there; older records
-// derive it from whether the origin was confirmed.
-constexpr std::int32_t SaveSchemaVersion = 4;
+// derive it from whether the origin was confirmed. Version 5 adds the date of
+// birth, additional languages, the school stream with its reason, and a flag
+// marking a record whose date of birth and stream were filled in by migration
+// (decision R2) rather than chosen; a record older than 5 migrates to the
+// documented defaults and sets that flag.
+constexpr std::int32_t SaveSchemaVersion = 5;
 constexpr std::int32_t MinSupportedSaveVersion = 1;
 constexpr std::size_t TraitCount = 20;
 constexpr std::size_t HouseholdTemplateCount = 5;
@@ -48,12 +53,20 @@ constexpr std::string_view DefaultHouseholdTemplateId = "parent_household";
  * exists yet, so loading such a record currently lands on the confirmed
  * creation and says so; when rooms exist this is the value that will send the
  * player back into one.
+ *
+ * Identity, Stream and Review are the screens added around the original two
+ * (M0-18). They are appended after InWorld rather than placed in flow order,
+ * because the Unreal mirror enum copies these values and the existing three
+ * must keep theirs. Nothing orders resume points numerically.
  */
 enum class ResumePoint
 {
     Appearance,
     Allocation,
-    InWorld
+    InWorld,
+    Identity,
+    Stream,
+    Review
 };
 
 /** Stable text for the save file. Never renumber; the text is the contract. */
@@ -74,7 +87,12 @@ enum class CreationError
     InvalidSave,
     UnknownHousehold,
     MalformedSaveText,
-    InvalidAppearance
+    InvalidAppearance,
+    InvalidIdentity,
+    InvalidDateOfBirth,
+    UnknownSchoolStream,
+    InvalidSchoolReason,
+    NothingToConfirm
 };
 
 struct PERFECTWORLDCORE_API OperationResult
@@ -152,17 +170,6 @@ struct OpeningHomePlan
     bool GrewUpInCare = false;
 };
 
-struct IdentityProfile
-{
-    std::string GivenName;
-    std::string FamilyName;
-    std::string Pronouns;
-    std::string HomeCity;
-    std::string PrimaryLanguage;
-};
-
-
-
 struct TraitAllocation
 {
     std::string_view Id;
@@ -181,6 +188,8 @@ struct CreationReview
     bool HasStarted = false;
     std::string_view HouseholdTemplateId = DefaultHouseholdTemplateId;
     std::string_view HomeKitId;
+    /** Shown on review. The stream changes no cost and no stat. */
+    std::string_view SchoolStreamId = DefaultSchoolStreamId;
     std::vector<TraitAllocation> Allocations;
 };
 
@@ -191,9 +200,12 @@ struct CharacterCreationSave
     std::array<std::int32_t, TraitCount> TraitRanks{};
     std::string HouseholdTemplateId{DefaultHouseholdTemplateId};
     IdentityProfile Identity;
+    SchoolChoice School;
     AppearanceRecord Appearance{AppearanceRecord::Default()};
     bool HasStarted = false;
     ResumePoint Resume = ResumePoint::Appearance;
+    /** True when the date of birth and stream are migration defaults the player never chose (R2). */
+    bool IdentityMigrated = false;
 };
 
 class PERFECTWORLDCORE_API CharacterCreator
@@ -231,7 +243,33 @@ public:
     [[nodiscard]] ResumePoint Resume() const noexcept { return Resume_; }
     void SetResumePoint(ResumePoint point) noexcept;
 
+    /**
+     * Replaces the whole identity (names, pronouns, languages, date of birth).
+     * Refused after life begins, and refused whole when any part is invalid.
+     */
     [[nodiscard]] OperationResult SetIdentity(IdentityProfile identity);
+
+    /** Exactly 16 on 2 June 2042: 3 June 2025 to 2 June 2026 inclusive. See AgeOnCampaignStart. */
+    [[nodiscard]] OperationResult SetDateOfBirth(const DateOfBirth& birth);
+    /** Free text, at most MaxPronounsBytes, no control characters. */
+    [[nodiscard]] OperationResult SetPronouns(std::string pronouns);
+    /** One primary language and up to MaxAdditionalLanguages others, no repeats. */
+    [[nodiscard]] OperationResult SetLanguages(std::string primary, std::vector<std::string> additional);
+    /** A stable stream ID from SchoolStreams() and a reason of at most MaxSchoolReasonBytes. Costs nothing and changes no stat. */
+    [[nodiscard]] OperationResult SetSchoolStream(std::string_view streamId, std::string reason);
+
+    [[nodiscard]] const SchoolChoice& School() const noexcept { return School_; }
+    /** True while the date of birth and stream are migration defaults the player has not confirmed (R2). */
+    [[nodiscard]] bool IdentityNeedsConfirmation() const noexcept { return IdentityMigrated_; }
+    /**
+     * Lets the player confirm or replace the migrated date of birth and stream.
+     * This is the one identity edit allowed after life begins, because migrated
+     * records are usually already started; it is refused when nothing is waiting
+     * to be confirmed, and clears the flag on success.
+     */
+    [[nodiscard]] OperationResult ConfirmMigratedIdentity(const DateOfBirth& birth, std::string_view streamId,
+                                                          std::string reason);
+
     [[nodiscard]] OperationResult SetAppearance(AppearanceRecord appearance);
 
     [[nodiscard]] CharacterCreationSave CaptureSave() const;
@@ -241,12 +279,22 @@ private:
     [[nodiscard]] static std::int32_t FindTraitIndex(std::string_view traitId) noexcept;
     [[nodiscard]] static OperationResult ValidateRanks(const std::array<std::int32_t, TraitCount>& ranks,
                                                        bool requireFullBudget);
+    /**
+     * The identity, school choice and migrated flag a record restores to. A v5
+     * record is validated and refused when invalid; an older record gets the R2
+     * defaults and the migrated flag. Defined in CreationIdentity.cpp.
+     */
+    [[nodiscard]] static OperationResult ResolveRestoredIdentity(const CharacterCreationSave& save,
+                                                                 IdentityProfile& identity, SchoolChoice& school,
+                                                                 bool& migrated);
 
     std::array<std::int32_t, TraitCount> TraitRanks_{};
     std::string HouseholdTemplateId_{DefaultHouseholdTemplateId};
     IdentityProfile Identity_;
+    SchoolChoice School_;
     AppearanceRecord Appearance_{AppearanceRecord::Default()};
     bool HasStarted_ = false;
     ResumePoint Resume_ = ResumePoint::Appearance;
+    bool IdentityMigrated_ = false;
 };
 } // namespace PerfectWorld

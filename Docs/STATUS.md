@@ -457,3 +457,29 @@ All are voxel-block definitions, not meshes.
 - Pose, grip and palette-ramp lists are hard-coded until M1-08 defines the tile list.
 
 **Remaining limitation:** nothing in Unreal reads the registry yet; that is M1-09 and M1-10.
+
+## Checkpoint — M0-18 identity and stream, creation schema v5, 2026-10-05
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:**
+- New `Public/CreationIdentity.h`, `Private/CreationIdentity.cpp` (streams, validators, setters, migration), `Private/CreationIdentityText.cpp` (v5 reading and writing), `Private/CreationText.h` (the shared JSON-subset reader) and `Tests/CreationIdentityTests.cpp`.
+- `CharacterCreation.{h,cpp}`.
+- `CreationSaveSerialization.cpp`: rewritten from 564 to 363 lines.
+- `Tests/WorldSaveTests.cpp`: a v5 fixture and v1–v5 migration.
+- The mirror enums in `PerfectWorldCharacterCreatorSubsystem.h`: five new errors before `FileAccess`, and resume points `Identity`, `Stream` and `Review` appended.
+- `CMakeLists.txt`.
+
+**Rules:**
+- **Age:** the player is 16 on 2 Jun 2042, so dates of birth run from 3 Jun 2025 to 2 Jun 2026 inclusive. Nonexistent dates are refused, never normalised.
+- **Pronouns and languages:** free text with byte limits, valid UTF-8 and no control characters. There is no closed list until GAME_PLAN question G is decided.
+- **Stream:** `science`, `commerce` or `humanities`, plus an optional reason of up to 240 bytes. The stream changes no cost, rank or home plan, and the test asserts this.
+- **Migration:** records older than v5 take the R2 working defaults with `identityMigrated` set. `ConfirmMigratedIdentity` is the one identity edit allowed after life starts.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwi`. **Result:** PASS, 33/33: 1,825 identity, 225,395 creation (10,000 edit sequences), 20,036 world save and 1,156,739 world hash checks, with the goldens unchanged.
+
+**Open questions:**
+1. R2 itself.
+2. Whether a new draft should resume at `identity` instead of `appearance`.
+3. Given name, family name and home city still have no length limits.
+4. The subsystem's `SetIdentity` builds a profile without a date of birth, so calling it resets the date to the default. The 3D creation scene (M1-23) needs full identity setters.
