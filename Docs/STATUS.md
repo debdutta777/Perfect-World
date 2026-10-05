@@ -269,3 +269,17 @@ The owner authorised pushing to GitHub for this session ("push to github and con
 **Exact check:** `python Scripts/build_core.py --build-dir D:/pwb` (the old `D:/pwcore` folder held a failed compiler detection and is protected from deletion). **Result:** PASS, 16/16, MSVC 19.51.36260.
 
 **Remaining limitation:** Unreal Engine 5.8 is not installed; the owner must reinstall it from the Epic launcher to `D:\Epic Games\UE_5.8`, so Rung 2, PIE and packaging are unavailable until then. The parity tests are re-added unchanged and unbuilt. The six agent steps are being rebuilt by fresh Sonnet 5.5 agents (the API recorded `claude-sonnet-5-5` for this session's subagents). D: may be temporary storage: push every verified step immediately.
+
+## Checkpoint — M1-03 state hash and M1-04 portable save store merged, 2026-10-05
+
+Both rebuilt by Sonnet 5.5 subagents after the D: wipe (the first attempts had passed but were lost), reviewed and merged here. Integration now happens in the C: clone, which survives a D: wipe; build folders stay on D:.
+
+**Intent:** M1-03, a stable world-state hash and command-log replay; M1-04 (portable half), a crash-safe slot store.
+
+**Files changed:** added `Source/PerfectWorldCore/{Public,Private}/WorldHash.{h,cpp}`, `Tests/WorldHashTests.cpp`, `Source/PerfectWorldCore/{Public,Private}/SaveStore.{h,cpp}`, `Tests/SaveStoreTests.cpp`; `CMakeLists.txt`; `Docs/ROADMAP.md`.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwi`.
+
+**Result:** PASS, 18/18. `PASS: 1156337 world hash checks` (golden hashes for a hand-built and an edge-case world, an in-test reference encoder checked against FNV-1a vectors, every single-field edit changes the hash and only its section's hash, 10,000 random sequences replay to identical hashes and results). `PASS: 527 save store checks` (stale temp ignored, corrupt primary falls back to `.bak` with a message, Missing and Corrupt told apart, crash-between-renames state recovers, non-ASCII folder, 100 round trips).
+
+**Remaining limitation:** the hash covers meta, clock and flags; RNG streams (M1-02) and Gate sites (M1-35) must be added as sections when they merge (one line each plus a `WorldHashVersion` bump). The character-creator subsystem still writes slots itself; switching it to `WriteSaveFile`/`ReadSaveFile` needs Rung 2, which waits for Unreal Engine to be reinstalled. Neither file has been compiled inside Unreal.

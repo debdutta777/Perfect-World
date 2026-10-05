@@ -17,6 +17,8 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/ContentSchemas.cpp
     Source/PerfectWorldCore/Private/RealmGenerator.cpp
     Source/PerfectWorldCore/Private/WorldReducer.cpp
+    Source/PerfectWorldCore/Private/WorldHash.cpp
+    Source/PerfectWorldCore/Private/SaveStore.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -47,6 +49,14 @@ add_test(NAME PerfectWorldRealmGeneratorTests COMMAND PerfectWorldRealmGenerator
 add_executable(PerfectWorldReducerTests Tests/WorldReducerTests.cpp)
 target_link_libraries(PerfectWorldReducerTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldReducerTests COMMAND PerfectWorldReducerTests)
+
+add_executable(PerfectWorldWorldHashTests Tests/WorldHashTests.cpp)
+target_link_libraries(PerfectWorldWorldHashTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldHashTests COMMAND PerfectWorldWorldHashTests)
+
+add_executable(PerfectWorldSaveStoreTests Tests/SaveStoreTests.cpp)
+target_link_libraries(PerfectWorldSaveStoreTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSaveStoreTests COMMAND PerfectWorldSaveStoreTests)
 
 add_executable(PerfectWorldAwakenedTests Tests/AwakenedProgressionTests.cpp)
 target_link_libraries(PerfectWorldAwakenedTests PRIVATE PerfectWorldCore)
