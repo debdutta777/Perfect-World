@@ -338,3 +338,29 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 
 **Note:** the shared finishing pass can change the output of the three earlier layouts for a given seed. Nothing saved depends on district output yet. Once a save stores generated-district edits, layout changes need a version field.
 
+## Checkpoint — M1-05 world save v6 (portable core), RNG in the world hash (version 3), 2026-10-05
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:** new `Public/WorldSave.h`, `Private/WorldSave.cpp` (writer, envelope, migration), `Private/WorldSaveReader.cpp`, `Private/WorldSaveInternal.h`, `Tests/WorldSaveTests.cpp`, `Tests/WorldSaveTestSupport.h`, `Tests/WorldHashReference.h` (the reference encoder and goldens, moved out of `WorldHashTests.cpp` to keep it under 500 lines). Changed: `WorldState.h` (`RandomStreams::Snapshot Rng` and `MakeWorldState(seed)`), `WorldReducer.cpp` (the sim starts from `MakeWorldState`), `WorldHash.{h,cpp}` (rng section, `WorldHashVersion` 3), `Tests/WorldHashTests.cpp` (goldens re-pinned to `0x094455d520abf770` and `0xf0312d8420e90da4` from the reference encoder; the agent also re-derived them in a separate Python implementation), `Tests/GateSitesTests.cpp` (five sections), `CMakeLists.txt`.
+
+**Format:** one JSON document: `format "perfectworld.save"`, `schemaVersion 6`, the existing creation object verbatim, `world` (seed, seq, clock with pending onsets, flags, Gates, the four RNG streams), `player` (zone, `posCm`, `yawCdeg`, `pitchCdeg`, camera mode), `hashVersion`, `stateHash`. 64-bit values are `0x` hex strings, there are no floats, every key is required and unknown keys are refused. The loader recomputes the hash and refuses a mismatch. A file without `format` is a v1–v4 creation save. It migrates to a world at 2 Jun 2042 06:00 in `zone.home.<home kit>`, with the seed derived from the file's bytes, so migrating the same file twice gives the same world.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwi`. **Result:** PASS, 23/23: 19,498 world save, 1,156,739 world hash, 79,559 Gate and 69 reducer checks. The tests cover:
+- round trips, including an edge world with INT64 limits and odd bytes in IDs
+- every proper prefix of three saves refused
+- v1–v4 fixtures migrating
+- about 25 targeted corruptions and over 3,000 single-byte flips, each refused or hash-preserving
+- 300 random command sequences whose loaded, live and replayed hashes agree
+- RNG streams that continue identically after a reload
+
+**Open questions for the owner, raised by the agent:**
+1. `ROADMAP.md` makes the world save v6 with v5 from M0-18, while `SYSTEMS.md` §6 calls v5 the first world envelope. The roadmap was followed. `SaveSchemaVersion` is still 4, so no v5 file exists yet.
+2. The player's zone, transform and camera are saved beside the world state but are not hashed.
+3. An unstarted draft migrates into a world. It could be refused instead.
+
+**Remaining limitation:**
+- `WorldSim` cannot yet be constructed from a loaded `WorldState`; M1-15 needs that.
+- The subsystem still writes creation-only slots.
+- The new files have not been compiled inside Unreal; the next Rung 2 covers them.
+

@@ -26,8 +26,11 @@ namespace PerfectWorld
  * Bump WorldHashVersion whenever the encoding or the set of sections changes;
  * the version is part of the world hash, so old and new hashes never compare equal.
  */
-/** 1: meta, clock, flags. 2 (2026-10-05): adds the gates section (ROADMAP M1-35). */
-constexpr std::uint32_t WorldHashVersion = 2;
+/**
+ * 1: meta, clock, flags. 2 (2026-10-05): adds the gates section (ROADMAP M1-35).
+ * 3 (2026-10-05): adds the rng section, the four stream states (ROADMAP M1-05).
+ */
+constexpr std::uint32_t WorldHashVersion = 3;
 
 struct WorldSectionHash
 {
@@ -35,7 +38,7 @@ struct WorldSectionHash
     std::uint64_t Hash = 0;
 };
 
-/** One entry per save section, always in the same order: meta, clock, flags (then any later sections). */
+/** One entry per save section, always in the same order: meta, clock, flags, gates, rng (then any later sections). */
 [[nodiscard]] PERFECTWORLDCORE_API std::vector<WorldSectionHash> HashWorldSections(const WorldState& state);
 
 /** The fingerprint of the whole world. */

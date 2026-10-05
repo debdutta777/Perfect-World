@@ -26,6 +26,8 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/DistrictLayouts.cpp
     Source/PerfectWorldCore/Private/DistrictLayoutsLand.cpp
     Source/PerfectWorldCore/Private/CityData.cpp
+    Source/PerfectWorldCore/Private/WorldSave.cpp
+    Source/PerfectWorldCore/Private/WorldSaveReader.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -60,6 +62,10 @@ add_test(NAME PerfectWorldReducerTests COMMAND PerfectWorldReducerTests)
 add_executable(PerfectWorldWorldHashTests Tests/WorldHashTests.cpp)
 target_link_libraries(PerfectWorldWorldHashTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldWorldHashTests COMMAND PerfectWorldWorldHashTests)
+
+add_executable(PerfectWorldWorldSaveTests Tests/WorldSaveTests.cpp)
+target_link_libraries(PerfectWorldWorldSaveTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldSaveTests COMMAND PerfectWorldWorldSaveTests)
 
 add_executable(PerfectWorldSaveStoreTests Tests/SaveStoreTests.cpp)
 target_link_libraries(PerfectWorldSaveStoreTests PRIVATE PerfectWorldCore)

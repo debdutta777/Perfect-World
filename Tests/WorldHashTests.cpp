@@ -27,120 +27,10 @@ void Check(bool condition, const char* message)
     }
 }
 
+#include "WorldHashReference.h"
+
 namespace
 {
-// ---- An independent reference encoder: builds the bytes first, then hashes them. ----
-
-std::uint64_t RefFnv1a(const std::string& bytes)
-{
-    std::uint64_t h = 0xcbf29ce484222325ULL;
-    for (const char c : bytes)
-    {
-        h ^= static_cast<std::uint64_t>(static_cast<unsigned char>(c));
-        h *= 0x100000001b3ULL;
-    }
-    return h;
-}
-
-struct RefBytes
-{
-    std::string Data;
-    void Le64(std::uint64_t v)
-    {
-        for (int i = 0; i < 8; ++i)
-            Data.push_back(static_cast<char>((v >> (8 * i)) & 0xff));
-    }
-    void U(std::uint64_t v) { Data.push_back('u'); Le64(v); }
-    void I(std::int64_t v) { Data.push_back('i'); Le64(static_cast<std::uint64_t>(v)); }
-    void B(bool v) { Data.push_back('b'); Data.push_back(v ? '\x01' : '\x00'); }
-    void S(const std::string& v) { Data.push_back('s'); Le64(v.size()); Data += v; }
-    void N(std::size_t v) { Data.push_back('n'); Le64(v); }
-};
-
-std::vector<std::pair<std::string, std::uint64_t>> RefSections(const WorldState& w)
-{
-    RefBytes meta;
-    meta.U(w.WorldSeed);
-    meta.U(w.Seq);
-    const GameClockSave save = w.Clock.CaptureSave();
-    RefBytes clock;
-    clock.I(save.Now);
-    clock.I(save.NextHandle);
-    clock.N(save.Pending.size());
-    for (const ScheduledEvent& e : save.Pending)
-        clock.I(e.Handle), clock.I(e.When), clock.S(e.Id);
-    RefBytes flags;
-    flags.N(w.Flags.size());
-    for (const auto& kv : w.Flags)
-        flags.S(kv.first), flags.B(kv.second);
-    RefBytes gates;
-    gates.N(w.Gates.size());
-    for (const auto& [id, g] : w.Gates)
-        gates.S(id), gates.U(static_cast<std::uint64_t>(g.Rank)), gates.U(static_cast<std::uint64_t>(g.Status)), gates.I(g.StatusSince),
-            gates.I(g.OnsetCount);
-    return {{"meta", RefFnv1a(meta.Data)}, {"clock", RefFnv1a(clock.Data)}, {"flags", RefFnv1a(flags.Data)}, {"gates", RefFnv1a(gates.Data)}};
-}
-
-std::uint64_t RefWorld(const WorldState& w)
-{
-    RefBytes all;
-    all.U(WorldHashVersion);
-    for (const auto& s : RefSections(w))
-    {
-        all.S(s.first);
-        all.U(s.second);
-    }
-    return RefFnv1a(all.Data);
-}
-
-/** The library's hashes must equal the reference encoder's, section by section and overall. */
-void CheckAgainstReference(const WorldState& w, const char* what)
-{
-    const std::vector<WorldSectionHash> got = HashWorldSections(w);
-    const auto want = RefSections(w);
-    Check(got.size() == want.size(), what);
-    for (std::size_t i = 0; i < got.size() && i < want.size(); ++i)
-        Check(got[i].Name == want[i].first && got[i].Hash == want[i].second, what);
-    Check(HashWorldState(w) == RefWorld(w), what);
-}
-
-// ---- Worlds ----
-
-WorldState MakeWorld(std::uint64_t seed, std::uint64_t seq, const GameClockSave& clock,
-                     const std::vector<std::pair<std::string, bool>>& flags)
-{
-    WorldState w;
-    w.WorldSeed = seed;
-    w.Seq = seq;
-    Check(w.Clock.RestoreSave(clock), "a test clock save is consistent");
-    for (const auto& f : flags)
-        w.Flags[f.first] = f.second;
-    return w;
-}
-
-WorldState HandBuiltWorld()
-{
-    GameClockSave clock;
-    clock.Now = 1234;
-    clock.NextHandle = 5;
-    clock.Pending = {{2, 1300, "test/kind/a"}, {4, 1300, "test/kind/b"}, {3, 2000, "sys/x/y"}};
-    return MakeWorld(2042, 7, clock, {{"door.open", true}, {"gate.cordoned", false}});
-}
-
-WorldState EdgeWorld()
-{
-    constexpr std::int64_t Max = std::numeric_limits<std::int64_t>::max();
-    GameClockSave clock;
-    clock.Now = std::numeric_limits<std::int64_t>::min();
-    clock.NextHandle = Max;
-    clock.Pending = {{Max - 1, Max, std::string("nul\0inside/\xff\x80/key", 18)}, {1, std::numeric_limits<std::int64_t>::min(), ""}};
-    return MakeWorld(std::numeric_limits<std::uint64_t>::max(), std::numeric_limits<std::uint64_t>::max() - 1, clock,
-                     {{"", false}, {std::string("a\0b", 3), true}, {"\xc3\xa9.unicode", true}});
-}
-
-// Pinned with PW_PRINT_GOLDEN=1 on 2026-10-05 (WorldHashVersion 2, gates section added). A change here means the encoding changed.
-constexpr std::uint64_t GoldenHandBuilt = 0x2f13757a256d0806ULL;
-constexpr std::uint64_t GoldenEdge = 0x0ec3679190f0dbc2ULL;
 
 // ---- Reducer output rendering, as in WorldReducerTests ----
 
@@ -226,16 +116,18 @@ void TestGolden()
     CheckAgainstReference(WorldState{}, "an empty world matches the reference encoder");
     if (const char* print = std::getenv("PW_PRINT_GOLDEN"); print != nullptr && print[0] == '1')
     {
-        std::cout << std::hex << "GoldenHandBuilt = 0x" << HashWorldState(hand) << "ULL\nGoldenEdge = 0x" << HashWorldState(edge)
-                  << "ULL\n";
+        // The reference encoder's values, not the library's: the CheckAgainstReference calls above already
+        // proved the two equal, so pinning the reference means the golden never rests on the code under test alone.
+        std::cout << std::hex << "GoldenHandBuilt = 0x" << RefWorld(hand) << "ULL\nGoldenEdge = 0x" << RefWorld(edge) << "ULL\n";
         std::exit(0);
     }
     Check(HashWorldState(hand) == GoldenHandBuilt, "the hand-built world hashes to its pinned value");
     Check(HashWorldState(edge) == GoldenEdge, "the edge-case world hashes to its pinned value");
     const std::vector<WorldSectionHash> sections = HashWorldSections(hand);
-    Check(sections.size() == 4 && sections[0].Name == "meta" && sections[1].Name == "clock" && sections[2].Name == "flags" &&
-              sections[3].Name == "gates",
-          "sections come in the order meta, clock, flags, gates");
+    Check(sections.size() == 5 && sections[0].Name == "meta" && sections[1].Name == "clock" && sections[2].Name == "flags" &&
+              sections[3].Name == "gates" && sections[4].Name == "rng",
+          "sections come in the order meta, clock, flags, gates, rng");
+    Check(WorldHashVersion == 3, "the hash version is 3 with the rng section");
     Check(HashWorldState(hand) == HashWorldState(HandBuiltWorld()), "hashing is repeatable");
     Check(HashWorldState(hand) != HashWorldState(WorldState{}), "different worlds differ");
 }
@@ -278,6 +170,15 @@ void TestSingleFieldEdits()
         {"flag added", "flags", [](WorldState& w) { w.Flags["new.flag"] = false; }},
         {"flag removed", "flags", [](WorldState& w) { w.Flags.erase("gate.cordoned"); }},
         {"all flags removed", "flags", [](WorldState& w) { w.Flags.clear(); }},
+        {"gate added", "gates", [](WorldState& w) { w.Gates["gate.new"] = GateSiteState{}; }},
+        {"rng opportunity word 0", "rng", [](WorldState& w) { w.Rng[0].Words[0] += 1; }},
+        {"rng opportunity word 3", "rng", [](WorldState& w) { w.Rng[0].Words[3] ^= 0x8000000000000000ULL; }},
+        {"rng opportunity draws", "rng", [](WorldState& w) { w.Rng[0].Draws += 1; }},
+        {"rng tower word 1", "rng", [](WorldState& w) { w.Rng[1].Words[1] += 1; }},
+        {"rng ambience word 2", "rng", [](WorldState& w) { w.Rng[2].Words[2] += 1; }},
+        {"rng crystallisation word 0", "rng", [](WorldState& w) { w.Rng[3].Words[0] += 1; }},
+        {"rng crystallisation draws", "rng", [](WorldState& w) { w.Rng[3].Draws += 1; }},
+        {"rng two streams swapped", "rng", [](WorldState& w) { std::swap(w.Rng[0], w.Rng[1]); }},
     };
     const WorldState base = HandBuiltWorld();
     const std::uint64_t baseWorld = HashWorldState(base);
@@ -416,8 +317,8 @@ void TestReplayCommandLog()
     // Empty log: complete, and the hash is that of a fresh world.
     {
         const ReplayResult empty = ReplayCommandLog(77, {});
-        WorldState fresh;
-        fresh.WorldSeed = 77;
+        const WorldState fresh = MakeWorldState(77); // WorldSim seeds the RNG streams from the world seed
+        Check(fresh.WorldSeed == 77 && fresh.Rng == RandomStreams(77).Capture(), "a fresh world seeds its streams from its seed");
         Check(empty.Complete && empty.Applied == 0 && empty.Hash == HashWorldState(fresh) && empty.Checkpoints.empty() &&
                   empty.Results.empty(),
               "an empty log replays to a fresh world");

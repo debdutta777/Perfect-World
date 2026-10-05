@@ -52,7 +52,7 @@ Rejection Reject(std::string code, std::string message)
 
 WorldSim::WorldSim(std::uint64_t worldSeed, std::size_t eventCap) : EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap)
 {
-    State_.WorldSeed = worldSeed;
+    State_ = MakeWorldState(worldSeed);
 }
 
 std::optional<Rejection> WorldSim::Validate(const Command& command) const

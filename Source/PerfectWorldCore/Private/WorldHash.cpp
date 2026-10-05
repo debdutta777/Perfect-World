@@ -113,6 +113,19 @@ std::uint64_t WorldHashGatesSection(const WorldState& state)
     return out.Result();
 }
 
+std::uint64_t WorldHashRngSection(const WorldState& state)
+{
+    WorldHashWriter out;
+    out.Count(state.Rng.size());
+    for (const RandomStreamState& stream : state.Rng) // indexed by RandomStreamId: stream order is part of the contract
+    {
+        for (const std::uint64_t word : stream.Words)
+            out.Unsigned(word);
+        out.Unsigned(stream.Draws);
+    }
+    return out.Result();
+}
+
 void WorldHashAddSection(std::vector<WorldSectionHash>& sections, const char* name, std::uint64_t hash)
 {
     sections.push_back(WorldSectionHash{name, hash});
@@ -134,6 +147,7 @@ std::vector<WorldSectionHash> HashWorldSections(const WorldState& state)
     WorldHashAddSection(sections, "clock", WorldHashClockSection(state));
     WorldHashAddSection(sections, "flags", WorldHashFlagsSection(state));
     WorldHashAddSection(sections, "gates", WorldHashGatesSection(state));
+    WorldHashAddSection(sections, "rng", WorldHashRngSection(state));
     return sections;
 }
 

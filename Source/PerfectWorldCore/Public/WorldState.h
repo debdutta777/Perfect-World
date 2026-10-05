@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GameClock.h"
+#include "RandomStreams.h"
 
 #include <cstdint>
 #include <map>
@@ -54,7 +55,22 @@ struct WorldState
     std::map<std::string, bool, std::less<>> Flags;
     /** Gate sites by stable ID (the gate system's slice). */
     std::map<std::string, GateSiteState, std::less<>> Gates;
+    /**
+     * The persisted state of the four RNG streams (M1-02), indexed by RandomStreamId.
+     * WorldSim seeds it from WorldSeed; whatever draws from a stream writes the
+     * captured state back here, so a reload continues the sequence instead of re-rolling it.
+     */
+    RandomStreams::Snapshot Rng = RandomStreams().Capture();
 };
+
+/** A fresh world: the clock at the campaign epoch (2 Jun 2042 06:00), no flags or Gates, RNG streams seeded from the world seed. */
+inline WorldState MakeWorldState(std::uint64_t worldSeed)
+{
+    WorldState state;
+    state.WorldSeed = worldSeed;
+    state.Rng = RandomStreams(worldSeed).Capture();
+    return state;
+}
 
 /** Things that happened, in the order they happened. Presentation rebuilds from these. */
 struct TimeAdvanced
