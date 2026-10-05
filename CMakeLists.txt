@@ -22,6 +22,8 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/GateSites.cpp
     Source/PerfectWorldCore/Private/RandomStreams.cpp
     Source/PerfectWorldCore/Private/ChunkDeltaStore.cpp
+    Source/PerfectWorldCore/Private/DistrictGenerator.cpp
+    Source/PerfectWorldCore/Private/CityData.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -72,6 +74,10 @@ add_test(NAME PerfectWorldRandomTests COMMAND PerfectWorldRandomTests)
 add_executable(PerfectWorldChunkDeltaTests Tests/ChunkDeltaStoreTests.cpp)
 target_link_libraries(PerfectWorldChunkDeltaTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldChunkDeltaTests COMMAND PerfectWorldChunkDeltaTests)
+
+add_executable(PerfectWorldDistrictTests Tests/DistrictGeneratorTests.cpp)
+target_link_libraries(PerfectWorldDistrictTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldDistrictTests COMMAND PerfectWorldDistrictTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
 add_executable(PerfectWorldAwakenedTests Tests/AwakenedProgressionTests.cpp)
 target_link_libraries(PerfectWorldAwakenedTests PRIVATE PerfectWorldCore)

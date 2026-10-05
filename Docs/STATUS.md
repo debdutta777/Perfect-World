@@ -299,3 +299,18 @@ Rebuilt by Sonnet 5.5 subagents after the D: wipe, reviewed and merged here.
 **Design question for the owner (M1-35):** an onset that fires at a Gate sealed after it was scheduled currently leaves the Gate unchanged and emits `GateOnsetHeld` ("the seal held"). That lets a seal prevent an onset, which `GAME_PLAN.md` §2 says cannot be prevented. The alternative is to count the onset without changing the sealed status.
 
 **Remaining limitation:** RNG streams are not yet part of `WorldState` or the hash; nothing generates onsets from content schedules yet; none of this has been compiled inside Unreal (the engine must be reinstalled).
+
+## Checkpoint — M1-29 city data and district generator merged, 2026-10-05
+
+Rebuilt by a Sonnet 5.5 subagent after the D: wipe, reviewed and merged here.
+
+**Intent:** typed city records read from validated content, and a seeded 64×64 (8 m cell) district builder.
+
+**Files changed:** added `Source/PerfectWorldCore/{Public,Private}/{CityData,DistrictGenerator}.{h,cpp}`, `Tests/DistrictGeneratorTests.cpp`; `CMakeLists.txt` (the test is given `Data/Content`); `Docs/ROADMAP.md`.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwi`. **Result:** PASS, 22/22. `PASS: 9753194 district generator checks`: every cell is street, building or open; one 4-connected street network reaching all four edges; every building touches a street; the same archetype and seed regenerate identically; archetypes differ measurably; the five real cities in `Data/Content/city` all read, Kolkata included, and all their generated districts hold the same guarantees. The validator's dangling-reference and duplicate-ID rejections are the existing `bad_dangling_ref` and `bad_duplicate_id` fixtures.
+
+**Merge note:** the agent's `GateStatus` enum in `CityData.h` clashed with `WorldState.h`'s `GateStatus` (M1-35), so it is renamed `GateSiteStatus` (`GateSiteStatusName`). The content records the authored status of a site; the world state tracks its live status.
+
+**Remaining limitation:** only three layouts are real; riverfront, rail yard, port, campus, industrial, suburb, government quarter and informal settlement borrow one. Nothing streams a district into Unreal yet (M1-30), and none of this has been compiled inside Unreal.
+
