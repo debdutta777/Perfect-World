@@ -656,3 +656,27 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 1. The act table is a placeholder until dialogue and activity data define it.
 2. Only the Acquaintance and Memorial stages are produced; the others belong to M5.
 3. Should a bereavement memory be pinned against decay?
+
+## Checkpoint — M2-06 schedules and minimal off-screen progress, 2026-10-10
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:** new `Public/Schedules.h`, `Private/{Schedules.cpp, SchedulePlan.cpp, ScheduleText.cpp, ScheduleInternal.h}` and `Tests/{SchedulesTests.cpp, SchedulesProgressTests.cpp, SchedulesTestSupport.h}`; `CMakeLists.txt`.
+
+**Rules:**
+- **Pure resolution:** `ResolveSchedule(person, travel, t)` is pure, following "Nobody walks around offscreen" (`SYSTEMS.md` §1) and the catalogue's `WhereIs`. It looks only 8 days either side of the instant.
+- **Routine and exceptions:** weekly routine entries plus dated exceptions, decided by priority. On a tie an exception beats routine, then the later start, then the smaller ID.
+- **Travel:** a person lingers in the previous zone, then leaves to arrive exactly on time. When a gap is too short for the trip, the lower-priority stay is shortened and both are marked `Squeezed`.
+- **Off-screen advance:** steps only at event boundaries and tallies sessions and minutes per activity. Unseen classmates therefore spend the same calendar, and a 16-hour jump equals boundary stepping equals minute stepping.
+- **Formats:** three strict text formats with hashes, for schedules, travel tables and person state.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 49/49, `Schedules tests passed (275421 checks)`. The tests cover:
+- 10,000 random schedules
+- additivity and determinism
+- event emitted exactly when the resolved identity changes
+- every truncation and every single-byte change refused
+
+**Open questions:**
+1. The `Data/Schedules` JSON shape and its validator are not decided.
+2. NPCs are never late, because squeezing shortens stays instead. M2-07 may want NPC lateness.
+3. Not yet profiled against the 2 ms boundary budget.

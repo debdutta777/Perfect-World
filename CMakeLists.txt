@@ -44,6 +44,9 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/ContentActivitySchemas.cpp
     Source/PerfectWorldCore/Private/Activities.cpp
     Source/PerfectWorldCore/Private/ActivityRunnerText.cpp
+    Source/PerfectWorldCore/Private/Schedules.cpp
+    Source/PerfectWorldCore/Private/SchedulePlan.cpp
+    Source/PerfectWorldCore/Private/ScheduleText.cpp
     Source/PerfectWorldCore/Private/PracticeWindow.cpp
     Source/PerfectWorldCore/Private/Relationships.cpp
     Source/PerfectWorldCore/Private/RelationshipsText.cpp
@@ -73,6 +76,10 @@ add_test(NAME PerfectWorldCreationIdentityTests COMMAND PerfectWorldCreationIden
 add_executable(PerfectWorldClockTests Tests/GameClockTests.cpp)
 target_link_libraries(PerfectWorldClockTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldClockTests COMMAND PerfectWorldClockTests)
+
+add_executable(PerfectWorldScheduleTests Tests/SchedulesTests.cpp Tests/SchedulesProgressTests.cpp)
+target_link_libraries(PerfectWorldScheduleTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldScheduleTests COMMAND PerfectWorldScheduleTests)
 
 add_executable(PerfectWorldConditionTests Tests/ConditionTests.cpp)
 target_link_libraries(PerfectWorldConditionTests PRIVATE PerfectWorldCore)
