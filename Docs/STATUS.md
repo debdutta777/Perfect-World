@@ -857,3 +857,31 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 - Routing the reducer's activity and time commands through the loop.
 - The Unreal subsystem writing checkpoints.
 - Reconciling `checkpoint_N.txt` with SYSTEMS §6's `.json` naming.
+
+## Checkpoint — M3-05 Aptitude Projection, 2026-10-10
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:** new `Public/AptitudeProjection.h`, `Private/{AptitudeProjection.cpp, AptitudeProjectionProject.cpp, AptitudeProjectionText.cpp, AptitudeInternal.h}` and `Tests/{AptitudeProjectionTests.cpp, AptitudeProjectionTextTests.cpp, AptitudeTestSupport.h}`; `CMakeLists.txt`.
+
+**Rules:**
+- **Paths and evidence:** the ten paths from `PATHS_AND_PROGRESSION.md` "The ten paths", each with five evidence kinds ("facets"). Four facets come from the four learning structures; six come from practice, activities and attendance.
+- **Bands:** each path gets one of Insufficient observation, Early evidence, Plausible or Strong, with a coverage level and an explicit list of the evidence kinds not yet observed. The printout says "unknown, not unsuitable".
+- **No farmable number:** tallies stay private, and the tests check that no public text contains a digit.
+- **Saturation:** repeats of the same source, facet and subject count 8, 4, 2, 1, then nothing, and only the best 4 are kept. One source kind can never establish a facet by itself.
+- **Signature facet:** each path's first facet must be shown, so a pure study life does not read as Plausible for athletics.
+- **Other guarantees:** adding evidence never lowers a band; the ledger is an order-independent set; a missed class is never recorded as weakness.
+- **Save format:** `pw.aptitude/1` text, which refuses truncation.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 91/91, `AptitudeProjectionTests passed (782371 checks)`. The tests cover:
+- each path's unobserved list on an empty ledger
+- 10,000 identical repeats ending identical to 4 repeats
+- structures alone never reaching Strong
+- a study-heavy persona and a repair-heavy persona diverging as expected
+- order independence under shuffling
+
+**Open questions:**
+1. Every number and the facet lists are chosen; the docs give the shape only.
+2. A fourth band, "Early evidence", was added beside the catalogue's three, and its `ConfidenceMilli` was dropped.
+3. The skill-to-facet mapping could move into data.
+4. Not yet fed from the day loop's events.
