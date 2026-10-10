@@ -92,6 +92,10 @@ void CheckStructureSemantics(const ContentDb& db, std::vector<ContentIssue>& iss
 const TypeSchema& BellScheduleSchema();
 void CheckBellScheduleSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
 
+/** The school calendar record type (ContentCalendarSchemas.cpp, ROADMAP M3-09) and its rules (SchoolCalendar.h). */
+const TypeSchema& CalendarSchema();
+void CheckCalendarSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
+
 /** Cross-record rules, run after every reference has resolved. */
 void CheckSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
 } // namespace PerfectWorld::ContentSchema

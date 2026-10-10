@@ -1,0 +1,7 @@
+{
+  "type": "institution",
+  "id": "institution.nga",
+  "name": "National Gate Authority",
+  "kind": "gate_authority",
+  "city": "city.kolkata"
+}

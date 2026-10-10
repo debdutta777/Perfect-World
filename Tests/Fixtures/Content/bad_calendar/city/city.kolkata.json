@@ -1,0 +1,14 @@
+{
+  "type": "city",
+  "id": "city.kolkata",
+  "name": "Kolkata",
+  "nation": "nation.india",
+  "state": "West Bengal",
+  "role": "A minimal city for the bell schedule fixtures",
+  "districts": [
+    { "id": "district.kolkata.nabapara", "name": "Nabapara", "kind": "authored", "fictional": true }
+  ],
+  "gateSites": [
+    { "id": "gate.kolkata.river_warehouse", "name": "River Warehouse Gate", "district": "district.kolkata.nabapara", "rank": "D", "status": "contained", "realmAnchor": true }
+  ]
+}

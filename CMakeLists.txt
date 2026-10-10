@@ -80,6 +80,9 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/AptitudeProjection.cpp
     Source/PerfectWorldCore/Private/AptitudeProjectionProject.cpp
     Source/PerfectWorldCore/Private/AptitudeProjectionText.cpp
+    Source/PerfectWorldCore/Private/ContentCalendarSchemas.cpp
+    Source/PerfectWorldCore/Private/SchoolCalendar.cpp
+    Source/PerfectWorldCore/Private/SchoolCalendarRules.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -159,6 +162,10 @@ add_test(NAME PerfectWorldDayLoopTests COMMAND PerfectWorldDayLoopTests ${CMAKE_
 add_executable(PerfectWorldAptitudeTests Tests/AptitudeProjectionTests.cpp Tests/AptitudeProjectionTextTests.cpp)
 target_link_libraries(PerfectWorldAptitudeTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldAptitudeTests COMMAND PerfectWorldAptitudeTests)
+
+add_executable(PerfectWorldSchoolCalendarTests Tests/SchoolCalendarTests.cpp Tests/SchoolCalendarContentTests.cpp)
+target_link_libraries(PerfectWorldSchoolCalendarTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSchoolCalendarTests COMMAND PerfectWorldSchoolCalendarTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
 add_executable(PerfectWorldRealmTests Tests/RealmCoordinateTests.cpp)
 target_link_libraries(PerfectWorldRealmTests PRIVATE PerfectWorldCore)
@@ -309,6 +316,32 @@ foreach(fixture_and_issue
         "bad_structure_links|coordinate_engine|needs a structure whose engine is coordinate, but its structure's engine is investigate"
         "bad_structure_links|small_classroom_family|a classroom explain family declares at least 3 cases"
         "bad_structure_links|few_cases|needs at least 4 cases, found 0")
+    string(REPLACE "|" ";" parts "${fixture_and_issue}")
+    list(GET parts 0 fixture)
+    list(GET parts 1 rule)
+    list(GET parts 2 issue)
+    add_test(NAME PerfectWorldContentFixture_${fixture}_${rule}
+             COMMAND pwcontent validate ${CMAKE_SOURCE_DIR}/Tests/Fixtures/Content/${fixture} --expect-issue "${issue}")
+endforeach()
+
+# The 2042-43 school calendar (ROADMAP M3-09): one fixture directory carries a calendar per rule, so an entry is
+# "directory|test name|issue text" and every issue text is unique to its rule.
+foreach(fixture_and_issue
+        "bad_calendar|date_missing|is not a date that exists"
+        "bad_calendar|date_format|is not written YYYY-MM-DD"
+        "bad_calendar|term_overlap|term term_2 overlaps term term_1"
+        "bad_calendar|range_order|holiday durga_puja ends before it starts"
+        "bad_calendar|outside_window|lies outside the calendar's window"
+        "bad_calendar|gap|2042-11-03 is in neither a term nor a break"
+        "bad_calendar|holiday_unexplained|holiday durga_puja (2042-10-20 to 2042-11-04) is not wholly inside a term or a break"
+        "bad_calendar|break_straddle|break puja_vacation straddles the edge of term term_1"
+        "bad_calendar|assessment_term|assessment unit_test_1 (2042-07-28 to 2042-08-01) is not inside its term term_2"
+        "bad_calendar|sports_weekend|event sports_day on 2042-12-06 is not on a school day"
+        "bad_calendar|missing_independence|the calendar must declare the holiday independence_day on 2042-08-15"
+        "bad_calendar|ten_days_school|the ten days after the Awakening have no school, but 2043-02-02 is a school day"
+        "bad_calendar|approximate_note|festival durga_puja has an approximate date"
+        "bad_calendar|exam_gap|the examination must be exactly 10 days after the Awakening"
+        "bad_calendar|not_a_school|the institution institution.nga is not a school")
     string(REPLACE "|" ";" parts "${fixture_and_issue}")
     list(GET parts 0 fixture)
     list(GET parts 1 rule)

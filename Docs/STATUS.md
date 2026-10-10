@@ -885,3 +885,33 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 2. A fourth band, "Early evidence", was added beside the catalogue's three, and its `ConfidenceMilli` was dropped.
 3. The skill-to-facet mapping could move into data.
 4. Not yet fed from the day loop's events.
+
+## Checkpoint — M3-09 the 2042–43 calendar, 2026-10-10
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:**
+- New: `Public/SchoolCalendar.h`, `Private/{SchoolCalendar.cpp, SchoolCalendarRules.cpp, ContentCalendarSchemas.cpp}` and `Tests/{SchoolCalendarTests.cpp, SchoolCalendarContentTests.cpp}`.
+- Data: `Data/Content/calendar/calendar.nabapara_2042_43.json`.
+- The `bad_calendar` fixtures (15 rules).
+- Registration lines in `ContentSchemas.{h,cpp}`.
+- `CMakeLists.txt`.
+- Pinned parity counts, now 118 files and 154 records.
+
+**Calendar:** the window runs 2 Jun 2042 to 27 Feb 2043.
+- **Fixed dates:** Independence Day 15 Aug, Gandhi Jayanti 2 Oct, Christmas 25 Dec, Republic Day 26 Jan.
+- **From `GAME_PLAN.md` §4:** Awakening on Fri 23 Jan 2043 and the examination on Mon 2 Feb 2043, ten days later.
+- **Approximate, to be confirmed:** Durga Puja 20–24 Oct 2042, Kali Puja and Diwali 12 Nov 2042, Saraswati Puja 14 Feb 2043.
+- **Assumptions:** three terms, a Puja vacation (18 Oct – 2 Nov), a winter break (24 Dec – 4 Jan), "the ten days" with no school, four assessment windows, and sports day on 5 Dec.
+- **Totals:** 168 school days, 149 of them on or before Awakening.
+
+The validator enforces real dates, ordered non-overlapping ranges, full coverage of the window by terms or breaks, the ten-day gap, and that lunisolar festival dates are marked approximate. The queries cover school day, holiday, term, break, assessment, the next and previous school day, and counts. All are checked against an independent oracle over every day and 3,000 random ranges.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 107/107, `PerfectWorldSchoolCalendarTests: 11841 checks passed`; `pwcontent validate Data/Content`: `PASS: 118 files, 154 records`.
+
+**For the owner:**
+1. Saraswati Puja (about 14 Feb 2043) falls after the examination, so the window runs on to 27 Feb, with school resuming 3 Feb. Confirm, or choose a window that ends at the examination.
+2. Netaji Jayanti (23 Jan) is left out because Awakening Day must be a school day.
+3. The terms, the Puja vacation length and the assessment dates need an education consultant.
+
+**Next:** switch Attendance to the calendar so holidays are not counted as absences (the hook is described in `SchoolCalendar.h`), then run Rung 2 and the editor test for 118/154.

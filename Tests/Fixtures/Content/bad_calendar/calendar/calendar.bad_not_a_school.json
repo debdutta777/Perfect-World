@@ -1,0 +1,28 @@
+{
+  "type": "calendar", "id": "calendar.bad_not_a_school", "name": "Fixture: the calendar belongs to an institution that is not a school",
+  "institution": "institution.nga", "stage": "stage.higher_secondary", "state": "West Bengal",
+  "yearStart": "2042-06-02", "yearEnd": "2043-02-27", "awakeningDate": "2043-01-23", "examinationDate": "2043-02-02",
+  "schoolWeekdays": [1, 2, 3, 4, 5],
+  "terms": [
+    { "id": "term_1", "name": "Term 1", "start": "2042-06-02", "end": "2042-10-17", "status": "unverified" },
+    { "id": "term_2", "name": "Term 2", "start": "2042-11-03", "end": "2042-12-23", "status": "unverified" },
+    { "id": "term_3", "name": "Term 3", "start": "2043-01-05", "end": "2043-02-27", "status": "unverified" }
+  ],
+  "breaks": [
+    { "id": "puja_vacation", "name": "Puja vacation", "start": "2042-10-18", "end": "2042-11-02", "status": "unverified" },
+    { "id": "winter_break", "name": "Winter break", "start": "2042-12-24", "end": "2043-01-04", "status": "unverified" },
+    { "id": "ten_days", "name": "The ten days", "start": "2043-01-24", "end": "2043-02-02", "status": "unverified" }
+  ],
+  "holidays": [
+    { "id": "independence_day", "name": "Independence Day", "kind": "national", "start": "2042-08-15", "end": "2042-08-15", "dateBasis": "fixed", "status": "unverified" },
+    { "id": "durga_puja", "name": "Durga Puja", "kind": "festival", "start": "2042-10-20", "end": "2042-10-24", "dateBasis": "lunisolar_approximate", "status": "unverified", "note": "approximate, to be confirmed" },
+    { "id": "kali_puja_diwali", "name": "Kali Puja and Diwali", "kind": "festival", "start": "2042-11-12", "end": "2042-11-12", "dateBasis": "lunisolar_approximate", "status": "unverified", "note": "approximate, to be confirmed" },
+    { "id": "saraswati_puja", "name": "Saraswati Puja", "kind": "festival", "start": "2043-02-14", "end": "2043-02-14", "dateBasis": "lunisolar_approximate", "status": "unverified", "note": "approximate, to be confirmed" }
+  ],
+  "assessments": [
+    { "id": "unit_test_1", "name": "Unit test 1", "term": "term_1", "start": "2042-07-28", "end": "2042-08-01", "status": "unverified" }
+  ],
+  "events": [
+    { "id": "sports_day", "name": "Sports day", "kind": "sports_day", "date": "2042-12-05", "status": "unverified" }
+  ]
+}
