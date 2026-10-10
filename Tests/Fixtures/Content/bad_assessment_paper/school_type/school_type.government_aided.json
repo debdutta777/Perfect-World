@@ -1,0 +1,6 @@
+{
+  "type": "school_type",
+  "id": "school_type.government_aided",
+  "name": "Government-aided school",
+  "fees": "low"
+}

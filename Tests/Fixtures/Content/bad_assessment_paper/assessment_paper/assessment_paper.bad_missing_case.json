@@ -1,0 +1,16 @@
+{
+  "type": "assessment_paper",
+  "id": "assessment_paper.bad_missing_case",
+  "name": "A paper whose first question has no case",
+  "calendar": "calendar.nabapara_2042_43",
+  "window": "half_yearly",
+  "minutes": 90,
+  "units": 18,
+  "groups": [
+    { "id": "g1", "structure": "model", "marks": 20, "case": "problem_case.xi_no_such" },
+    { "id": "g2", "structure": "explain", "marks": 20, "case": "explain_case.b" },
+    { "id": "g3", "structure": "investigate", "marks": 20, "case": "investigate_case.c" },
+    { "id": "g4", "structure": "coordinate", "marks": 20, "case": "coordinate_case.d" },
+    { "id": "g5", "structure": "model", "marks": 20, "case": "problem_case.e" }
+  ]
+}

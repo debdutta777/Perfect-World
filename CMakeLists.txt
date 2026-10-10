@@ -85,6 +85,10 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/ContentCalendarSchemas.cpp
     Source/PerfectWorldCore/Private/SchoolCalendar.cpp
     Source/PerfectWorldCore/Private/SchoolCalendarRules.cpp
+    Source/PerfectWorldCore/Private/ContentAssessmentSchemas.cpp
+    Source/PerfectWorldCore/Private/Assessment.cpp
+    Source/PerfectWorldCore/Private/AssessmentRun.cpp
+    Source/PerfectWorldCore/Private/AssessmentText.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -172,6 +176,11 @@ add_test(NAME PerfectWorldAptitudeTests COMMAND PerfectWorldAptitudeTests)
 add_executable(PerfectWorldSchoolCalendarTests Tests/SchoolCalendarTests.cpp Tests/SchoolCalendarContentTests.cpp)
 target_link_libraries(PerfectWorldSchoolCalendarTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldSchoolCalendarTests COMMAND PerfectWorldSchoolCalendarTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+add_executable(PerfectWorldAssessmentTests Tests/AssessmentTests.cpp Tests/AssessmentMarkingTests.cpp Tests/AssessmentSaveTests.cpp
+               Tests/AssessmentContentTests.cpp)
+target_link_libraries(PerfectWorldAssessmentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldAssessmentTests COMMAND PerfectWorldAssessmentTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
 add_executable(PerfectWorldRealmTests Tests/RealmCoordinateTests.cpp)
 target_link_libraries(PerfectWorldRealmTests PRIVATE PerfectWorldCore)
@@ -347,7 +356,16 @@ foreach(fixture_and_issue
         "bad_calendar|ten_days_school|the ten days after the Awakening have no school, but 2043-02-02 is a school day"
         "bad_calendar|approximate_note|festival durga_puja has an approximate date"
         "bad_calendar|exam_gap|the examination must be exactly 10 days after the Awakening"
-        "bad_calendar|not_a_school|the institution institution.nga is not a school")
+        "bad_calendar|not_a_school|the institution institution.nga is not a school"
+        # Assessment papers (ROADMAP M3-07): one paper per rule.
+        "bad_assessment_paper|units|a paper is 90 minutes: 18 units of 5 minutes"
+        "bad_assessment_paper|groups|a paper has 5 question groups, found 4"
+        "bad_assessment_paper|marks|group g1 is worth 10 marks, not 20"
+        "bad_assessment_paper|duplicate_group|the group id g1 is used twice"
+        "bad_assessment_paper|missing_case|group g1 names the case problem_case.xi_no_such, which does not exist"
+        "bad_assessment_paper|case_type|a calendar, but its structure model needs a problem_case"
+        "bad_assessment_paper|repeat_case|group g2 repeats the case problem_case.a"
+        "bad_assessment_paper|window|has no assessment window quarterly")
     string(REPLACE "|" ";" parts "${fixture_and_issue}")
     list(GET parts 0 fixture)
     list(GET parts 1 rule)

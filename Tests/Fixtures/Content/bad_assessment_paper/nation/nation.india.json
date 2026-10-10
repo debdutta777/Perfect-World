@@ -1,0 +1,10 @@
+{
+  "type": "nation",
+  "id": "nation.india",
+  "name": "India",
+  "capitalCity": "city.kolkata",
+  "gateAuthority": "institution.nga",
+  "realmHomeRegion": "realm.region.india",
+  "stageOneCities": ["city.kolkata"],
+  "towerExamination": { "centralHall": "institution.nga", "certifiedHallPerCity": true }
+}

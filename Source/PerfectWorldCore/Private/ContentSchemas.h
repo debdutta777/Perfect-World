@@ -96,6 +96,10 @@ void CheckBellScheduleSemantics(const ContentDb& db, std::vector<ContentIssue>& 
 const TypeSchema& CalendarSchema();
 void CheckCalendarSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
 
+/** The assessment paper record type (ContentAssessmentSchemas.cpp, ROADMAP M3-07) and its rules (Assessment.h). */
+const TypeSchema& AssessmentPaperSchema();
+void CheckAssessmentSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
+
 /** Cross-record rules, run after every reference has resolved. */
 void CheckSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
 } // namespace PerfectWorld::ContentSchema

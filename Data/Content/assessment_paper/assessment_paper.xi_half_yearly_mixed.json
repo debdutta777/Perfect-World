@@ -1,0 +1,22 @@
+{
+  "type": "assessment_paper",
+  "id": "assessment_paper.xi_half_yearly_mixed",
+  "name": "Class XI half-yearly: mixed paper",
+  "calendar": "calendar.nabapara_2042_43",
+  "window": "half_yearly",
+  "minutes": 90,
+  "units": 18,
+  "groups": [
+    { "id": "g1", "structure": "model", "marks": 20, "case": "problem_case.xi_water_tank_level",
+      "note": "A stock and flow question with a clock fault behind it: an unconfirmed firm estimate is an unsupported conclusion." },
+    { "id": "g2", "structure": "explain", "marks": 20, "case": "explain_case.xi_canal_log",
+      "note": "An interpretation question: a claim, its evidence, and the limit that bounds it." },
+    { "id": "g3", "structure": "investigate", "marks": 20, "case": "investigate_case.xi_bicycle_lamp",
+      "note": "An intermittent fault, so one clearing proves nothing until it is confirmed." },
+    { "id": "g4", "structure": "coordinate", "marks": 20, "case": "coordinate_case.xi_titration_report",
+      "note": "A group report whose parts do not join unless the hand-over is checked." },
+    { "id": "g5", "structure": "model", "marks": 20, "case": "problem_case.xi_roof_rainwater_tank",
+      "note": "A clean stock and flow question with no hidden fault: confirming or hedging it wastes the time." }
+  ],
+  "note": "The first Class XI paper (SCHOOL_AND_PROGRESSION.md, Time economy): a 90-minute paper of eighteen five-minute units, five question groups worth twenty marks each, sat in the half-yearly window of the 2042-43 calendar. Its five questions are cases the four classroom structures already teach (two model, one each of explain, investigate and coordinate), so the examination re-asks what the classroom practised. A prepared character clears and confirms every group; an unprepared one must triage."
+}

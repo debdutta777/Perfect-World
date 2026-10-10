@@ -955,3 +955,32 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 **Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 108/108. `AttendanceTests passed (168902 checks)`, `PerfectWorld day loop: 819112 checks passed`. The tests show Independence Day and the Puja vacation are not absences, a missed ordinary day still is, and the day loop refuses arrival at school on 15 Aug.
 
 **Limitation:** `ValidateAttendanceRecord` still assumes Monday to Friday, so a future calendar with Saturday classes would need the validator to read the calendar.
+
+## Checkpoint — M3-07 assessments, 2026-10-10
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:**
+- New: `Public/Assessment.h`, `Private/{Assessment.cpp, AssessmentRun.cpp, AssessmentText.cpp, ContentAssessmentSchemas.cpp}` and `Tests/Assessment{,Marking,Save,Content}Tests.cpp` plus `AssessmentTestSupport.h`.
+- Registration lines in `ContentSchemas.{h,cpp}`.
+- Data: `Data/Content/assessment_paper/assessment_paper.xi_half_yearly_mixed.json`.
+- Eight bad fixtures.
+- `CMakeLists.txt`.
+- Pinned parity counts, now 119 files and 155 records.
+
+**Paper:** 90 minutes in 18 units, set in the calendar's half-yearly window. Five groups of 20 marks draw on all four structures: two model cases, one explain, one investigate, one coordinate.
+
+**Play:**
+- **Survey:** costs 1 unit, is optional, and shows familiarity plus a price range that always contains the true price.
+- **Allocation:** units are promised to groups and cap what each may spend.
+- **Answers:** Work costs 2 units if the method is practised and 4 if not; Confirm adds 1; Guess costs 1; Hedge is free. Every price is quoted before commit.
+- **Economy:** a prepared student fits in 16 of 18 units; an unprepared one must triage.
+
+**Marking:** each structure's own failure bits map to the four kinds from `SCHOOL_AND_PROGRESSION.md` "What varies on the fortieth class": wrong model, unsupported conclusion, wasted time and unclear explanation. Sound earns full marks, Partial 750‰, Unsound 250‰, and an unattempted group 0.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 117/117. `AssessmentTests passed (131210 checks)`; `pwcontent validate Data/Content`: `PASS: 119 files, 155 records`.
+
+**Open questions:**
+1. The doc's step 6 names four different failure kinds; the "fortieth class" set was used.
+2. Questions use an abbreviated resolution rather than the full 45-minute structure runners, to keep the documented paper economy.
+3. The 119/155 parity counts need Rung 2 and an editor run.
