@@ -1,0 +1,17 @@
+{
+  "type": "explain_family",
+  "id": "explain_family.fixture",
+  "name": "Fixture explain family pointing at the coordinate structure",
+  "structure": "structure.coordinate_a_group",
+  "skill": "skill.academics",
+  "setting": "classroom",
+  "minCases": 2,
+  "subjects": ["literature"],
+  "questions": ["meaning"],
+  "roles": ["author"],
+  "scarce": ["time"],
+  "methods": [
+    { "id": "method.read", "name": "Read", "knownAtMilli": 100000 }
+  ],
+  "template": { "minClaims": 2, "maxClaims": 4, "minDefensible": 2, "minSupport": 2, "minEvidence": 3, "maxEvidence": 8, "minLimitations": 2, "maxLimitations": 4 }
+}

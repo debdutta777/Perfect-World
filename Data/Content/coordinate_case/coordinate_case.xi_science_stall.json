@@ -1,0 +1,28 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.xi_science_stall",
+  "family": "coordinate_family.xi_group_work",
+  "name": "The Class XI stall at the science fair",
+  "subject": "projects",
+  "constraint": "capacity",
+  "role": "chair",
+  "scarce": "time",
+  "method": "method.split_the_list",
+  "seam": false,
+  "brief": "Class XI is running a stall at the school science fair: a poster, a working model of a lock and a short spoken script. Three of you share the work and the period is short. You are the chair. Two of the jobs suit more than one of you; one of you has something on that nobody has mentioned.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 2, "self": true },
+    { "id": "m_ishan", "name": "Ishan Sheikh", "capacity": 2, "self": false },
+    { "id": "m_tara", "name": "Tara Das", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_poster", "name": "Paint the poster", "load": 1, "fits": ["m_you", "m_tara"] },
+    { "id": "t_model", "name": "Build the working model of the lock", "load": 2, "fits": ["m_ishan", "m_you"] },
+    { "id": "t_script", "name": "Write and rehearse the spoken script", "load": 1, "fits": ["m_tara", "m_ishan"] }
+  ],
+  "facts": [
+    { "id": "f_tara_meet", "holder": "m_tara", "text": "Tara runs in the district meet next week and can carry only one job", "critical": true },
+    { "id": "f_ishan_bus", "holder": "m_ishan", "text": "Ishan takes the 5:40 bus and has to leave on the bell", "critical": false }
+  ],
+  "note": "Tara Das and Ishan Sheikh are from INDIA_WORLD_BIBLE.md (npc_tara_das, npc_ishan_sheikh). The constraint is capacity: Tara's training week limits what she can carry, which only a conversation with her shows. Any assignment within each member's capacity that gives every job to someone it suits is Sound."
+}

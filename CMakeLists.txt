@@ -51,6 +51,18 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/StructureModel.cpp
     Source/PerfectWorldCore/Private/StructureModelRun.cpp
     Source/PerfectWorldCore/Private/StructureModelText.cpp
+    Source/PerfectWorldCore/Private/StructureCommon.cpp
+    Source/PerfectWorldCore/Private/StructureExplain.cpp
+    Source/PerfectWorldCore/Private/StructureExplainRun.cpp
+    Source/PerfectWorldCore/Private/StructureExplainText.cpp
+    Source/PerfectWorldCore/Private/StructureInvestigate.cpp
+    Source/PerfectWorldCore/Private/StructureInvestigateRun.cpp
+    Source/PerfectWorldCore/Private/StructureInvestigateText.cpp
+    Source/PerfectWorldCore/Private/StructureCoordinate.cpp
+    Source/PerfectWorldCore/Private/StructureCoordinateRun.cpp
+    Source/PerfectWorldCore/Private/StructureCoordinateText.cpp
+    Source/PerfectWorldCore/Private/ContentStructureSchemas.cpp
+    Source/PerfectWorldCore/Private/ContentStructureCases.cpp
     Source/PerfectWorldCore/Private/ContentScheduleSchemas.cpp
     Source/PerfectWorldCore/Private/AttendanceBell.cpp
     Source/PerfectWorldCore/Private/Attendance.cpp
@@ -111,6 +123,11 @@ add_test(NAME PerfectWorldActivitiesTests COMMAND PerfectWorldActivitiesTests ${
 add_executable(PerfectWorldStructureModelTests Tests/StructureModelTests.cpp Tests/StructureModelFlowTests.cpp Tests/StructureModelContentTests.cpp)
 target_link_libraries(PerfectWorldStructureModelTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldStructureModelTests COMMAND PerfectWorldStructureModelTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+add_executable(PerfectWorldStructureOthersTests Tests/StructureOthersTests.cpp Tests/StructureExplainTests.cpp Tests/StructureInvestigateTests.cpp
+               Tests/StructureCoordinateTests.cpp Tests/StructureOthersContentTests.cpp Tests/StructureDistinctTests.cpp)
+target_link_libraries(PerfectWorldStructureOthersTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldStructureOthersTests COMMAND PerfectWorldStructureOthersTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
 add_executable(PerfectWorldAttendanceTests Tests/AttendanceTests.cpp Tests/AttendanceRoutineTests.cpp Tests/AttendanceRecordTests.cpp Tests/AttendanceTextTests.cpp)
 target_link_libraries(PerfectWorldAttendanceTests PRIVATE PerfectWorldCore)
@@ -244,6 +261,39 @@ foreach(fixture_and_issue
         "bad_bell_streams|shared_bells|one school rings one set of bells"
         "bad_bell_streams|duplicate_stream|a second science schedule"
         "bad_bell_streams|missing_stream|has no schedule for the commerce stream")
+    string(REPLACE "|" ";" parts "${fixture_and_issue}")
+    list(GET parts 0 fixture)
+    list(GET parts 1 rule)
+    list(GET parts 2 issue)
+    add_test(NAME PerfectWorldContentFixture_${fixture}_${rule}
+             COMMAND pwcontent validate ${CMAKE_SOURCE_DIR}/Tests/Fixtures/Content/${fixture} --expect-issue "${issue}")
+endforeach()
+
+# The other three structures (ROADMAP M2-09): each fixture directory carries several bad records, one per rule,
+# so an entry is "directory|test name|issue text" and every issue text is unique to its rule.
+foreach(fixture_and_issue
+        "bad_explain_cases|unsupported|the defensible claim c_a needs at least 2 supporting evidence items, found 1"
+        "bad_explain_cases|unbounded|the defensible claim c_a has no limitation that bounds it"
+        "bad_explain_cases|no_indefensible|needs at least one indefensible claim"
+        "bad_explain_cases|dangling|evidence e_a1 names the claim c_nope, which the case does not have"
+        "bad_explain_cases|duplicate_role|the family's roles names author twice"
+        "bad_investigate_cases|two_faults|exactly one cause must be the fault, found 2"
+        "bad_investigate_cases|all_causes|test t_3 must implicate some, but not all, of the causes"
+        "bad_investigate_cases|same_cost|the tests all cost the same"
+        "bad_investigate_cases|unseparable|no test tells the cause c_a from c_b"
+        "bad_coordinate_cases|no_self|exactly one member must be the player's own (self), found 0"
+        "bad_coordinate_cases|player_fact|the critical fact f_1 is held by the player"
+        "bad_coordinate_cases|no_critical|needs at least one critical fact"
+        "bad_coordinate_cases|no_assignment|no assignment keeps every member within capacity"
+        "bad_coordinate_cases|many_holders|members holding a critical fact, found 2"
+        "bad_structure_records|explain_beats|the explain structure's beats must be claim, evidence, limitation, in that order"
+        "bad_structure_records|investigate_decisions|the investigate structure's decisions must be run_test, diagnose, report_inconclusive"
+        "bad_structure_records|coordinate_period|the coordinate structure's period is 9 units of 5 minutes"
+        "bad_structure_links|explain_engine|needs a structure whose engine is explain, but its structure's engine is coordinate"
+        "bad_structure_links|investigate_engine|needs a structure whose engine is investigate, but its structure's engine is explain"
+        "bad_structure_links|coordinate_engine|needs a structure whose engine is coordinate, but its structure's engine is investigate"
+        "bad_structure_links|small_classroom_family|a classroom explain family declares at least 3 cases"
+        "bad_structure_links|few_cases|needs at least 4 cases, found 0")
     string(REPLACE "|" ";" parts "${fixture_and_issue}")
     list(GET parts 0 fixture)
     list(GET parts 1 rule)

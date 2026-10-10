@@ -1,0 +1,27 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.fixture_no_critical",
+  "family": "coordinate_family.fixture",
+  "name": "Nothing to learn by asking",
+  "subject": "projects",
+  "constraint": "capacity",
+  "role": "treasurer",
+  "scarce": "time",
+  "method": "method.split",
+  "seam": false,
+  "brief": "A fixture in which no fact reveals the constraint, so the conversation beat has no point.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 2, "self": true },
+    { "id": "m_x", "name": "X", "capacity": 2, "self": false },
+    { "id": "m_y", "name": "Y", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_1", "name": "one", "load": 1, "fits": ["m_you", "m_x"] },
+    { "id": "t_2", "name": "two", "load": 2, "fits": ["m_x", "m_you"] },
+    { "id": "t_3", "name": "three", "load": 1, "fits": ["m_y", "m_x"] }
+  ],
+  "facts": [
+    { "id": "f_1", "holder": "m_y", "text": "Y can carry one job", "critical": false },
+    { "id": "f_2", "holder": "m_x", "text": "X likes tea", "critical": false }
+  ]
+}

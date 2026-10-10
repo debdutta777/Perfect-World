@@ -1,0 +1,13 @@
+{
+  "type": "structure",
+  "id": "structure.construct_an_explanation",
+  "name": "Construct an explanation",
+  "engine": "explain",
+  "beats": ["claim", "evidence", "limitation"],
+  "goals": ["argue_claim", "weigh_evidence", "state_limits"],
+  "decisions": ["model_paragraph", "choose_claim", "place_evidence", "place_limitation"],
+  "failures": ["indefensible_reading", "unsupported_claim", "overreach", "padding"],
+  "periodUnits": 9,
+  "unitMinutes": 5,
+  "note": "Place a claim, its supporting evidence and its limitation into three slots (SCHOOL_AND_PROGRESSION.md, Construct an explanation). A case offers several claims and at least two are defensible: there is no single hidden right answer. The runner is Core/StructureExplain; the validator checks these lists against its constants. A 45-minute period is nine five-minute units."
+}

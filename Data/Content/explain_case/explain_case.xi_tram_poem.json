@@ -1,0 +1,30 @@
+{
+  "type": "explain_case",
+  "id": "explain_case.xi_tram_poem",
+  "family": "explain_family.xi_claim_evidence_limit",
+  "name": "The last tram on the poem's route",
+  "subject": "literature",
+  "question": "meaning",
+  "role": "author",
+  "scarce": "time",
+  "method": "method.close_reading",
+  "brief": "Ms Basu has set a poem called The Last Tram from the Class XI anthology, written by an invented Kolkata poet. It follows an empty tram through the night and ends on the conductor's bell fading as the depot gate closes. What does the poem mean? You write the group's paragraph, and the bell rings in five units.",
+  "claims": [
+    { "id": "c_farewell", "name": "The poem is a farewell to a way of city life that is passing", "defensible": true },
+    { "id": "c_defiance", "name": "The poem is about the tram's stubborn survival against the new traffic", "defensible": true },
+    { "id": "c_complaint", "name": "The poem is a complaint against the tram company's fare rises", "defensible": false }
+  ],
+  "evidence": [
+    { "id": "e_empty_seats", "name": "The third stanza counts the empty seats one by one", "supports": ["c_farewell"], "against": [] },
+    { "id": "e_bell", "name": "The last line ends on the conductor's bell fading away", "supports": ["c_farewell", "c_defiance"], "against": [] },
+    { "id": "e_sparks", "name": "The tram throws sparks from the wire and keeps moving", "supports": ["c_defiance"], "against": [] },
+    { "id": "e_no_fares", "name": "The poem never mentions a fare, a ticket or a company", "supports": [], "against": ["c_complaint"] },
+    { "id": "e_year", "name": "The anthology dates the poem to 1974", "supports": [], "against": [] }
+  ],
+  "limitations": [
+    { "id": "l_memory", "name": "A farewell reading leans on a reader's own memory of trams, which younger readers may not share", "bounds": ["c_farewell"] },
+    { "id": "l_sorrow", "name": "A defiance reading has to explain away the sorrowful last stanza", "bounds": ["c_defiance"] },
+    { "id": "l_one_poem", "name": "This is one poem; the poet's other work may treat the tram differently", "bounds": ["c_farewell", "c_defiance", "c_complaint"] }
+  ],
+  "note": "Interpretation has no single hidden right answer (SCHOOL_AND_PROGRESSION.md): two readings are defensible and each has its own evidence and limit. The poet and poem are invented for the alternate world; the tram line is a Kolkata institution."
+}

@@ -1,0 +1,17 @@
+{
+  "type": "investigate_family",
+  "id": "investigate_family.fixture",
+  "name": "Fixture family",
+  "structure": "structure.investigate_a_fault",
+  "skill": "skill.practical_repair",
+  "setting": "workplace",
+  "minCases": 1,
+  "subjects": ["repair"],
+  "symptoms": ["no_response"],
+  "roles": ["inspector", "experimenter", "repairer", "critic"],
+  "scarce": ["time"],
+  "methods": [
+    { "id": "method.look", "name": "Look", "knownAtMilli": 1000 }
+  ],
+  "template": { "minCauses": 3, "maxCauses": 5, "minTests": 3, "maxTests": 6 }
+}

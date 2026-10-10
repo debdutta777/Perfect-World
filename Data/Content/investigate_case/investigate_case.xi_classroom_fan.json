@@ -1,0 +1,26 @@
+{
+  "type": "investigate_case",
+  "id": "investigate_case.xi_classroom_fan",
+  "family": "investigate_family.xi_fault_finding",
+  "name": "The slow fan in Class XI-B",
+  "subject": "repair",
+  "symptom": "wrong_output",
+  "role": "inspector",
+  "scarce": "equipment",
+  "method": "method.half_split",
+  "brief": "The ceiling fan in Class XI-B turns, but slowly, even on its top setting. Ms Basu will not have the room closed, so you may test only in the break, and the school owns a single tachometer that the caretaker lends out one reading at a time. There are four things it could be, and the break is not long enough to test them all.",
+  "causes": [
+    { "id": "c_capacitor", "name": "The starting capacitor has weakened", "fault": true },
+    { "id": "c_dust", "name": "Dust has caked the blade edges", "fault": false },
+    { "id": "c_bearing", "name": "The bearing has stiffened", "fault": false },
+    { "id": "c_regulator", "name": "The regulator is stuck on a low step", "fault": false }
+  ],
+  "tests": [
+    { "id": "t_spin", "name": "Spin the blades by hand with the power off", "kind": "observe", "units": 1, "implicates": ["c_bearing"] },
+    { "id": "t_blades", "name": "Look along the blade edges for caked dust", "kind": "observe", "units": 1, "implicates": ["c_dust"] },
+    { "id": "t_hum", "name": "Listen for a hum at switch-on before the blades pick up", "kind": "observe", "units": 2, "implicates": ["c_capacitor", "c_regulator"] },
+    { "id": "t_steps", "name": "Read the speed at every regulator step with a tachometer", "kind": "measure", "units": 2, "implicates": ["c_regulator"] },
+    { "id": "t_swap_capacitor", "name": "Fit a known-good capacitor and run the fan", "kind": "swap", "units": 3, "implicates": ["c_capacitor"] }
+  ],
+  "note": "Class XI classrooms are from INDIA_WORLD_BIBLE.md (loc_nhss). Equipment is the scarce resource: every tachometer reading costs a unit more. A hum separates {capacitor, regulator} from the rest in one cheap look; the swap isolates the capacitor outright but costs most."
+}

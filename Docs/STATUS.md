@@ -777,3 +777,36 @@ The subjects are WBCHSE-style assumptions flagged for a consultant check. A bell
 1. Holidays and Saturday school are not modelled; every Monday to Friday is a school day.
 2. The `nhss.*` zone names are placeholders until M2-13.
 3. The new parity counts need Rung 2 and an editor run.
+
+## Checkpoint — engine tests at 99/135, the derived-data cache moved to D:, 2026-10-10
+
+**Engine side (D: clone at `b441347`, which includes M2-07 and M2-08):**
+- **First Rung 2 attempt:** a `cl.exe` compiling `PerfectWorldCoreParityTests.cpp` hung in a kernel wait with no CPU and no disk load. I killed it and reran: **Succeeded** in 149 s, no warnings.
+- **Unreal MCP `RunTestsByFilter "StartsWith:PerfectWorld.Core"`:** **4/4 Success**, with `ContentLoadsInEngine` at 99 files and 135 records.
+- **Packaging attempt:** the cook stalled for over 10 minutes at startup while bringing up the Zen derived-data cache service, whose data folder was on C: (about 10 GB free). The run was stopped.
+- **Cache move:** the machine-local file `%LOCALAPPDATA%\Unreal Engine\Engine\Config\UserEngine.ini` now sets `[Zen.AutoLaunch] DataPath=D:/UnrealDDC/Zen/Data`. This is not project config. The editor's zenserver now runs with `--data-dir D:\UnrealDDC\Zen\Data`.
+
+## Checkpoint — M2-09 explain, investigate and coordinate structures, 2026-10-10
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:**
+- New: `Public/{StructureCommon,StructureExplain,StructureInvestigate,StructureCoordinate}.h`, `Private/{StructureCommon.cpp, StructureInternal.h}`, three `Structure<X>{,Run,Text}.cpp` per structure, `Private/{ContentStructureSchemas.cpp, ContentStructureCases.cpp, ContentStructureChecks.h}`, and tests under `Tests/Structure{Others,Explain,Investigate,Coordinate,Distinct}*`.
+- Small registration edits in `ContentSchemas.{h,cpp}` and `ContentProblemSchemas.cpp`.
+- Data: 3 `structure`, 3 family and 12 case records under `Data/Content`.
+- Five fixture directories with 22 rules.
+- `CMakeLists.txt`.
+- Pinned parity counts, now 117 files and 153 records.
+
+**Structures** (from `SCHOOL_AND_PROGRESSION.md`, and `ALTERNATE_WORLD.md` for investigate):
+- **Explain:** claim, evidence, limitation. Every case has at least two defensible claims, so there is no hidden right answer. Failures are indefensible, unsupported, overreach and padding.
+- **Investigate:** an adaptive loop of tests with different costs, then a conclusion. Failures are wrong cause, unsupported (a lucky guess is still Unsound), redundant test and abandoned search; an honest "not isolated" report is Sound.
+- **Coordinate:** assign, exchange, settle, submit, around one hidden constraint revealed only by a classmate's facts. Failures are overloaded, mismatched, uninformed, unsettled, an unchecked seam and wasted effort.
+- **Shared conventions:** all three share M2-08's time economy, quote-before-commit, case selection, mastery and routine abbreviation.
+- **Distinctness:** the four structures share no beat, decision or failure name, and the standard play of one case each gives four different decision sequences.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 89/89. `StructureOthersTests passed (390535 checks)`; M2-08's 131,015 checks are unchanged; `pwcontent validate Data/Content`: `PASS: 117 files, 153 records`.
+
+**Open questions:**
+1. The new families use their own record types (`explain_family` and so on) rather than `problem_family`/`problem_case`, which would have required changing M2-08's loader.
+2. The 117/153 parity counts need Rung 2 and an editor run.

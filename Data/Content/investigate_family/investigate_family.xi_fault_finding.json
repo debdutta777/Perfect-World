@@ -1,0 +1,25 @@
+{
+  "type": "investigate_family",
+  "id": "investigate_family.xi_fault_finding",
+  "name": "Finding the fault",
+  "structure": "structure.investigate_a_fault",
+  "skill": "skill.practical_repair",
+  "setting": "classroom",
+  "minCases": 4,
+  "subjects": ["computing", "practical_science", "repair"],
+  "symptoms": ["wrong_output", "no_response", "intermittent"],
+  "roles": ["inspector", "experimenter", "repairer", "critic"],
+  "scarce": ["time", "equipment", "parts", "access"],
+  "methods": [
+    { "id": "method.half_split", "name": "Halve the search", "knownAtMilli": 8000 },
+    { "id": "method.read_the_meter", "name": "Read a meter", "knownAtMilli": 18000 },
+    { "id": "method.swap_known_good", "name": "Swap in a known-good part", "knownAtMilli": 30000 }
+  ],
+  "template": {
+    "minCauses": 4,
+    "maxCauses": 5,
+    "minTests": 4,
+    "maxTests": 6
+  },
+  "note": "The Class XI classroom family for the investigate structure: something that should work and does not, with four or five candidate causes and tests of different cost (ALTERNATE_WORLD.md: 'Four possible causes; you have time to test two'). Computing, practical science and repair reach it. The method thresholds are chosen: Practical Repair starts at 0 and is seeded additively by technical_aptitude and practical_experience at 10, 25, 45 or 70 XP by rank, so any rank in either trait halves the search, rank 2 in one trait (or rank 1 in both) reads a meter, and rank 3 (or rank 2 with rank 1) swaps in a known-good part."
+}

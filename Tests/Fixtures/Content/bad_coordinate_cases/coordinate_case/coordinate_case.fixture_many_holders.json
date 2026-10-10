@@ -1,0 +1,27 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.fixture_many_holders",
+  "family": "coordinate_family.fixture",
+  "name": "Every classmate holds a critical fact",
+  "subject": "projects",
+  "constraint": "capacity",
+  "role": "chair",
+  "scarce": "time",
+  "method": "method.split",
+  "seam": true,
+  "brief": "A fixture in which both classmates hold a critical fact, more than the family allows and with no one left to find nothing from.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 2, "self": true },
+    { "id": "m_x", "name": "X", "capacity": 2, "self": false },
+    { "id": "m_y", "name": "Y", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_1", "name": "one", "load": 1, "fits": ["m_you", "m_x"] },
+    { "id": "t_2", "name": "two", "load": 2, "fits": ["m_x", "m_you"] },
+    { "id": "t_3", "name": "three", "load": 1, "fits": ["m_y", "m_x"] }
+  ],
+  "facts": [
+    { "id": "f_1", "holder": "m_y", "text": "Y can carry one job", "critical": true },
+    { "id": "f_2", "holder": "m_x", "text": "X leaves at four", "critical": true }
+  ]
+}

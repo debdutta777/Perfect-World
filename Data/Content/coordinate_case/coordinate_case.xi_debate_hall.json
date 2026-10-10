@@ -1,0 +1,28 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.xi_debate_hall",
+  "family": "coordinate_family.xi_group_work",
+  "name": "Rehearsing for the inter-school debate",
+  "subject": "debate",
+  "constraint": "clash",
+  "role": "mediator",
+  "scarce": "space",
+  "method": "method.run_a_check_in",
+  "seam": true,
+  "brief": "Your team of three has an inter-school debate on Friday: an opening speech, a rebuttal and the timekeeping. You are the mediator, so keeping everyone heard is your job, but there is no quiet room left on the school's one corridor for the three of you to settle anything. The rehearsal has to happen somewhere, and nobody has said where.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 2, "self": true },
+    { "id": "m_arup", "name": "Arup Ghosh", "capacity": 2, "self": false },
+    { "id": "m_nasrin", "name": "Nasrin Khatun", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_opening", "name": "Write and deliver the opening speech", "load": 2, "fits": ["m_you", "m_arup"] },
+    { "id": "t_rebuttal", "name": "Prepare the rebuttal", "load": 1, "fits": ["m_arup", "m_nasrin"] },
+    { "id": "t_timekeeping", "name": "Keep time and hold the cards", "load": 1, "fits": ["m_nasrin", "m_you"] }
+  ],
+  "facts": [
+    { "id": "f_hall", "holder": "m_nasrin", "text": "The hall is booked for the staff meeting until three, and the school bus leaves at half past three", "critical": true },
+    { "id": "f_arup_cards", "holder": "m_arup", "text": "Arup still has last year's cards from the same round", "critical": false }
+  ],
+  "note": "The constraint is a clash of time and place that only Nasrin knows. The seam: the three parts are written in different time limits and only a check of the hand-over finds it. Arup and Nasrin are invented classmates."
+}

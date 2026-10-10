@@ -1,0 +1,27 @@
+{
+  "type": "explain_case",
+  "id": "explain_case.fixture_no_indefensible",
+  "family": "explain_family.fixture",
+  "name": "Every claim is defensible",
+  "subject": "literature",
+  "question": "meaning",
+  "role": "critic",
+  "scarce": "time",
+  "method": "method.read",
+  "brief": "A fixture in which no claim is a reading the sources contradict.",
+  "claims": [
+    { "id": "c_a", "name": "A", "defensible": true },
+    { "id": "c_b", "name": "B", "defensible": true }
+  ],
+  "evidence": [
+    { "id": "e_a1", "name": "a1", "supports": ["c_a"], "against": [] },
+    { "id": "e_a2", "name": "a2", "supports": ["c_a"], "against": [] },
+    { "id": "e_b1", "name": "b1", "supports": ["c_b"], "against": [] },
+    { "id": "e_b2", "name": "b2", "supports": ["c_b"], "against": [] },
+    { "id": "e_x", "name": "x", "supports": [], "against": [] }
+  ],
+  "limitations": [
+    { "id": "l_a", "name": "la", "bounds": ["c_a"] },
+    { "id": "l_b", "name": "lb", "bounds": ["c_b"] }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.xi_titration_report",
+  "family": "coordinate_family.xi_group_work",
+  "name": "The titration practical and its write-up",
+  "subject": "practicals",
+  "constraint": "deadline",
+  "role": "scribe",
+  "scarce": "attention",
+  "method": "method.run_a_check_in",
+  "seam": true,
+  "brief": "Your chemistry group of three has one titration to run, its readings to record and a report to write. You are the scribe, and the lab is loud with four other groups: every conversation across the bench costs real effort to be heard. When the report is due, and how long the lab stays open, is not on the board.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 2, "self": true },
+    { "id": "m_ishan", "name": "Ishan Sheikh", "capacity": 2, "self": false },
+    { "id": "m_mira", "name": "Mira Sen", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_titration", "name": "Run the titration", "load": 2, "fits": ["m_ishan", "m_you"] },
+    { "id": "t_readings", "name": "Record and tabulate the readings", "load": 1, "fits": ["m_you", "m_mira"] },
+    { "id": "t_writeup", "name": "Write up the report", "load": 1, "fits": ["m_mira", "m_ishan"] }
+  ],
+  "facts": [
+    { "id": "f_lab_lock", "holder": "m_ishan", "text": "The lab is locked at half past three on Friday and the report is due on Monday at nine", "critical": true },
+    { "id": "f_mira_burette", "holder": "m_mira", "text": "Mira has already rinsed the burettes with distilled water", "critical": false }
+  ],
+  "note": "The constraint is the deadline: the lab closes before the report is due, so the group has to ask for more time. The seam: the readings are in millilitres in one part and litres in another, and only a check of the hand-over finds it."
+}

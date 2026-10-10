@@ -1,0 +1,7 @@
+{
+  "type": "skill",
+  "id": "skill.practical_repair",
+  "name": "Practical Repair",
+  "category": "practical",
+  "baselineXp": 0
+}

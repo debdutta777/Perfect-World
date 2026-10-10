@@ -1,0 +1,34 @@
+{
+  "type": "explain_case",
+  "id": "explain_case.xi_canal_log",
+  "family": "explain_family.xi_claim_evidence_limit",
+  "name": "Why the canal works stood idle",
+  "subject": "history",
+  "question": "cause",
+  "role": "researcher",
+  "scarce": "counterpoint",
+  "method": "method.source_criticism",
+  "brief": "The old log book in the school library records that the works site beside the canal stopped work for two monsoons in the 1990s, and does not say why. You are the group's researcher: gather what the library, the council papers and the photographs offer, and the group will explain the cause. Nobody else in the group is willing to argue the other side, so every limit you name you will have to think of yourself.",
+  "claims": [
+    { "id": "c_flood", "name": "Repeated floods put the pump house out of use", "defensible": true },
+    { "id": "c_funds", "name": "The council stopped paying for the pump contract", "defensible": true },
+    { "id": "c_strike", "name": "A workers' strike halted the site", "defensible": false },
+    { "id": "c_fire", "name": "A fire at the depot destroyed the pumps", "defensible": false }
+  ],
+  "evidence": [
+    { "id": "e_gauge", "name": "The canal gauge in the log shows water over the pump-house sill on fourteen days", "supports": ["c_flood"], "against": [] },
+    { "id": "e_photo", "name": "A dated photograph shows water at the pump-house doorstep", "supports": ["c_flood"], "against": [] },
+    { "id": "e_tender", "name": "The tender register shows the pump contract unpaid for eleven months", "supports": ["c_funds"], "against": [] },
+    { "id": "e_minutes", "name": "Council minutes record two requests for more money turned down", "supports": ["c_funds"], "against": [] },
+    { "id": "e_rolls", "name": "The attendance rolls show full gangs on every dry day of both years", "supports": [], "against": ["c_strike"] },
+    { "id": "e_inspector", "name": "An inspector's note records the pumps intact and no fire damage", "supports": [], "against": ["c_fire"] },
+    { "id": "e_holiday", "name": "The log notes the Durga Puja holidays in October", "supports": [], "against": [] }
+  ],
+  "limitations": [
+    { "id": "l_one_log", "name": "The log was kept by someone watching the canal, not by the council", "bounds": ["c_flood"] },
+    { "id": "l_missing", "name": "Three months of the tender register are missing", "bounds": ["c_funds"] },
+    { "id": "l_together", "name": "Floods and an unpaid contract could have worked together; the sources cannot separate them", "bounds": ["c_flood", "c_funds"] },
+    { "id": "l_recopied", "name": "The log was recopied in 2003, so copying errors are possible", "bounds": ["c_strike", "c_fire"] }
+  ],
+  "note": "The canal-side works site is from INDIA_WORLD_BIBLE.md (loc_canal_works). The archive, the log and the dates are invented. Two causes are defensible and may both be true; the limitation says so."
+}

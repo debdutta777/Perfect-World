@@ -1,0 +1,27 @@
+{
+  "type": "investigate_case",
+  "id": "investigate_case.xi_cash_total",
+  "family": "investigate_family.xi_fault_finding",
+  "name": "The cash-box total that is 2,340 rupees short",
+  "subject": "computing",
+  "symptom": "wrong_output",
+  "role": "critic",
+  "scarce": "time",
+  "method": "method.half_split",
+  "brief": "The Commerce room's cash-box spreadsheet totals 2,340 rupees less than the daybook for the week, and Mira Sen needs it settled before the next bell. There are four places the gap could come from and time to test two or three of them. As the critic your job is to say honestly what the tests have shown.",
+  "causes": [
+    { "id": "c_range", "name": "The total adds up one row too few", "fault": true },
+    { "id": "c_text", "name": "One amount was typed as text and is skipped", "fault": false },
+    { "id": "c_hidden", "name": "A filter is hiding some rows", "fault": false },
+    { "id": "c_oldfile", "name": "An older copy of the file was opened", "fault": false }
+  ],
+  "tests": [
+    { "id": "t_filename", "name": "Compare the file's name and date with the one on the staff computer", "kind": "observe", "units": 1, "implicates": ["c_oldfile"] },
+    { "id": "t_filter", "name": "Look for the filter marker on the column headings", "kind": "observe", "units": 1, "implicates": ["c_hidden"] },
+    { "id": "t_alignment", "name": "Check which amounts sit on the left of their cells", "kind": "observe", "units": 2, "implicates": ["c_text"] },
+    { "id": "t_formula", "name": "Read the formula in the total cell", "kind": "observe", "units": 2, "implicates": ["c_range"] },
+    { "id": "t_rowcount", "name": "Count the rows against the daybook's lines", "kind": "measure", "units": 2, "implicates": ["c_range", "c_hidden"] },
+    { "id": "t_recount", "name": "Add the column again by hand and compare", "kind": "measure", "units": 3, "implicates": ["c_range", "c_text"] }
+  ],
+  "note": "Mira Sen's family counter and the daybook are from INDIA_WORLD_BIBLE.md (npc_mira_sen); the 2,340 rupee gap is the reconciliation example in ALTERNATE_WORLD.md. Time is the scarce resource (five units). Two tests that cost a unit each narrow the field; the formula settles it for two."
+}

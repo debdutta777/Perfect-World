@@ -1,0 +1,17 @@
+{
+  "type": "investigate_family",
+  "id": "investigate_family.fixture",
+  "name": "Fixture investigate family pointing at the explain structure",
+  "structure": "structure.construct_an_explanation",
+  "skill": "skill.academics",
+  "setting": "classroom",
+  "minCases": 4,
+  "subjects": ["repair"],
+  "symptoms": ["no_response"],
+  "roles": ["inspector"],
+  "scarce": ["time"],
+  "methods": [
+    { "id": "method.look", "name": "Look", "knownAtMilli": 1000 }
+  ],
+  "template": { "minCauses": 3, "maxCauses": 5, "minTests": 3, "maxTests": 6 }
+}

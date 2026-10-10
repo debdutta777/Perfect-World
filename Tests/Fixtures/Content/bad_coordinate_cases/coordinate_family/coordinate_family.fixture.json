@@ -1,0 +1,17 @@
+{
+  "type": "coordinate_family",
+  "id": "coordinate_family.fixture",
+  "name": "Fixture family",
+  "structure": "structure.coordinate_a_group",
+  "skill": "skill.communication",
+  "setting": "workplace",
+  "minCases": 1,
+  "subjects": ["projects"],
+  "constraints": ["capacity"],
+  "roles": ["chair", "mediator", "treasurer", "scribe"],
+  "scarce": ["time"],
+  "methods": [
+    { "id": "method.split", "name": "Split", "knownAtMilli": 1000 }
+  ],
+  "template": { "minMembers": 3, "maxMembers": 4, "minTasks": 2, "maxTasks": 4, "maxCriticalHolders": 1 }
+}

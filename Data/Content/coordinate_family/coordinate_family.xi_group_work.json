@@ -1,0 +1,26 @@
+{
+  "type": "coordinate_family",
+  "id": "coordinate_family.xi_group_work",
+  "name": "Group work",
+  "structure": "structure.coordinate_a_group",
+  "skill": "skill.communication",
+  "setting": "classroom",
+  "minCases": 4,
+  "subjects": ["projects", "debate", "events", "practicals"],
+  "constraints": ["capacity", "clash", "budget", "deadline"],
+  "roles": ["chair", "mediator", "treasurer", "scribe"],
+  "scarce": ["time", "attention", "space", "materials"],
+  "methods": [
+    { "id": "method.split_the_list", "name": "Split the task list", "knownAtMilli": 6000 },
+    { "id": "method.run_a_check_in", "name": "Run a short check-in", "knownAtMilli": 15000 },
+    { "id": "method.settle_by_ledger", "name": "Settle it from the ledger", "knownAtMilli": 28000 }
+  ],
+  "template": {
+    "minMembers": 3,
+    "maxMembers": 4,
+    "minTasks": 3,
+    "maxTasks": 4,
+    "maxCriticalHolders": 2
+  },
+  "note": "The Class XI classroom family for the coordinate structure: a small group, three or four jobs, one binding constraint that only the right conversation reveals (SCHOOL_AND_PROGRESSION.md, Coordinate a group). Projects, debate, events and practicals reach it. The method thresholds are chosen: Communication starts at 0 and creative_aptitude seeds it with 10, 25, 45 or 70 XP by rank, so rank 1 splits a task list, rank 2 runs a check-in and rank 3 settles from the ledger."
+}

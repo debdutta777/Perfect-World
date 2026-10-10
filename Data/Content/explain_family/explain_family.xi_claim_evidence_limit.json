@@ -1,0 +1,29 @@
+{
+  "type": "explain_family",
+  "id": "explain_family.xi_claim_evidence_limit",
+  "name": "Claim, evidence and limit",
+  "structure": "structure.construct_an_explanation",
+  "skill": "skill.academics",
+  "setting": "classroom",
+  "minCases": 4,
+  "subjects": ["literature", "history", "economics", "interpretation"],
+  "questions": ["meaning", "cause", "judgement"],
+  "roles": ["author", "researcher", "critic", "recorder"],
+  "scarce": ["time", "sources", "help", "counterpoint"],
+  "methods": [
+    { "id": "method.close_reading", "name": "Read closely", "knownAtMilli": 108000 },
+    { "id": "method.source_criticism", "name": "Weigh a source", "knownAtMilli": 122000 },
+    { "id": "method.reading_figures", "name": "Read a table of figures", "knownAtMilli": 138000 }
+  ],
+  "template": {
+    "minClaims": 3,
+    "maxClaims": 4,
+    "minDefensible": 2,
+    "minSupport": 2,
+    "minEvidence": 5,
+    "maxEvidence": 7,
+    "minLimitations": 3,
+    "maxLimitations": 4
+  },
+  "note": "The Class XI classroom family for the explain structure: a question about a text, a record or a notice, answered by a claim with evidence and a limit. Literature, history, economics and interpretation reach it (SCHOOL_AND_PROGRESSION.md, Construct an explanation). The method thresholds are chosen: Academics starts at 100,000 milli-XP and the academic_foundation trait adds 10, 25, 45 or 70 XP by rank, so rank 1 reads closely, rank 2 weighs a source and rank 3 reads a table of figures."
+}

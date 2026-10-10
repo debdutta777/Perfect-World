@@ -1,0 +1,30 @@
+{
+  "type": "explain_case",
+  "id": "explain_case.fixture_unbounded",
+  "family": "explain_family.fixture",
+  "name": "A defensible claim no limitation bounds",
+  "subject": "literature",
+  "question": "meaning",
+  "role": "researcher",
+  "scarce": "time",
+  "method": "method.read",
+  "brief": "A fixture whose claim c_a has no limitation that bounds it.",
+  "claims": [
+    { "id": "c_a", "name": "A", "defensible": true },
+    { "id": "c_b", "name": "B", "defensible": true },
+    { "id": "c_c", "name": "C", "defensible": false }
+  ],
+  "evidence": [
+    { "id": "e_a1", "name": "a1", "supports": ["c_a"], "against": [] },
+    { "id": "e_a2", "name": "a2", "supports": ["c_a"], "against": [] },
+    { "id": "e_b1", "name": "b1", "supports": ["c_b"], "against": [] },
+    { "id": "e_b2", "name": "b2", "supports": ["c_b"], "against": [] },
+    { "id": "e_c", "name": "c", "supports": [], "against": ["c_c"] },
+    { "id": "e_x", "name": "x", "supports": [], "against": [] }
+  ],
+  "limitations": [
+    { "id": "l_a", "name": "la", "bounds": ["c_b"] },
+    { "id": "l_b", "name": "lb", "bounds": ["c_b"] },
+    { "id": "l_ab", "name": "lab", "bounds": ["c_b", "c_c"] }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.xi_sports_day_stall",
+  "family": "coordinate_family.xi_group_work",
+  "name": "The refreshment stall on sports day",
+  "subject": "events",
+  "constraint": "budget",
+  "role": "treasurer",
+  "scarce": "materials",
+  "method": "method.settle_by_ledger",
+  "seam": true,
+  "brief": "The class is running a refreshment stall on sports day at the Banyan Maidan: snacks, a banner and the ticket table. Four of you share the work. You hold the class fund's book, so the money is yours to settle, but the three printed price lists and the ticket roll are the only copies, and checking that they agree means borrowing the staff-room photocopier.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 2, "self": true },
+    { "id": "m_mira", "name": "Mira Sen", "capacity": 2, "self": false },
+    { "id": "m_ishan", "name": "Ishan Sheikh", "capacity": 1, "self": false },
+    { "id": "m_tara", "name": "Tara Das", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_snacks", "name": "Buy and set out the snacks", "load": 1, "fits": ["m_mira", "m_tara"] },
+    { "id": "t_banner", "name": "Paint and hang the banner", "load": 1, "fits": ["m_you", "m_ishan"] },
+    { "id": "t_tickets", "name": "Run the ticket table", "load": 2, "fits": ["m_mira", "m_you"] }
+  ],
+  "facts": [
+    { "id": "f_float", "holder": "m_mira", "text": "The class fund holds 1,800 rupees and the stall as planned costs 2,400", "critical": true },
+    { "id": "f_tara_rota", "holder": "m_tara", "text": "Tara is down to run the 400-metre heat at noon", "critical": false }
+  ],
+  "note": "The Banyan Maidan and the family counter (Mira Sen) are from INDIA_WORLD_BIBLE.md. The constraint is the budget: the plan costs more than the fund holds, which only Mira, who keeps the tally, can say. Materials are scarce, so checking the hand-over costs a unit more. The seam: the ticket roll and the price list use different prices for the same snack, and only a check of the hand-over finds it."
+}

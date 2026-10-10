@@ -1,0 +1,13 @@
+{
+  "type": "structure",
+  "id": "structure.investigate_a_fault",
+  "name": "Investigate a fault",
+  "engine": "investigate",
+  "beats": ["isolate", "conclude"],
+  "goals": ["inspect", "measure", "swap_parts"],
+  "decisions": ["run_test", "diagnose", "report_inconclusive"],
+  "failures": ["wrong_cause", "unsupported_diagnosis", "redundant_test", "abandoned_search"],
+  "periodUnits": 9,
+  "unitMinutes": 5,
+  "note": "Choose tests with different costs; eliminate causes (SCHOOL_AND_PROGRESSION.md, Investigate a fault). The first beat is a loop of tests, the second one conclusion, so this structure has two beats where the others have three or four. The runner is Core/StructureInvestigate; the validator checks these lists against its constants. A 45-minute period is nine five-minute units."
+}

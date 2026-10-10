@@ -1,0 +1,26 @@
+{
+  "type": "investigate_case",
+  "id": "investigate_case.xi_torch_circuit",
+  "family": "investigate_family.xi_fault_finding",
+  "name": "The dead torch-bulb circuit",
+  "subject": "practical_science",
+  "symptom": "no_response",
+  "role": "experimenter",
+  "scarce": "parts",
+  "method": "method.read_the_meter",
+  "brief": "In the physics practical every group wired the same torch-bulb circuit and yours is the only one that stays dark. The lab technician hands out one spare bulb, cell or lead at a time and writes each one down, so every swap costs you a visit to the store cupboard. You are the experimenter: choose which tests to run, and run only as many as the period allows.",
+  "causes": [
+    { "id": "c_bulb", "name": "The bulb filament has blown", "fault": false },
+    { "id": "c_cell", "name": "The cell is flat", "fault": false },
+    { "id": "c_clip", "name": "A crocodile clip is not gripping", "fault": true },
+    { "id": "c_switch", "name": "The switch contacts are dirty", "fault": false }
+  ],
+  "tests": [
+    { "id": "t_swap_bulb", "name": "Fit a bulb from a working circuit", "kind": "swap", "units": 2, "implicates": ["c_bulb"] },
+    { "id": "t_swap_cell", "name": "Fit a cell from a working circuit", "kind": "swap", "units": 2, "implicates": ["c_cell"] },
+    { "id": "t_meter_loop", "name": "Read the meter for continuity across the switch and the leads", "kind": "measure", "units": 2, "implicates": ["c_clip", "c_switch"] },
+    { "id": "t_bypass", "name": "Bridge the switch with a spare wire", "kind": "swap", "units": 1, "implicates": ["c_switch"] },
+    { "id": "t_reseat", "name": "Re-seat and tighten every clip, then close the switch", "kind": "swap", "units": 3, "implicates": ["c_clip"] }
+  ],
+  "note": "A Class XI physics practical (INDIA_WORLD_BIBLE.md, school bible). Parts are the scarce resource, so every swap costs a unit more. The experimenter's discount applies to the meter, so the cheap way to the clip is a reading and a bridge. Continuity narrows the fault to two causes and a bridged switch settles which."
+}

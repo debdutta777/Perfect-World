@@ -1,0 +1,22 @@
+{
+  "type": "investigate_case",
+  "id": "investigate_case.fixture_same_cost",
+  "family": "investigate_family.fixture",
+  "name": "Every test costs the same",
+  "subject": "repair",
+  "symptom": "no_response",
+  "role": "repairer",
+  "scarce": "time",
+  "method": "method.look",
+  "brief": "A fixture in which every test has the same price, so there is nothing to choose between.",
+  "causes": [
+    { "id": "c_a", "name": "A", "fault": true },
+    { "id": "c_b", "name": "B", "fault": false },
+    { "id": "c_c", "name": "C", "fault": false }
+  ],
+  "tests": [
+    { "id": "t_1", "name": "one", "kind": "observe", "units": 2, "implicates": ["c_a"] },
+    { "id": "t_2", "name": "two", "kind": "observe", "units": 2, "implicates": ["c_b"] },
+    { "id": "t_3", "name": "three", "kind": "measure", "units": 2, "implicates": ["c_a", "c_b"] }
+  ]
+}

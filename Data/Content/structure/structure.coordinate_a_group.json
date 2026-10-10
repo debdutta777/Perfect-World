@@ -1,0 +1,13 @@
+{
+  "type": "structure",
+  "id": "structure.coordinate_a_group",
+  "name": "Coordinate a group",
+  "engine": "coordinate",
+  "beats": ["assign", "exchange", "settle", "submit"],
+  "goals": ["organise_work", "hear_everyone", "settle_constraint", "submit_cleanly"],
+  "decisions": ["assign_work", "exchange", "end_exchange", "settle", "submit"],
+  "failures": ["overloaded_member", "mismatched_task", "uninformed_group", "unsettled_constraint", "seam_in_submission", "wasted_effort"],
+  "periodUnits": 9,
+  "unitMinutes": 5,
+  "note": "Assign work, exchange information, settle a constraint, submit together (SCHOOL_AND_PROGRESSION.md, Coordinate a group). The runner is Core/StructureCoordinate; the validator checks these lists against its constants. A 45-minute period is nine five-minute units."
+}

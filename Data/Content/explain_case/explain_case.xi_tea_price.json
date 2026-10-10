@@ -1,0 +1,31 @@
+{
+  "type": "explain_case",
+  "id": "explain_case.xi_tea_price",
+  "family": "explain_family.xi_claim_evidence_limit",
+  "name": "The price of a cup at Shanti Chai Corner",
+  "subject": "economics",
+  "question": "judgement",
+  "role": "critic",
+  "scarce": "help",
+  "method": "method.reading_figures",
+  "brief": "In July Farida Qadri raised the price of a cup of tea at Shanti Chai Corner from 8 rupees to 10. The Commerce class has her notebook of costs and the prices of the stalls nearby. Was the rise justified? You are the critic, so the limits are yours to raise, but the teacher is busy with another table and nobody can show you how to read a table of figures.",
+  "claims": [
+    { "id": "c_justified", "name": "The rise was justified by her costs", "defensible": true },
+    { "id": "c_overshot", "name": "Her costs rose, but the rise overshot them", "defensible": true },
+    { "id": "c_profiteering", "name": "She is profiteering from students", "defensible": false }
+  ],
+  "evidence": [
+    { "id": "e_costs", "name": "Her cost per cup rose from 6.40 rupees to 8.10 once milk, sugar and the gas are counted", "supports": ["c_justified"], "against": [] },
+    { "id": "e_cylinder", "name": "The price of her gas cylinder rose by a fifth in the same month", "supports": ["c_justified"], "against": [] },
+    { "id": "e_neighbours", "name": "The two nearest stalls raised their price by only one rupee", "supports": ["c_overshot"], "against": [] },
+    { "id": "e_volume", "name": "Her sales grew by a third once the bus stand reopened, spreading her fixed costs", "supports": ["c_overshot"], "against": [] },
+    { "id": "e_uniform", "name": "She kept the old price for customers in school uniform", "supports": [], "against": ["c_profiteering"] },
+    { "id": "e_toast", "name": "She also began selling toast in the same month", "supports": [], "against": [] }
+  ],
+  "limitations": [
+    { "id": "l_one_stall", "name": "These figures are one stall in one month", "bounds": ["c_justified", "c_overshot"] },
+    { "id": "l_notebook", "name": "The cost figures come from Farida's own notebook and nobody has checked them", "bounds": ["c_justified"] },
+    { "id": "l_demand", "name": "There is no evidence of what customers would have paid", "bounds": ["c_overshot", "c_profiteering"] }
+  ],
+  "note": "Shanti Chai Corner and Farida Qadri are from INDIA_WORLD_BIBLE.md (loc_shanti_chai, npc_farida_qadri); the figures are invented. A judgement of fairness is contestable: two claims are defensible and neither is 'the answer'."
+}

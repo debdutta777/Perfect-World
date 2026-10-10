@@ -1,0 +1,27 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.fixture_no_assignment",
+  "family": "coordinate_family.fixture",
+  "name": "More work than anyone can carry",
+  "subject": "projects",
+  "constraint": "capacity",
+  "role": "scribe",
+  "scarce": "time",
+  "method": "method.split",
+  "seam": false,
+  "brief": "A fixture in which a job of load two cannot be given to anybody of capacity one.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 1, "self": true },
+    { "id": "m_x", "name": "X", "capacity": 1, "self": false },
+    { "id": "m_y", "name": "Y", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_1", "name": "one", "load": 1, "fits": ["m_you", "m_x"] },
+    { "id": "t_2", "name": "two", "load": 2, "fits": ["m_x", "m_you"] },
+    { "id": "t_3", "name": "three", "load": 1, "fits": ["m_y", "m_x"] }
+  ],
+  "facts": [
+    { "id": "f_1", "holder": "m_y", "text": "Y can carry one job", "critical": true },
+    { "id": "f_2", "holder": "m_x", "text": "X likes tea", "critical": false }
+  ]
+}

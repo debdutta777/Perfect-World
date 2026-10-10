@@ -1,0 +1,30 @@
+{
+  "type": "explain_case",
+  "id": "explain_case.xi_annex_notice",
+  "family": "explain_family.xi_claim_evidence_limit",
+  "name": "What the Annex notice means",
+  "subject": "interpretation",
+  "question": "meaning",
+  "role": "recorder",
+  "scarce": "sources",
+  "method": "method.close_reading",
+  "brief": "A notice at the NGA Ward Annex says that supervised training is available to residents who have completed the school safety course, and that applications are considered in order of ward residence. Your group must say what the notice means. You are the recorder, taking the group's notes. The notice board and a counter leaflet are all the Annex puts out, so every further source costs the group a trip to ask.",
+  "claims": [
+    { "id": "c_open", "name": "Training is open to any student who has completed the safety course", "defensible": true },
+    { "id": "c_ward_first", "name": "Training is open in principle, but ward residents are served first", "defensible": true },
+    { "id": "c_combat", "name": "Supervised training means combat classes for schoolchildren", "defensible": false }
+  ],
+  "evidence": [
+    { "id": "e_wording", "name": "The notice says 'residents who have completed the school safety course'", "supports": ["c_open"], "against": [] },
+    { "id": "e_leaflet", "name": "The leaflet on the counter lists first aid, evacuation drill and equipment checks", "supports": ["c_open"], "against": ["c_combat"] },
+    { "id": "e_order", "name": "The notice says applications are 'considered in order of ward residence'", "supports": ["c_ward_first"], "against": [] },
+    { "id": "e_places", "name": "Amit Roy told Tara Das the Annex had twelve places this term", "supports": ["c_ward_first"], "against": [] },
+    { "id": "e_stamp", "name": "The notice carries the Annex's date stamp from March", "supports": [], "against": [] }
+  ],
+  "limitations": [
+    { "id": "l_one_notice", "name": "This is one notice, read without the Annex's own rules", "bounds": ["c_open", "c_ward_first"] },
+    { "id": "l_places", "name": "Twelve places is a figure from one conversation and may change", "bounds": ["c_ward_first"] },
+    { "id": "l_more_criteria", "name": "The notice does not say whether applicants are judged on more than residence", "bounds": ["c_open"] }
+  ],
+  "note": "The NGA Ward Annex, Amit Roy and Tara Das are from INDIA_WORLD_BIBLE.md (loc_authority_annex, npc_amit_roy, npc_tara_das); the notice is invented. The Gate safety procedure is fictional (INDIA_WORLD_BIBLE.md, School bible)."
+}

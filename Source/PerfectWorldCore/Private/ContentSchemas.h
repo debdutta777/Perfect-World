@@ -76,6 +76,18 @@ const TypeSchema& ProblemCaseSchema();
 /** The problem rules: each case fits its family's template, the family really varies, the structure matches the runner. */
 void CheckProblemSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
 
+/**
+ * The explain, investigate and coordinate families and cases (ContentStructureSchemas.cpp, ROADMAP M2-09), and the
+ * rules that tie them to their structure records, to their templates and to the runners' constants.
+ */
+const TypeSchema& ExplainFamilySchema();
+const TypeSchema& ExplainCaseSchema();
+const TypeSchema& InvestigateFamilySchema();
+const TypeSchema& InvestigateCaseSchema();
+const TypeSchema& CoordinateFamilySchema();
+const TypeSchema& CoordinateCaseSchema();
+void CheckStructureSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
+
 /** The bell schedule record type (ContentScheduleSchemas.cpp, ROADMAP M2-07) and its per-record and per-school rules. */
 const TypeSchema& BellScheduleSchema();
 void CheckBellScheduleSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);

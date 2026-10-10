@@ -1,0 +1,28 @@
+{
+  "type": "investigate_case",
+  "id": "investigate_case.xi_bicycle_lamp",
+  "family": "investigate_family.xi_fault_finding",
+  "name": "Ishan's flickering bicycle lamp",
+  "subject": "repair",
+  "symptom": "intermittent",
+  "role": "repairer",
+  "scarce": "access",
+  "method": "method.swap_known_good",
+  "brief": "Ishan Sheikh's bicycle lamp flickers on rough road and holds steady on smooth. The repair stall in Maitri Lane lends parts freely, but the bicycle is chained up behind the shutter and is only brought out when the stall owner is there: every look at it has to wait for him. You are the repairer. There are five things it could be, and you cannot fit a new part for each.",
+  "causes": [
+    { "id": "c_bulb", "name": "The bulb has a weak filament", "fault": false },
+    { "id": "c_wire", "name": "A lead is frayed inside its sleeve", "fault": false },
+    { "id": "c_dynamo", "name": "The dynamo roller slips on the tyre", "fault": false },
+    { "id": "c_earth", "name": "The earth contact at the mudguard is poor", "fault": true },
+    { "id": "c_holder", "name": "The bulb holder is corroded", "fault": false }
+  ],
+  "tests": [
+    { "id": "t_roller", "name": "Spin the roller against the tyre and watch for slip", "kind": "observe", "units": 1, "implicates": ["c_dynamo"] },
+    { "id": "t_holder", "name": "Open the lamp and look at the holder", "kind": "observe", "units": 1, "implicates": ["c_holder"] },
+    { "id": "t_shake", "name": "Shake each lead in turn with the lamp lit", "kind": "observe", "units": 2, "implicates": ["c_wire", "c_earth"] },
+    { "id": "t_swap_bulb", "name": "Fit a known-good bulb", "kind": "swap", "units": 2, "implicates": ["c_bulb"] },
+    { "id": "t_rewire", "name": "Replace the suspect lead with a new one", "kind": "swap", "units": 3, "implicates": ["c_wire"] },
+    { "id": "t_strip_earth", "name": "Strip the paint under the earth clip and refit it", "kind": "swap", "units": 3, "implicates": ["c_earth"] }
+  ],
+  "note": "Maitri Lane (workshops) and Ishan Sheikh are from INDIA_WORLD_BIBLE.md (loc_row_houses, npc_ishan_sheikh). Access is the scarce resource, so every look costs a unit more. Shaking the leads splits the five causes cheaply but cannot separate the wire from the earth."
+}

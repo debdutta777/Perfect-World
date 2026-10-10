@@ -1,0 +1,17 @@
+{
+  "type": "coordinate_family",
+  "id": "coordinate_family.fixture",
+  "name": "Fixture coordinate family pointing at the investigate structure",
+  "structure": "structure.investigate_a_fault",
+  "skill": "skill.academics",
+  "setting": "workplace",
+  "minCases": 1,
+  "subjects": ["projects"],
+  "constraints": ["capacity"],
+  "roles": ["chair"],
+  "scarce": ["time"],
+  "methods": [
+    { "id": "method.split", "name": "Split", "knownAtMilli": 1000 }
+  ],
+  "template": { "minMembers": 3, "maxMembers": 4, "minTasks": 2, "maxTasks": 4, "maxCriticalHolders": 1 }
+}

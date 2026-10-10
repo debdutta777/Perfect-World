@@ -1,0 +1,12 @@
+{
+  "type": "structure",
+  "id": "structure.investigate_a_fault",
+  "name": "Investigate a fault",
+  "engine": "investigate",
+  "beats": ["isolate", "conclude"],
+  "goals": ["inspect", "measure", "swap_parts"],
+  "decisions": ["run_test", "diagnose"],
+  "failures": ["wrong_cause", "unsupported_diagnosis", "redundant_test", "abandoned_search"],
+  "periodUnits": 9,
+  "unitMinutes": 5
+}

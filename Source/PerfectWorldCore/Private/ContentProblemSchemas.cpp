@@ -395,7 +395,8 @@ const TypeSchema& StructureSchema()
 {
     static const TypeSchema s{"structure", "structure.", Base({
         Str("name", true), OneOf("engine", true, {"model", "explain", "investigate", "coordinate"}), Strs("beats", true),
-        Strs("goals", false), Strs("investigations", false), Strs("claims", false), Int("periodUnits", true, 1, 48),
+        Strs("goals", false), Strs("investigations", false), Strs("claims", false), Strs("decisions", false), Strs("failures", false),
+        Int("periodUnits", true, 1, 48),
         Int("unitMinutes", true, 1, 60)})};
     return s;
 }
