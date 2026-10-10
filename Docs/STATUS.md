@@ -680,3 +680,30 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 1. The `Data/Schedules` JSON shape and its validator are not decided.
 2. NPCs are never late, because squeezing shortens stays instead. M2-07 may want NPC lateness.
 3. Not yet profiled against the 2 ms boundary budget.
+
+## Checkpoint — M2-11 opportunity receipts, 2026-10-10
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:** new `Public/OpportunityReceipts.h`, `Private/{OpportunityReceipts.cpp, OpportunityReceiptsState.cpp, OpportunityReceiptsText.cpp, OpportunityReceiptsInternal.h}` and `Tests/{OpportunityReceiptsTests.cpp, OpportunityReceiptsTextTests.cpp, OpportunityReceiptsTestSupport.h}`; `CMakeLists.txt`.
+
+**Rules** (from `SYSTEMS_CATALOGUE.md` "Opportunity receipts" and the `GAME_PLAN.md` glossary):
+- **What gets displaced:** a commitment records an alternative only if all of these hold: it was known at the decision, it was available then, its window overlaps the commitment's (windows are half-open), and it is a different activity. Later knowledge never rewrites a receipt.
+- **Ranking:** alternatives are ranked by forecast learning, and at most 8 are stored per commitment. The rest are summarised, so totals stay exact.
+- **Per day:** a commitment belongs to the day it starts on. A day keeps at most 24 entries, with an overflow running sum beyond that.
+- **Append-only:** stored entries never change.
+- **Folding:** weeks older than 120 days fold into weekly totals.
+- **Query:** `ReceiptDayQuery` answers "what did today cost me".
+- **Save format:** `pw.receipts/1` text, which refuses truncation, non-canonical input and invalid states.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 50/50, `OpportunityReceiptsTests passed (4507301 checks)`. The tests cover:
+- exact displacement sets
+- order independence
+- the per-commitment and per-day caps
+- folding that preserves totals
+- 10,000 random sequences against an independent oracle, with save and load midway
+
+**Open questions:**
+1. Weeks open on Monday; the owner may want the school week instead.
+2. The catalogue's other receipt line kinds (`covered`, `earned`, `spent`, `decided_by_order`) wait for integration.
+3. `KnownAt` must be stamped from real discovery events when this is wired in.

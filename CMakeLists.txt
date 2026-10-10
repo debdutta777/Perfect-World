@@ -50,6 +50,9 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/PracticeWindow.cpp
     Source/PerfectWorldCore/Private/Relationships.cpp
     Source/PerfectWorldCore/Private/RelationshipsText.cpp
+    Source/PerfectWorldCore/Private/OpportunityReceipts.cpp
+    Source/PerfectWorldCore/Private/OpportunityReceiptsState.cpp
+    Source/PerfectWorldCore/Private/OpportunityReceiptsText.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -104,6 +107,10 @@ add_test(NAME PerfectWorldPracticeTests COMMAND PerfectWorldPracticeTests)
 add_executable(PerfectWorldRelationshipTests Tests/RelationshipsTests.cpp Tests/RelationshipsSaveTests.cpp)
 target_link_libraries(PerfectWorldRelationshipTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldRelationshipTests COMMAND PerfectWorldRelationshipTests)
+
+add_executable(PerfectWorldReceiptTests Tests/OpportunityReceiptsTests.cpp Tests/OpportunityReceiptsTextTests.cpp)
+target_link_libraries(PerfectWorldReceiptTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldReceiptTests COMMAND PerfectWorldReceiptTests)
 
 add_executable(PerfectWorldRealmTests Tests/RealmCoordinateTests.cpp)
 target_link_libraries(PerfectWorldRealmTests PRIVATE PerfectWorldCore)
