@@ -822,3 +822,38 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 - No crash reporter appeared.
 
 The first attempt that session hung in the Zen cache start-up with the cache on C:; moving it to D: fixed it (see the earlier checkpoint). The owner's look-around check is still to do.
+
+## Checkpoint — M2-12 day loop and recovery checkpoints, 2026-10-10
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:** new `Public/{DayLoop.h, Checkpoints.h}`, `Private/{DayLoop.cpp, DayLoopApply.cpp, DayLoopText.cpp, Checkpoints.cpp}` and `Tests/{DayLoopTests, DayLoopRefusalTests, DayLoopSaveTests, DayLoopRandomTests}.cpp` plus `DayLoopTestSupport.h`; `CMakeLists.txt`. No other module changed.
+
+**Design:**
+- **State:** `DayLoopState` composes the modules' own states: condition, activity runner, practice window, receipts and attendance. It adds the clock, a derived phase (plan, school, free block, evening, sleep), the plan, the current commitment, the last action and a dense command sequence.
+- **Commands:** nine day commands through one `ApplyDayCommand`, which works on a copy and re-validates, so a refusal changes nothing.
+  - Completing an activity routes learning through the practice window and records the receipt with the alternatives shown at commit.
+  - Waking advances condition and the clock and closes attendance gaps.
+- **Envelope:** `pw.dayloop/1` embeds each module's own text in length-prefixed sections, with one FNV-1a hash. The parse is strict, and re-serialising must reproduce the input byte for byte.
+- **Checkpoints:** `checkpoint_1..3.txt`, rotated by wake count, which can never equal a `creation_slot_N.json` life slot.
+- **Summary:** `DayLoopSlotSummary` gives the current commitment and the last action.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 90/90, `PerfectWorld day loop: 819044 checks passed`. The tests cover:
+- A scripted Monday from 06:00 to Tuesday 06:00, 29 commands. The player arrives on time and attends 6 of 6 periods. Learning totals 6,250 milli-XP, matching the command log, and the condition matches an independent simulation.
+- Saving and resuming at every command boundary of a day (30) and of a five-day week (146), each reaching the same final hash.
+- Checkpoints that never touch life-slot files.
+- About 85 refusals, each leaving the state unchanged.
+- 1,000 random 70-command sequences that replay identically.
+
+**Choices for review:**
+1. The practice family is `family.<outcome>`, so all class periods share one window and the third period of a day earns only a tenth. The docs imagine separate subjects.
+2. A morning plan (possibly empty) is required before time can be spent.
+3. Activities are scene-mode: the clock jumps at completion.
+4. **Finding:** at the campaign's starting energy of 80,000, an ordinary school day reaches the exhaustion-neglect threshold. The scripted day starts at 100,000 instead, and the Condition tuning probably needs a look.
+
+**Integration still needed:**
+- A `dayloop` section in the v6 world save, with a hash version bump.
+- One shared clock.
+- Routing the reducer's activity and time commands through the loop.
+- The Unreal subsystem writing checkpoints.
+- Reconciling `checkpoint_N.txt` with SYSTEMS §6's `.json` naming.

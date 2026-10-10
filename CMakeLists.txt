@@ -73,6 +73,10 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/OpportunityReceipts.cpp
     Source/PerfectWorldCore/Private/OpportunityReceiptsState.cpp
     Source/PerfectWorldCore/Private/OpportunityReceiptsText.cpp
+    Source/PerfectWorldCore/Private/DayLoop.cpp
+    Source/PerfectWorldCore/Private/DayLoopApply.cpp
+    Source/PerfectWorldCore/Private/DayLoopText.cpp
+    Source/PerfectWorldCore/Private/Checkpoints.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -144,6 +148,10 @@ add_test(NAME PerfectWorldRelationshipTests COMMAND PerfectWorldRelationshipTest
 add_executable(PerfectWorldReceiptTests Tests/OpportunityReceiptsTests.cpp Tests/OpportunityReceiptsTextTests.cpp)
 target_link_libraries(PerfectWorldReceiptTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldReceiptTests COMMAND PerfectWorldReceiptTests)
+
+add_executable(PerfectWorldDayLoopTests Tests/DayLoopTests.cpp Tests/DayLoopRefusalTests.cpp Tests/DayLoopSaveTests.cpp Tests/DayLoopRandomTests.cpp)
+target_link_libraries(PerfectWorldDayLoopTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldDayLoopTests COMMAND PerfectWorldDayLoopTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
 add_executable(PerfectWorldRealmTests Tests/RealmCoordinateTests.cpp)
 target_link_libraries(PerfectWorldRealmTests PRIVATE PerfectWorldCore)
