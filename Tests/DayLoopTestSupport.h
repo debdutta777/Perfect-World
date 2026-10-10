@@ -119,3 +119,5 @@ struct DayLoopRng
 void TestDayLoopRefusals();
 void TestDayLoopSave();
 void TestDayLoopRandom();
+// DayLoopCalendarTests.cpp: takes the real 2042-43 calendar.
+void TestDayLoopCalendar(const PerfectWorld::SchoolCalendar& calendar);

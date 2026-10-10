@@ -83,3 +83,5 @@ void TestContentAndRoutine();
 void TestLateness();
 void TestRecord();
 void TestText();
+// AttendanceCalendarTests.cpp
+void TestAttendanceCalendar();

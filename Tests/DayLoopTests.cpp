@@ -338,6 +338,10 @@ int main(int argc, char** argv)
     Check(science != nullptr, "the science stream's day exists");
     Catalogues.Activities = &ActivityCat;
     Catalogues.School = science;
+    static const SchoolCalendarResult calendars = LoadSchoolCalendars(content.Db);
+    Check(calendars.Ok(), "the school calendars load");
+    const SchoolCalendar* calendar = calendars.Set.Find("institution.nabapara_vidyalaya", "stage.higher_secondary");
+    Check(calendar != nullptr, "the Nabapara Class XI calendar exists");
 
     TestScriptedDay();
     TestArrivals();
@@ -345,6 +349,7 @@ int main(int argc, char** argv)
     TestDayLoopRefusals();
     TestDayLoopSave();
     TestDayLoopRandom();
+    TestDayLoopCalendar(*calendar);
     std::cout << "PerfectWorld day loop: " << DayLoopChecks << " checks passed\n";
     return 0;
 }

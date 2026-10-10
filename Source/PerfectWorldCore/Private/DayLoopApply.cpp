@@ -285,7 +285,7 @@ DayLoopResult DayLoopArriveSchool(DayLoopWork& w)
         return DayLoopRefuse(DayLoopError::NoSchool);
     const BellSchedule& school = *w.Cats.School;
     const std::int32_t departure = w.Command.DepartureMinute;
-    const AttendanceResult attendance = RecordAttendanceArrival(s.Attendance, school, s.Now, departure);
+    const AttendanceResult attendance = RecordAttendanceArrival(s.Attendance, school, s.Now, departure, w.Cats.Calendar);
     if (!attendance.Ok)
         return DayLoopRefuse(DayLoopError::AttendanceRefused, attendance.Error);
     if (attendance.Day.Outcome != AttendanceOutcome::Absent && !school.Bells.empty())
@@ -334,7 +334,7 @@ DayLoopResult DayLoopWake(DayLoopWork& w)
     s.Plan.clear();
     // Earlier unrecorded school days become absences; failing to catch up never keeps a player asleep.
     if (w.Cats.School != nullptr)
-        (void)CloseAttendanceBefore(s.Attendance, *w.Cats.School, s.Now);
+        (void)CloseAttendanceBefore(s.Attendance, *w.Cats.School, s.Now, w.Cats.Calendar);
     (void)FoldReceipts(s.Receipts, s.Now);
     ++s.Wakes;
 

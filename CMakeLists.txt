@@ -141,7 +141,7 @@ add_executable(PerfectWorldStructureOthersTests Tests/StructureOthersTests.cpp T
 target_link_libraries(PerfectWorldStructureOthersTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldStructureOthersTests COMMAND PerfectWorldStructureOthersTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
-add_executable(PerfectWorldAttendanceTests Tests/AttendanceTests.cpp Tests/AttendanceRoutineTests.cpp Tests/AttendanceRecordTests.cpp Tests/AttendanceTextTests.cpp)
+add_executable(PerfectWorldAttendanceTests Tests/AttendanceTests.cpp Tests/AttendanceRoutineTests.cpp Tests/AttendanceRecordTests.cpp Tests/AttendanceTextTests.cpp Tests/AttendanceCalendarTests.cpp)
 target_link_libraries(PerfectWorldAttendanceTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldAttendanceTests COMMAND PerfectWorldAttendanceTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
@@ -161,7 +161,7 @@ add_executable(PerfectWorldReceiptTests Tests/OpportunityReceiptsTests.cpp Tests
 target_link_libraries(PerfectWorldReceiptTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldReceiptTests COMMAND PerfectWorldReceiptTests)
 
-add_executable(PerfectWorldDayLoopTests Tests/DayLoopTests.cpp Tests/DayLoopRefusalTests.cpp Tests/DayLoopSaveTests.cpp Tests/DayLoopRandomTests.cpp)
+add_executable(PerfectWorldDayLoopTests Tests/DayLoopTests.cpp Tests/DayLoopRefusalTests.cpp Tests/DayLoopSaveTests.cpp Tests/DayLoopRandomTests.cpp Tests/DayLoopCalendarTests.cpp)
 target_link_libraries(PerfectWorldDayLoopTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldDayLoopTests COMMAND PerfectWorldDayLoopTests ${CMAKE_SOURCE_DIR}/Data/Content)
 

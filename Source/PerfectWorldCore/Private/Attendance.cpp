@@ -55,13 +55,30 @@ AttendanceResult AttendanceRefuse(AttendanceResult result, std::string why)
     return result;
 }
 
+/** The refusal for a day that is not a school day: the same text as ever without a calendar, with the reason when there is one. */
+AttendanceResult AttendanceRefuseNotSchoolDay(AttendanceResult result, const SchoolCalendar* calendar, std::int64_t day)
+{
+    std::string why = "that day is not a school day";
+    if (calendar != nullptr)
+    {
+        const SchoolDayKind kind = ClassifyCalendarDay(*calendar, day);
+        const CalendarHoliday* holiday = kind == SchoolDayKind::Holiday ? CalendarHolidayOn(*calendar, day) : nullptr;
+        const CalendarBreak* closure = kind == SchoolDayKind::Break ? CalendarBreakOn(*calendar, day) : nullptr;
+        why += " (";
+        why += holiday != nullptr ? holiday->Name : closure != nullptr ? closure->Name : std::string(SchoolDayKindName(kind));
+        why += ")";
+    }
+    result.Code = std::string(AttendanceNotSchoolDayCode);
+    return AttendanceRefuse(std::move(result), std::move(why));
+}
+
 /** Closes the school days in [record.NextDay, upTo) as absent. Returns how many. */
-std::int32_t AttendanceCloseDays(AttendanceRecord& record, std::int64_t upTo, std::int32_t periods)
+std::int32_t AttendanceCloseDays(AttendanceRecord& record, std::int64_t upTo, std::int32_t periods, const SchoolCalendar* calendar)
 {
     std::int32_t closed = 0;
     for (std::int64_t day = record.NextDay; day < upTo; ++day)
     {
-        if (!AttendanceIsSchoolDay(day))
+        if (!AttendanceIsSchoolDay(calendar, day))
             continue;
         AttendanceApply(record, AttendanceAbsentDay(day, periods));
         ++closed;
@@ -141,6 +158,11 @@ bool AttendanceIsSchoolDay(std::int64_t day)
     return (AttendanceSchoolWeekdays >> weekday & 1u) != 0;
 }
 
+bool AttendanceIsSchoolDay(const SchoolCalendar* calendar, std::int64_t day)
+{
+    return calendar != nullptr ? CalendarIsSchoolDay(*calendar, day) : AttendanceIsSchoolDay(day);
+}
+
 AttendanceForecast ForecastAttendance(const BellSchedule& schedule, std::int32_t arrival, std::int32_t departure)
 {
     AttendanceForecast forecast;
@@ -215,21 +237,21 @@ AttendanceStanding AttendanceStandingOf(const AttendanceRecord& record)
 }
 
 AttendanceResult RecordAttendanceArrival(AttendanceRecord& record, const BellSchedule& schedule, GameInstant arrival,
-                                         std::int32_t departure)
+                                         std::int32_t departure, const SchoolCalendar* calendar)
 {
     AttendanceResult result;
     const std::optional<std::int64_t> day = AttendanceCheckCall(record, schedule, arrival, result);
     if (!day)
         return result;
-    if (!AttendanceIsSchoolDay(*day))
-        return AttendanceRefuse(result, "that day is not a school day");
+    if (!AttendanceIsSchoolDay(calendar, *day))
+        return AttendanceRefuseNotSchoolDay(result, calendar, *day);
     if (departure < 0 || departure > AttendanceStaysUntilDismissal)
         return AttendanceRefuse(result, "the departure minute is outside the day");
 
     const std::int32_t minute = static_cast<std::int32_t>(arrival - GameClock::StartOfDay(arrival));
     const AttendanceForecast forecast = ForecastAttendance(schedule, minute, departure);
     AttendanceRecord work = record;
-    result.DaysClosedAbsent = AttendanceCloseDays(work, *day, forecast.PeriodsHeld);
+    result.DaysClosedAbsent = AttendanceCloseDays(work, *day, forecast.PeriodsHeld, calendar);
     AttendanceDay entry;
     entry.Day = *day;
     entry.Outcome = forecast.Outcome;
@@ -243,17 +265,18 @@ AttendanceResult RecordAttendanceArrival(AttendanceRecord& record, const BellSch
     return result;
 }
 
-AttendanceResult RecordAttendanceAbsence(AttendanceRecord& record, const BellSchedule& schedule, GameInstant dayInstant)
+AttendanceResult RecordAttendanceAbsence(AttendanceRecord& record, const BellSchedule& schedule, GameInstant dayInstant,
+                                         const SchoolCalendar* calendar)
 {
     AttendanceResult result;
     const std::optional<std::int64_t> day = AttendanceCheckCall(record, schedule, dayInstant, result);
     if (!day)
         return result;
-    if (!AttendanceIsSchoolDay(*day))
-        return AttendanceRefuse(result, "that day is not a school day");
+    if (!AttendanceIsSchoolDay(calendar, *day))
+        return AttendanceRefuseNotSchoolDay(result, calendar, *day);
     const std::int32_t periods = BellPeriodCount(schedule);
     AttendanceRecord work = record;
-    result.DaysClosedAbsent = AttendanceCloseDays(work, *day, periods);
+    result.DaysClosedAbsent = AttendanceCloseDays(work, *day, periods, calendar);
     result.Day = AttendanceAbsentDay(*day, periods);
     AttendanceApply(work, result.Day);
     AttendanceFinish(result, record, work);
@@ -261,7 +284,8 @@ AttendanceResult RecordAttendanceAbsence(AttendanceRecord& record, const BellSch
     return result;
 }
 
-AttendanceResult CloseAttendanceBefore(AttendanceRecord& record, const BellSchedule& schedule, GameInstant now)
+AttendanceResult CloseAttendanceBefore(AttendanceRecord& record, const BellSchedule& schedule, GameInstant now,
+                                       const SchoolCalendar* calendar)
 {
     AttendanceResult result;
     if (!ValidateBellSchedule(schedule).empty())
@@ -272,7 +296,7 @@ AttendanceResult CloseAttendanceBefore(AttendanceRecord& record, const BellSched
     if (today - record.NextDay > AttendanceMaxCatchUpDays)
         return AttendanceRefuse(result, "the record is more than a year behind; start a new record");
     AttendanceRecord work = record;
-    result.DaysClosedAbsent = AttendanceCloseDays(work, today, BellPeriodCount(schedule));
+    result.DaysClosedAbsent = AttendanceCloseDays(work, today, BellPeriodCount(schedule), calendar);
     AttendanceFinish(result, record, work);
     record = std::move(work);
     return result;

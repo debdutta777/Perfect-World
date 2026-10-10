@@ -937,3 +937,21 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 **Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 108/108, `PerfectWorldConductTests: 330079 checks passed`.
 
 **For the owner:** confirm the five dimensions and six actions before they reach saves. M4-02 must map them to the Tattvas, and decide how a student absent from the dungeon is treated without penalty.
+
+## Checkpoint — attendance follows the school calendar, 2026-10-10
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:**
+- `Attendance.{h,cpp}`: `AttendanceIsSchoolDay(const SchoolCalendar*, day)`, plus an optional trailing calendar argument on `RecordAttendanceArrival`, `RecordAttendanceAbsence` and `CloseAttendanceBefore`, and the code `attendance.not_school_day`.
+- `DayLoop.h` and `DayLoopApply.cpp`: `DayLoopCatalogues::Calendar`, passed through at school arrival and at wake.
+- New `Tests/{AttendanceCalendarTests.cpp, DayLoopCalendarTests.cpp}`, with small hooks in the existing test mains.
+- `CMakeLists.txt`.
+
+**Behaviour:**
+- With a calendar: holidays, breaks, weekends, gaps between terms and days outside the year are never absences, and recording on one is refused with the holiday named.
+- Without a calendar: nothing changes. The save text is byte-identical either way.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 108/108. `AttendanceTests passed (168902 checks)`, `PerfectWorld day loop: 819112 checks passed`. The tests show Independence Day and the Puja vacation are not absences, a missed ordinary day still is, and the day loop refuses arrival at school on 15 Aug.
+
+**Limitation:** `ValidateAttendanceRecord` still assumes Monday to Friday, so a future calendar with Saturday classes would need the validator to read the calendar.

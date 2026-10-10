@@ -3,6 +3,7 @@
 #include "ContentRegistry.h"
 #include "GameClock.h"
 #include "Schedules.h"
+#include "SchoolCalendar.h"
 
 #include <cstdint>
 #include <optional>
@@ -63,7 +64,8 @@ namespace PerfectWorld
  * The running record. AttendanceRecord keeps exact totals (school days by
  * outcome, periods held and attended) plus the last AttendanceKeptDays daily
  * entries (the catalogue's `Attendance map<Day, PeriodMask>`). Every Monday to
- * Friday is a school day (holidays arrive with the calendar content). Recording
+ * Friday is a school day unless a SchoolCalendar is passed (see "The calendar"
+ * below). Recording
  * a day first closes any earlier unrecorded school days as absent, so a long
  * sleep or a skipped week has a deterministic effect. Thresholds, all chosen:
  *   - every AttendanceLateMarksPerWarning (3) late marks the teacher issues a
@@ -72,6 +74,18 @@ namespace PerfectWorld
  *     AttendanceEligiblePermille (75.0%) is AtRisk, the point at which the
  *     student would not be allowed to sit the board examinations. A record is
  *     one term; the integration starts a fresh one when a term begins.
+ *
+ * The calendar (ROADMAP M3-09 integration; SchoolCalendar.h). RecordAttendanceArrival,
+ * RecordAttendanceAbsence and CloseAttendanceBefore take a trailing optional
+ * `const SchoolCalendar*`, null by default. Null is exactly the Monday to Friday
+ * rule above. When it is set, a day is a school day only when CalendarIsSchoolDay
+ * says so, so a holiday, a break, a weekend, a gap between terms and any day outside
+ * the calendar's year are never closed as absences, and recording an arrival or an
+ * absence on one is refused with the code "attendance.not_school_day" (the
+ * reason, such as the holiday's name, follows in the message). The record's
+ * text form is unchanged: every day it holds is still a Monday to Friday school
+ * day, and a calendar only ever removes days from that set. Starting a fresh
+ * record at the first day of each term is the caller's job.
  *
  * Standalone, integer-only plain data plus free functions. Not part of
  * WorldState, the reducer, the hash or the save; to integrate, store the record
@@ -305,12 +319,19 @@ enum class AttendanceStanding : std::uint8_t
 [[nodiscard]] PERFECTWORLDCORE_API AttendanceStanding AttendanceStandingOf(const AttendanceRecord& record);
 /** Whether the day number is a Monday to Friday. */
 [[nodiscard]] PERFECTWORLDCORE_API bool AttendanceIsSchoolDay(std::int64_t day);
+/** The calendar's answer (CalendarIsSchoolDay) when `calendar` is set, else the Monday to Friday rule above. */
+[[nodiscard]] PERFECTWORLDCORE_API bool AttendanceIsSchoolDay(const SchoolCalendar* calendar, std::int64_t day);
+
+/** The stable code of a refusal because the day is not a school day. */
+inline constexpr std::string_view AttendanceNotSchoolDayCode = "attendance.not_school_day";
 
 struct AttendanceResult
 {
     bool Ok = false;
     /** Why a call was refused (the record is untouched); empty when Ok. */
     std::string Error;
+    /** A stable code for the refusals that have one (AttendanceNotSchoolDayCode); empty otherwise and when Ok. */
+    std::string Code;
     /** The day just recorded. */
     AttendanceDay Day;
     /** Earlier unrecorded school days closed as absent by this call. */
@@ -326,15 +347,21 @@ struct AttendanceResult
  * first at a school zone; `departure` the minute of that day they leave. Refused
  * (record untouched) for an invalid schedule, a weekend, a day already recorded,
  * an instant outside the clock, or a record more than AttendanceMaxCatchUpDays behind.
+ * With a `calendar`, "a weekend" widens to any day that is not one of its school days.
  */
 PERFECTWORLDCORE_API AttendanceResult RecordAttendanceArrival(AttendanceRecord& record, const BellSchedule& schedule,
                                                               GameInstant arrival,
-                                                              std::int32_t departure = AttendanceStaysUntilDismissal);
+                                                              std::int32_t departure = AttendanceStaysUntilDismissal,
+                                                              const SchoolCalendar* calendar = nullptr);
 /** Records the day containing the instant as absent (the student did not come). Same refusals. */
 PERFECTWORLDCORE_API AttendanceResult RecordAttendanceAbsence(AttendanceRecord& record, const BellSchedule& schedule,
-                                                              GameInstant dayInstant);
-/** Closes every unrecorded school day before the day of `now` as absent (the record is then current to yesterday). */
-PERFECTWORLDCORE_API AttendanceResult CloseAttendanceBefore(AttendanceRecord& record, const BellSchedule& schedule, GameInstant now);
+                                                              GameInstant dayInstant, const SchoolCalendar* calendar = nullptr);
+/**
+ * Closes every unrecorded school day before the day of `now` as absent (the record is then current to yesterday).
+ * With a `calendar` only its school days are closed.
+ */
+PERFECTWORLDCORE_API AttendanceResult CloseAttendanceBefore(AttendanceRecord& record, const BellSchedule& schedule, GameInstant now,
+                                                            const SchoolCalendar* calendar = nullptr);
 
 /** "" when the record is internally consistent (totals equal the entries, counts and orders valid), else the first problem. */
 [[nodiscard]] PERFECTWORLDCORE_API std::string ValidateAttendanceRecord(const AttendanceRecord& record);

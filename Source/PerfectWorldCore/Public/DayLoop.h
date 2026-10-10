@@ -205,11 +205,18 @@ struct DayLoopState
 /** True when every module's state is valid and the fields agree (phase, running activity, commitment, plan, clock). */
 [[nodiscard]] PERFECTWORLDCORE_API bool IsDayLoopStateValid(const DayLoopState& state);
 
-/** What the commands read: both are borrowed. A missing school means no school commands. */
+/**
+ * What the commands read: all are borrowed. A missing school means no school commands.
+ * A set Calendar (found with SchoolCalendarSet::Find for the school's institution and stage)
+ * is passed to the attendance calls: holidays, breaks and non-term days are never closed as
+ * absences at a wake and ArriveSchool on one is refused (AttendanceRefused). Null keeps the
+ * Monday to Friday rule.
+ */
 struct DayLoopCatalogues
 {
     const ActivityCatalogue* Activities = nullptr;
     const BellSchedule* School = nullptr;
+    const SchoolCalendar* Calendar = nullptr;
 };
 
 /** Spending time without an activity. */

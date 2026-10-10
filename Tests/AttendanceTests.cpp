@@ -273,6 +273,7 @@ int main(int argc, char** argv)
     TestLateness();
     TestRecord();
     TestText();
+    TestAttendanceCalendar();
     std::cout << "AttendanceTests passed (" << AttendanceChecks << " checks)\n";
     return 0;
 }
