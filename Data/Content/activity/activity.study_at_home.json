@@ -1,0 +1,21 @@
+{
+  "type": "activity",
+  "id": "activity.study_at_home",
+  "name": "Study at home",
+  "durationMinutes": 120,
+  "clock": { "mode": "scene", "interrupt": "at_beat", "resolve": "on_complete" },
+  "place": "home",
+  "condition": { "activity": "awake" },
+  "outcome": "studied",
+  "learning": {
+    "allowanceMilliXp": 3000,
+    "split": [
+      { "skill": "skill.academics", "permille": 800 },
+      { "skill": "skill.self_management", "permille": 200 }
+    ]
+  },
+  "evidence": [
+    { "attribute": "attribute.intelligence", "milli": 150 }
+  ],
+  "note": "Two hours of self-study: one finite allowance divided between the subject and the habit of sitting down to it (SCHOOL_AND_PROGRESSION.md). Evidence is the full one twentieth of the allowance."
+}

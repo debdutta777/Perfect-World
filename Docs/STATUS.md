@@ -560,3 +560,46 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 **For the owner:**
 1. Only `balanced_scholar` has an ID in the doc; the other four IDs are the headings in snake_case.
 2. **Athletic Organizer leaves Household Resources at rank 0**, so under the 2026-09-20 rule that character also grows up in institutional care. The doc's note names only Independent Generalist. Either the note or the preset should change.
+
+## Checkpoint — M2-03 activities, 2026-10-10
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:**
+- New `Public/Activities.h`, `Private/{Activities.cpp, ActivityRunnerText.cpp, ContentActivitySchemas.cpp, ContentSchemaBuilders.h}`.
+- `ContentSchemas.{h,cpp}`: the builders moved out to keep files under 500 lines.
+- Tests: `Tests/{ActivitiesTests.cpp, ActivitiesContentTests.cpp, ActivitiesTestSupport.h}`.
+- Data: `Data/Content/activity/*.json` (7).
+- Three bad fixtures.
+- `CMakeLists.txt`.
+- The pinned counts in `PerfectWorldCoreParityTests.cpp`, now 86 files and 122 records.
+
+**Schema:** an activity declares:
+- a duration (1 to 1,440 minutes)
+- a clock mode, interrupt and resolve
+- a place
+- a condition activity, with an optional meal and stress delta
+- an outcome
+- an optional learning allowance in milli-XP, split by permille across up to four skills (the split must sum to exactly 1,000)
+- attribute evidence, capped at one twentieth of the allowance
+
+The seven authored activities are: study at home, attend class, sleep, eat a meal, household chores, a run, and rest.
+
+**Runner:** start, complete and cancel are pure. The caller passes the time and the condition state, and a refusal changes nothing.
+- **Completion** charges the full duration's condition cost and emits learning and evidence credits, keyed by an instance number so they apply exactly once.
+- **Cancel** charges only the elapsed minutes and grants nothing else.
+- **Save format:** `pw.activity_runner/1` text, which refuses truncation and non-canonical input.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 46/46. `PerfectWorld activities: 1659546 checks passed`; `pwcontent validate Data/Content`: `PASS: 86 files, 122 records`. The tests cover:
+- save and load mid-activity for all seven activities, matching an uninterrupted run
+- repeat completion, completion after cancel, and cancel after completion all refused
+- 3,000 random splits summing exactly
+- 60 random 400-operation runs that replay identically with and without save/load
+
+**Open questions:**
+1. Should learning be scaled by the condition's focus multiplier here or in M2-04?
+2. `interrupt` and `resolve` are validated but not yet enforced.
+3. Applying credits to stats (with deduplication by instance) belongs to the later stats-state step.
+4. The allowance sizes, about 1.5 to 2 XP an hour, are chosen.
+
+**Remaining:** not in `WorldState`, the reducer, the hash or the save. The parity-test change waits for Rung 2.

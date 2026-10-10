@@ -1,0 +1,22 @@
+{
+  "type": "activity",
+  "id": "activity.attend_class",
+  "name": "Attend a class period",
+  "durationMinutes": 45,
+  "clock": { "mode": "scene", "interrupt": "at_beat", "resolve": "on_complete" },
+  "place": "classroom",
+  "condition": { "activity": "awake" },
+  "outcome": "attended_class",
+  "learning": {
+    "allowanceMilliXp": 1500,
+    "split": [
+      { "skill": "skill.academics", "permille": 800 },
+      { "skill": "skill.communication", "permille": 200 }
+    ]
+  },
+  "evidence": [
+    { "attribute": "attribute.intelligence", "milli": 50 },
+    { "attribute": "attribute.perception", "milli": 25 }
+  ],
+  "note": "One 45-minute period, attended through the routine path. Foreground classroom play (the four structures, M3) will replace the generic outcome; the allowance does not change."
+}

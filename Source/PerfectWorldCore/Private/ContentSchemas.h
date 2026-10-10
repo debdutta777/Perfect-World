@@ -62,6 +62,12 @@ const TypeSchema* FindTopLevel(std::string_view type);
  */
 void CheckFairness(const JsonValue& root, const std::string& file, std::vector<ContentIssue>& issues);
 
+/** The activity record type (ContentActivitySchemas.cpp, ROADMAP M2-03). */
+const TypeSchema& ActivitySchema();
+
+/** The activity cross-field rules: the learning split, the evidence cap, the meal and outcome pairing. */
+void CheckActivitySemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
+
 /** Cross-record rules, run after every reference has resolved. */
 void CheckSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
 } // namespace PerfectWorld::ContentSchema

@@ -1,6 +1,7 @@
 #include "ContentSchemas.h"
 
 #include "CharacterCreation.h"
+#include "ContentSchemaBuilders.h"
 
 #include <algorithm>
 #include <array>
@@ -8,90 +9,14 @@
 
 namespace PerfectWorld::ContentSchema
 {
+using namespace Build;
+
 namespace
 {
-FieldSpec Str(std::string name, bool required)
-{
-    FieldSpec f;
-    f.Name = std::move(name);
-    f.Kind = FieldKind::String;
-    f.Required = required;
-    return f;
-}
-
-FieldSpec Flag(std::string name, bool required)
-{
-    FieldSpec f = Str(std::move(name), required);
-    f.Kind = FieldKind::Bool;
-    return f;
-}
-
-FieldSpec Int(std::string name, bool required, std::int64_t min, std::int64_t max, bool nullable = false)
-{
-    FieldSpec f = Str(std::move(name), required);
-    f.Kind = FieldKind::Int;
-    f.Min = min;
-    f.Max = max;
-    f.Nullable = nullable;
-    return f;
-}
-
-FieldSpec OneOf(std::string name, bool required, std::vector<std::string> values)
-{
-    FieldSpec f = Str(std::move(name), required);
-    f.Kind = FieldKind::Enum;
-    f.Values = std::move(values);
-    return f;
-}
-
-FieldSpec Ref(std::string name, bool required, std::string type)
-{
-    FieldSpec f = Str(std::move(name), required);
-    f.Kind = FieldKind::Ref;
-    f.RefType = std::move(type);
-    return f;
-}
-
-FieldSpec Refs(std::string name, bool required, std::string type)
-{
-    FieldSpec f = Ref(std::move(name), required, std::move(type));
-    f.Kind = FieldKind::RefArray;
-    return f;
-}
-
-FieldSpec Strs(std::string name, bool required)
-{
-    FieldSpec f = Str(std::move(name), required);
-    f.Kind = FieldKind::StringArray;
-    return f;
-}
-
-FieldSpec Ints(std::string name, bool required, std::int64_t min, std::int64_t max)
-{
-    FieldSpec f = Int(std::move(name), required, min, max);
-    f.Kind = FieldKind::IntArray;
-    return f;
-}
-
-FieldSpec Obj(std::string name, bool required, const TypeSchema* nested, bool many)
-{
-    FieldSpec f = Str(std::move(name), required);
-    f.Kind = many ? FieldKind::ObjectArray : FieldKind::Object;
-    f.Nested = nested;
-    return f;
-}
-
 const std::vector<std::string>& Ranks()
 {
     static const std::vector<std::string> ranks = {"F", "E", "D", "C", "B", "A", "S"};
     return ranks;
-}
-
-// Every top-level record has these two; they are checked by the loader.
-std::vector<FieldSpec> Base(std::vector<FieldSpec> fields)
-{
-    fields.insert(fields.begin(), {Str("type", true), Str("id", true), Str("note", false)});
-    return fields;
 }
 
 const TypeSchema& District()
@@ -246,7 +171,7 @@ const std::vector<const TypeSchema*>& TopLevelSchemas()
 {
     static const std::vector<const TypeSchema*> all = {&Nation(), &RealmRegion(), &City(), &Institution(), &EducationStage(),
                                                        &SchoolType(), &UniversityTier(), &Stratum(), &Resource(), &Attribute(),
-                                                       &Skill()};
+                                                       &Skill(), &ActivitySchema()};
     return all;
 }
 
@@ -304,6 +229,7 @@ constexpr std::array<std::string_view, 6> AttributeIds{"attribute.body", "attrib
 
 void CheckSemantics(const ContentDb& db, std::vector<ContentIssue>& issues)
 {
+    CheckActivitySemantics(db, issues);
     for (const ContentRecord* skill : db.OfType("skill"))
         SeedCheck(issues, *skill, "xpByRank");
     const std::vector<const ContentRecord*> attributes = db.OfType("attribute");

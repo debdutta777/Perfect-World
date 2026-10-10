@@ -1,0 +1,16 @@
+{
+  "type": "activity",
+  "id": "activity.bad_skill",
+  "name": "Study a skill that is not in the catalogue",
+  "durationMinutes": 60,
+  "clock": { "mode": "scene", "interrupt": "at_beat", "resolve": "on_complete" },
+  "place": "home",
+  "condition": { "activity": "awake" },
+  "outcome": "studied",
+  "learning": {
+    "allowanceMilliXp": 1000,
+    "split": [
+      { "skill": "skill.alchemy", "permille": 1000 }
+    ]
+  }
+}

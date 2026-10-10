@@ -41,6 +41,9 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/EventLog.cpp
     Source/PerfectWorldCore/Private/ContentFairness.cpp
     Source/PerfectWorldCore/Private/LatentStats.cpp
+    Source/PerfectWorldCore/Private/ContentActivitySchemas.cpp
+    Source/PerfectWorldCore/Private/Activities.cpp
+    Source/PerfectWorldCore/Private/ActivityRunnerText.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -79,6 +82,10 @@ add_test(NAME PerfectWorldIdentityTests COMMAND PerfectWorldIdentityTests)
 add_executable(PerfectWorldLatentStatsTests Tests/LatentStatsTests.cpp)
 target_link_libraries(PerfectWorldLatentStatsTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldLatentStatsTests COMMAND PerfectWorldLatentStatsTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+add_executable(PerfectWorldActivitiesTests Tests/ActivitiesTests.cpp Tests/ActivitiesContentTests.cpp)
+target_link_libraries(PerfectWorldActivitiesTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldActivitiesTests COMMAND PerfectWorldActivitiesTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
 add_executable(PerfectWorldRealmTests Tests/RealmCoordinateTests.cpp)
 target_link_libraries(PerfectWorldRealmTests PRIVATE PerfectWorldCore)
@@ -151,7 +158,10 @@ foreach(fixture_and_issue
         "bad_fairness_stream|keys a modifier on stream"
         "bad_fairness_family|keys a modifier on family"
         "bad_skill_seed|which is not a creation trait"
-        "bad_attribute_set|the attribute set is missing")
+        "bad_attribute_set|the attribute set is missing"
+        "bad_activity_split|sums to 900 parts per thousand, not exactly 1000"
+        "bad_activity_skill|which does not exist"
+        "bad_activity_duration|outside 1..1440")
     string(REPLACE "|" ";" parts "${fixture_and_issue}")
     list(GET parts 0 fixture)
     list(GET parts 1 issue)

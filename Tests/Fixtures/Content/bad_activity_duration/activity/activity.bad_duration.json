@@ -1,0 +1,10 @@
+{
+  "type": "activity",
+  "id": "activity.bad_duration",
+  "name": "An activity with a negative duration",
+  "durationMinutes": -30,
+  "clock": { "mode": "scene", "interrupt": "at_beat", "resolve": "on_complete" },
+  "place": "home",
+  "condition": { "activity": "resting" },
+  "outcome": "rested"
+}

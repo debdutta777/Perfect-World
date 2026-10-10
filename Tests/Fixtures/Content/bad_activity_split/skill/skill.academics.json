@@ -1,0 +1,11 @@
+{
+  "type": "skill",
+  "id": "skill.academics",
+  "name": "Academics",
+  "category": "academic",
+  "baselineXp": 100,
+  "seeds": [
+    { "trait": "academic_foundation", "xpByRank": [10, 25, 45, 70] }
+  ],
+  "note": "The broad schoolwork skill. Every stream begins at the same total Academics XP (CHARACTER_CREATION.md, School stream and creator separation), so baselineXp is common to all characters. The value 100 is a placeholder; the docs fix the equality, not the number."
+}

@@ -1,0 +1,8 @@
+{
+  "type": "skill",
+  "id": "skill.self_management",
+  "name": "Self-management",
+  "category": "personal",
+  "baselineXp": 0,
+  "note": "Resuming interrupted work, planning a day, coping and asking for help early (SCHOOL_AND_PROGRESSION.md). Manufacturing hardship grants nothing. No creation trait seeds it."
+}

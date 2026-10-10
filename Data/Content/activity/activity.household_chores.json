@@ -1,0 +1,20 @@
+{
+  "type": "activity",
+  "id": "activity.household_chores",
+  "name": "Household chores",
+  "durationMinutes": 60,
+  "clock": { "mode": "scene", "interrupt": "at_beat", "resolve": "on_complete" },
+  "place": "home",
+  "condition": { "activity": "light_exertion" },
+  "outcome": "chore_done",
+  "learning": {
+    "allowanceMilliXp": 1000,
+    "split": [
+      { "skill": "skill.household_tasks", "permille": 1000 }
+    ]
+  },
+  "evidence": [
+    { "attribute": "attribute.body", "milli": 50 }
+  ],
+  "note": "An hour of sweeping, washing and carrying on one's feet."
+}

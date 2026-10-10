@@ -1,0 +1,21 @@
+{
+  "type": "activity",
+  "id": "activity.exercise_run",
+  "name": "Go for a run",
+  "durationMinutes": 45,
+  "clock": { "mode": "scene", "interrupt": "immediate", "resolve": "on_complete" },
+  "place": "outdoors",
+  "condition": { "activity": "heavy_exertion", "stressDelta": -3000 },
+  "outcome": "exercised",
+  "learning": {
+    "allowanceMilliXp": 1500,
+    "split": [
+      { "skill": "skill.fitness", "permille": 1000 }
+    ]
+  },
+  "evidence": [
+    { "attribute": "attribute.body", "milli": 50 },
+    { "attribute": "attribute.agility", "milli": 25 }
+  ],
+  "note": "A 45-minute run. Changing routes does not make it a new practice family (SCHOOL_AND_PROGRESSION.md); the window in M2-04 owns that. The stress relief is chosen."
+}

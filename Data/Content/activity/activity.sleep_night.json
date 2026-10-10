@@ -1,0 +1,11 @@
+{
+  "type": "activity",
+  "id": "activity.sleep_night",
+  "name": "Sleep through the night",
+  "durationMinutes": 480,
+  "clock": { "mode": "scene", "interrupt": "immediate", "resolve": "on_complete" },
+  "place": "home",
+  "condition": { "activity": "sleeping" },
+  "outcome": "slept",
+  "note": "Eight hours restores 96000 energy (Condition.h). No learning: sleep consolidates through the practice window (M2-04), not through an allowance."
+}

@@ -1,0 +1,11 @@
+{
+  "type": "activity",
+  "id": "activity.eat_meal",
+  "name": "Eat a meal",
+  "durationMinutes": 20,
+  "clock": { "mode": "scene", "interrupt": "none", "resolve": "on_complete" },
+  "place": "dining",
+  "condition": { "activity": "awake", "meal": "full" },
+  "outcome": "ate",
+  "note": "A full meal at a table: 20 minutes awake, then Hunger falls by 55000 (Condition.h)."
+}

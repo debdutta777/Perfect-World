@@ -1,0 +1,17 @@
+{
+  "type": "activity",
+  "id": "activity.bad_split",
+  "name": "Study with a split that does not sum to the whole",
+  "durationMinutes": 60,
+  "clock": { "mode": "scene", "interrupt": "at_beat", "resolve": "on_complete" },
+  "place": "home",
+  "condition": { "activity": "awake" },
+  "outcome": "studied",
+  "learning": {
+    "allowanceMilliXp": 1000,
+    "split": [
+      { "skill": "skill.academics", "permille": 700 },
+      { "skill": "skill.self_management", "permille": 200 }
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "activity",
+  "id": "activity.rest",
+  "name": "Rest",
+  "durationMinutes": 30,
+  "clock": { "mode": "free_roam", "interrupt": "immediate", "resolve": "on_complete" },
+  "place": "any",
+  "condition": { "activity": "resting" },
+  "outcome": "rested",
+  "note": "Sitting or lying down awake for half an hour: waiting time (SYSTEMS.md 2.5 lists waiting under free roam)."
+}
