@@ -810,3 +810,5 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 **Open questions:**
 1. The new families use their own record types (`explain_family` and so on) rather than `problem_family`/`problem_case`, which would have required changing M2-08's loader.
 2. The 117/153 parity counts need Rung 2 and an editor run.
+
+**Engine verification of M2-09 (D: clone at `d0cdc36` plus the fix below):** Rung 2 printed `error: Expected StructureCommon.h to be first header included.` for `StructureCommon.cpp`, though the build still reported Succeeded. After the source included its own header first, Rung 1 passed 89/89 and Rung 2 succeeded with no error lines. Unreal MCP `RunTestsByFilter "StartsWith:PerfectWorld.Core"`: **4/4 Success**, with `ContentLoadsInEngine` at 117 files and 153 records.

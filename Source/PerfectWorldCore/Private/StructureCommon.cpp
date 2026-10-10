@@ -1,6 +1,7 @@
-#include "StructureInternal.h"
+#include "StructureCommon.h"
 
 #include "RandomStreams.h"
+#include "StructureInternal.h"
 
 #include <algorithm>
 #include <array>
