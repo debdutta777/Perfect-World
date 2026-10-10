@@ -1,0 +1,11 @@
+{
+  "type": "skill",
+  "id": "skill.fitness",
+  "name": "Fitness",
+  "category": "physical",
+  "baselineXp": 0,
+  "seeds": [
+    { "trait": "athletic_aptitude", "xpByRank": [10, 25, 45, 70] }
+  ],
+  "note": "Trained endurance, strength and sport. Changing running routes does not reset endurance practice (SCHOOL_AND_PROGRESSION.md)."
+}

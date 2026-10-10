@@ -38,6 +38,8 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/AssetGameplay.cpp
     Source/PerfectWorldCore/Private/IdentityRegistry.cpp
     Source/PerfectWorldCore/Private/EventLog.cpp
+    Source/PerfectWorldCore/Private/ContentFairness.cpp
+    Source/PerfectWorldCore/Private/LatentStats.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -68,6 +70,10 @@ add_test(NAME PerfectWorldConditionTests COMMAND PerfectWorldConditionTests)
 add_executable(PerfectWorldIdentityTests Tests/IdentityRegistryTests.cpp Tests/EventLogTests.cpp)
 target_link_libraries(PerfectWorldIdentityTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldIdentityTests COMMAND PerfectWorldIdentityTests)
+
+add_executable(PerfectWorldLatentStatsTests Tests/LatentStatsTests.cpp)
+target_link_libraries(PerfectWorldLatentStatsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLatentStatsTests COMMAND PerfectWorldLatentStatsTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
 add_executable(PerfectWorldRealmTests Tests/RealmCoordinateTests.cpp)
 target_link_libraries(PerfectWorldRealmTests PRIVATE PerfectWorldCore)
@@ -134,7 +140,13 @@ foreach(fixture_and_issue
         "bad_range|outside 0..4"
         "bad_semantic|share a householdResourcesRank"
         "bad_json|not valid JSON"
-        "bad_prefix|must start with")
+        "bad_prefix|must start with"
+        "bad_fairness_religion|keys a modifier on religion"
+        "bad_fairness_language|keys a modifier on language"
+        "bad_fairness_stream|keys a modifier on stream"
+        "bad_fairness_family|keys a modifier on family"
+        "bad_skill_seed|which is not a creation trait"
+        "bad_attribute_set|the attribute set is missing")
     string(REPLACE "|" ";" parts "${fixture_and_issue}")
     list(GET parts 0 fixture)
     list(GET parts 1 issue)

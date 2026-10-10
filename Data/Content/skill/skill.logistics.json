@@ -1,0 +1,8 @@
+{
+  "type": "skill",
+  "id": "skill.logistics",
+  "name": "Logistics",
+  "category": "practical",
+  "baselineXp": 0,
+  "note": "Sequencing, routing and scheduling, such as planning a Kolkata commute against the authored timetable (SCHOOL_AND_PROGRESSION.md). No creation trait seeds it."
+}

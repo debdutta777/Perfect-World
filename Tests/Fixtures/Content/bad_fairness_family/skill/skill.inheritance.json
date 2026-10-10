@@ -1,0 +1,10 @@
+{
+  "type": "skill",
+  "id": "skill.inheritance",
+  "name": "Inheritance",
+  "category": "practical",
+  "baselineXp": 0,
+  "seeds": [
+    { "trait": "practical_experience", "xpByRank": [10, 25, 45, 70], "modifiers": { "family": 1100 } }
+  ]
+}

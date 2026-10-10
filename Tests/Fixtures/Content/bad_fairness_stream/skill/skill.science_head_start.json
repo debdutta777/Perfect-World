@@ -1,0 +1,8 @@
+{
+  "type": "skill",
+  "id": "skill.science_head_start",
+  "name": "Science head start",
+  "category": "academic",
+  "baselineXp": 100,
+  "streamModifier": 3
+}

@@ -1,0 +1,8 @@
+{
+  "type": "attribute",
+  "id": "attribute.perception",
+  "name": "Perception",
+  "startMilli": 10000,
+  "maxMilli": 100000,
+  "note": "Noticing detail in the world and in people. Fed by observation, diagnosis and route planning. Every character starts at the same value; no trait seeds it."
+}

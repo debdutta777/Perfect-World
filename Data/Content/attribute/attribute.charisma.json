@@ -1,0 +1,8 @@
+{
+  "type": "attribute",
+  "id": "attribute.charisma",
+  "name": "Charisma",
+  "startMilli": 10000,
+  "maxMilli": 100000,
+  "note": "Presence in negotiation, argument and organising. Helping someone is not automatically Charisma growth; it grows through communication challenges, including accepting refusal (SCHOOL_AND_PROGRESSION.md). Every character starts at the same value; no trait seeds it."
+}

@@ -1,0 +1,11 @@
+{
+  "type": "skill",
+  "id": "skill.computing",
+  "name": "Computing",
+  "category": "academic",
+  "baselineXp": 0,
+  "seeds": [
+    { "trait": "technical_aptitude", "xpByRank": [10, 25, 45, 70] }
+  ],
+  "note": "Debugging, programs and systems; resolves through the investigate-a-fault structure (SCHOOL_AND_PROGRESSION.md)."
+}

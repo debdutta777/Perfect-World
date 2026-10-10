@@ -1,0 +1,8 @@
+{
+  "type": "attribute",
+  "id": "attribute.body",
+  "name": "Body",
+  "startMilli": 10000,
+  "maxMilli": 100000,
+  "note": "Strength, endurance and physical robustness. Fed by weight training, physical labour and carrying (AWAKENING_AND_EXAM.md, latent stats). Every character starts at the same value; no trait seeds it."
+}

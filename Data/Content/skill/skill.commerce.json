@@ -1,0 +1,8 @@
+{
+  "type": "skill",
+  "id": "skill.commerce",
+  "name": "Commerce",
+  "category": "academic",
+  "baselineXp": 0,
+  "note": "Accounts, stock and payments, such as reconciling a shop daybook (SCHOOL_AND_PROGRESSION.md). No creation trait seeds it, and the Commerce stream does not either: a stream sets a timetable, not a head start."
+}

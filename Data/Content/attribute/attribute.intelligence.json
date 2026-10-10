@@ -1,0 +1,8 @@
+{
+  "type": "attribute",
+  "id": "attribute.intelligence",
+  "name": "Intelligence",
+  "startMilli": 10000,
+  "maxMilli": 100000,
+  "note": "Capacity to reason and learn. It supports research but never replaces a learned method (PATHS_AND_PROGRESSION.md). Fed by reading, study and analysis. Every character starts at the same value; no trait seeds it."
+}

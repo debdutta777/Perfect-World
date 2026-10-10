@@ -1,0 +1,11 @@
+{
+  "type": "skill",
+  "id": "skill.household_tasks",
+  "name": "Household Tasks",
+  "category": "practical",
+  "baselineXp": 0,
+  "seeds": [
+    { "trait": "practical_experience", "xpByRank": [10, 25, 45, 70] }
+  ],
+  "note": "Familiarity with the work of running a home: cooking, cleaning, carrying, minding a younger child. Practical Experience names it alongside Practical Repair. Household Resources never seeds it."
+}

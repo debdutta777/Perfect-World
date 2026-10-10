@@ -1,0 +1,8 @@
+{
+  "type": "attribute",
+  "id": "attribute.willpower",
+  "name": "Willpower",
+  "startMilli": 10000,
+  "maxMilli": 100000,
+  "note": "Persistence and recovery. Fed by sitting with discomfort, persisting and resuming interrupted work; deliberate suffering grants nothing (SCHOOL_AND_PROGRESSION.md). Every character starts at the same value; no trait seeds it."
+}

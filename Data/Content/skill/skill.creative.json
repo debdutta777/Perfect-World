@@ -1,0 +1,11 @@
+{
+  "type": "skill",
+  "id": "skill.creative",
+  "name": "Creative",
+  "category": "creative",
+  "baselineXp": 0,
+  "seeds": [
+    { "trait": "creative_aptitude", "xpByRank": [10, 25, 45, 70] }
+  ],
+  "note": "Making things that did not exist: writing, drawing, music, design. Creative Aptitude calls it the future Creative skill (CHARACTER_CREATION.md)."
+}

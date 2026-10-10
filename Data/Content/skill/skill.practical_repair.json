@@ -1,0 +1,12 @@
+{
+  "type": "skill",
+  "id": "skill.practical_repair",
+  "name": "Practical Repair",
+  "category": "practical",
+  "baselineXp": 0,
+  "seeds": [
+    { "trait": "technical_aptitude", "xpByRank": [10, 25, 45, 70] },
+    { "trait": "practical_experience", "xpByRank": [10, 25, 45, 70] }
+  ],
+  "note": "Diagnosing, fixing and building physical things, such as a bicycle puncture. Two traits seed it and their XP stacks additively (CHARACTER_CREATION.md, Canonical trait catalogue)."
+}

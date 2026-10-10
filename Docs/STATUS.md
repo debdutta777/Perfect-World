@@ -486,7 +486,7 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 
 ## Checkpoint — D: wiped again; toolchain restored; M2-05 identity registry and event log, 2026-10-10
 
-**D: wipe (second, found 2026-10-10):** D: came back empty. GitHub, the C: clone and nothing else held the code; all were at `0d47fa5`, so no committed work was lost. Agent worktrees live on C: and survived.
+**D: wipe (second, found 2026-10-10):** D: came back empty. GitHub and the C: clone were both at `0d47fa5`, so no committed work was lost. Agent worktrees live on C: and survived.
 
 Restored:
 - gh 2.102.0 to `D:\Tools\GitHubCLI` and CMake 4.4.4 to `D:\Tools\CMake`, both from the official GitHub release zips at the paths the machine PATH and git's credential helper expect. gh's sign-in survived in the Windows keyring.
@@ -505,3 +505,33 @@ Restored:
   - The catalogue's names, date of birth, nation and facts on an identity are left for crystallisation.
   - Event payloads are not decided.
   - The parse caps (about 1M identities, 16M events) are looser than the catalogue's budget of 25,000 people.
+
+## Checkpoint — M2-02 latent stats and skill catalogue, 2026-10-10
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:**
+- New `Public/LatentStats.h`, `Private/LatentStats.cpp`, `Private/ContentFairness.cpp` and `Tests/LatentStatsTests.cpp`.
+- `ContentSchemas.{h,cpp}`: the `attribute` and `skill` types and an `IntArray` field kind.
+- `ContentRegistry.cpp`: the fairness scan runs on every file.
+- Data: `Data/Content/attribute/*.json` (6), `Data/Content/skill/*.json` (10).
+- Six bad fixtures.
+- `CMakeLists.txt`.
+- The pinned counts in `PerfectWorldCoreParityTests.cpp`, now 79 files and 115 records.
+
+**Rules:**
+- **Attributes:** Body, Agility, Intelligence, Perception, Willpower and Charisma, on the integer milli scale. They start at 10,000 with a maximum of 100,000; both values are placeholders kept in data.
+- **Skill starting XP:** a baseline plus the documented trait packages, +10/+25/+45/+70 by rank, stacked additively. Academics has the same baseline of 100 for everyone, so every stream starts equal.
+- **Only input:** the 20 trait ranks. Stream, household, appearance, pronouns, languages, date of birth and names are not inputs; the test checks 60 variants for identical results.
+- **Fairness:** the validator refuses any key, or modifier table, that ties a modifier to religion, language, stream or family, in every content type.
+- **Balanced Scholar:** Academics 145 XP, Computing 25, Practical Repair 35, Household Tasks, Communication and Creative 10 each, all attributes 10,000.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 41/41. `PASS: 911 latent stats checks`; `pwcontent validate Data/Content`: `PASS: 79 files, 115 records`. The six fixtures fail for their reasons (four fairness cases, a seed naming a non-trait, a missing attribute).
+
+**Open questions:**
+1. The attribute scale and the Academics baseline are placeholders.
+2. No trait seeds an attribute yet; the docs give none.
+3. School subjects are folded into one Academics skill.
+4. The seeds live on the skill and attribute records, not in a separate `creation/trait_seeds.json`.
+
+**Remaining:** the changed parity test needs Rung 2 and an editor run once Unreal is back.

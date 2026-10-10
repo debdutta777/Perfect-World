@@ -170,6 +170,21 @@ public:
                     Refs.push_back({file, id, field.Name, item.String, field.RefType});
             }
             break;
+        case FieldKind::IntArray:
+            if (!value.IsArray())
+            {
+                Issue(file, id, where + " must be an array");
+                break;
+            }
+            for (const JsonValue& item : value.Array)
+            {
+                if (!item.Integer)
+                    Issue(file, id, where + " must contain only whole numbers");
+                else if (*item.Integer < field.Min || *item.Integer > field.Max)
+                    Issue(file, id, where + " has " + std::to_string(*item.Integer) + ", outside " + std::to_string(field.Min) +
+                                        ".." + std::to_string(field.Max));
+            }
+            break;
         case FieldKind::Object:
             if (!value.IsObject())
                 Issue(file, id, where + " must be an object");
@@ -232,6 +247,7 @@ public:
             }
         }
         CheckObject(*schema, root, file.Path, "", "");
+        CheckFairness(root, file.Path, Result.Issues);
     }
 
     void ResolveReferences()

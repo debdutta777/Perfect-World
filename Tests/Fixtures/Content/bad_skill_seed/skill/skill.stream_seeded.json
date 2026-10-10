@@ -1,0 +1,10 @@
+{
+  "type": "skill",
+  "id": "skill.stream_seeded",
+  "name": "Stream seeded",
+  "category": "academic",
+  "baselineXp": 0,
+  "seeds": [
+    { "trait": "science_stream", "xpByRank": [10, 25, 45, 70] }
+  ]
+}

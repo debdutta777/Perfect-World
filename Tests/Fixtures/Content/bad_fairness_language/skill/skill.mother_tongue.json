@@ -1,0 +1,8 @@
+{
+  "type": "skill",
+  "id": "skill.mother_tongue",
+  "name": "Mother tongue",
+  "category": "social",
+  "baselineXp": 0,
+  "languageBonus": 5
+}

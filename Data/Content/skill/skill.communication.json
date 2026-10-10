@@ -1,0 +1,11 @@
+{
+  "type": "skill",
+  "id": "skill.communication",
+  "name": "Communication",
+  "category": "social",
+  "baselineXp": 0,
+  "seeds": [
+    { "trait": "creative_aptitude", "xpByRank": [10, 25, 45, 70] }
+  ],
+  "note": "Explaining, negotiating, mediating and asking for help early. The language a character speaks never changes it: a language is a way to talk, not a stat multiplier."
+}

@@ -18,6 +18,8 @@ enum class FieldKind
     Ref,
     RefArray,
     StringArray,
+    /** An array of whole numbers, each within Min..Max. */
+    IntArray,
     Object,
     ObjectArray
 };
@@ -50,6 +52,15 @@ struct TypeSchema
 
 const std::vector<const TypeSchema*>& TopLevelSchemas();
 const TypeSchema* FindTopLevel(std::string_view type);
+
+/**
+ * The fairness rule (SCHOOL_AND_PROGRESSION.md: religion, language, family
+ * background and stream never carry innate stat multipliers). Walks one parsed
+ * record and reports any key that attaches a multiplier, bonus, modifier,
+ * XP grant or similar to one of those dimensions. It runs on every record of
+ * every type, whether or not the type's schema would also refuse the key.
+ */
+void CheckFairness(const JsonValue& root, const std::string& file, std::vector<ContentIssue>& issues);
 
 /** Cross-record rules, run after every reference has resolved. */
 void CheckSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);

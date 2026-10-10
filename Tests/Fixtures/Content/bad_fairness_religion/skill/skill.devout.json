@@ -1,0 +1,8 @@
+{
+  "type": "skill",
+  "id": "skill.devout",
+  "name": "Devout",
+  "category": "personal",
+  "baselineXp": 0,
+  "religionMultiplier": 1200
+}

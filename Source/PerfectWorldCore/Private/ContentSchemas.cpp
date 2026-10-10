@@ -1,5 +1,9 @@
 #include "ContentSchemas.h"
 
+#include "CharacterCreation.h"
+
+#include <algorithm>
+#include <array>
 #include <set>
 
 namespace PerfectWorld::ContentSchema
@@ -59,6 +63,13 @@ FieldSpec Strs(std::string name, bool required)
 {
     FieldSpec f = Str(std::move(name), required);
     f.Kind = FieldKind::StringArray;
+    return f;
+}
+
+FieldSpec Ints(std::string name, bool required, std::int64_t min, std::int64_t max)
+{
+    FieldSpec f = Int(std::move(name), required, min, max);
+    f.Kind = FieldKind::IntArray;
     return f;
 }
 
@@ -184,6 +195,41 @@ const TypeSchema& Resource()
     return s;
 }
 
+// Latent stats (ROADMAP M2-02). Attribute values are Milli on 0..AttributeScaleMax;
+// skill experience is whole XP (CHARACTER_CREATION.md "Canonical trait catalogue").
+constexpr std::int64_t AttributeScaleMax = 100'000;
+constexpr std::int64_t SkillXpMax = 10'000;
+
+// One trait's contribution to a skill or attribute, indexed by rank 1..4 (rank 0
+// contributes nothing). The trait must be one of the twenty creation traits.
+const TypeSchema& SkillSeed()
+{
+    static const TypeSchema s{"skill_seed", "", {Str("trait", true), Ints("xpByRank", true, 0, SkillXpMax)}};
+    return s;
+}
+
+const TypeSchema& AttributeSeed()
+{
+    static const TypeSchema s{"attribute_seed", "", {Str("trait", true), Ints("milliByRank", true, 0, AttributeScaleMax)}};
+    return s;
+}
+
+const TypeSchema& Attribute()
+{
+    static const TypeSchema s{"attribute", "attribute.", Base({
+        Str("name", true), Int("startMilli", true, 0, AttributeScaleMax), Int("maxMilli", true, 1, AttributeScaleMax),
+        Obj("seeds", false, &AttributeSeed(), true)})};
+    return s;
+}
+
+const TypeSchema& Skill()
+{
+    static const TypeSchema s{"skill", "skill.", Base({
+        Str("name", true), OneOf("category", true, {"academic", "practical", "social", "physical", "creative", "personal"}),
+        Int("baselineXp", true, 0, SkillXpMax), Obj("seeds", false, &SkillSeed(), true)})};
+    return s;
+}
+
 void Issue(std::vector<ContentIssue>& issues, const ContentRecord& record, std::string message)
 {
     issues.push_back({record.File, record.Id, std::move(message)});
@@ -199,7 +245,8 @@ std::string StringField(const ContentRecord& record, std::string_view name)
 const std::vector<const TypeSchema*>& TopLevelSchemas()
 {
     static const std::vector<const TypeSchema*> all = {&Nation(), &RealmRegion(), &City(), &Institution(), &EducationStage(),
-                                                       &SchoolType(), &UniversityTier(), &Stratum(), &Resource()};
+                                                       &SchoolType(), &UniversityTier(), &Stratum(), &Resource(), &Attribute(),
+                                                       &Skill()};
     return all;
 }
 
@@ -215,8 +262,74 @@ const TypeSchema* FindTopLevel(std::string_view type)
     return nullptr;
 }
 
+namespace
+{
+// ---- Latent stat seeds ------------------------------------------------------------
+
+constexpr std::size_t SeedRanks = 4; // ranks 1..4; rank 0 contributes nothing
+
+void SeedCheck(std::vector<ContentIssue>& issues, const ContentRecord& record, std::string_view arrayName)
+{
+    const JsonValue* seeds = record.Data.Find("seeds");
+    if (seeds == nullptr || !seeds->IsArray())
+        return;
+    std::set<std::string> seen;
+    for (const JsonValue& seed : seeds->Array)
+    {
+        const JsonValue* trait = seed.Find("trait");
+        const JsonValue* ranks = seed.Find(arrayName);
+        if (trait == nullptr || !trait->IsString() || ranks == nullptr || !ranks->IsArray())
+            continue;
+        const auto& traits = CharacterCreator::TraitDefinitions();
+        if (std::none_of(traits.begin(), traits.end(), [&](const TraitDefinition& t) { return t.Id == trait->String; }))
+            Issue(issues, record, "seed names " + trait->String + ", which is not a creation trait");
+        if (!seen.insert(trait->String).second)
+            Issue(issues, record, "two seeds name the trait " + trait->String);
+        if (ranks->Array.size() != SeedRanks)
+        {
+            Issue(issues, record, "seed " + trait->String + " needs exactly four values, ranks 1 to 4");
+            continue;
+        }
+        for (std::size_t i = 1; i < SeedRanks; ++i)
+        {
+            if (ranks->Array[i].Integer && ranks->Array[i - 1].Integer && *ranks->Array[i].Integer < *ranks->Array[i - 1].Integer)
+                Issue(issues, record, "seed " + trait->String + " must not fall as the rank rises");
+        }
+    }
+}
+
+constexpr std::array<std::string_view, 6> AttributeIds{"attribute.body", "attribute.agility", "attribute.intelligence",
+                                                       "attribute.perception", "attribute.willpower", "attribute.charisma"};
+} // namespace
+
 void CheckSemantics(const ContentDb& db, std::vector<ContentIssue>& issues)
 {
+    for (const ContentRecord* skill : db.OfType("skill"))
+        SeedCheck(issues, *skill, "xpByRank");
+    const std::vector<const ContentRecord*> attributes = db.OfType("attribute");
+    for (const ContentRecord* attribute : attributes)
+    {
+        SeedCheck(issues, *attribute, "milliByRank");
+        const JsonValue* start = attribute->Data.Find("startMilli");
+        const JsonValue* max = attribute->Data.Find("maxMilli");
+        if (start != nullptr && max != nullptr && start->Integer && max->Integer && *start->Integer > *max->Integer)
+            Issue(issues, *attribute, "startMilli is above maxMilli");
+    }
+    if (!attributes.empty())
+    {
+        // The six attributes are a closed set (SYSTEMS_CATALOGUE.md "Attributes, skills and latent growth").
+        for (const std::string_view id : AttributeIds)
+        {
+            if (db.Find(id) == nullptr)
+                issues.push_back({attributes.front()->File, std::string(id), "the attribute set is missing " + std::string(id)});
+        }
+        for (const ContentRecord* attribute : attributes)
+        {
+            if (std::find(AttributeIds.begin(), AttributeIds.end(), attribute->Id) == AttributeIds.end())
+                Issue(issues, *attribute, "not one of the six attributes: body, agility, intelligence, perception, willpower, charisma");
+        }
+    }
+
     for (const ContentRecord* d : db.OfType("district"))
     {
         const bool generated = StringField(*d, "kind") == "generated";
