@@ -915,3 +915,5 @@ The validator enforces real dates, ordered non-overlapping ranges, full coverage
 3. The terms, the Puja vacation length and the assessment dates need an education consultant.
 
 **Next:** switch Attendance to the calendar so holidays are not counted as absences (the hook is described in `SchoolCalendar.h`), then run Rung 2 and the editor test for 118/154.
+
+**Engine verification of M2-12, M3-05 and M3-09 (D: clone at `879c9df`):** the first Rung 2 stalled in the same `PerfectWorldCoreParityTests.cpp` compile as before. Ending the stray `vctip.exe` processes did not help; killing `cl.exe` and rerunning gave **Succeeded** (232 s), no warnings or error lines. The trap is now in `DEVELOPMENT_WORKFLOW.md` §4. Unreal MCP `RunTestsByFilter "StartsWith:PerfectWorld.Core"`: **4/4 Success**, with `ContentLoadsInEngine` at 118 files and 154 records.
