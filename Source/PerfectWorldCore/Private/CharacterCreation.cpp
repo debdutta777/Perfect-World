@@ -67,15 +67,6 @@ constexpr std::array<HomeDressingTier, HomeDressingTierCount> DressingTiers{{
      "A family home with a room the teenager does not share, dependable power through a cut, and a "
      "computer that is theirs."},
 }};
-
-constexpr std::array<std::int32_t, TraitCount> BalancedScholarRanks{
-    1, 1, 1, 3, 2,
-    2, 1, 2,
-    2, 3, 1,
-    2, 1, 0,
-    3, 1, 0,
-    3, 1, 2
-};
 } // namespace
 
 std::string_view ResumePointId(ResumePoint point) noexcept
@@ -229,16 +220,18 @@ OperationResult CharacterCreator::ApplyPreset(std::string_view presetId)
         return OperationResult::Failure(CreationError::CreationAlreadyStarted,
                                         "Character creation is locked after life begins.");
     }
-    if (presetId != "balanced_scholar")
+    const CreationPreset* preset = FindPreset(presetId);
+    if (preset == nullptr)
     {
         return OperationResult::Failure(CreationError::UnsupportedPreset,
                                         "Unknown creation preset: " + std::string(presetId));
     }
-    if (OperationResult validation = ValidateRanks(BalancedScholarRanks, true); !validation)
+    // Presets are validated from the same path as a player's own allocation.
+    if (OperationResult validation = ValidateRanks(preset->Ranks, true); !validation)
     {
         return validation;
     }
-    TraitRanks_ = BalancedScholarRanks;
+    TraitRanks_ = preset->Ranks;
     return OperationResult::Success();
 }
 

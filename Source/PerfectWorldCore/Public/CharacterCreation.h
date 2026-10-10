@@ -44,6 +44,9 @@ constexpr std::int32_t SaveSlotCount = 3;
 constexpr std::int32_t MaxRank = 4;
 constexpr std::int32_t MaxRankFourTraits = 4;
 constexpr std::string_view DefaultHouseholdTemplateId = "parent_household";
+constexpr std::size_t CreationPresetCount = 5;
+/** The canonical default preset. Docs/CHARACTER_CREATION.md, "Verified presets". */
+constexpr std::string_view DefaultPresetId = "balanced_scholar";
 
 /**
  * Where the player had got to when the slot was written, so Load Game returns
@@ -112,6 +115,19 @@ struct TraitDefinition
     std::string_view Id;
     std::string_view DisplayName;
     std::string_view Group;
+};
+
+/**
+ * A verified starting allocation from Docs/CHARACTER_CREATION.md. Ranks are in
+ * TraitDefinitions() order, one per trait. A preset allocates only the twenty
+ * background traits; it never touches appearance, household template, stream
+ * or difficulty, and every preset spends exactly CreationBudget points.
+ */
+struct CreationPreset
+{
+    std::string_view Id;
+    std::string_view DisplayName;
+    std::array<std::int32_t, TraitCount> Ranks{};
 };
 
 /**
@@ -218,6 +234,10 @@ public:
     [[nodiscard]] static const HouseholdDefinition* FindHousehold(std::string_view householdId) noexcept;
     [[nodiscard]] static const std::array<HomeDressingTier, HomeDressingTierCount>& HomeDressingTiers() noexcept;
     [[nodiscard]] static std::int32_t CostForRank(std::int32_t rank) noexcept;
+    /** The five verified presets in document order; the default comes first. */
+    [[nodiscard]] static const std::array<CreationPreset, CreationPresetCount>& Presets() noexcept;
+    /** Null when the ID names no preset. */
+    [[nodiscard]] static const CreationPreset* FindPreset(std::string_view presetId) noexcept;
 
     [[nodiscard]] OperationResult SetTraitRank(std::string_view traitId, std::int32_t rank);
     [[nodiscard]] OperationResult SetHouseholdTemplate(std::string_view householdId);

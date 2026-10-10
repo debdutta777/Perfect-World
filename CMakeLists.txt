@@ -10,6 +10,7 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/GameClock.cpp
     Source/PerfectWorldCore/Private/Condition.cpp
     Source/PerfectWorldCore/Private/CharacterCreation.cpp
+    Source/PerfectWorldCore/Private/CreationPresets.cpp
     Source/PerfectWorldCore/Private/CreationSaveSerialization.cpp
     Source/PerfectWorldCore/Private/CreationIdentity.cpp
     Source/PerfectWorldCore/Private/CreationIdentityText.cpp
@@ -54,6 +55,10 @@ enable_testing()
 add_executable(PerfectWorldCoreTests Tests/CharacterCreationTests.cpp)
 target_link_libraries(PerfectWorldCoreTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldCoreTests COMMAND PerfectWorldCoreTests)
+
+add_executable(PerfectWorldCreationPresetTests Tests/CreationPresetTests.cpp)
+target_link_libraries(PerfectWorldCreationPresetTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldCreationPresetTests COMMAND PerfectWorldCreationPresetTests)
 
 add_executable(PerfectWorldCreationIdentityTests Tests/CreationIdentityTests.cpp)
 target_link_libraries(PerfectWorldCreationIdentityTests PRIVATE PerfectWorldCore)

@@ -535,3 +535,28 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 4. The seeds live on the skill and attribute records, not in a separate `creation/trait_seeds.json`.
 
 **Remaining:** the changed parity test needs Rung 2 and an editor run once Unreal is back.
+
+## Checkpoint — M0-22 the five creation presets, 2026-10-10
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:** `CharacterCreation.{h,cpp}` (`CreationPreset`, `Presets()`, `FindPreset()`; `ApplyPreset` accepts all five); new `Private/CreationPresets.cpp` (the table) and `Tests/CreationPresetTests.cpp`; `CMakeLists.txt`.
+
+**Presets:** the ranks are copied verbatim from `CHARACTER_CREATION.md` "Verified presets", and each totals exactly 1,000 by the cost table.
+- `balanced_scholar`
+- `resourceful_maker` (rank 4 in practical experience)
+- `athletic_organizer` (rank 4 in athletic aptitude)
+- `creative_connector`
+- `independent_generalist`, using the doc's valid second composition
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 42/42, `PASS: 865 checks`. The tests cover:
+- the table matches the doc trait by trait
+- each preset totals 1,000, uses ranks 0 to 4, and has at most four rank-4 traits
+- the preset list is in doc order
+- apply, review, start, save and reload all behave
+- unknown, differently-cased and padded IDs are refused
+- a preset leaves household, stream, appearance and identity alone
+
+**For the owner:**
+1. Only `balanced_scholar` has an ID in the doc; the other four IDs are the headings in snake_case.
+2. **Athletic Organizer leaves Household Resources at rank 0**, so under the 2026-09-20 rule that character also grows up in institutional care. The doc's note names only Independent Generalist. Either the note or the preset should change.
