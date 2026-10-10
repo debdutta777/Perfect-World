@@ -984,3 +984,5 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 1. The doc's step 6 names four different failure kinds; the "fortieth class" set was used.
 2. Questions use an abbreviated resolution rather than the full 45-minute structure runners, to keep the documented paper economy.
 3. The 119/155 parity counts need Rung 2 and an editor run.
+
+**Engine verification of M4-01, the attendance calendar change and M3-07 (D: clone at `3abffe8`):** Rung 2 **Succeeded** (28 actions, no warnings or error lines). Unreal MCP `RunTestsByFilter "StartsWith:PerfectWorld.Core"`: **4/4 Success**, with `ContentLoadsInEngine` at 119 files and 155 records.
