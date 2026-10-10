@@ -917,3 +917,23 @@ The validator enforces real dates, ordered non-overlapping ranges, full coverage
 **Next:** switch Attendance to the calendar so holidays are not counted as absences (the hook is described in `SchoolCalendar.h`), then run Rung 2 and the editor test for 118/154.
 
 **Engine verification of M2-12, M3-05 and M3-09 (D: clone at `879c9df`):** the first Rung 2 stalled in the same `PerfectWorldCoreParityTests.cpp` compile as before. Ending the stray `vctip.exe` processes did not help; killing `cl.exe` and rerunning gave **Succeeded** (232 s), no warnings or error lines. The trap is now in `DEVELOPMENT_WORKFLOW.md` §4. Unreal MCP `RunTestsByFilter "StartsWith:PerfectWorld.Core"`: **4/4 Success**, with `ContentLoadsInEngine` at 118 files and 154 records.
+
+## Checkpoint — M4-01 conduct ledger, 2026-10-10
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:** new `Public/ConductLedger.h`, `Private/{ConductLedger.cpp, ConductLedgerText.cpp}` and `Tests/ConductLedgerTests.cpp`; `CMakeLists.txt`.
+
+**Rules:**
+- **Dimensions:** the docs name only the dungeon's verbs and situations (`AWAKENING_AND_EXAM.md`, catalogue "Tutorial dungeon"). The module therefore uses five chosen dimensions (care, steadfastness, restraint, resourcefulness, attentiveness) and six actions (observe, assist, evade, improvise, withdraw, hold).
+- **Evidence:** keyed on the action alone, so every action weighs the same and withdrawing equals a rescue. Evidence is never negative.
+- **Bounds:** stakes run 1 to 3, set per test by the author. Each test is capped at 10 per dimension and 14 in total. The ledger caps each dimension at 24.
+- **Bands:** NotObserved, Slight, Clear and Strong. No single test can make a dimension Strong.
+- **Once per test:** the first resolution of each test stands, and replays are refused.
+- **Fairness:** tokens naming religion, caste, language, stream, gender, family or background are refused.
+- **Summary:** for M4-02, bands with bounded milli values and named evidence, with no overall verdict.
+- **Save format:** `pw_conduct 1` text, which refuses truncation and corruption.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 108/108, `PerfectWorldConductTests: 330079 checks passed`.
+
+**For the owner:** confirm the five dimensions and six actions before they reach saves. M4-02 must map them to the Tattvas, and decide how a student absent from the dungeon is treated without penalty.
