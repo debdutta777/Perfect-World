@@ -29,9 +29,12 @@ bool AssetInsideOuter(const AssetBodyContext& context, const AssetVec& p)
     return !context.HaveOuter || AssetContains(context.Outer, p);
 }
 
-/** Runs one object of an array through a checker, or reports that it is not an object. */
-template <typename Check>
-void AssetEachObject(AssetReader& parent, const JsonValue* array, std::string_view name, Check check)
+/**
+ * Runs one object of an array through a checker, or reports that it is not an object.
+ * (Not named `check`: inside Unreal that is the engine's assertion macro.)
+ */
+template <typename Checker>
+void AssetEachObject(AssetReader& parent, const JsonValue* array, std::string_view name, Checker checkObject)
 {
     if (array == nullptr)
     {
@@ -47,7 +50,7 @@ void AssetEachObject(AssetReader& parent, const JsonValue* array, std::string_vi
             continue;
         }
         AssetReader reader(item, where, parent.SinkRef());
-        check(reader);
+        checkObject(reader);
         reader.Finish();
     }
 }

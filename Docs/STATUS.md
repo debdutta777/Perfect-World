@@ -707,3 +707,12 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 1. Weeks open on Monday; the owner may want the school week instead.
 2. The catalogue's other receipt line kinds (`covered`, `earned`, `spent`, `decided_by_order`) wait for integration.
 3. `KnownAt` must be stamped from real discovery events when this is wired in.
+
+## Checkpoint — Unreal 5.8.3 reinstalled after the second wipe; Rung 2 and engine tests green, 2026-10-10
+
+**What happened:** the first Rung 2 on the fresh engine failed in `AssetGameplay.cpp`: a callback parameter named `check` was macro-expanded by Unreal's `check()` assertion (`binary '!': no operator found`). Renamed it to `checkObject` and recorded the trap in `DEVELOPMENT_WORKFLOW.md` §4.
+
+**Exact checks:**
+- `python Scripts/build_unreal.py --engine-root "D:\Epic Games\UE_5.8"` (D: clone, MSVC 14.50.35739): **Succeeded**, no warnings. This compiles every core module merged since 2026-10-05 inside Unreal.
+- Editor opened, Unreal MCP `RunTestsByFilter "StartsWith:PerfectWorld.Core"`: **4/4 Success**, including `ContentLoadsInEngine` at 86 files and 122 records.
+- `python Scripts/build_core.py --build-dir D:/pwm`: PASS, 50/50.
