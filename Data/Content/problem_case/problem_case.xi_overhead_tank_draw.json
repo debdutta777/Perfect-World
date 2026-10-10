@@ -1,0 +1,26 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_overhead_tank_draw",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "The housing society's overhead tank",
+  "subject": "physics",
+  "unknown": "time",
+  "role": "experimenter",
+  "scarce": "equipment",
+  "fault": "hidden_flow",
+  "method": "method.time_to_target",
+  "brief": "The Nabapara Cooperative Housing overhead tank holds 4,000 litres when the pump stops at seven. The flats draw about 150 litres a minute, yet the caretaker finds it empty well before that rate predicts. Your group has one flow meter, shared with the next group. How long until the tank is empty?",
+  "quantities": [
+    { "id": "q_empty_after", "name": "Minutes until the tank is empty", "kind": "time", "given": false },
+    { "id": "q_tank_volume", "name": "Litres in the tank when the pump stops", "kind": "stock", "given": true },
+    { "id": "q_flat_draw", "name": "Litres drawn by the flats a minute", "kind": "outflow", "given": true },
+    { "id": "q_floors", "name": "Number of floors in the building", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_draw_subtracts", "from": "q_flat_draw", "to": "q_tank_volume", "effect": "subtracts", "sound": true },
+    { "id": "l_minutes_accumulate", "from": "q_empty_after", "to": "q_tank_volume", "effect": "adds", "sound": true },
+    { "id": "l_floors_subtract", "from": "q_floors", "to": "q_tank_volume", "effect": "subtracts", "sound": false },
+    { "id": "l_volume_drives_draw", "from": "q_tank_volume", "to": "q_flat_draw", "effect": "adds", "sound": false }
+  ],
+  "note": "The hidden flow is a worn float valve leaking to the drain; only looking for a flow finds it. The Cooperative Housing is from INDIA_WORLD_BIBLE.md (loc_family_flats)."
+}

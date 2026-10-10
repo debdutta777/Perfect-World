@@ -1,0 +1,7 @@
+{
+  "type": "skill",
+  "id": "skill.self_management",
+  "name": "Self-management",
+  "category": "personal",
+  "baselineXp": 0
+}

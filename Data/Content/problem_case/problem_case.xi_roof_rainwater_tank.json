@@ -1,0 +1,28 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_roof_rainwater_tank",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "The rainwater tank on the school roof",
+  "subject": "geography",
+  "unknown": "outflow",
+  "role": "experimenter",
+  "scarce": "help",
+  "fault": "none",
+  "method": "method.rate_from_readings",
+  "brief": "The Vidyalaya roof gutter feeds a rainwater tank that went from 400 to 1,500 litres in the first week of the monsoon, at about 220 litres a day from the gutter. The same prefect dipped the tank each morning with the same stick. The geography teacher is on examination duty today. How much does the garden tap draw each day? You run the dipstick.",
+  "quantities": [
+    { "id": "q_garden_draw", "name": "Litres the garden tap draws a day", "kind": "outflow", "given": false },
+    { "id": "q_tank_level", "name": "Litres in the tank", "kind": "stock", "given": true },
+    { "id": "q_gutter", "name": "Litres the gutter adds a day", "kind": "inflow", "given": true },
+    { "id": "q_week", "name": "Days of measurement", "kind": "time", "given": true },
+    { "id": "q_garden_area", "name": "Size of the school garden", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_gutter_adds", "from": "q_gutter", "to": "q_tank_level", "effect": "adds", "sound": true },
+    { "id": "l_draw_subtracts", "from": "q_garden_draw", "to": "q_tank_level", "effect": "subtracts", "sound": true },
+    { "id": "l_week_accumulate", "from": "q_week", "to": "q_tank_level", "effect": "adds", "sound": true },
+    { "id": "l_area_subtracts", "from": "q_garden_area", "to": "q_tank_level", "effect": "subtracts", "sound": false },
+    { "id": "l_tank_drives_gutter", "from": "q_tank_level", "to": "q_gutter", "effect": "adds", "sound": false }
+  ],
+  "note": "The measurements are consistent, so the discrepancy is none and a hedge wastes the period. Rainfall catchment is the geography side of the water budget; help is scarce because the teacher is away."
+}

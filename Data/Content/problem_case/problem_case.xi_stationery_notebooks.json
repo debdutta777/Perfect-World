@@ -1,0 +1,26 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_stationery_notebooks",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "Notebooks on the stationery counter",
+  "subject": "accounting",
+  "unknown": "outflow",
+  "role": "recorder",
+  "scarce": "readings",
+  "fault": "none",
+  "method": "method.rate_from_readings",
+  "brief": "Mira Sen counted 240 exercise notebooks on the family stationery counter on Monday evening and 168 on Thursday evening, with no delivery between. Both counts were hers, on one tally sheet, at closing time. How many notebooks are sold each day? You keep the record the group will copy.",
+  "quantities": [
+    { "id": "q_sold_daily", "name": "Notebooks sold a day", "kind": "outflow", "given": false },
+    { "id": "q_shelf_stock", "name": "Notebooks on the shelf", "kind": "stock", "given": true },
+    { "id": "q_days", "name": "Days between the two counts", "kind": "time", "given": true },
+    { "id": "q_price", "name": "Price of one notebook", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_sales_subtract", "from": "q_sold_daily", "to": "q_shelf_stock", "effect": "subtracts", "sound": true },
+    { "id": "l_days_accumulate", "from": "q_days", "to": "q_shelf_stock", "effect": "adds", "sound": true },
+    { "id": "l_price_subtracts", "from": "q_price", "to": "q_shelf_stock", "effect": "subtracts", "sound": false },
+    { "id": "l_stock_drives_sales", "from": "q_shelf_stock", "to": "q_sold_daily", "effect": "adds", "sound": false }
+  ],
+  "note": "Only two counts exist, so readings are scarce, and they are trustworthy: a hedge here wastes the period. Mira Sen's family shop is from INDIA_WORLD_BIBLE.md (npc_mira_sen)."
+}

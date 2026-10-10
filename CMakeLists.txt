@@ -47,6 +47,10 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/Schedules.cpp
     Source/PerfectWorldCore/Private/SchedulePlan.cpp
     Source/PerfectWorldCore/Private/ScheduleText.cpp
+    Source/PerfectWorldCore/Private/ContentProblemSchemas.cpp
+    Source/PerfectWorldCore/Private/StructureModel.cpp
+    Source/PerfectWorldCore/Private/StructureModelRun.cpp
+    Source/PerfectWorldCore/Private/StructureModelText.cpp
     Source/PerfectWorldCore/Private/PracticeWindow.cpp
     Source/PerfectWorldCore/Private/Relationships.cpp
     Source/PerfectWorldCore/Private/RelationshipsText.cpp
@@ -99,6 +103,10 @@ add_test(NAME PerfectWorldLatentStatsTests COMMAND PerfectWorldLatentStatsTests 
 add_executable(PerfectWorldActivitiesTests Tests/ActivitiesTests.cpp Tests/ActivitiesContentTests.cpp)
 target_link_libraries(PerfectWorldActivitiesTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldActivitiesTests COMMAND PerfectWorldActivitiesTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+add_executable(PerfectWorldStructureModelTests Tests/StructureModelTests.cpp Tests/StructureModelFlowTests.cpp Tests/StructureModelContentTests.cpp)
+target_link_libraries(PerfectWorldStructureModelTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldStructureModelTests COMMAND PerfectWorldStructureModelTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
 add_executable(PerfectWorldPracticeTests Tests/PracticeWindowTests.cpp)
 target_link_libraries(PerfectWorldPracticeTests PRIVATE PerfectWorldCore)
@@ -186,7 +194,14 @@ foreach(fixture_and_issue
         "bad_attribute_set|the attribute set is missing"
         "bad_activity_split|sums to 900 parts per thousand, not exactly 1000"
         "bad_activity_skill|which does not exist"
-        "bad_activity_duration|outside 1..1440")
+        "bad_activity_duration|outside 1..1440"
+        "bad_problem_few_cases|needs at least 8 cases, found 2"
+        "bad_problem_duplicate_variation|repeats the unknown, role and scarce resource of problem_case.fixture_a"
+        "bad_problem_template|wants exactly 1 stock quantity, found 2"
+        "bad_problem_unknown_kind|the unknown quantity is a inflow, but the case says its unknown is a stock"
+        "bad_problem_method|is not one of the family's methods"
+        "bad_problem_role|its role presenter is not a role the family allows"
+        "bad_problem_link|sound link l_flow_adds must join an inflow (adds)")
     string(REPLACE "|" ";" parts "${fixture_and_issue}")
     list(GET parts 0 fixture)
     list(GET parts 1 issue)

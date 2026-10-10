@@ -1,0 +1,28 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_monsoon_canal",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "The canal in the monsoon",
+  "subject": "geography",
+  "unknown": "inflow",
+  "role": "presenter",
+  "scarce": "time",
+  "fault": "hidden_flow",
+  "method": "method.rate_from_readings",
+  "brief": "During a monsoon afternoon the canal beside the municipal works site gained 36,000 litres in two hours while the works gang's pump drew water out at a measured rate. The canal rose less than the rain gauge on the school roof predicts, and an old culvert in the canal wall has never been checked. What runoff flows into the canal each hour? You will present the group's answer to the class before the bell.",
+  "quantities": [
+    { "id": "q_runoff", "name": "Runoff into the canal an hour", "kind": "inflow", "given": false },
+    { "id": "q_pump", "name": "Pump draw an hour", "kind": "outflow", "given": true },
+    { "id": "q_canal_gain", "name": "Water gained by the canal", "kind": "stock", "given": true },
+    { "id": "q_hours", "name": "Hours of rain", "kind": "time", "given": true },
+    { "id": "q_arrival", "name": "Time the works gang arrived", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_runoff_adds", "from": "q_runoff", "to": "q_canal_gain", "effect": "adds", "sound": true },
+    { "id": "l_pump_subtracts", "from": "q_pump", "to": "q_canal_gain", "effect": "subtracts", "sound": true },
+    { "id": "l_hours_accumulate", "from": "q_hours", "to": "q_canal_gain", "effect": "adds", "sound": true },
+    { "id": "l_arrival_adds", "from": "q_arrival", "to": "q_canal_gain", "effect": "adds", "sound": false },
+    { "id": "l_gain_drives_pump", "from": "q_canal_gain", "to": "q_pump", "effect": "subtracts", "sound": false }
+  ],
+  "note": "Monsoon drainage and the canal-side municipal works site are from INDIA_WORLD_BIBLE.md (Nabapara). The hidden flow is the culvert."
+}

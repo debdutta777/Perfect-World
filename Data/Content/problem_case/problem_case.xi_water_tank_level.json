@@ -1,0 +1,26 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_water_tank_level",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "The tank that rose too little",
+  "subject": "physics",
+  "unknown": "stock",
+  "role": "solver",
+  "scarce": "time",
+  "fault": "timing",
+  "method": "method.balance_stock",
+  "brief": "The practical-lab tank is filled by one tap at its marked 12 litres a minute. One group read the level at the start; another read it twenty minutes later from a different clock. The tank rose less than the marked flow predicts. How much water will the tank have gained when the tap has run twenty minutes?",
+  "quantities": [
+    { "id": "q_gained", "name": "Water gained by the tank", "kind": "stock", "given": false },
+    { "id": "q_tap_flow", "name": "Tap flow in litres a minute", "kind": "inflow", "given": true },
+    { "id": "q_minutes", "name": "Minutes the tap ran", "kind": "time", "given": true },
+    { "id": "q_paint", "name": "Colour of the tank", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_flow_adds", "from": "q_tap_flow", "to": "q_gained", "effect": "adds", "sound": true },
+    { "id": "l_minutes_accumulate", "from": "q_minutes", "to": "q_gained", "effect": "adds", "sound": true },
+    { "id": "l_paint_adds", "from": "q_paint", "to": "q_gained", "effect": "adds", "sound": false },
+    { "id": "l_gain_drives_flow", "from": "q_gained", "to": "q_tap_flow", "effect": "adds", "sound": false }
+  ],
+  "note": "The worked example of SCHOOL_AND_PROGRESSION.md. The timing fault is the inconsistent measurement interval: the discrepancy is a clock, not a leak."
+}

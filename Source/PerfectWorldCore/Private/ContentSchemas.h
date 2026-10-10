@@ -68,6 +68,14 @@ const TypeSchema& ActivitySchema();
 /** The activity cross-field rules: the learning split, the evidence cap, the meal and outcome pairing. */
 void CheckActivitySemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
 
+/** The structure, problem family and problem case record types (ContentProblemSchemas.cpp, ROADMAP M2-08). */
+const TypeSchema& StructureSchema();
+const TypeSchema& ProblemFamilySchema();
+const TypeSchema& ProblemCaseSchema();
+
+/** The problem rules: each case fits its family's template, the family really varies, the structure matches the runner. */
+void CheckProblemSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
+
 /** Cross-record rules, run after every reference has resolved. */
 void CheckSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
 } // namespace PerfectWorld::ContentSchema

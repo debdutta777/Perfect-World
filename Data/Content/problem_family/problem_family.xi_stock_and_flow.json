@@ -1,0 +1,29 @@
+{
+  "type": "problem_family",
+  "id": "problem_family.xi_stock_and_flow",
+  "name": "Stock and flow",
+  "structure": "structure.model_a_system",
+  "skill": "skill.academics",
+  "setting": "classroom",
+  "minCases": 8,
+  "subjects": ["mathematics", "physics", "accounting", "geography"],
+  "unknowns": ["stock", "inflow", "outflow", "time"],
+  "roles": ["solver", "experimenter", "recorder", "critic", "presenter"],
+  "scarce": ["time", "readings", "equipment", "help"],
+  "faults": ["none", "timing", "hidden_flow", "scale"],
+  "methods": [
+    { "id": "method.balance_stock", "name": "Balance a stock", "unknowns": ["stock"], "knownAtMilli": 110000 },
+    { "id": "method.rate_from_readings", "name": "Rate from two readings", "unknowns": ["inflow", "outflow"], "knownAtMilli": 125000 },
+    { "id": "method.time_to_target", "name": "Time to reach a target", "unknowns": ["time"], "knownAtMilli": 140000 }
+  ],
+  "template": {
+    "stocks": 1,
+    "times": 1,
+    "minFlows": 1,
+    "maxFlows": 3,
+    "maxContexts": 2,
+    "minDistractors": 1,
+    "maxDistractors": 4
+  },
+  "note": "The Class XI classroom family for the model structure: a quantity that gathers or loses an amount at flow rates over time. Maths, physics, accounting and geography all reach it (SCHOOL_AND_PROGRESSION.md, Model a system). The method thresholds are chosen: Academics starts at 100,000 milli-XP and the academic_foundation trait adds 10, 25, 45 or 70 XP by rank, so rank 1 has the stock method, rank 2 the rate method and rank 3 the time method."
+}

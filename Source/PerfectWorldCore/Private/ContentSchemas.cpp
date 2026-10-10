@@ -171,7 +171,8 @@ const std::vector<const TypeSchema*>& TopLevelSchemas()
 {
     static const std::vector<const TypeSchema*> all = {&Nation(), &RealmRegion(), &City(), &Institution(), &EducationStage(),
                                                        &SchoolType(), &UniversityTier(), &Stratum(), &Resource(), &Attribute(),
-                                                       &Skill(), &ActivitySchema()};
+                                                       &Skill(), &ActivitySchema(), &StructureSchema(), &ProblemFamilySchema(),
+                                                       &ProblemCaseSchema()};
     return all;
 }
 
@@ -230,6 +231,7 @@ constexpr std::array<std::string_view, 6> AttributeIds{"attribute.body", "attrib
 void CheckSemantics(const ContentDb& db, std::vector<ContentIssue>& issues)
 {
     CheckActivitySemantics(db, issues);
+    CheckProblemSemantics(db, issues);
     for (const ContentRecord* skill : db.OfType("skill"))
         SeedCheck(issues, *skill, "xpByRank");
     const std::vector<const ContentRecord*> attributes = db.OfType("attribute");

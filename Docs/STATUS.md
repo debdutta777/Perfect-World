@@ -716,3 +716,30 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 - `python Scripts/build_unreal.py --engine-root "D:\Epic Games\UE_5.8"` (D: clone, MSVC 14.50.35739): **Succeeded**, no warnings. This compiles every core module merged since 2026-10-05 inside Unreal.
 - Editor opened, Unreal MCP `RunTestsByFilter "StartsWith:PerfectWorld.Core"`: **4/4 Success**, including `ContentLoadsInEngine` at 86 files and 122 records.
 - `python Scripts/build_core.py --build-dir D:/pwm`: PASS, 50/50.
+
+## Checkpoint — M2-08 "Model a system" structure and its classroom family, 2026-10-10
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:**
+- New: `Public/{StructureModel.h, StructureModelCatalogue.h}`, `Private/{StructureModel.cpp, StructureModelRun.cpp, StructureModelText.cpp, ContentProblemSchemas.cpp}` and `Tests/{StructureModelTests.cpp, StructureModelFlowTests.cpp, StructureModelContentTests.cpp, StructureModelTestSupport.h}`.
+- Registration lines in `ContentSchemas.{h,cpp}`.
+- Data under `Data/Content/`: `structure` 1, `problem_family` 1, `problem_case` 8. The registry requires `<type>/<id>.json`, so this is not `Data/Problems`.
+- Seven bad fixtures.
+- `CMakeLists.txt`.
+- The pinned counts in `PerfectWorldCoreParityTests.cpp`, now 96 files and 132 records.
+
+**Rules** (from `SCHOOL_AND_PROGRESSION.md`: the water-tank example, "Time economy", "what failure means", "established routine"):
+- **Beats:** three per exposure: build the model, resolve the discrepancy, present a claim. Each runs in 5-minute units with every price quoted before commit, and an exposure can never strand.
+- **Failure:** a wrong model or an unsupported conclusion grades Unsound; wasted time or an unclear explanation grades Partial.
+- **Case selection:** deterministic, never repeating the last three cases shown.
+- **Routine abbreviation:** for a secure family, resolves an exposure off-screen at the normal learning value, with nothing observed.
+- **Cases:** eight Class XI stock-and-flow cases (the water tank, the overhead tank, the stationery counter, a cash daybook, a monsoon canal, a bus queue, a cricket required rate, roof rainwater). All have distinct (unknown, role, scarce resource) triples, and every value is used at least once.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 58/58. `StructureModelTests passed (131015 checks)`; `pwcontent validate Data/Content`: `PASS: 96 files, 132 records`.
+
+**Open questions:**
+1. The unit budgets rarely bind.
+2. An honest hedge (accepting the readings and giving a bounded range) grades the same as investigating.
+3. Mastery counts cases met, not cases passed.
+4. The new parity counts need Rung 2 and an editor run.

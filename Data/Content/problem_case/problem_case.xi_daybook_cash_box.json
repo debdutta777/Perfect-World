@@ -1,0 +1,28 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_daybook_cash_box",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "The corner shop's cash box",
+  "subject": "accounting",
+  "unknown": "stock",
+  "role": "critic",
+  "scarce": "help",
+  "fault": "scale",
+  "method": "method.balance_stock",
+  "brief": "A corner shop's daybook shows takings of 9,650 rupees and expenses of 3,100 rupees over seven days, and the cash box is short of what the book says. The accounts teacher is away and the cashier is serving a queue. Some entries in the takings column are written in paise, some in rupees. How much cash should the box hold? You are asked to test the group's figure.",
+  "quantities": [
+    { "id": "q_box_cash", "name": "Cash the box should hold", "kind": "stock", "given": false },
+    { "id": "q_takings", "name": "Takings a day", "kind": "inflow", "given": true },
+    { "id": "q_expenses", "name": "Expenses a day", "kind": "outflow", "given": true },
+    { "id": "q_week", "name": "Days in the week", "kind": "time", "given": true },
+    { "id": "q_poster", "name": "Festival discount poster", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_takings_add", "from": "q_takings", "to": "q_box_cash", "effect": "adds", "sound": true },
+    { "id": "l_expenses_subtract", "from": "q_expenses", "to": "q_box_cash", "effect": "subtracts", "sound": true },
+    { "id": "l_week_accumulate", "from": "q_week", "to": "q_box_cash", "effect": "adds", "sound": true },
+    { "id": "l_poster_adds", "from": "q_poster", "to": "q_box_cash", "effect": "adds", "sound": false },
+    { "id": "l_cash_drives_takings", "from": "q_box_cash", "to": "q_takings", "effect": "adds", "sound": false }
+  ],
+  "note": "The scale fault is a units mismatch: paise and rupees in one column. Help is scarce, so asking for a worked example costs more. From SCHOOL_AND_PROGRESSION.md, reconcile a shop daybook."
+}

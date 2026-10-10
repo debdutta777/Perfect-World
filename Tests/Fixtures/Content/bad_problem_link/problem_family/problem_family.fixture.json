@@ -1,0 +1,18 @@
+{
+  "type": "problem_family",
+  "id": "problem_family.fixture",
+  "name": "Fixture family",
+  "structure": "structure.model_a_system",
+  "skill": "skill.self_management",
+  "setting": "workplace",
+  "minCases": 1,
+  "subjects": ["physics"],
+  "unknowns": ["stock"],
+  "roles": ["solver"],
+  "scarce": ["time"],
+  "faults": ["none"],
+  "methods": [
+    { "id": "method.balance_stock", "name": "Balance", "unknowns": ["stock"], "knownAtMilli": 110000 }
+  ],
+  "template": { "stocks": 1, "times": 1, "minFlows": 1, "maxFlows": 3, "maxContexts": 2, "minDistractors": 1, "maxDistractors": 4 }
+}

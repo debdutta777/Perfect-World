@@ -1,0 +1,26 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_cricket_required_rate",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "The chase in the section match",
+  "subject": "mathematics",
+  "unknown": "inflow",
+  "role": "critic",
+  "scarce": "equipment",
+  "fault": "scale",
+  "method": "method.rate_from_readings",
+  "brief": "In the inter-section match the chasing side has to reach 84 runs and has 12 overs to do it. The one shared scorebook writes the overs left as 9.4, but a cricket over has six balls, so 9.4 means nine overs and four balls, not nine and four tenths. What scoring rate per over must the side keep up? You are asked to test the group's required rate.",
+  "quantities": [
+    { "id": "q_required_rate", "name": "Runs scored per over", "kind": "inflow", "given": false },
+    { "id": "q_target_runs", "name": "Runs the side must reach", "kind": "stock", "given": true },
+    { "id": "q_overs_left", "name": "Overs left", "kind": "time", "given": true },
+    { "id": "q_wickets", "name": "Wickets in hand", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_rate_adds", "from": "q_required_rate", "to": "q_target_runs", "effect": "adds", "sound": true },
+    { "id": "l_overs_accumulate", "from": "q_overs_left", "to": "q_target_runs", "effect": "adds", "sound": true },
+    { "id": "l_wickets_add", "from": "q_wickets", "to": "q_target_runs", "effect": "adds", "sound": false },
+    { "id": "l_target_drives_rate", "from": "q_target_runs", "to": "q_required_rate", "effect": "adds", "sound": false }
+  ],
+  "note": "The scale fault is the over written as a decimal. Maintaining a cricket scorebook is from SCHOOL_AND_PROGRESSION.md; the single shared scorebook is the scarce equipment."
+}

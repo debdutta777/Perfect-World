@@ -1,0 +1,23 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.fixture_b",
+  "family": "problem_family.fixture",
+  "name": "Fixture case B",
+  "subject": "physics",
+  "unknown": "stock",
+  "role": "solver",
+  "scarce": "time",
+  "fault": "none",
+  "method": "method.balance_stock",
+  "brief": "Another fixture with the same variation.",
+  "quantities": [
+    { "id": "q_gained", "name": "Gained", "kind": "stock", "given": false },
+    { "id": "q_flow", "name": "Flow", "kind": "inflow", "given": true },
+    { "id": "q_minutes", "name": "Minutes", "kind": "time", "given": true }
+  ],
+  "links": [
+    { "id": "l_flow_adds", "from": "q_flow", "to": "q_gained", "effect": "adds", "sound": true },
+    { "id": "l_minutes_accumulate", "from": "q_minutes", "to": "q_gained", "effect": "adds", "sound": true },
+    { "id": "l_gain_drives_flow", "from": "q_gained", "to": "q_flow", "effect": "adds", "sound": false }
+  ]
+}

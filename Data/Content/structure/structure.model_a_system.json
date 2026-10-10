@@ -1,0 +1,13 @@
+{
+  "type": "structure",
+  "id": "structure.model_a_system",
+  "name": "Model a system",
+  "engine": "model",
+  "beats": ["build_model", "resolve_discrepancy", "present_claim"],
+  "goals": ["understand_model", "test_measurements", "explain_to_group"],
+  "investigations": ["accept_readings", "check_times", "look_for_flow", "compare_markings"],
+  "claims": ["estimate", "bounded_range", "need_more_measurement"],
+  "periodUnits": 9,
+  "unitMinutes": 5,
+  "note": "Connect quantities, then predict what a change does (SCHOOL_AND_PROGRESSION.md, the water tank: build the model, resolve the discrepancy, present a claim). The runner is Core/StructureModel; the validator checks these lists against its constants. A 45-minute period is nine five-minute units."
+}

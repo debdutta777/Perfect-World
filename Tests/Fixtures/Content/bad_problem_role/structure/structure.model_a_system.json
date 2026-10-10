@@ -1,0 +1,12 @@
+{
+  "type": "structure",
+  "id": "structure.model_a_system",
+  "name": "Model a system",
+  "engine": "model",
+  "beats": ["build_model", "resolve_discrepancy", "present_claim"],
+  "goals": ["understand_model", "test_measurements", "explain_to_group"],
+  "investigations": ["accept_readings", "check_times", "look_for_flow", "compare_markings"],
+  "claims": ["estimate", "bounded_range", "need_more_measurement"],
+  "periodUnits": 9,
+  "unitMinutes": 5
+}
