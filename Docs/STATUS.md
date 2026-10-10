@@ -483,3 +483,25 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 2. Whether a new draft should resume at `identity` instead of `appearance`.
 3. Given name, family name and home city still have no length limits.
 4. The subsystem's `SetIdentity` builds a profile without a date of birth, so calling it resets the date to the default. The 3D creation scene (M1-23) needs full identity setters.
+
+## Checkpoint — D: wiped again; toolchain restored; M2-05 identity registry and event log, 2026-10-10
+
+**D: wipe (second, found 2026-10-10):** D: came back empty. GitHub, the C: clone and nothing else held the code; all were at `0d47fa5`, so no committed work was lost. Agent worktrees live on C: and survived.
+
+Restored:
+- gh 2.102.0 to `D:\Tools\GitHubCLI` and CMake 4.4.4 to `D:\Tools\CMake`, both from the official GitHub release zips at the paths the machine PATH and git's credential helper expect. gh's sign-in survived in the Windows keyring.
+- VS Build Tools 18.10 at `D:\VS\BuildTools`: recreated the folder, then `setup.exe repair` on the stale instance (exit 0). MSVC 14.50.35717 and 14.51.36231 are present, and `Tracker.exe` is back.
+- The D: clone, re-cloned at `0d47fa5`. Rung 1 there passes 33/33 with MSVC 19.51.
+- Unreal 5.8.3: the launcher, now on C:, still recorded it at `D:\Epic Games\UE_5.8`. A launcher verify re-downloads it to the same D: folder, staging in `D:\Epic Games\UE_5.8\.egstore`.
+
+**M2-05 (built by a Sonnet 5.5 subagent, reviewed and merged here):**
+- **Files:** new `Public/{IdentityRegistry,EventLog}.h`, `Private/{IdentityRegistry,EventLog}.cpp`, `Private/IdentityText.h`, `Tests/{IdentityRegistryTests,EventLogTests}.cpp` and `Tests/IdentityTestSupport.h`; `CMakeLists.txt`.
+- **Identities:** a generated person is `p_` plus hex16 of a keyed draw on (world seed, cohort token, slot), so the ID does not depend on the order people are referenced. The first reference creates exactly one identity; later references change nothing. A collision is refused.
+- **Event log:** append-only (sequence, time, type token, cause sequence, up to 8 parties), with a running FNV-1a chain hash.
+- **Formats:** both have strict versioned line formats that refuse truncation, non-canonical numbers and a hash that does not match.
+- **Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 34/34, `PerfectWorldIdentityTests passed, 25300 checks`.
+- **Remaining:**
+  - Not in `WorldState`, the world hash or the save.
+  - The catalogue's names, date of birth, nation and facts on an identity are left for crystallisation.
+  - Event payloads are not decided.
+  - The parse caps (about 1M identities, 16M events) are looser than the catalogue's budget of 25,000 people.

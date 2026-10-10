@@ -36,6 +36,8 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/AssetContractReader.cpp
     Source/PerfectWorldCore/Private/AssetGeometry.cpp
     Source/PerfectWorldCore/Private/AssetGameplay.cpp
+    Source/PerfectWorldCore/Private/IdentityRegistry.cpp
+    Source/PerfectWorldCore/Private/EventLog.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -62,6 +64,10 @@ add_test(NAME PerfectWorldClockTests COMMAND PerfectWorldClockTests)
 add_executable(PerfectWorldConditionTests Tests/ConditionTests.cpp)
 target_link_libraries(PerfectWorldConditionTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldConditionTests COMMAND PerfectWorldConditionTests)
+
+add_executable(PerfectWorldIdentityTests Tests/IdentityRegistryTests.cpp Tests/EventLogTests.cpp)
+target_link_libraries(PerfectWorldIdentityTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldIdentityTests COMMAND PerfectWorldIdentityTests)
 
 add_executable(PerfectWorldRealmTests Tests/RealmCoordinateTests.cpp)
 target_link_libraries(PerfectWorldRealmTests PRIVATE PerfectWorldCore)
