@@ -44,6 +44,7 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/ContentActivitySchemas.cpp
     Source/PerfectWorldCore/Private/Activities.cpp
     Source/PerfectWorldCore/Private/ActivityRunnerText.cpp
+    Source/PerfectWorldCore/Private/PracticeWindow.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -86,6 +87,10 @@ add_test(NAME PerfectWorldLatentStatsTests COMMAND PerfectWorldLatentStatsTests 
 add_executable(PerfectWorldActivitiesTests Tests/ActivitiesTests.cpp Tests/ActivitiesContentTests.cpp)
 target_link_libraries(PerfectWorldActivitiesTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldActivitiesTests COMMAND PerfectWorldActivitiesTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+add_executable(PerfectWorldPracticeTests Tests/PracticeWindowTests.cpp)
+target_link_libraries(PerfectWorldPracticeTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldPracticeTests COMMAND PerfectWorldPracticeTests)
 
 add_executable(PerfectWorldRealmTests Tests/RealmCoordinateTests.cpp)
 target_link_libraries(PerfectWorldRealmTests PRIVATE PerfectWorldCore)

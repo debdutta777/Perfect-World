@@ -603,3 +603,29 @@ The seven authored activities are: study at home, attend class, sleep, eat a mea
 4. The allowance sizes, about 1.5 to 2 XP an hour, are chosen.
 
 **Remaining:** not in `WorldState`, the reducer, the hash or the save. The parity-test change waits for Rung 2.
+
+## Checkpoint — M2-04 practice limits, 2026-10-10
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:** new `Public/PracticeWindow.h`, `Private/PracticeWindow.cpp` (491 lines) and `Tests/PracticeWindowTests.cpp`; `CMakeLists.txt`.
+
+**Rules** (from `SCHOOL_AND_PROGRESSION.md` "Anti-grind: the rolling practice window" and `SYSTEMS_CATALOGUE.md`):
+- **Window:** each practice family has a rolling 1,440-minute window. Credit is 1000, 500, 100, then 0 permille by position in the window, and a session leaves the window exactly 24 h later.
+- **Route variants:** every activity that is a route to one practice shares that family's window. The family ID is passed by the caller.
+- **Per-skill budget:** each skill earns at most 8,000 milli-XP per game day (a placeholder for `tuning/growth.json`).
+- **Consolidation:** a skill is consolidated when it has 3 useful days within the 7 days ending today. This is a rolling status, so a missed day only ages out of the span and never resets anything. Consolidation grants no XP.
+- **Forecast:** the forecast and the recorded credit come from one function, and the labels are "Useful practice", "Consolidation" and "Little new learning".
+- **Save format:** `pw.practice/1` text, which refuses truncation.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 47/47, `PracticeWindowTests passed (458434 checks)`. The tests cover:
+- the four tiers, and the window boundaries at 1,439, 1,440 and 1,441 minutes
+- shared route limits
+- the budget, including its reset at midnight
+- consolidation edges
+- 10,000 random sequences against an independent oracle, with forecast equal to credit and identical results across save and load
+
+**Open questions:**
+1. Zero-credit sessions still occupy the window, so spamming a locked window does not unlock it sooner.
+2. Consolidation is per skill, not per family.
+3. The activity schema needs a practice-family field at integration time.
