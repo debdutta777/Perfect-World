@@ -812,3 +812,13 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 2. The 117/153 parity counts need Rung 2 and an editor run.
 
 **Engine verification of M2-09 (D: clone at `d0cdc36` plus the fix below):** Rung 2 printed `error: Expected StructureCommon.h to be first header included.` for `StructureCommon.cpp`, though the build still reported Succeeded. After the source included its own header first, Rung 1 passed 89/89 and Rung 2 succeeded with no error lines. Unreal MCP `RunTestsByFilter "StartsWith:PerfectWorld.Core"`: **4/4 Success**, with `ContentLoadsInEngine` at 117 files and 153 records.
+
+## Checkpoint — Rung 4 again on the reinstalled engine, 2026-10-10
+
+**Exact check:** `python Scripts/package_windows.py --engine-root "D:\Epic Games\UE_5.8" --output D:\PWBuilds` (D: clone at `09f9f2b`, editor closed, derived-data cache on D:): **exit 0**, `BUILD SUCCESSFUL`. Then `D:\PWBuilds\Windows\PerfectWorld.exe -windowed`:
+- The window appeared in 10 s.
+- The log shows `Game class is 'PerfectWorldBlockTestGameMode'` and no `Error:` or ensure.
+- Closing the window gave `RequestExit(0)` and `LogExit: Exiting.` after about 16 s of shutdown.
+- No crash reporter appeared.
+
+The first attempt that session hung in the Zen cache start-up with the cache on C:; moving it to D: fixed it (see the earlier checkpoint). The owner's look-around check is still to do.
