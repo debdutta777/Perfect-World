@@ -629,3 +629,30 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 1. Zero-credit sessions still occupy the window, so spamming a locked window does not unlock it sooner.
 2. Consolidation is per skill, not per family.
 3. The activity schema needs a practice-family field at integration time.
+
+## Checkpoint — M2-10 relationships and remembered events (minimal), 2026-10-10
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here.
+
+**Files changed:** new `Public/Relationships.h`, `Private/{Relationships.cpp, RelationshipsText.cpp}` and `Tests/{RelationshipsTests.cpp, RelationshipsSaveTests.cpp, RelationshipsTestSupport.h}`; `CMakeLists.txt`.
+
+**Model** (from `SYSTEMS_CATALOGUE.md` "Relationships"):
+- **Pairs:** one undirected record per pair, keyed by (low ID, high ID), holding stage, trust, warmth, respect and owed on −100000..100000, a first-acts bitset, and at most 32 memories.
+- **Acts:** callers pass an event-log sequence, the two people (both must be parties to that log entry) and an act kind. Deltas come from a fixed placeholder table of nine kinds.
+- **First act only:** only the first act of a kind moves the pair, so generosity farming does nothing. Repeats are remembered at quarter salience.
+- **Bereavement:** turns the pair into a frozen memorial that is never deleted.
+- **Memory:** salience halves every 180 game days. When the pair is full, the least salient memory is evicted, the older one losing a tie.
+- **Fairness:** an event type naming religion, caste, language, stream or background is refused.
+- **Save format:** `pw_relationships 1` text with an FNV hash, which refuses truncation and corruption.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 48/48, `PerfectWorldRelationshipTests passed, 2198923 checks`. The tests cover:
+- 10,000 random sequences with every dimension in range
+- replay stability, including save and load midway
+- deterministic, bounded eviction (300 farmed gifts never displace first-act memories)
+- every truncation refused
+- the 8,192-pair limit
+
+**Open questions:**
+1. The act table is a placeholder until dialogue and activity data define it.
+2. Only the Acquaintance and Memorial stages are produced; the others belong to M5.
+3. Should a bereavement memory be pinned against decay?

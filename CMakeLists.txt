@@ -45,6 +45,8 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/Activities.cpp
     Source/PerfectWorldCore/Private/ActivityRunnerText.cpp
     Source/PerfectWorldCore/Private/PracticeWindow.cpp
+    Source/PerfectWorldCore/Private/Relationships.cpp
+    Source/PerfectWorldCore/Private/RelationshipsText.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -91,6 +93,10 @@ add_test(NAME PerfectWorldActivitiesTests COMMAND PerfectWorldActivitiesTests ${
 add_executable(PerfectWorldPracticeTests Tests/PracticeWindowTests.cpp)
 target_link_libraries(PerfectWorldPracticeTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldPracticeTests COMMAND PerfectWorldPracticeTests)
+
+add_executable(PerfectWorldRelationshipTests Tests/RelationshipsTests.cpp Tests/RelationshipsSaveTests.cpp)
+target_link_libraries(PerfectWorldRelationshipTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldRelationshipTests COMMAND PerfectWorldRelationshipTests)
 
 add_executable(PerfectWorldRealmTests Tests/RealmCoordinateTests.cpp)
 target_link_libraries(PerfectWorldRealmTests PRIVATE PerfectWorldCore)
