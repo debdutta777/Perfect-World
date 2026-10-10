@@ -1,0 +1,20 @@
+{
+  "type": "bell_schedule",
+  "id": "bell_schedule.humanities",
+  "name": "A valid humanities day whose bells ring five minutes after the science day's",
+  "institution": "institution.nabapara_vidyalaya",
+  "stage": "stage.higher_secondary",
+  "stream": "humanities",
+  "gatesOpen": 575,
+  "bells": [605, 620, 625, 670, 675, 720, 725, 770, 775, 805, 810, 855, 860, 905, 910, 955],
+  "blocks": [
+    { "kind": "assembly", "start": 605, "end": 620, "room": "nhss.court" },
+    { "kind": "period", "start": 625, "end": 670, "room": "nhss.room_xi_humanities", "subject": "history" },
+    { "kind": "period", "start": 675, "end": 720, "room": "nhss.room_xi_humanities", "subject": "geography" },
+    { "kind": "period", "start": 725, "end": 770, "room": "nhss.room_xi_humanities", "subject": "political_science" },
+    { "kind": "break", "start": 775, "end": 805, "room": "nhss.court" },
+    { "kind": "period", "start": 810, "end": 855, "room": "nhss.room_xi_humanities", "subject": "english" },
+    { "kind": "period", "start": 860, "end": 905, "room": "nhss.room_xi_humanities", "subject": "sociology" },
+    { "kind": "period", "start": 910, "end": 955, "room": "nhss.room_xi_humanities", "subject": "bengali" }
+  ]
+}

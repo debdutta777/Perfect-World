@@ -1,0 +1,21 @@
+{
+  "type": "bell_schedule",
+  "id": "bell_schedule.nabapara_xi_science",
+  "name": "Nabapara Vidyalaya, Class XI Science, one weekday",
+  "institution": "institution.nabapara_vidyalaya",
+  "stage": "stage.higher_secondary",
+  "stream": "science",
+  "gatesOpen": 570,
+  "bells": [600, 615, 620, 665, 670, 715, 720, 765, 770, 800, 805, 850, 855, 900, 905, 950],
+  "blocks": [
+    { "kind": "assembly", "start": 600, "end": 615, "room": "nhss.court" },
+    { "kind": "period", "start": 620, "end": 665, "room": "nhss.room_xi_science", "subject": "mathematics" },
+    { "kind": "period", "start": 670, "end": 715, "room": "nhss.room_xi_science", "subject": "physics" },
+    { "kind": "period", "start": 720, "end": 765, "room": "nhss.room_xi_science", "subject": "chemistry" },
+    { "kind": "break", "start": 770, "end": 800, "room": "nhss.court" },
+    { "kind": "period", "start": 805, "end": 850, "room": "nhss.room_xi_science", "subject": "english" },
+    { "kind": "period", "start": 855, "end": 900, "room": "nhss.science_lab", "subject": "physics" },
+    { "kind": "period", "start": 905, "end": 950, "room": "nhss.room_xi_science", "subject": "bengali" }
+  ],
+  "note": "Times are minutes of the day: the gate opens 09:30, the bell and assembly are 10:00, tiffin is 12:50, dismissal is 15:50. Monday to Friday. Science differs from the other streams in its subjects, its home room, and the physics practical in the science lab (the only period away from the home room). The docs fix the shape (assembly, a stream-specific period, an after-school choice) but not these numbers or subject lists: they are production assumptions in a WBCHSE style, to be checked with a West Bengal education consultant before any script or UI presents them as fact (INDIA_WORLD_BIBLE.md, School bible)."
+}

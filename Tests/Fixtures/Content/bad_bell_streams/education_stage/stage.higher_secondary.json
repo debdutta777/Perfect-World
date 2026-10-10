@@ -1,0 +1,10 @@
+{
+  "type": "education_stage",
+  "id": "stage.higher_secondary",
+  "name": "Higher secondary (Classes XI-XII)",
+  "ageFrom": 16,
+  "ageTo": 18,
+  "playable": true,
+  "streams": ["science", "commerce", "humanities"],
+  "endsWith": "class_xii_board"
+}

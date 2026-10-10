@@ -743,3 +743,37 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 2. An honest hedge (accepting the readings and giving a bounded range) grades the same as investigating.
 3. Mastery counts cases met, not cases passed.
 4. The new parity counts need Rung 2 and an editor run.
+
+## Checkpoint — M2-07 Nabapara Vidyalaya bell schedule, attendance and lateness, 2026-10-10
+
+Built by a Sonnet 5.5 subagent, reviewed and merged here. Its registration lines in `ContentSchemas.{h,cpp}` were merged by hand next to M2-08's.
+
+**Files changed:**
+- New: `Public/Attendance.h`, `Private/{AttendanceBell.cpp, Attendance.cpp, AttendanceText.cpp, AttendanceInternal.h, ContentScheduleSchemas.cpp}` and `Tests/{AttendanceTests,AttendanceRoutineTests,AttendanceRecordTests,AttendanceTextTests}.cpp` plus `AttendanceTestSupport.h`.
+- Data: three `Data/Content/bell_schedule/bell_schedule.nabapara_xi_*.json`.
+- Two fixture directories with seven rules.
+- `CMakeLists.txt`.
+- Pinned parity counts, now 99 files and 135 records.
+
+**Timetable:** one shared frame. The gate opens at 09:30, assembly runs 10:00–10:15, then six 45-minute periods with tiffin from 12:50 to 13:20.
+- **Science:** mathematics, physics, chemistry, english, physics lab, bengali.
+- **Commerce:** accountancy, business studies, economics, english, mathematics, bengali.
+- **Humanities:** history, geography, political science, english, sociology, bengali.
+
+The subjects are WBCHSE-style assumptions flagged for a consultant check. A bell schedule becomes M2-06 routine entries, so classmates and the player share one calendar.
+
+**Lateness:**
+- At or before the 10:00 bell: on time.
+- 1 to 5 minutes after: late, one late mark.
+- 6 minutes or more after: very late. One late mark, assembly missed, and any period more than 5 minutes started is missed.
+- No period attended: absent.
+- A teacher warns at every third late mark, and the guardian is told at the sixth.
+- Below 85% period attendance is Warned; below 75% is AtRisk (no board examination).
+- NPCs are never late, because M2-06 squeezes stays instead.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 66/66. `AttendanceTests passed (167422 checks)`; `pwcontent validate Data/Content`: `PASS: 99 files, 135 records`.
+
+**Open questions:**
+1. Holidays and Saturday school are not modelled; every Monday to Friday is a school day.
+2. The `nhss.*` zone names are placeholders until M2-13.
+3. The new parity counts need Rung 2 and an editor run.

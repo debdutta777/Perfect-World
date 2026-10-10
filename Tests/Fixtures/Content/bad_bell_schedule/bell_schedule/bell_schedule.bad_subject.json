@@ -1,0 +1,20 @@
+{
+  "type": "bell_schedule",
+  "id": "bell_schedule.bad_subject",
+  "name": "Humanities day with an accountancy period",
+  "institution": "institution.nabapara_vidyalaya",
+  "stage": "stage.higher_secondary",
+  "stream": "humanities",
+  "gatesOpen": 570,
+  "bells": [600, 615, 620, 665, 670, 715, 720, 765, 770, 800, 805, 850, 855, 900, 905, 950],
+  "blocks": [
+    { "kind": "assembly", "start": 600, "end": 615, "room": "nhss.court" },
+    { "kind": "period", "start": 620, "end": 665, "room": "nhss.room_xi_humanities", "subject": "accountancy" },
+    { "kind": "period", "start": 670, "end": 715, "room": "nhss.room_xi_humanities", "subject": "geography" },
+    { "kind": "period", "start": 720, "end": 765, "room": "nhss.room_xi_humanities", "subject": "political_science" },
+    { "kind": "break", "start": 770, "end": 800, "room": "nhss.court" },
+    { "kind": "period", "start": 805, "end": 850, "room": "nhss.room_xi_humanities", "subject": "english" },
+    { "kind": "period", "start": 855, "end": 900, "room": "nhss.room_xi_humanities", "subject": "sociology" },
+    { "kind": "period", "start": 905, "end": 950, "room": "nhss.room_xi_humanities", "subject": "bengali" }
+  ]
+}

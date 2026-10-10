@@ -1,0 +1,7 @@
+{
+  "type": "realm_region",
+  "id": "realm.region.india",
+  "name": "India's home region",
+  "floor": 1,
+  "anchors": ["gate.kolkata.river_warehouse"]
+}

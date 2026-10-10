@@ -51,6 +51,10 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/StructureModel.cpp
     Source/PerfectWorldCore/Private/StructureModelRun.cpp
     Source/PerfectWorldCore/Private/StructureModelText.cpp
+    Source/PerfectWorldCore/Private/ContentScheduleSchemas.cpp
+    Source/PerfectWorldCore/Private/AttendanceBell.cpp
+    Source/PerfectWorldCore/Private/Attendance.cpp
+    Source/PerfectWorldCore/Private/AttendanceText.cpp
     Source/PerfectWorldCore/Private/PracticeWindow.cpp
     Source/PerfectWorldCore/Private/Relationships.cpp
     Source/PerfectWorldCore/Private/RelationshipsText.cpp
@@ -107,6 +111,10 @@ add_test(NAME PerfectWorldActivitiesTests COMMAND PerfectWorldActivitiesTests ${
 add_executable(PerfectWorldStructureModelTests Tests/StructureModelTests.cpp Tests/StructureModelFlowTests.cpp Tests/StructureModelContentTests.cpp)
 target_link_libraries(PerfectWorldStructureModelTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldStructureModelTests COMMAND PerfectWorldStructureModelTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+add_executable(PerfectWorldAttendanceTests Tests/AttendanceTests.cpp Tests/AttendanceRoutineTests.cpp Tests/AttendanceRecordTests.cpp Tests/AttendanceTextTests.cpp)
+target_link_libraries(PerfectWorldAttendanceTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldAttendanceTests COMMAND PerfectWorldAttendanceTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
 add_executable(PerfectWorldPracticeTests Tests/PracticeWindowTests.cpp)
 target_link_libraries(PerfectWorldPracticeTests PRIVATE PerfectWorldCore)
@@ -224,4 +232,22 @@ foreach(fixture_and_issue
     list(GET parts 1 issue)
     add_test(NAME PerfectWorldAssetFixture_${fixture}
              COMMAND pwcontent assets ${CMAKE_SOURCE_DIR}/Tests/Fixtures/Assets/${fixture} --expect-issue "${issue}")
+endforeach()
+
+# Bell schedules (ROADMAP M2-07): each fixture directory carries several bad schedules, one per rule,
+# so an entry is "directory|test name|issue text" and every issue text is unique to its rule.
+foreach(fixture_and_issue
+        "bad_bell_schedule|overlap|overlaps block 2"
+        "bad_bell_schedule|bell_order|the bells are not in ascending order"
+        "bad_bell_schedule|subject|which is not taught in the humanities stream"
+        "bad_bell_schedule|hours|after the school hours end"
+        "bad_bell_streams|shared_bells|one school rings one set of bells"
+        "bad_bell_streams|duplicate_stream|a second science schedule"
+        "bad_bell_streams|missing_stream|has no schedule for the commerce stream")
+    string(REPLACE "|" ";" parts "${fixture_and_issue}")
+    list(GET parts 0 fixture)
+    list(GET parts 1 rule)
+    list(GET parts 2 issue)
+    add_test(NAME PerfectWorldContentFixture_${fixture}_${rule}
+             COMMAND pwcontent validate ${CMAKE_SOURCE_DIR}/Tests/Fixtures/Content/${fixture} --expect-issue "${issue}")
 endforeach()

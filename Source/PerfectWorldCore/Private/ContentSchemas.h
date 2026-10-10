@@ -76,6 +76,10 @@ const TypeSchema& ProblemCaseSchema();
 /** The problem rules: each case fits its family's template, the family really varies, the structure matches the runner. */
 void CheckProblemSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
 
+/** The bell schedule record type (ContentScheduleSchemas.cpp, ROADMAP M2-07) and its per-record and per-school rules. */
+const TypeSchema& BellScheduleSchema();
+void CheckBellScheduleSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
+
 /** Cross-record rules, run after every reference has resolved. */
 void CheckSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
 } // namespace PerfectWorld::ContentSchema

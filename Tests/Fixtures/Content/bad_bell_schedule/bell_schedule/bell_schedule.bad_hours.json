@@ -1,0 +1,20 @@
+{
+  "type": "bell_schedule",
+  "id": "bell_schedule.bad_hours",
+  "name": "Science day that runs past the end of the school hours",
+  "institution": "institution.nabapara_vidyalaya",
+  "stage": "stage.higher_secondary",
+  "stream": "science",
+  "gatesOpen": 750,
+  "bells": [780, 795, 800, 845, 850, 895, 900, 945, 950, 980, 985, 1030, 1035, 1080, 1085, 1130],
+  "blocks": [
+    { "kind": "assembly", "start": 780, "end": 795, "room": "nhss.court" },
+    { "kind": "period", "start": 800, "end": 845, "room": "nhss.room_xi_science", "subject": "mathematics" },
+    { "kind": "period", "start": 850, "end": 895, "room": "nhss.room_xi_science", "subject": "physics" },
+    { "kind": "period", "start": 900, "end": 945, "room": "nhss.room_xi_science", "subject": "chemistry" },
+    { "kind": "break", "start": 950, "end": 980, "room": "nhss.court" },
+    { "kind": "period", "start": 985, "end": 1030, "room": "nhss.room_xi_science", "subject": "english" },
+    { "kind": "period", "start": 1035, "end": 1080, "room": "nhss.science_lab", "subject": "physics" },
+    { "kind": "period", "start": 1085, "end": 1130, "room": "nhss.room_xi_science", "subject": "bengali" }
+  ]
+}
