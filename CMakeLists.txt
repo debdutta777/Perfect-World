@@ -100,6 +100,11 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/Threads.cpp
     Source/PerfectWorldCore/Private/ThreadsRun.cpp
     Source/PerfectWorldCore/Private/ThreadsText.cpp
+    Source/PerfectWorldCore/Private/TimeContractRules.cpp
+    Source/PerfectWorldCore/Private/TimeContractResolve.cpp
+    Source/PerfectWorldCore/Private/TimeContractText.cpp
+    Source/PerfectWorldCore/Private/TimeContractContent.cpp
+    Source/PerfectWorldCore/Private/TimeContractEquivalence.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -201,6 +206,11 @@ add_executable(PerfectWorldThreadTests Tests/ThreadsTests.cpp Tests/ThreadsConte
                Tests/ThreadsEquivalenceTests.cpp Tests/ThreadsSaveTests.cpp)
 target_link_libraries(PerfectWorldThreadTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldThreadTests COMMAND PerfectWorldThreadTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+add_executable(PerfectWorldTimeContractTests Tests/TimeContractTests.cpp Tests/TimeContractResolveTests.cpp
+               Tests/TimeContractContentTests.cpp Tests/TimeContractEquivalenceTests.cpp)
+target_link_libraries(PerfectWorldTimeContractTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldTimeContractTests COMMAND PerfectWorldTimeContractTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
 add_executable(PerfectWorldRealmTests Tests/RealmCoordinateTests.cpp)
 target_link_libraries(PerfectWorldRealmTests PRIVATE PerfectWorldCore)

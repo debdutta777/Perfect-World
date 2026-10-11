@@ -1032,3 +1032,24 @@ Built by a Sonnet 5.5 subagent. The agent was cut off by session ends before wri
 **Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 143/143, `PerfectWorldThreadTests` `PASS: 176142 checks`; `pwcontent validate Data/Content`: `PASS: 140 files, 176 records`.
 
 **Remaining:** not in the world state, the day loop or the save; the 140/176 parity counts need Rung 2 and an editor run.
+
+## Checkpoint — M3-01 time contract, portable half, 2026-10-11
+
+Built by a Sonnet 5.5 subagent. The agent hit the usage limit during its final build, so I built and tested the worktree myself (144/144 there), reviewed it, and merged it here.
+
+**Files changed:** new `Public/TimeContract.h`, `Private/{TimeContractRules.cpp, TimeContractResolve.cpp, TimeContractText.cpp, TimeContractContent.cpp, TimeContractEquivalence.cpp}` and `Tests/TimeContract{,Resolve,Content,Equivalence}Tests.cpp` plus `TimeContractTestSupport.h`; `CMakeLists.txt`. No existing module changed.
+
+**Rules** (`GAME_PLAN.md` §5, `SYSTEMS.md` §2.5, catalogue "Calendar and time granularity"):
+- **Modes:** six clock modes plus compressed time.
+  - free_roam runs the world clock at 1 game minute per real second.
+  - conversation, scene, ui_paused and accessibility_pause pause the world.
+  - mission runs its own clock and charges the world a capped amount at exit.
+  - compressed jumps event by event.
+- **Declarations:** each declaration is `clock{mode, interrupt, resolve}` plus a cost and a number of beats. Every activity in `Data/Content/activity` validates against the rules.
+- **Interrupt policies:** none, at_beat and immediate; immediate charges pro rata.
+- **Resolution boundaries:** on_commit, on_complete and per_beat.
+- **Equivalence:** a helper shows a plan resolved in one jump or step by step gives the same results for the documented quantities. This is the base M3-02 builds on.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 144/144, `PerfectWorld time contract: 205778 checks passed`.
+
+**Remaining:** the Unreal (PIE) half: the free-roam ticker and the pause overlays that read this state.
