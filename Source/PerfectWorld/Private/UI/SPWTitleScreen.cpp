@@ -6,6 +6,7 @@
 #include "Widgets/Images/SImage.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SScaleBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
 
@@ -62,7 +63,14 @@ void SPWTitleScreen::Construct(const FArguments& InArgs, UPerfectWorldCharacterC
                         SNew(SVerticalBox)
                         + SVerticalBox::Slot().AutoHeight()
                         [
-                            PWUI::MakeText(LOCTEXT("TitleMain", "PERFECT WORLD"), 84, Style.TextPrimary, true)
+                            // Shrinks (never grows) to the panel's width, so the full title reads at any resolution.
+                            SNew(SScaleBox)
+                            .Stretch(EStretch::ScaleToFitX)
+                            .StretchDirection(EStretchDirection::DownOnly)
+                            .HAlign(HAlign_Left)
+                            [
+                                PWUI::MakeText(LOCTEXT("TitleMain", "PERFECT WORLD"), 84, Style.TextPrimary, true)
+                            ]
                         ]
                         + SVerticalBox::Slot().AutoHeight().Padding(4.0f, 8.0f, 0.0f, 0.0f)
                         [

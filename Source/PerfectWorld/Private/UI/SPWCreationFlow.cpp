@@ -1,5 +1,6 @@
 #include "UI/SPWCreationFlow.h"
 
+#include "Framework/Application/SlateApplication.h"
 #include "Input/Events.h"
 #include "InputCoreTypes.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
@@ -84,17 +85,45 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
         true, 20, 150.0f);
     NextButton->SetVisibility(TAttribute<EVisibility>::CreateLambda(
         [this]() { return CurrentStep < PWUI::CreationStepCount - 1 ? EVisibility::Visible : EVisibility::Collapsed; }));
+    BackButton->SetVisibility(TAttribute<EVisibility>::CreateLambda(
+        [this]() { return bConfirmingStart ? EVisibility::Collapsed : EVisibility::Visible; }));
 
     const TSharedRef<SWidget> StartButton = PWUI::MakeButton(
         LOCTEXT("StartLife", "Start Life"), PWUI::EButtonKind::Primary,
         FOnClicked::CreateLambda([this]()
         {
-            RequestStartLife();
+            BeginStartConfirmation();
             return FReply::Handled();
         }),
         TAttribute<bool>::CreateLambda([this]() { return Model->Summary.bReadyToStart; }), 22, 200.0f);
-    StartButton->SetVisibility(TAttribute<EVisibility>::CreateLambda(
-        [this]() { return CurrentStep == PWUI::CreationStepCount - 1 ? EVisibility::Visible : EVisibility::Collapsed; }));
+    StartButton->SetVisibility(TAttribute<EVisibility>::CreateLambda([this]()
+    {
+        return CurrentStep == PWUI::CreationStepCount - 1 && !bConfirmingStart ? EVisibility::Visible : EVisibility::Collapsed;
+    }));
+
+    const TSharedRef<SWidget> CancelButton = PWUI::MakeButton(
+        LOCTEXT("CancelStart", "Not yet"), PWUI::EButtonKind::Secondary,
+        FOnClicked::CreateLambda([this]()
+        {
+            CancelStartConfirmation();
+            return FReply::Handled();
+        }),
+        true, 20, 150.0f);
+    CancelButton->SetVisibility(TAttribute<EVisibility>::CreateLambda(
+        [this]() { return bConfirmingStart ? EVisibility::Visible : EVisibility::Collapsed; }));
+    CancelStartButton = CancelButton;
+
+    const TSharedRef<SWidget> ConfirmButton = PWUI::MakeButton(
+        LOCTEXT("ConfirmStart", "Begin this life"), PWUI::EButtonKind::Primary,
+        FOnClicked::CreateLambda([this]()
+        {
+            bConfirmingStart = false;
+            RequestStartLife();
+            return FReply::Handled();
+        }),
+        true, 22, 220.0f);
+    ConfirmButton->SetVisibility(TAttribute<EVisibility>::CreateLambda(
+        [this]() { return bConfirmingStart ? EVisibility::Visible : EVisibility::Collapsed; }));
 
     ChildSlot
     [
@@ -130,9 +159,18 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
                 + SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Center).Padding(0.0f, 0.0f, 24.0f, 0.0f)
                 [
                     SNew(STextBlock)
-                    .Text_Lambda([this]() { return Model->Message; })
+                    .Text_Lambda([this]()
+                    {
+                        return bConfirmingStart
+                            ? LOCTEXT("ConfirmPrompt", "Begin this life? Your choices are then fixed and the story starts.")
+                            : Model->Message;
+                    })
                     .Font(PWUI::Font(17, true))
-                    .ColorAndOpacity(FSlateColor(Style.Danger))
+                    .ColorAndOpacity_Lambda([this]()
+                    {
+                        const PWUI::FStyle& S = PWUI::FStyle::Get();
+                        return FSlateColor(bConfirmingStart ? S.TextPrimary : S.Danger);
+                    })
                     .AutoWrapText(true)
                 ]
                 + SHorizontalBox::Slot().AutoWidth().Padding(0.0f, 0.0f, 12.0f, 0.0f)
@@ -147,6 +185,14 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
                 [
                     StartButton
                 ]
+                + SHorizontalBox::Slot().AutoWidth().Padding(0.0f, 0.0f, 12.0f, 0.0f)
+                [
+                    CancelButton
+                ]
+                + SHorizontalBox::Slot().AutoWidth()
+                [
+                    ConfirmButton
+                ]
             ],
             FMargin(36.0f, 28.0f))
     ];
@@ -157,6 +203,7 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
 void SPWCreationFlow::GoToStep(int32 Step)
 {
     CurrentStep = FMath::Clamp(Step, 0, PWUI::CreationStepCount - 1);
+    bConfirmingStart = false;
     Model->ClearMessage();
 
     // Remember where the player got to, so a save written now resumes on this page.
@@ -203,6 +250,26 @@ void SPWCreationFlow::RequestStartLife()
     }
 }
 
+void SPWCreationFlow::BeginStartConfirmation()
+{
+    if (!Model->Summary.bReadyToStart)
+    {
+        return;
+    }
+    Model->ClearMessage();
+    bConfirmingStart = true;
+    if (CancelStartButton.IsValid() && FSlateApplication::IsInitialized())
+    {
+        FSlateApplication::Get().SetKeyboardFocus(CancelStartButton, EFocusCause::SetDirectly);
+    }
+}
+
+void SPWCreationFlow::CancelStartConfirmation()
+{
+    bConfirmingStart = false;
+    FocusActivePage();
+}
+
 void SPWCreationFlow::FocusActivePage()
 {
     if (Pages.IsValid() && Pages->GetActiveWidget().IsValid())
@@ -215,7 +282,14 @@ FReply SPWCreationFlow::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& 
 {
     if (InKeyEvent.GetKey() == EKeys::Escape || InKeyEvent.GetKey() == EKeys::Gamepad_FaceButton_Right)
     {
-        GoBack();
+        if (bConfirmingStart)
+        {
+            CancelStartConfirmation();
+        }
+        else
+        {
+            GoBack();
+        }
         return FReply::Handled();
     }
     return SCompoundWidget::OnKeyDown(MyGeometry, InKeyEvent);

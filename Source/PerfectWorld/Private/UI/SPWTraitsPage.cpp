@@ -334,11 +334,11 @@ TSharedRef<SWidget> SPWTraitsPage::BuildTraitRow(int32 Index)
                 + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(16.0f, 0.0f, 0.0f, 0.0f)
                 [
                     SNew(SBox)
-                    .WidthOverride(150.0f)
+                    .WidthOverride(170.0f)
                     [
                         SNew(STextBlock)
                         .Text_Lambda([this, Index]() { return RankSummary(Index); })
-                        .Font(PWUI::Font(15, true))
+                        .Font(PWUI::Font(14, true))
                         .ColorAndOpacity(FSlateColor(Style.TextPrimary))
                     ]
                 ]
@@ -371,10 +371,10 @@ FText SPWTraitsPage::RankSummary(int32 Index) const
     const int32 Cost = Model->Traits[Index].Cost;
     if (Rank >= PerfectWorld::MaxRank)
     {
-        return FText::Format(LOCTEXT("RankMaxFmt", "Rank {0}   {1} pts (max)"), FText::AsNumber(Rank), FText::AsNumber(Cost));
+        return FText::Format(LOCTEXT("RankMaxFmt", "Rank {0} (max)\n{1} pts"), FText::AsNumber(Rank), FText::AsNumber(Cost));
     }
     const int32 NextCost = PerfectWorld::CharacterCreator::CostForRank(Rank + 1) - PerfectWorld::CharacterCreator::CostForRank(Rank);
-    return FText::Format(LOCTEXT("RankFmt", "Rank {0}   {1} pts, next +{2}"), FText::AsNumber(Rank),
+    return FText::Format(LOCTEXT("RankFmt", "Rank {0}\n{1} pts · next +{2}"), FText::AsNumber(Rank),
                          FText::AsNumber(Cost), FText::AsNumber(NextCost));
 }
 

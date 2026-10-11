@@ -1099,3 +1099,11 @@ All text goes through LOCTEXT. Every rule stays in the portable core: the UI sho
 - Changed: `PerfectWorldCharacterCreatorSubsystem.h` (presets, identity, stream and review accessors), `PerfectWorldBlockTestGameMode.cpp` (`HUDClass`), `PerfectWorld.Build.cs` (Slate, SlateCore).
 
 **Exact check so far:** `python Scripts/build_unreal.py --engine-root "D:\Epic Games\UE_5.8"` (D: clone at `79aaa0f` plus these files): **Succeeded**, no warnings or error lines. The packaged build and a visual check come next. Nothing here has been seen running yet.
+
+**Front end, first look in the packaged build (2026-10-11):** `package_windows.py` exit 0 and `BUILD SUCCESSFUL`. Launched windowed at 1600×900 and captured the window.
+- The title, household and trait pages render as designed: dark panels with amber accents, the block scene turning behind, the points bar, presets, and sliders with +/− buttons.
+- **Fixed:** the title logo was clipped to "PERFECT WO". It is now in a shrink-only scale box.
+- **Fixed:** the trait rows' rank and cost label was cut off. It now uses two lines in a wider column.
+- **Fixed:** Start Life is irreversible but fired on a single press. A held "accept" from the cloud PC's virtual gamepad (Parsec and ViGEm are installed) carried a test run from Traits straight into the world. Start Life now asks "Begin this life?" with **Not yet** focused by default, so a stray or held accept cancels.
+
+After the fixes, Rung 2 **Succeeded** and the repackaged build boots to the corrected title. The Identity, Stream and Review pages and the pause menu were not walked through on screen, because the owner was using the desktop.

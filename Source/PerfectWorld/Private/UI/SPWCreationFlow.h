@@ -41,9 +41,15 @@ private:
     void GoBack();
     void RequestStartLife();
 
+    /** Start Life cannot be undone, so it asks once more, with Cancel focused (a stray or held accept cancels). */
+    void BeginStartConfirmation();
+    void CancelStartConfirmation();
+
     TSharedPtr<FPWCreationModel> Model;
     TSharedPtr<SWidgetSwitcher> Pages;
+    TSharedPtr<SWidget> CancelStartButton;
     FPWTryDelegate OnStartLife;
     FSimpleDelegate OnBackToTitle;
     int32 CurrentStep = 0;
+    bool bConfirmingStart = false;
 };
