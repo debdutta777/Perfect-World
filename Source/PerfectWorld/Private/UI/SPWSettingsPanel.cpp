@@ -90,7 +90,7 @@ void SPWSettingsPanel::Construct(const FArguments& InArgs)
                     + SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Center).Padding(14.0f, 0.0f)
                     [
                         SNew(SBox)
-                        .HeightOverride(30.0f)
+                        .HeightOverride(44.0f)
                         [
                             SNew(SSlider)
                             .Style(&Style.Slider)
@@ -189,6 +189,11 @@ void SPWSettingsPanel::SetSensitivity(float Value, bool bSave)
 
 FReply SPWSettingsPanel::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent)
 {
+    // A held key auto-repeats; menus react to the first press only.
+    if (InKeyEvent.IsRepeat())
+    {
+        return FReply::Handled();
+    }
     if (InKeyEvent.GetKey() == EKeys::Escape || InKeyEvent.GetKey() == EKeys::Gamepad_FaceButton_Right)
     {
         OnBack.ExecuteIfBound();

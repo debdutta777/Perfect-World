@@ -98,6 +98,11 @@ void SPWLoadPanel::Construct(const FArguments& InArgs, UPerfectWorldCharacterCre
 
 FReply SPWLoadPanel::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent)
 {
+    // A held key auto-repeats; menus react to the first press only.
+    if (InKeyEvent.IsRepeat())
+    {
+        return FReply::Handled();
+    }
     if (InKeyEvent.GetKey() == EKeys::Escape || InKeyEvent.GetKey() == EKeys::Gamepad_FaceButton_Right)
     {
         OnBack.ExecuteIfBound();

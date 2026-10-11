@@ -50,6 +50,7 @@ public:
 
     /** Writes the active life to its slot. The returned text says what happened; bOutSucceeded says whether it worked. */
     FText SaveActiveGame(bool& bOutSucceeded);
+    FText SaveGameToSlot(int32 SlotIndex, bool& bOutSucceeded);
 
     void ReturnToTitle();
     void QuitGame();
@@ -82,4 +83,5 @@ private:
     /** The slot the running life saves to, or -1 when it has none yet. */
     int32 ActiveSlot = -1;
     float TitleYaw = 0.0f;
+    float TitleDriftSeconds = 0.0f;
 };

@@ -1,5 +1,6 @@
 #include "UI/SPWFrontEndRoot.h"
 
+#include "Framework/Application/SlateApplication.h"
 #include "Input/Events.h"
 #include "InputCoreTypes.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
@@ -14,7 +15,7 @@
 #include "Widgets/Images/SImage.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
-#include "Widgets/Layout/SScaleBox.h"
+#include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/SNullWidget.h"
 #include "Widgets/SOverlay.h"
@@ -22,24 +23,11 @@
 
 #define LOCTEXT_NAMESPACE "PerfectWorldFrontEndRoot"
 
-namespace
-{
-/** Centres a panel and shrinks it to fit a small window, but never enlarges it. */
-TSharedRef<SWidget> RootCentred(const TSharedRef<SWidget>& Content)
-{
-    return SNew(SScaleBox)
-        .Stretch(EStretch::ScaleToFit)
-        .StretchDirection(EStretchDirection::DownOnly)
-        [
-            Content
-        ];
-}
-} // namespace
-
 void SPWFrontEndRoot::Construct(const FArguments& InArgs)
 {
     const PWUI::FStyle& Style = PWUI::FStyle::Get();
     Hud = InArgs._Hud;
+    PageReveal = PageTransition.AddCurve(0.0f, 0.18f, ECurveEaseFunction::CubicOut);
 
     SetVisibility(TAttribute<EVisibility>::CreateLambda([this]()
     {
@@ -53,20 +41,16 @@ void SPWFrontEndRoot::Construct(const FArguments& InArgs)
         [
             SNew(SImage)
             .Image(&Style.BrushScrim)
-            .Visibility_Lambda([this]() { return Screen == EScreen::None ? EVisibility::Collapsed : EVisibility::Visible; })
-        ]
-        + SOverlay::Slot()
-        [
-            SNew(SImage)
-            .Image(&Style.BrushScrim)
-            .Visibility_Lambda([this]()
-            {
-                return (Screen == EScreen::None || Screen == EScreen::Title) ? EVisibility::Collapsed : EVisibility::HitTestInvisible;
-            })
+            .Visibility_Lambda([this]() { return (Screen == EScreen::None || Screen == EScreen::Title) ? EVisibility::Collapsed : EVisibility::Visible; })
         ]
         + SOverlay::Slot()
         [
             SAssignNew(ScreenHolder, SBox)
+            .IsEnabled_Lambda([this]() { return !bChooserOpen; })
+            .RenderTransform_Lambda([this]()
+            {
+                return FSlateRenderTransform(FVector2f(0.0f, 8.0f * (1.0f - PageReveal.GetLerp())));
+            })
         ]
         + SOverlay::Slot()
         [
@@ -86,19 +70,34 @@ void SPWFrontEndRoot::Construct(const FArguments& InArgs)
             .Padding(FMargin(26.0f, 14.0f))
             .Visibility_Lambda([this]() { return Toast.IsEmpty() ? EVisibility::Collapsed : EVisibility::HitTestInvisible; })
             [
-                SNew(STextBlock)
-                .Text_Lambda([this]() { return Toast; })
-                .Font(PWUI::Font(18, true))
-                .ColorAndOpacity(FSlateColor(Style.TextPrimary))
+                SNew(SBox)
+                .MaxDesiredWidth(720.0f)
+                [
+                    SNew(STextBlock)
+                    .Text_Lambda([this]() { return Toast; })
+                    .Font(PWUI::Font(18, true))
+                    .ColorAndOpacity(FSlateColor(Style.TextPrimary))
+                    .AutoWrapText(true)
+                ]
             ]
         ]
     ];
 }
 
+void SPWFrontEndRoot::Tick(const FGeometry& AllottedGeometry, double InCurrentTime, float InDeltaTime)
+{
+    SCompoundWidget::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
+    ScreenHolder->SetRenderOpacity(PageReveal.GetLerp());
+}
+
 void SPWFrontEndRoot::SetScreen(EScreen NewScreen, const TSharedRef<SWidget>& Content)
 {
+    PWUI::CancelPendingFocus();
+    PageTransition.JumpToEnd();
     Screen = NewScreen;
     ScreenHolder->SetContent(Content);
+    if (NewScreen != EScreen::None && NewScreen != EScreen::Creation) PageTransition.Play(AsShared());
+    if (NewScreen != EScreen::None) PWUI::FocusWhenReady(AsShared(), Content);
 }
 
 void SPWFrontEndRoot::ShowTitle()
@@ -136,25 +135,25 @@ void SPWFrontEndRoot::ShowLoad()
         return;
     }
     SetScreen(EScreen::Load,
-              RootCentred(SNew(SPWLoadPanel, Owner->GetCreator())
+              SNew(SBox).HAlign(HAlign_Center).VAlign(VAlign_Center)[SNew(SPWLoadPanel, Owner->GetCreator())
               .OnLoadSlot(FPWSlotDelegate::CreateSPLambda(this, [this](int32 Slot)
               {
                   APerfectWorldFrontEndHUD* Target = Hud.Get();
                   return Target != nullptr ? Target->LoadSlot(Slot) : FText::GetEmpty();
               }))
-              .OnBack(FSimpleDelegate::CreateSP(this, &SPWFrontEndRoot::ShowTitle))));
+              .OnBack(FSimpleDelegate::CreateSP(this, &SPWFrontEndRoot::ShowTitle))]);
 }
 
 void SPWFrontEndRoot::ShowSettings()
 {
     SetScreen(EScreen::Settings,
-              RootCentred(SNew(SPWSettingsPanel).OnBack(FSimpleDelegate::CreateSP(this, &SPWFrontEndRoot::ShowTitle))));
+              SNew(SBox).HAlign(HAlign_Center).VAlign(VAlign_Center)[SNew(SPWSettingsPanel).OnBack(FSimpleDelegate::CreateSP(this, &SPWFrontEndRoot::ShowTitle))]);
 }
 
 void SPWFrontEndRoot::ShowPause()
 {
     bChooserOpen = false;
-    SetScreen(EScreen::Pause, RootCentred(SNew(SPWPauseMenu).Hud(Hud)));
+    SetScreen(EScreen::Pause, SNew(SBox).HAlign(HAlign_Center).VAlign(VAlign_Center)[SNew(SPWPauseMenu).Hud(Hud)]);
 }
 
 void SPWFrontEndRoot::ShowCreation(int32 Step)
@@ -165,17 +164,20 @@ void SPWFrontEndRoot::ShowCreation(int32 Step)
         return;
     }
     bChooserOpen = false;
+    TSharedPtr<SPWCreationFlow> Flow;
     SetScreen(EScreen::Creation,
-              RootCentred(
+              SNew(SBox).HAlign(HAlign_Center).VAlign(VAlign_Center)
+              [
                   SNew(SBox)
-                  .WidthOverride(1500.0f)
-                  .HeightOverride(940.0f)
+                  .WidthOverride_Lambda([this]() { return FMath::Min(1500.0f, static_cast<float>(GetCachedGeometry().GetLocalSize().X) * 0.94f); })
+                  .HeightOverride_Lambda([this]() { return static_cast<float>(GetCachedGeometry().GetLocalSize().Y) * 0.94f; })
                   [
-                      SNew(SPWCreationFlow, Owner->GetCreator())
+                      SAssignNew(Flow, SPWCreationFlow, Owner->GetCreator())
                       .InitialStep(Step)
                       .OnStartLife(FPWTryDelegate::CreateSP(this, &SPWFrontEndRoot::HandleStartLife))
                       .OnBackToTitle(FSimpleDelegate::CreateSP(this, &SPWFrontEndRoot::ShowTitle))
-                  ]));
+                  ]]);
+    Flow->FocusActivePage();
 }
 
 void SPWFrontEndRoot::Hide()
@@ -225,107 +227,159 @@ FText SPWFrontEndRoot::HandleStartLife()
     return FText::GetEmpty();
 }
 
+void SPWFrontEndRoot::OpenSaveChooser()
+{
+    bSavingExistingLife = true;
+    ChooserInvokingControl = FSlateApplication::Get().GetKeyboardFocusedWidget();
+    ChooserStatus = FText::GetEmpty();
+    BuildOverwriteChooser();
+}
+
 void SPWFrontEndRoot::OpenOverwriteChooser()
 {
+    bSavingExistingLife = false;
+    ChooserInvokingControl = FSlateApplication::Get().GetKeyboardFocusedWidget();
+    ChooserStatus = FText::GetEmpty();
+    BuildOverwriteChooser();
+}
+
+void SPWFrontEndRoot::BuildOverwriteChooser(int32 SelectedSlot)
+{
     APerfectWorldFrontEndHUD* Owner = Hud.Get();
-    if (Owner == nullptr)
-    {
-        return;
-    }
+    if (Owner == nullptr) return;
+    PWUI::CancelPendingFocus();
     const PWUI::FStyle& Style = PWUI::FStyle::Get();
     UPerfectWorldCharacterCreatorSubsystem* Creator = Owner->GetCreator();
-
-    const TSharedRef<SVerticalBox> Slots = SNew(SVerticalBox);
-    const int32 SlotCount = UPerfectWorldCharacterCreatorSubsystem::GetSaveSlotCount();
-    for (int32 Slot = 0; Slot < SlotCount; ++Slot)
+    const TSharedRef<SVerticalBox> Body = SNew(SVerticalBox);
+    Body->AddSlot().AutoHeight()
+    [
+        PWUI::MakeText(SelectedSlot < 0 ? LOCTEXT("ChooseTitle", "Choose a save slot")
+                                       : LOCTEXT("ConfirmTitle", "Replace this save?"),
+                       30, Style.TextPrimary, true)
+    ];
+    Body->AddSlot().AutoHeight().Padding(0.0f, 8.0f, 0.0f, 16.0f)
+    [
+        PWUI::MakeText(LOCTEXT("Warning", "The save in the chosen slot will be overwritten. Your current life stays open until you confirm."),
+                       18, Style.TextSecondary, false, true)
+    ];
+    if (SelectedSlot < 0)
     {
-        const FText Description = Creator != nullptr ? Creator->DescribeSaveSlot(Slot) : FText::GetEmpty();
-        const TSharedRef<SWidget> Content =
-            SNew(SVerticalBox)
-            + SVerticalBox::Slot().AutoHeight()
+        for (int32 Slot = 0; Slot < UPerfectWorldCharacterCreatorSubsystem::GetSaveSlotCount(); ++Slot)
+        {
+            Body->AddSlot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 12.0f)
             [
-                PWUI::MakeText(FText::Format(LOCTEXT("ReplaceSlotFmt", "REPLACE SLOT {0}"), FText::AsNumber(Slot + 1)), 13,
-                               Style.Warn, true)
-            ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 6.0f, 0.0f, 0.0f)
-            [
-                PWUI::MakeText(Description, 20, Style.TextPrimary, false, true)
+                PWUI::MakeContentButton(
+                    PWUI::MakeText(FText::Format(LOCTEXT("Slot", "Slot {0}: {1}"), FText::AsNumber(Slot + 1),
+                        Creator != nullptr ? Creator->DescribeSaveSlot(Slot) : FText::GetEmpty()),
+                        18, Style.TextPrimary, false, true),
+                    PWUI::EButtonKind::Card,
+                    FOnClicked::CreateSPLambda(this, [this, Slot]()
+                    {
+                        BuildOverwriteChooser(Slot);
+                        return FReply::Handled();
+                    }))
             ];
-        Slots->AddSlot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 12.0f)
+        }
+    }
+    else
+    {
+        Body->AddSlot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 24.0f)
         [
-            PWUI::MakeContentButton(
-                Content, PWUI::EButtonKind::Card,
-                FOnClicked::CreateSPLambda(this, [this, Slot]()
+            PWUI::MakeText(FText::Format(LOCTEXT("ChosenSlot", "Slot {0}: {1}"), FText::AsNumber(SelectedSlot + 1),
+                Creator != nullptr ? Creator->DescribeSaveSlot(SelectedSlot) : FText::GetEmpty()),
+                18, Style.TextPrimary, false, true)
+        ];
+    }
+    Body->AddSlot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 12.0f)
+    [
+        PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return ChooserStatus; }),
+                       18, Style.Danger, false, true)
+    ];
+    const TSharedRef<SWidget> Cancel = PWUI::MakeButton(
+        LOCTEXT("Cancel", "Cancel"), PWUI::EButtonKind::Secondary,
+        FOnClicked::CreateSPLambda(this, [this]()
+        {
+            CloseOverwriteChooser();
+            return FReply::Handled();
+        }));
+    const TSharedRef<SHorizontalBox> Actions = SNew(SHorizontalBox);
+    Actions->AddSlot().AutoWidth().Padding(0.0f, 0.0f, 12.0f, 0.0f)[Cancel];
+    if (SelectedSlot >= 0)
+    {
+        Actions->AddSlot().AutoWidth()
+        [
+            PWUI::MakeButton(LOCTEXT("Replace", "Replace this save"), PWUI::EButtonKind::Primary,
+                FOnClicked::CreateSPLambda(this, [this, SelectedSlot]()
                 {
                     if (APerfectWorldFrontEndHUD* Target = Hud.Get())
                     {
-                        ChooserStatus = Target->StartNewLife(Slot);
+                        if (bSavingExistingLife)
+                        {
+                            bool bSucceeded = false;
+                            ChooserStatus = Target->SaveGameToSlot(SelectedSlot, bSucceeded);
+                            if (bSucceeded)
+                            {
+                                const FText Notice = ChooserStatus;
+                                CloseOverwriteChooser();
+                                ShowToast(Notice);
+                            }
+                        }
+                        else
+                        {
+                            ChooserStatus = Target->StartNewLife(SelectedSlot);
+                        }
                     }
                     return FReply::Handled();
-                }),
-                false, true, FMargin(24.0f, 16.0f))
+                }))
         ];
     }
-
-    ChooserStatus = FText::GetEmpty();
+    Body->AddSlot().AutoHeight()[Actions];
     ChooserHolder->SetContent(
-        RootCentred(
-            SNew(SBox)
-            .WidthOverride(720.0f)
+        SNew(SBox)
+        .WidthOverride_Lambda([this]()
+        {
+            return FMath::Min(720.0f, static_cast<float>(GetCachedGeometry().GetLocalSize().X) * 0.9f);
+        })
+        .MaxDesiredHeight_Lambda([this]()
+        {
+            return static_cast<float>(GetCachedGeometry().GetLocalSize().Y) * 0.9f;
+        })
+        [
+            SNew(SScrollBox)
+            .ScrollBarStyle(&Style.ScrollBar)
+            .NavigationDestination(EDescendantScrollDestination::IntoView)
+            .ScrollWhenFocusChanges(EScrollWhenFocusChanges::InstantScroll)
+            + SScrollBox::Slot()
             [
-                PWUI::MakePanel(
-                    SNew(SVerticalBox)
-                    + SVerticalBox::Slot().AutoHeight()
-                    [
-                        PWUI::MakeText(LOCTEXT("ChooserTitle", "All three save slots are in use"), 30, Style.TextPrimary, true)
-                    ]
-                    + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 8.0f, 0.0f, 18.0f)
-                    [
-                        PWUI::MakeText(LOCTEXT("ChooserBody",
-                            "Choose the slot this new life will replace. The save currently in that slot will be overwritten."),
-                            16, Style.TextSecondary, false, true)
-                    ]
-                    + SVerticalBox::Slot().AutoHeight()
-                    [
-                        Slots
-                    ]
-                    + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 8.0f)
-                    [
-                        PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return ChooserStatus; }), 16, Style.Danger, true, true)
-                    ]
-                    + SVerticalBox::Slot().AutoHeight()
-                    [
-                        SNew(SBox)
-                        .HAlign(HAlign_Left)
-                        [
-                            PWUI::MakeButton(LOCTEXT("Cancel", "Cancel"), PWUI::EButtonKind::Secondary,
-                                             FOnClicked::CreateSPLambda(this, [this]()
-                                             {
-                                                 CloseOverwriteChooser();
-                                                 return FReply::Handled();
-                                             }),
-                                             true, 20, 140.0f)
-                        ]
-                    ],
-                    FMargin(34.0f, 28.0f))
-            ]));
+                PWUI::MakeDialog(Body, FMargin(32.0f, 24.0f))
+            ]
+        ]);
     bChooserOpen = true;
-    PWUI::FocusWhenReady(AsShared(), ChooserHolder);
+    PWUI::FocusWhenReady(AsShared(), Cancel);
 }
 
 void SPWFrontEndRoot::CloseOverwriteChooser()
 {
+    PWUI::CancelPendingFocus();
     bChooserOpen = false;
     ChooserHolder->SetContent(SNullWidget::NullWidget);
-    if (ScreenHolder.IsValid() && ScreenHolder->GetChildren()->Num() > 0)
-    {
-        PWUI::FocusWhenReady(AsShared(), ScreenHolder);
-    }
+    // Return focus to the control that opened the chooser, unless it has since been hidden or disabled; then the
+    // screen's first focusable control takes it, so focus never sits on nothing.
+    const TSharedPtr<SWidget> Invoker = ChooserInvokingControl.Pin();
+    const bool bInvokerUsable = Invoker.IsValid() && PWUI::FindFirstFocusable(Invoker.ToSharedRef()).IsValid();
+    PWUI::FocusWhenReady(AsShared(), bInvokerUsable ? TWeakPtr<SWidget>(Invoker) : TWeakPtr<SWidget>(ScreenHolder));
+    ChooserInvokingControl.Reset();
 }
 
 FReply SPWFrontEndRoot::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent)
 {
-    if (bChooserOpen && (InKeyEvent.GetKey() == EKeys::Escape || InKeyEvent.GetKey() == EKeys::Gamepad_FaceButton_Right))
+    // A held key auto-repeats; menus react to the first press only.
+    if (InKeyEvent.IsRepeat())
+    {
+        return FReply::Handled();
+    }
+    if (bChooserOpen && (InKeyEvent.GetKey() == EKeys::Escape || InKeyEvent.GetKey() == EKeys::Gamepad_FaceButton_Right
+        || InKeyEvent.GetKey() == EKeys::Gamepad_Special_Right))
     {
         CloseOverwriteChooser();
         return FReply::Handled();

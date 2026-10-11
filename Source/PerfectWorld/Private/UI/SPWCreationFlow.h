@@ -4,9 +4,11 @@
 #include "UI/PWDelegates.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Widgets/SCompoundWidget.h"
+#include "Animation/CurveSequence.h"
 
 class FPWCreationModel;
 class SWidgetSwitcher;
+class SScrollBox;
 class UPerfectWorldCharacterCreatorSubsystem;
 
 /**
@@ -30,6 +32,7 @@ public:
     SLATE_END_ARGS()
 
     void Construct(const FArguments& InArgs, UPerfectWorldCharacterCreatorSubsystem* InSubsystem);
+    virtual void Tick(const FGeometry& AllottedGeometry, double InCurrentTime, float InDeltaTime) override;
 
     virtual FReply OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent) override;
 
@@ -47,6 +50,9 @@ private:
 
     TSharedPtr<FPWCreationModel> Model;
     TSharedPtr<SWidgetSwitcher> Pages;
+    TSharedPtr<SScrollBox> PageBody;
+    FCurveSequence PageTransition;
+    FCurveHandle PageReveal;
     TSharedPtr<SWidget> CancelStartButton;
     FPWTryDelegate OnStartLife;
     FSimpleDelegate OnBackToTitle;

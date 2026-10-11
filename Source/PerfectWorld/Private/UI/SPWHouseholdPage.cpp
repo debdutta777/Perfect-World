@@ -23,7 +23,7 @@ void SPWHouseholdPage::Construct(const FArguments& InArgs, const TSharedRef<FPWC
     const TSharedRef<STextBlock> HomeText = PWUI::MakeText(
         TAttribute<FText>::CreateLambda([this]() { return Model->Summary.OpeningHomeText; }), 18, Style.TextPrimary, false, true);
     const TSharedRef<STextBlock> CareText = PWUI::MakeText(
-        TAttribute<FText>::CreateLambda([this]() { return Model->Summary.CareNote; }), 16, Style.Warn, false, true);
+        TAttribute<FText>::CreateLambda([this]() { return Model->Summary.CareNote; }), 16, Style.TextSecondary, false, true);
     CareText->SetVisibility(TAttribute<EVisibility>::CreateLambda(
         [this]() { return Model->Summary.bGrewUpInCare ? EVisibility::Visible : EVisibility::Collapsed; }));
 
