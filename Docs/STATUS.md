@@ -1107,3 +1107,5 @@ All text goes through LOCTEXT. Every rule stays in the portable core: the UI sho
 - **Fixed:** Start Life is irreversible but fired on a single press. A held "accept" from the cloud PC's virtual gamepad (Parsec and ViGEm are installed) carried a test run from Traits straight into the world. Start Life now asks "Begin this life?" with **Not yet** focused by default, so a stray or held accept cancels.
 
 After the fixes, Rung 2 **Succeeded** and the repackaged build boots to the corrected title. The Identity, Stream and Review pages and the pause menu were not walked through on screen, because the owner was using the desktop.
+
+**Released as `v0.1.0-alpha` (prerelease, 2026-10-11):** tag `v0.1.0-alpha` on `28541f6`, https://github.com/debdutta777/Perfect-World/releases/tag/v0.1.0-alpha. The repository is private, so the release is visible only to people with access. The asset is `PerfectWorld-v0.1.0-alpha-Win64.zip` (402,654,098 bytes, sha256 `1b8d854c…f687b1`): the Development packaged build with its `Saved` folder (logs, test saves) left out.
