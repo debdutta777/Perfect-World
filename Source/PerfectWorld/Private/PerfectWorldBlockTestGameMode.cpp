@@ -9,6 +9,7 @@
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "GameFramework/DefaultPawn.h"
+#include "PerfectWorldFrontEndHUD.h"
 #include "UObject/ConstructorHelpers.h"
 
 namespace
@@ -38,6 +39,8 @@ APerfectWorldBlockTestGameMode::APerfectWorldBlockTestGameMode()
         BlockMesh = Cube.Object;
     }
     DefaultPawnClass = ADefaultPawn::StaticClass();
+    // The front end (title, creation flow, pause menu) is drawn over this scene by the HUD.
+    HUDClass = APerfectWorldFrontEndHUD::StaticClass();
 }
 
 void APerfectWorldBlockTestGameMode::StartPlay()

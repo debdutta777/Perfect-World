@@ -1076,3 +1076,26 @@ Built by a Sonnet 5.5 subagent. The agent hit the usage limit just after pinning
 **Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 144/144: 22,738 world save, 1,451,654 world hash, 820,922 day loop and 79,559 Gate checks.
 
 **Integration still to do:** route the reducer's activity and time commands through `ApplyDayCommand`; the Unreal subsystem writing v7 slots and checkpoints; condition, practice and receipts feeding stats and the aptitude projection.
+
+## Checkpoint — first playable front end: title menu and creation flow (no appearance editor), 2026-10-11
+
+Started by a Sonnet 5.5 subagent, which wrote the subsystem additions, the HUD and the Slate screens before a session end cut it off. I finished the wiring, built it and merged it.
+
+**What it is:** C++ Slate, no UI assets, drawn by `APerfectWorldFrontEndHUD` over the block test scene, with the camera turning slowly behind a darkened overlay.
+- **Title:** New Game, Continue (the most recently written slot), Load (three slots with their descriptions), Settings, Quit.
+- **Creation, in five steps:**
+  1. Household cards.
+  2. Traits: all 20 with a rank slider each, a "spent / 1,000" bar that changes colour, the five presets, and Reset.
+  3. Identity: name, date of birth within the valid window, pronouns, primary language.
+  4. Stream: Science, Commerce or Humanities, with an optional reason.
+  5. Review: everything, the core's warnings (rank-0 household means institutional care), the opening home, and Start Life.
+- **Into the world:** Start Life saves to the first empty slot and enters the block world. Escape opens Resume, Save, Quit to Title and Quit.
+- **No appearance editor,** as the owner asked; appearance keeps its defaults.
+
+All text goes through LOCTEXT. Every rule stays in the portable core: the UI shows the core's own messages.
+
+**Files:**
+- New: `Source/PerfectWorld/Public/{PerfectWorldFrontEndHUD.h, PerfectWorldCreationViews.h}`, `Private/{PerfectWorldFrontEndHUD.cpp, PerfectWorldCharacterCreatorFlow.{h,cpp}}` and `Private/UI/*` (title, creation flow, household, traits, identity, stream, review, load, settings and pause pages, plus style and widget helpers).
+- Changed: `PerfectWorldCharacterCreatorSubsystem.h` (presets, identity, stream and review accessors), `PerfectWorldBlockTestGameMode.cpp` (`HUDClass`), `PerfectWorld.Build.cs` (Slate, SlateCore).
+
+**Exact check so far:** `python Scripts/build_unreal.py --engine-root "D:\Epic Games\UE_5.8"` (D: clone at `79aaa0f` plus these files): **Succeeded**, no warnings or error lines. The packaged build and a visual check come next. Nothing here has been seen running yet.

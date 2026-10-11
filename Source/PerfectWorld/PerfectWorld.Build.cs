@@ -13,6 +13,7 @@ public class PerfectWorld : ModuleRules
             "Engine",
             "PerfectWorldCore"
         });
-        PrivateDependencyModuleNames.AddRange(new[] { "InputCore" });
+        // Slate draws the front end (title, creation flow, pause menu) in code, with no UI assets.
+        PrivateDependencyModuleNames.AddRange(new[] { "InputCore", "Slate", "SlateCore" });
     }
 }

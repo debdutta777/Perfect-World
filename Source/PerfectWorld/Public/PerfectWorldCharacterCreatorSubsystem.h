@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "CharacterCreation.h"
+#include "PerfectWorldCreationViews.h"
 #include "PerfectWorldCharacterCreatorSubsystem.generated.h"
 
 /**
@@ -356,6 +357,65 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Perfect World|Save")
     bool DeleteSaveSlot(int32 SlotIndex);
+
+    // ---- Front-end additions (M1-15, M1-23). All rules stay in the portable core. ----
+
+    /** Starts a fresh draft: everything reset, then the canonical Balanced Scholar allocation and Kolkata as the home city. */
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Creation")
+    void BeginNewCreation();
+
+    /** The five verified presets in document order; the canonical default comes first. */
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Creation")
+    TArray<FPWPresetView> GetPresets() const;
+
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Creation")
+    bool ApplyPreset(FName PresetId);
+
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Creation")
+    FPWIdentityView GetIdentity() const;
+
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Creation")
+    bool SetGivenName(const FString& GivenName);
+
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Creation")
+    bool SetFamilyName(const FString& FamilyName);
+
+    /** Refused with the core's own message unless the character is exactly 16 on 2 June 2042. */
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Creation")
+    bool SetDateOfBirth(int32 Year, int32 Month, int32 Day);
+
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Creation")
+    bool SetPronouns(const FString& Pronouns);
+
+    /** Sets the primary language and keeps any additional languages already listed. */
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Creation")
+    bool SetPrimaryLanguage(const FString& PrimaryLanguage);
+
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Creation")
+    TArray<FPWStreamView> GetSchoolStreams() const;
+
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Creation")
+    FString GetSchoolReason() const;
+
+    /** Free: a stream changes the timetable and nothing else. The reason may be empty. */
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Creation")
+    bool SetSchoolStream(FName StreamId, const FString& Reason);
+
+    /** Review page data, including the core's own explanation when Start Life is refused. */
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Creation")
+    FPWCreationSummary GetCreationSummary() const;
+
+    /** The first save slot with no file, or -1 when all are occupied. */
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Save")
+    static int32 FindFirstEmptySaveSlot();
+
+    /** The occupied slot written most recently, or -1 when none is occupied. */
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Save")
+    static int32 FindMostRecentSaveSlot();
+
+    /** Whether the loaded or created life has been confirmed and play may begin. */
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Save")
+    bool HasLifeStarted() const;
 
 private:
     bool RecordResult(const PerfectWorld::OperationResult& Result);
