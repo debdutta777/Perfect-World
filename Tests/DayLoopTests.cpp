@@ -350,6 +350,7 @@ int main(int argc, char** argv)
     TestDayLoopSave();
     TestDayLoopRandom();
     TestDayLoopCalendar(*calendar);
+    TestDayLoopWorld();
     std::cout << "PerfectWorld day loop: " << DayLoopChecks << " checks passed\n";
     return 0;
 }

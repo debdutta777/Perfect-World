@@ -63,8 +63,8 @@ void TestRoundTrip()
         Check(text.front() == '{' && text.back() == '}', "a save is one object with no trailing newline");
         WorldSaveData loaded = Sentinel();
         const WorldSaveResult result = DeserializeWorldSave(text, loaded);
-        Check(result.Succeeded() && !result.Migrated && result.SourceVersion == 6 && result.HashVerified, "a v6 save loads, verified");
-        CheckSame(saved, loaded, "a v6 save round-trips field by field");
+        Check(result.Succeeded() && !result.Migrated && result.SourceVersion == 7 && result.HashVerified, "a v7 save loads, verified");
+        CheckSame(saved, loaded, "a v7 save round-trips field by field");
         Check(HashWorldState(loaded.World) == HashWorldState(saved.World), "the loaded hash equals the saved hash");
         Check(SerializeWorldSave(loaded) == text, "saving what was loaded gives byte-identical text");
         Check(ErrorOf(text + "\n") == WorldSaveError::None && ErrorOf(text + "  \r\n\n") == WorldSaveError::None, "trailing whitespace is tolerated");
@@ -74,7 +74,9 @@ void TestRoundTrip()
     Check(!rich.World.Flags.empty() && !rich.World.Gates.empty() && !rich.World.Clock.Pending().empty(), "the rich world has flags, Gates and events");
     Check(rich.World.Rng != MakeWorldState(11).Rng, "the rich world's streams have been drawn from");
     const std::string text = SerializeWorldSave(rich);
-    Check(text.find("\"schemaVersion\": 6") != std::string::npos && text.find("\"format\": \"perfectworld.save\"") != std::string::npos, "the envelope names its format and version");
+    Check(text.find("\"schemaVersion\": 7") != std::string::npos && text.find("\"format\": \"perfectworld.save\"") != std::string::npos, "the envelope names its format and version");
+    Check(text.find("\"dayloop\": \"pw.dayloop/1\\nstate now=") != std::string::npos && text.find('\n', text.find("\"dayloop\"")) == text.find("\n  }", text.find("\"dayloop\"")),
+          "the player's day is one string holding the pw.dayloop/1 envelope, on one line");
     Check(text.find("\"camera\": \"third_person\"") != std::string::npos && text.find("\"stream\": \"crystallisation\"") != std::string::npos, "camera and streams are written by stable name");
     Check(!CameraModeName(CameraMode::FirstPerson).empty() && ParseCameraMode("third_person") == CameraMode::ThirdPerson && !ParseCameraMode("fps"),
           "camera modes have stable names");
@@ -113,8 +115,9 @@ void TestCorruption()
           "a changed Gate field that still parses fails the hash check");
     Check(ErrorOf(ReplaceOnce(text, "\"seq\": \"0x", "\"seq\": \"0x1")) == WorldSaveError::Malformed, "a hex value of the wrong length is refused");
     Check(ErrorOf(ReplaceOnce(text, "\"0x", "\"0X")) == WorldSaveError::Malformed, "hex digits must be lowercase with a 0x prefix");
-    Check(ErrorOf(ReplaceOnce(text, "\"schemaVersion\": 6", "\"schemaVersion\": 7")) == WorldSaveError::UnsupportedVersion, "a newer envelope is refused as unsupported");
-    Check(ErrorOf(ReplaceOnce(text, "\"schemaVersion\": 6", "\"schemaVersion\": 5")) == WorldSaveError::UnsupportedVersion, "an envelope version never written is refused");
+    Check(ErrorOf(ReplaceOnce(text, "\"schemaVersion\": 7", "\"schemaVersion\": 8")) == WorldSaveError::UnsupportedVersion, "a newer envelope is refused as unsupported");
+    Check(ErrorOf(ReplaceOnce(text, "\"schemaVersion\": 7", "\"schemaVersion\": 5")) == WorldSaveError::UnsupportedVersion, "an envelope version never written is refused");
+    Check(ErrorOf(ReplaceOnce(text, "\"schemaVersion\": 7", "\"schemaVersion\": 6")) == WorldSaveError::Malformed, "a v6 record that carries a day loop has an unexpected key");
     Check(ErrorOf(ReplaceOnce(text, "perfectworld.save", "other.save")) == WorldSaveError::Malformed, "a different format is refused");
     Check(ErrorOf(ReplaceOnce(text, "\"hashVersion\"", "\"hashVersionX\"")) == WorldSaveError::Malformed, "an unknown top-level key is refused");
     Check(ErrorOf(ReplaceOnce(text, "\"seq\": ", "\"seed\": \"0x0000000000000000\", \"seq\": ")) == WorldSaveError::Malformed, "a duplicate key is refused");
@@ -260,6 +263,9 @@ void CheckMigrated(const std::string& text, int version, bool started, bool care
     const WorldSaveResult second = DeserializeWorldSave(SerializeWorldSave(data), reloaded);
     Check(second.Succeeded() && !second.Migrated && second.HashVerified, what);
     CheckSame(data, reloaded, what);
+    // A migrated life begins a fresh day at the campaign start, in step with the new world's clock.
+    Check(data.World.DayLoop == NewDayLoopState(0) && IsWorldDayInStep(data.World) && data.World.DayLoop.Seq == 0 && data.World.DayLoop.Phase == DayPhase::Plan,
+          what);
 
     // A cut-off legacy file is refused, as it always was (the prefix missing only the final newline is a whole record).
     for (std::size_t cut = 0; cut + 2 < text.size(); ++cut)
@@ -351,7 +357,7 @@ void TestRandomSequences()
             const std::string text = SerializeWorldSave(saved);
             WorldSaveData loaded = Sentinel();
             const WorldSaveResult result = DeserializeWorldSave(text, loaded);
-            Check(result.Succeeded() && result.HashVerified, "a mid-sequence save loads");
+            Check(result.Succeeded() && result.HashVerified && IsWorldDayInStep(loaded.World), "a mid-sequence save loads");
             Check(HashWorldState(loaded.World) == HashWorldState(sim.State()), "the loaded hash equals the live hash");
             if (index % 10 == 0)
                 CheckSame(saved, loaded, "a mid-sequence save round-trips field by field");
@@ -412,6 +418,7 @@ int main()
     TestMigration();
     TestRandomSequences();
     TestSlotStore();
+    TestWorldSaveDay();
     std::cout << "PASS: " << Checks << " world save checks\n";
     return 0;
 }

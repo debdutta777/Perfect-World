@@ -191,6 +191,42 @@ bool WorldSaveReaderRng(const JsonValue& value, WorldState& world, std::string& 
     }
     return true;
 }
+
+/** v7: the day loop's envelope text, which must be canonical and in step with the world clock. */
+bool WorldSaveReaderDayLoop(const JsonValue& value, WorldState& world, std::string& error)
+{
+    std::string text;
+    if (!WorldSaveAsText(&value, text))
+    {
+        error = "the player's day is not text.";
+        return false;
+    }
+    DayLoopParse parsed = ParseDayLoop(text);
+    if (!parsed.Ok())
+    {
+        error = "the player's day is damaged: " + parsed.Error;
+        return false;
+    }
+    if (parsed.State.Now != world.Clock.Now())
+    {
+        error = "the player's day and the world clock disagree about the time.";
+        return false;
+    }
+    world.DayLoop = std::move(parsed.State);
+    return true;
+}
+
+/** v6: no day loop was saved. A fresh day opens at the clock's instant; a clock outside the day loop's calendar cannot hold one. */
+bool WorldSaveReaderFreshDay(WorldState& world, std::string& error)
+{
+    world.DayLoop = NewDayLoopState(world.Clock.Now());
+    if (!IsWorldDayInStep(world))
+    {
+        error = "the world clock is outside the calendar a life can use.";
+        return false;
+    }
+    return true;
+}
 } // namespace
 
 WorldSaveResult WorldSaveFail(WorldSaveError error, std::string message)
@@ -311,15 +347,18 @@ std::string_view WorldSaveCreationSpan(std::string_view text)
     }
 }
 
-WorldSaveResult WorldSaveReadWorld(const JsonValue& value, WorldState& world)
+WorldSaveResult WorldSaveReadWorld(const JsonValue& value, WorldState& world, bool withDayLoop)
 {
     std::string error;
     const JsonValue* clock = value.IsObject() ? value.Find("clock") : nullptr;
-    if (!WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng"}) || clock == nullptr ||
-        !WorldSaveAsHex(value.Find("seed"), world.WorldSeed) || !WorldSaveAsHex(value.Find("seq"), world.Seq))
+    const bool keys = withDayLoop ? WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng", "dayloop"})
+                                  : WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng"});
+    if (!keys || clock == nullptr || !WorldSaveAsHex(value.Find("seed"), world.WorldSeed) || !WorldSaveAsHex(value.Find("seq"), world.Seq))
         return WorldSaveMalformed("the world record is incomplete.");
+    // The clock is read first: the day loop must agree with it.
     if (!WorldSaveReaderClock(*clock, world, error) || !WorldSaveReaderFlags(*value.Find("flags"), world, error) ||
-        !WorldSaveReaderGates(*value.Find("gates"), world, error) || !WorldSaveReaderRng(*value.Find("rng"), world, error))
+        !WorldSaveReaderGates(*value.Find("gates"), world, error) || !WorldSaveReaderRng(*value.Find("rng"), world, error) ||
+        !(withDayLoop ? WorldSaveReaderDayLoop(*value.Find("dayloop"), world, error) : WorldSaveReaderFreshDay(world, error)))
         return WorldSaveInvalid(error);
     return {};
 }

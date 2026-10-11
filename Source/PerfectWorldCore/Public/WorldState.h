@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DayLoop.h"
 #include "GameClock.h"
 #include "RandomStreams.h"
 
@@ -7,6 +8,10 @@
 #include <map>
 #include <string>
 #include <variant>
+
+#ifndef PERFECTWORLDCORE_API
+#define PERFECTWORLDCORE_API
+#endif
 
 namespace PerfectWorld
 {
@@ -43,8 +48,9 @@ struct GateSiteState
 
 /**
  * The authoritative world (SYSTEMS.md §2). Each member is one save section,
- * mutated only by the reducer through its owning system. This first version
- * holds the clock, world flags and Gate sites; systems add their slices as they arrive.
+ * mutated only by the reducer through its owning system. This version holds the
+ * clock, world flags, Gate sites, the RNG streams and the player's day; systems
+ * add their slices as they arrive.
  */
 struct WorldState
 {
@@ -61,16 +67,31 @@ struct WorldState
      * captured state back here, so a reload continues the sequence instead of re-rolling it.
      */
     RandomStreams::Snapshot Rng = RandomStreams().Capture();
+    /**
+     * The player's day (M2-12): condition, the running activity, practice, receipts, attendance,
+     * the plan and the commitment. It keeps its own Now, but there is one clock: in a valid world
+     * DayLoop.Now equals Clock.Now() (IsWorldDayInStep). The world clock is authoritative.
+     * AdvanceTime moves both; the day loop's own commands move its Now, and a world that routes
+     * them must move Clock to match. A fresh world is a fresh life at the clock's instant.
+     */
+    DayLoopState DayLoop = NewDayLoopState(0);
 };
 
-/** A fresh world: the clock at the campaign epoch (2 Jun 2042 06:00), no flags or Gates, RNG streams seeded from the world seed. */
+/** A fresh world: the clock at the campaign epoch (2 Jun 2042 06:00), no flags or Gates, RNG streams seeded from the world seed, a fresh day. */
 inline WorldState MakeWorldState(std::uint64_t worldSeed)
 {
     WorldState state;
     state.WorldSeed = worldSeed;
     state.Rng = RandomStreams(worldSeed).Capture();
+    state.DayLoop = NewDayLoopState(state.Clock.Now());
     return state;
 }
+
+/**
+ * True when the player's day is a valid day loop and its clock is the world clock. The save
+ * reader requires it, and the reducer keeps it true: a time advance moves both clocks.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API bool IsWorldDayInStep(const WorldState& state);
 
 /** Things that happened, in the order they happened. Presentation rebuilds from these. */
 struct TimeAdvanced

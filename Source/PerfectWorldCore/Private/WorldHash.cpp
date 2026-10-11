@@ -126,6 +126,18 @@ std::uint64_t WorldHashRngSection(const WorldState& state)
     return out.Result();
 }
 
+/**
+ * The player's day: the day loop's own hash (HashDayLoop), which covers its core text and the
+ * condition, activity, practice, receipt and attendance texts. A day loop that is not valid
+ * hashes as zero, and the save reader and the reducer never let one into a world.
+ */
+std::uint64_t WorldHashDayLoopSection(const WorldState& state)
+{
+    WorldHashWriter out;
+    out.Unsigned(HashDayLoop(state.DayLoop));
+    return out.Result();
+}
+
 void WorldHashAddSection(std::vector<WorldSectionHash>& sections, const char* name, std::uint64_t hash)
 {
     sections.push_back(WorldSectionHash{name, hash});
@@ -148,6 +160,7 @@ std::vector<WorldSectionHash> HashWorldSections(const WorldState& state)
     WorldHashAddSection(sections, "flags", WorldHashFlagsSection(state));
     WorldHashAddSection(sections, "gates", WorldHashGatesSection(state));
     WorldHashAddSection(sections, "rng", WorldHashRngSection(state));
+    WorldHashAddSection(sections, "dayloop", WorldHashDayLoopSection(state));
     return sections;
 }
 

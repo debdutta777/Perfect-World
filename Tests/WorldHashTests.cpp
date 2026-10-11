@@ -119,15 +119,17 @@ void TestGolden()
         // The reference encoder's values, not the library's: the CheckAgainstReference calls above already
         // proved the two equal, so pinning the reference means the golden never rests on the code under test alone.
         std::cout << std::hex << "GoldenHandBuilt = 0x" << RefWorld(hand) << "ULL\nGoldenEdge = 0x" << RefWorld(edge) << "ULL\n";
+        // Both worlds carry the fresh day, so the text below is all a separate implementation needs to rederive them.
+        std::cout << "--- fresh day envelope ---\n" << SerialiseDayLoop(hand.DayLoop) << "--- end envelope ---\n";
         std::exit(0);
     }
     Check(HashWorldState(hand) == GoldenHandBuilt, "the hand-built world hashes to its pinned value");
     Check(HashWorldState(edge) == GoldenEdge, "the edge-case world hashes to its pinned value");
     const std::vector<WorldSectionHash> sections = HashWorldSections(hand);
-    Check(sections.size() == 5 && sections[0].Name == "meta" && sections[1].Name == "clock" && sections[2].Name == "flags" &&
-              sections[3].Name == "gates" && sections[4].Name == "rng",
-          "sections come in the order meta, clock, flags, gates, rng");
-    Check(WorldHashVersion == 3, "the hash version is 3 with the rng section");
+    Check(sections.size() == 6 && sections[0].Name == "meta" && sections[1].Name == "clock" && sections[2].Name == "flags" &&
+              sections[3].Name == "gates" && sections[4].Name == "rng" && sections[5].Name == "dayloop",
+          "sections come in the order meta, clock, flags, gates, rng, dayloop");
+    Check(WorldHashVersion == 4, "the hash version is 4 with the dayloop section");
     Check(HashWorldState(hand) == HashWorldState(HandBuiltWorld()), "hashing is repeatable");
     Check(HashWorldState(hand) != HashWorldState(WorldState{}), "different worlds differ");
 }
@@ -137,6 +139,14 @@ void EditClock(WorldState& w, const std::function<void(GameClockSave&)>& edit)
     GameClockSave save = w.Clock.CaptureSave();
     edit(save);
     Check(w.Clock.RestoreSave(save), "an edited clock save is still consistent");
+}
+
+/** A valid edit of the player's day: change it, then restore the phase it implies. */
+void EditDay(WorldState& w, const std::function<void(DayLoopState&)>& edit)
+{
+    edit(w.DayLoop);
+    w.DayLoop.Phase = DayLoopPhaseOf(w.DayLoop);
+    Check(IsDayLoopStateValid(w.DayLoop), "an edited day loop is still valid");
 }
 
 void TestSingleFieldEdits()
@@ -179,6 +189,37 @@ void TestSingleFieldEdits()
         {"rng crystallisation word 0", "rng", [](WorldState& w) { w.Rng[3].Words[0] += 1; }},
         {"rng crystallisation draws", "rng", [](WorldState& w) { w.Rng[3].Draws += 1; }},
         {"rng two streams swapped", "rng", [](WorldState& w) { std::swap(w.Rng[0], w.Rng[1]); }},
+        {"day energy", "dayloop", [](WorldState& w) { EditDay(w, [](DayLoopState& d) { d.Condition.Energy -= 1; }); }},
+        {"day hunger", "dayloop", [](WorldState& w) { EditDay(w, [](DayLoopState& d) { d.Condition.Hunger += 1; }); }},
+        {"day stress", "dayloop", [](WorldState& w) { EditDay(w, [](DayLoopState& d) { d.Condition.Stress += 1; }); }},
+        {"day clock", "dayloop", [](WorldState& w) { EditDay(w, [](DayLoopState& d) { d.Now += 1; }); }},
+        {"day planned", "dayloop", [](WorldState& w) { EditDay(w, [](DayLoopState& d) { d.Planned = true; }); }},
+        {"day plan item", "dayloop",
+         [](WorldState& w) { EditDay(w, [](DayLoopState& d) { d.Planned = true, d.Plan = {{360, "activity.eat_meal"}}; }); }},
+        {"day plan item activity", "dayloop",
+         [](WorldState& w) { EditDay(w, [](DayLoopState& d) { d.Planned = true, d.Plan = {{360, "activity.rest"}}; }); }},
+        {"day last action", "dayloop",
+         [](WorldState& w)
+         {
+             EditDay(w,
+                     [](DayLoopState& d)
+                     {
+                         d.Seq = 1;
+                         d.HasLastAction = true;
+                         d.Last = {DayCommandKind::PlanDay, 0, ""};
+                     });
+         }},
+        {"day asleep", "dayloop", [](WorldState& w) { EditDay(w, [](DayLoopState& d) { d.Asleep = true; }); }},
+        {"day pass", "dayloop",
+         [](WorldState& w)
+         {
+             EditDay(w, [](DayLoopState& d) { d.Planned = true; });
+             DayCommand pass;
+             pass.Kind = DayCommandKind::Pass;
+             pass.Minutes = 30;
+             pass.Pass = DayPassKind::Walk;
+             Check(ApplyDayCommand(w.DayLoop, DayLoopCatalogues{}, pass).Ok(), "a pass needs no catalogue");
+         }},
     };
     const WorldState base = HandBuiltWorld();
     const std::uint64_t baseWorld = HashWorldState(base);
@@ -222,6 +263,37 @@ void TestSingleFieldEdits()
     Check(HashWorldState(MakeWorld(1, 0, {}, {{"ab", true}, {"c", true}})) != HashWorldState(MakeWorld(1, 0, {}, {{"a", true}, {"bc", true}})),
           "flag IDs cannot bleed together");
     Check(HashWorldState(MakeWorld(1, 2, {}, {})) != HashWorldState(MakeWorld(2, 1, {}, {})), "seed and Seq are not interchangeable");
+}
+
+void TestDayLoopSection()
+{
+    // The section is the day loop's own hash: HashDayLoop, and the hash line its envelope stores.
+    const WorldState hand = HandBuiltWorld();
+    Check(RefEnvelopeHash(hand.DayLoop) == HashDayLoop(hand.DayLoop) && HashDayLoop(hand.DayLoop) != 0,
+          "the envelope's stored hash is the day loop's hash");
+    Check(hand.DayLoop == NewDayLoopState(0) && IsDayLoopStateValid(hand.DayLoop) && MakeWorldState(1).DayLoop == NewDayLoopState(0),
+          "a fresh world starts a fresh valid day at the campaign start");
+    Check(IsWorldDayInStep(MakeWorldState(1)) && IsWorldDayInStep(WorldSim(9).State()), "a fresh world's day is in step with its clock");
+    Check(!IsWorldDayInStep(hand), "the hand-built world's clock (1234) is not its day's (0)");
+
+    // The day's own hash, not its clock alone, is what the section carries: two worlds with the same clock but different days differ.
+    WorldState tired = MakeWorldState(1);
+    tired.DayLoop.Condition.Energy -= 1;
+    Check(IsWorldDayInStep(tired) && HashWorldState(tired) != HashWorldState(MakeWorldState(1)), "a different day is a different world");
+    CheckAgainstReference(tired, "a changed day matches the reference encoder");
+
+    // Advancing time moves the day with the clock, exactly, in one step or several.
+    WorldSim whole(3);
+    WorldSim split(3);
+    Check(whole.Submit(Advance(2000)).Accepted, "advance");
+    for (int i = 0; i < 4; ++i)
+        Check(split.Submit(Advance(500)).Accepted, "advance in parts");
+    Check(whole.State().DayLoop.Now == 2000 && IsWorldDayInStep(whole.State()) && IsWorldDayInStep(split.State()), "the day followed the clock");
+    Check(whole.State().DayLoop.Condition == MakeWorldState(3).DayLoop.Condition && whole.State().DayLoop.Seq == 0,
+          "a bare advance spends no condition and records no day command (time moves through the day loop's commands)");
+    Check(whole.State().DayLoop.Phase == DayLoopPhaseOf(whole.State().DayLoop) && whole.State().DayLoop.Phase == DayPhase::Plan,
+          "an unplanned day stays in the plan phase");
+    CheckAgainstReference(whole.State(), "an advanced world matches the reference encoder");
 }
 
 void TestFlagOrder()
@@ -272,6 +344,8 @@ void TestRandomReplay()
             const std::uint64_t before = HashWorldState(a.State());
             const CommandResult ra = a.Submit(command);
             const CommandResult rb = b.Submit(command);
+            Check(IsWorldDayInStep(a.State()) && a.State().DayLoop.Phase == DayLoopPhaseOf(a.State().DayLoop),
+                  "the player's day follows the world clock after every command");
             const std::string rendered = Render(ra);
             Check(rendered == Render(rb), "two worlds fed the same commands give identical results");
             const std::uint64_t after = HashWorldState(a.State());
@@ -391,6 +465,7 @@ int main()
     TestReferenceEncoder();
     TestGolden();
     TestSingleFieldEdits();
+    TestDayLoopSection();
     TestFlagOrder();
     TestReplayCommandLog();
     TestRandomReplay();

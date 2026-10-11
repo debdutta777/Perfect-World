@@ -16,6 +16,8 @@
 #include <utility>
 
 void Check(bool condition, const char* message);
+/** WorldSaveDayTests.cpp: the day loop in the v7 save, and the v6 save without it. */
+void TestWorldSaveDay();
 
 namespace
 {
@@ -90,6 +92,23 @@ void DrawFromStreams(WorldState& world, std::mt19937_64& random)
     world.Rng = streams.Capture();
 }
 
+/** A day with something in it that costs no time: planned, tired, a plan, three commands and a wake counted. The clock is untouched. */
+void BusyDay(WorldState& world)
+{
+    DayLoopState& d = world.DayLoop;
+    d.Condition.Energy -= 1234;
+    d.Condition.Hunger += 321;
+    d.Condition.Stress += 17;
+    d.Planned = true;
+    d.Plan = {{360, "activity.eat_meal"}, {620, "activity.attend_class"}};
+    d.Seq = 3;
+    d.Wakes = 1;
+    d.HasLastAction = true;
+    d.Last = {DayCommandKind::PlanDay, d.Now, ""};
+    d.Phase = DayLoopPhaseOf(d);
+    Check(IsWorldDayInStep(world), "a busy day is valid and in step with the clock");
+}
+
 WorldSaveData RichSave(std::uint64_t seed, int steps)
 {
     std::mt19937_64 random(seed);
@@ -102,6 +121,7 @@ WorldSaveData RichSave(std::uint64_t seed, int steps)
     (void)sim.Submit(SystemCommand(GateRegister{"gate.pinned", GateRank::C, GateStatus::Contained}));
     WorldSaveData data = SaveOf(sim, MakeCreation("grandparent_household"));
     DrawFromStreams(data.World, random);
+    BusyDay(data.World);
     data.Player.Camera = CameraMode::ThirdPerson;
     data.Player.PitchCdeg = -1234;
     return data;
@@ -115,10 +135,14 @@ WorldSaveData EdgeSave()
     w.WorldSeed = std::numeric_limits<std::uint64_t>::max();
     w.Seq = std::numeric_limits<std::uint64_t>::max() - 1;
     GameClockSave clock;
-    clock.Now = Min64;
+    // The clock sits at the last instant a day can use (a save with a clock outside that range is refused);
+    // the extremes live in the scheduled events and the other 64-bit fields.
+    clock.Now = DayLoopMaxInstant;
     clock.NextHandle = Max64;
-    clock.Pending = {{Max64 - 1, Max64, std::string("nul\0inside/\xff\x80/key", 17)}, {1, Min64, ""}};
+    clock.Pending = {{Max64 - 1, Max64, std::string("nul\0inside/\xff\x80/key", 17)}, {1, DayLoopMaxInstant, ""}};
     Check(w.Clock.RestoreSave(clock), "the edge clock is consistent");
+    w.DayLoop = NewDayLoopState(DayLoopMaxInstant);
+    BusyDay(w);
     w.Flags = {{"", false}, {std::string("a\0b", 3), true}, {"\xc3\xa9.unicode", true}, {"quote\"back\\slash", false}};
     w.Gates["gate.edge"] = GateSiteState{GateRank::S, GateStatus::Sealed, Min64, std::numeric_limits<std::int32_t>::max()};
     constexpr std::uint64_t Top = std::numeric_limits<std::uint64_t>::max();
@@ -173,6 +197,8 @@ void CheckSame(const WorldSaveData& a, const WorldSaveData& b, const char* what)
     Check(a.World.Flags == b.World.Flags, what);
     Check(SameGates(a.World, b.World), what);
     Check(a.World.Rng == b.World.Rng, what);
+    Check(a.World.DayLoop == b.World.DayLoop && SerialiseDayLoop(a.World.DayLoop) == SerialiseDayLoop(b.World.DayLoop), what);
+    Check(IsWorldDayInStep(a.World) == IsWorldDayInStep(b.World) && a.World.DayLoop.Now == a.World.Clock.Now(), what);
     Check(a.Player == b.Player, what);
     Check(SerializeCreationSave(a.Creation) == SerializeCreationSave(b.Creation), what);
     Check(HashWorldState(a.World) == HashWorldState(b.World), what);

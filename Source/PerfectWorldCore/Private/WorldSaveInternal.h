@@ -30,7 +30,11 @@ bool WorldSaveExactKeys(const JsonValue& object, std::initializer_list<std::stri
 /** The text of the top-level "creation" value of a document that has already parsed, or empty. */
 std::string_view WorldSaveCreationSpan(std::string_view text);
 
-/** Reads the "world" and "player" objects. Success leaves the result default; a failure carries the refusal. */
-WorldSaveResult WorldSaveReadWorld(const JsonValue& value, WorldState& world);
+/**
+ * Reads the "world" and "player" objects. Success leaves the result default; a failure carries the refusal.
+ * `withDayLoop` is true for the v7 record (a "dayloop" key is required) and false for v6 (the key is refused
+ * and the world gets a fresh day).
+ */
+WorldSaveResult WorldSaveReadWorld(const JsonValue& value, WorldState& world, bool withDayLoop);
 WorldSaveResult WorldSaveReadPlayer(const JsonValue& value, PlayerPlacement& player);
 } // namespace PerfectWorld

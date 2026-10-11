@@ -32,6 +32,7 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/CityData.cpp
     Source/PerfectWorldCore/Private/WorldSave.cpp
     Source/PerfectWorldCore/Private/WorldSaveReader.cpp
+    Source/PerfectWorldCore/Private/WorldDay.cpp
     Source/PerfectWorldCore/Private/AssetRegistry.cpp
     Source/PerfectWorldCore/Private/AssetReader.cpp
     Source/PerfectWorldCore/Private/AssetContractReader.cpp
@@ -181,7 +182,7 @@ add_executable(PerfectWorldReceiptTests Tests/OpportunityReceiptsTests.cpp Tests
 target_link_libraries(PerfectWorldReceiptTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldReceiptTests COMMAND PerfectWorldReceiptTests)
 
-add_executable(PerfectWorldDayLoopTests Tests/DayLoopTests.cpp Tests/DayLoopRefusalTests.cpp Tests/DayLoopSaveTests.cpp Tests/DayLoopRandomTests.cpp Tests/DayLoopCalendarTests.cpp)
+add_executable(PerfectWorldDayLoopTests Tests/DayLoopTests.cpp Tests/DayLoopRefusalTests.cpp Tests/DayLoopSaveTests.cpp Tests/DayLoopRandomTests.cpp Tests/DayLoopCalendarTests.cpp Tests/DayLoopWorldTests.cpp)
 target_link_libraries(PerfectWorldDayLoopTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldDayLoopTests COMMAND PerfectWorldDayLoopTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
@@ -228,7 +229,7 @@ add_executable(PerfectWorldWorldHashTests Tests/WorldHashTests.cpp)
 target_link_libraries(PerfectWorldWorldHashTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldWorldHashTests COMMAND PerfectWorldWorldHashTests)
 
-add_executable(PerfectWorldWorldSaveTests Tests/WorldSaveTests.cpp)
+add_executable(PerfectWorldWorldSaveTests Tests/WorldSaveTests.cpp Tests/WorldSaveDayTests.cpp)
 target_link_libraries(PerfectWorldWorldSaveTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldWorldSaveTests COMMAND PerfectWorldWorldSaveTests)
 

@@ -55,6 +55,11 @@ WorldSim::WorldSim(std::uint64_t worldSeed, std::size_t eventCap) : EventCap_(ev
     State_ = MakeWorldState(worldSeed);
 }
 
+WorldSim::WorldSim(WorldState state, std::size_t eventCap)
+    : State_(std::move(state)), EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap)
+{
+}
+
 std::optional<Rejection> WorldSim::Validate(const Command& command) const
 {
     if (const auto* advance = std::get_if<AdvanceTime>(&command.Payload))
@@ -63,6 +68,16 @@ std::optional<Rejection> WorldSim::Validate(const Command& command) const
             return Reject("time.non_positive", "Time can only move forward, by at least one minute.");
         if (advance->Minutes > MaxSingleAdvanceMinutes)
             return Reject("time.too_long", "A single advance may not exceed ten years.");
+        // The player's day keeps the same clock (WorldState::DayLoop). While an activity runs the
+        // day stands at its start, and while the player sleeps only waking moves time: a bare
+        // advance would leave the day invalid or count the sleep twice. Those time commands move
+        // the clock through the day loop's own commands.
+        if (State_.DayLoop.Runner.Active())
+            return Reject("time.activity_running", "An activity is running; finish or cancel it before time moves on.");
+        if (State_.DayLoop.Asleep)
+            return Reject("time.asleep", "The player is asleep; time moves on when they wake.");
+        if (advance->Minutes > DayLoopMaxInstant - State_.Clock.Now())
+            return Reject("time.beyond_calendar", "The calendar of a life ends one hundred years after it began.");
         return std::nullopt;
     }
     if (const auto* schedule = std::get_if<ScheduleWorldEvent>(&command.Payload))
@@ -138,6 +153,9 @@ void WorldSim::Apply(const Command& command, CommandResult& result)
         const GameInstant from = State_.Clock.Now();
         const std::size_t firstEvent = result.Events.size();
         RunTimeTo(from + advance->Minutes, result);
+        // One clock: the day follows the world clock to wherever the advance stopped (a capped advance may stop short).
+        State_.DayLoop.Now = State_.Clock.Now();
+        State_.DayLoop.Phase = DayLoopPhaseOf(State_.DayLoop);
         result.Events.insert(result.Events.begin() + static_cast<std::ptrdiff_t>(firstEvent),
                              DomainEvent{0, from, TimeAdvanced{from, State_.Clock.Now()}});
     }

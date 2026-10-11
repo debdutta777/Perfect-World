@@ -119,5 +119,7 @@ struct DayLoopRng
 void TestDayLoopRefusals();
 void TestDayLoopSave();
 void TestDayLoopRandom();
+// DayLoopWorldTests.cpp: the scripted day inside the world state, the world hash and the v7 world save.
+void TestDayLoopWorld();
 // DayLoopCalendarTests.cpp: takes the real 2042-43 calendar.
 void TestDayLoopCalendar(const PerfectWorld::SchoolCalendar& calendar);

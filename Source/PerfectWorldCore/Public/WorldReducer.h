@@ -47,6 +47,11 @@ class PERFECTWORLDCORE_API WorldSim
 public:
     /** `eventCap` exists for tests; the game always uses MaxEventsPerAdvance. */
     explicit WorldSim(std::uint64_t worldSeed, std::size_t eventCap = MaxEventsPerAdvance);
+    /**
+     * Continue a loaded world (DeserializeWorldSave's World). The state must be in step
+     * (IsWorldDayInStep); the command log starts empty, so it holds the commands since the load.
+     */
+    explicit WorldSim(WorldState state, std::size_t eventCap = MaxEventsPerAdvance);
 
     CommandResult Submit(const Command& command);
     const WorldState& State() const noexcept { return State_; }

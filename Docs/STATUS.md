@@ -1053,3 +1053,26 @@ Built by a Sonnet 5.5 subagent. The agent hit the usage limit during its final b
 **Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 144/144, `PerfectWorld time contract: 205778 checks passed`.
 
 **Remaining:** the Unreal (PIE) half: the free-roam ticker and the pause overlays that read this state.
+
+## Checkpoint — the player's day joins the world state, the world hash (version 4) and the world save (schema v7), 2026-10-11
+
+Built by a Sonnet 5.5 subagent. The agent hit the usage limit just after pinning the goldens, so I built and tested the worktree myself (143/143 there), reviewed it, and merged it here next to the time contract.
+
+**Files changed:**
+- `WorldState.h`: `DayLoopState DayLoop` in the world, `MakeWorldState` starting a fresh day, and `IsWorldDayInStep`.
+- New `Private/WorldDay.cpp`.
+- `WorldHash.{h,cpp}`: a `dayloop` section and `WorldHashVersion` 4.
+- `WorldSave.{h,cpp}`, `WorldSaveReader.cpp` and `WorldSaveInternal.h`: schema v7 with a `dayloop` key carrying the `pw.dayloop/1` envelope.
+- `WorldReducer.{h,cpp}`: a time advance moves both clocks.
+- Tests: `WorldHashReference.h` and `WorldHashTests.cpp` (goldens re-pinned to `0x6172068cb2eb0ae3` and `0xa26bab6e23ab1fbf`, set only once the reference encoder and the library agreed), `GateSitesTests.cpp` (six sections), the save and day-loop test support, and new `Tests/{WorldSaveDayTests.cpp, DayLoopWorldTests.cpp}`.
+- `CMakeLists.txt`.
+
+**Design:**
+- **One clock:** the world clock is authoritative, and a valid world has `DayLoop.Now == Clock.Now()`. The save reader refuses any other world.
+- **Schema bump:** v7, rather than making `dayloop` optional, so every key stays required and an older build refuses a v7 file as newer rather than as damaged.
+- **v6 saves:** still load with a fresh day. Their version-3 hash cannot be recomputed, so they load unverified.
+- **v1–v5:** still migrate.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 144/144: 22,738 world save, 1,451,654 world hash, 820,922 day loop and 79,559 Gate checks.
+
+**Integration still to do:** route the reducer's activity and time commands through `ApplyDayCommand`; the Unreal subsystem writing v7 slots and checkpoints; condition, practice and receipts feeding stats and the aptitude projection.
