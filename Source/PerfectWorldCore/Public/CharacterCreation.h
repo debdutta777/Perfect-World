@@ -47,6 +47,8 @@ constexpr std::string_view DefaultHouseholdTemplateId = "parent_household";
 constexpr std::size_t CreationPresetCount = 5;
 /** The canonical default preset. Docs/CHARACTER_CREATION.md, "Verified presets". */
 constexpr std::string_view DefaultPresetId = "balanced_scholar";
+/** How many allocation edits the creator remembers for undo (and, separately, redo). */
+constexpr std::size_t MaxUndoDepth = 32;
 
 /**
  * Where the player had got to when the slot was written, so Load Game returns
@@ -224,6 +226,21 @@ struct CharacterCreationSave
     bool IdentityMigrated = false;
 };
 
+/**
+ * What an allocation edit WOULD produce, computed without changing the draft.
+ * Result is exactly what the matching real edit would return, so a refusal
+ * (for example after life has started) previews as the same refusal. When the
+ * edit would be refused, Review and Home describe the unchanged draft.
+ */
+struct AllocationPreview
+{
+    OperationResult Result;
+    CreationReview Review;
+    /** The opening home the previewed allocation resolves to, so a preset that
+     *  leaves Household Resources at rank 0 shows institutional care up front. */
+    OpeningHomePlan Home;
+};
+
 class PERFECTWORLDCORE_API CharacterCreator
 {
 public:
@@ -244,6 +261,37 @@ public:
     [[nodiscard]] OperationResult ApplyPreset(std::string_view presetId);
     [[nodiscard]] OperationResult StartLife();
     void Reset();
+
+    /**
+     * Every trait to rank 0 as one transaction (one undo step, not twenty edits).
+     * Leaves the draft under budget, so it cannot start life until reallocated.
+     * Refused after life begins; clearing an already empty draft is a no-op that
+     * adds no undo step.
+     */
+    [[nodiscard]] OperationResult ClearAllocation();
+    /** Back to the default preset (DefaultPresetId) as one transaction. */
+    [[nodiscard]] OperationResult ResetAllocation();
+
+    /**
+     * Allocation history. Only trait ranks are recorded: rank edits, presets,
+     * clear and reset each add one step, and an edit that changes nothing adds
+     * none. A new edit discards redo. Identity, household, stream and
+     * appearance are never touched. Undo and redo are refused after life begins
+     * (CanUndo and CanRedo then report false); with nothing to undo or redo they
+     * fail with NothingToConfirm. The history is never saved and is cleared by
+     * Reset and RestoreSave.
+     */
+    [[nodiscard]] bool CanUndo() const noexcept;
+    [[nodiscard]] bool CanRedo() const noexcept;
+    [[nodiscard]] OperationResult Undo();
+    [[nodiscard]] OperationResult Redo();
+    [[nodiscard]] std::size_t UndoDepth() const noexcept { return UndoStack_.size(); }
+    [[nodiscard]] std::size_t RedoDepth() const noexcept { return RedoStack_.size(); }
+
+    /** What ApplyPreset / ClearAllocation / ResetAllocation would produce. Never changes the draft. */
+    [[nodiscard]] AllocationPreview PreviewPreset(std::string_view presetId) const;
+    [[nodiscard]] AllocationPreview PreviewClear() const;
+    [[nodiscard]] AllocationPreview PreviewReset() const;
 
     [[nodiscard]] CreationReview Review() const;
     [[nodiscard]] std::int32_t GetTraitRank(std::string_view traitId) const noexcept;
@@ -308,7 +356,13 @@ private:
                                                                  IdentityProfile& identity, SchoolChoice& school,
                                                                  bool& migrated);
 
+    /** The one place a rank change is committed: records undo, drops redo. Equal ranks are a no-op. */
+    void CommitRanks(const std::array<std::int32_t, TraitCount>& proposed);
+    void ClearHistory() noexcept;
+
     std::array<std::int32_t, TraitCount> TraitRanks_{};
+    std::vector<std::array<std::int32_t, TraitCount>> UndoStack_;
+    std::vector<std::array<std::int32_t, TraitCount>> RedoStack_;
     std::string HouseholdTemplateId_{DefaultHouseholdTemplateId};
     IdentityProfile Identity_;
     SchoolChoice School_;

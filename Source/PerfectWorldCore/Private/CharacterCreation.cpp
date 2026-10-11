@@ -193,7 +193,7 @@ OperationResult CharacterCreator::SetTraitRank(std::string_view traitId, std::in
     {
         return validation;
     }
-    TraitRanks_ = proposed;
+    CommitRanks(proposed);
     return OperationResult::Success();
 }
 
@@ -231,7 +231,7 @@ OperationResult CharacterCreator::ApplyPreset(std::string_view presetId)
     {
         return validation;
     }
-    TraitRanks_ = preset->Ranks;
+    CommitRanks(preset->Ranks);
     return OperationResult::Success();
 }
 
@@ -256,6 +256,7 @@ OperationResult CharacterCreator::StartLife()
 void CharacterCreator::Reset()
 {
     TraitRanks_.fill(0);
+    ClearHistory();
     HouseholdTemplateId_ = std::string(DefaultHouseholdTemplateId);
     Identity_ = {};
     School_ = {};
@@ -451,6 +452,7 @@ OperationResult CharacterCreator::RestoreSave(const CharacterCreationSave& save)
     }
 
     TraitRanks_ = save.TraitRanks;
+    ClearHistory();
     HouseholdTemplateId_ = std::move(household);
     Identity_ = std::move(identity);
     School_ = std::move(school);

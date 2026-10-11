@@ -1109,3 +1109,21 @@ All text goes through LOCTEXT. Every rule stays in the portable core: the UI sho
 After the fixes, Rung 2 **Succeeded** and the repackaged build boots to the corrected title. The Identity, Stream and Review pages and the pause menu were not walked through on screen, because the owner was using the desktop.
 
 **Released as `v0.1.0-alpha` (prerelease, 2026-10-11):** tag `v0.1.0-alpha` on `28541f6`, https://github.com/debdutta777/Perfect-World/releases/tag/v0.1.0-alpha. The repository is private, so the release is visible only to people with access. The asset is `PerfectWorld-v0.1.0-alpha-Win64.zip` (402,654,098 bytes, sha256 `1b8d854c…f687b1`): the Development packaged build with its `Saved` folder (logs, test saves) left out.
+
+## Checkpoint — core data for the trait screen: presentation, cost queries, atomic edits with undo, 2026-10-11
+
+Built by a Claude Sonnet 5.5 subagent and merged here as a straight copy (its base `0e681da` matches main's code for these files).
+
+**Files:** new `Public/CreationPresentation.h`, `Private/{CreationPresentation.cpp, CreationEdits.cpp}` and `Tests/CreationPresentationTests.cpp`; additive changes to `CharacterCreation.{h,cpp}`; `CMakeLists.txt`.
+
+**What it adds:**
+- **Presentation data:** the seven trait groups, plus per-trait descriptions and per-rank meanings with structured effect lines (unit, direction and value transcribed from `CHARACTER_CREATION.md`'s canonical catalogue). Household Resources rank 0 states institutional care.
+- **Cost queries:** cumulative cost and incremental cost or refund.
+- **Atomic edits:** `ClearAllocation`, `ResetAllocation` and `ApplyPreset` are each one undo step.
+- **Undo:** a 32-deep undo and redo stack covering ranks only, refused after Start Life and never saved.
+- **Previews:** for presets, clear and reset, each running the real edit on a copy.
+- **Unchanged:** the save format, still schema 5.
+
+**Check:** `python Scripts/build_core.py --build-dir D:/pwc_tpres` in the agent's worktree: **100% tests passed out of 145**, no warnings. The same run on main was still in progress at commit time and is recorded separately.
+
+**For review:** the agent wrote the 80 rank meanings (ranks 1–4) itself. The doc gives only effect numbers, so the wording needs a narrative pass.
