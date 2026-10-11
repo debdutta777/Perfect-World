@@ -39,3 +39,11 @@ These are **placeholder greybox props, not final art**. They are Western-styled 
 The owner decided the whole game is developed with voxel block visuals — cuboids with pixel textures, generated from data — until the game is complete (GAME_PLAN.md §3, §8 M9). This supersedes the two downloaded CC0 packs above as the development-time look: greyboxing now uses generated block placeholders, not this Western-styled furniture. `ASSET_PIPELINE.md` decides whether the packs are kept as local reference material or removed; this document is not the authority on that call.
 
 Provenance rules for the real art that eventually replaces the blocks — Blender/FBX/GLB sources and AI-generated sources, arriving through a drop folder or editor import — live in `ASSET_PIPELINE.md`, not here. Future entries in this file should record specific delivered images and models, the way the entries above do; the pipeline-level provenance policy belongs in `ASSET_PIPELINE.md`.
+
+## UI fonts — Hind Siliguri (added 2026-10-11)
+
+- **What:** `Content/UIResources/Fonts/HindSiliguri/HindSiliguri-{Regular,Medium,SemiBold,Bold}.ttf`, static weights covering Latin and Bengali script.
+- **Source:** Google Fonts, `https://github.com/google/fonts/tree/main/ofl/hindsiliguri`, downloaded 2026-10-11.
+- **Author:** Indian Type Foundry (copyright 2015).
+- **Licence:** SIL Open Font License 1.1; the licence text ships beside the fonts as `OFL.txt` and must stay with them in packaged builds.
+- **Why:** the front-end UI review (gpt-6.1-sol and gpt-6-astra) found the engine default font a main reason the menus looked basic. They recommended a contemporary Latin face plus Noto Sans Bengali for names. Hind Siliguri covers both scripts in one family, and Google Fonts ships it as static weights, which Slate loads reliably, unlike the variable-only Manrope.
