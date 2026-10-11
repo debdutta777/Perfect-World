@@ -1,0 +1,52 @@
+{
+  "type": "thread_template",
+  "id": "thread.canal_side_stall",
+  "name": "The tea stall's thin margin",
+  "situation": "neighbourhood",
+  "kind": "promise",
+  "opensWhen": "The player becomes a regular at the tea stall by the bus stand and hears that the monsoon is eating its margin.",
+  "calendar": "calendar.nabapara_2042_43",
+  "note": "INDIA_WORLD_BIBLE.md: Farida Qadri's narrow-margin stall at Shanti Chai Corner, and the 'reconcile a shop daybook' activity (SCHOOL_AND_PROGRESSION.md). The practical-project arc of ROADMAP M3-17. The stallkeeper is a role, so any neighbourhood stall keeper can fill it. Authored draft.",
+  "roles": [
+    { "id": "player", "name": "You" },
+    { "id": "stallkeeper", "name": "The stall keeper" }
+  ],
+  "stages": [
+    { "id": "wet_mornings", "name": "Wet mornings", "intensity": 150, "dwellDays": 12,
+      "expression": { "channel": "ambient", "by": "stallkeeper",
+        "observe": "On wet mornings the stall opens late and the steel tumblers go out half filled." } },
+    { "id": "margin_thin", "name": "Thin margin", "intensity": 450, "dwellDays": 12,
+      "expression": { "channel": "conversation", "by": "stallkeeper",
+        "observe": "She mentions that the daybook does not add up and that the supplier wants cash on Thursday." } },
+    { "id": "short_hours", "name": "Short hours", "intensity": 750, "dwellDays": 16,
+      "expression": { "channel": "ambient", "by": "stallkeeper",
+        "observe": "The shutter comes down an hour early and the school crowd drifts to another corner." } },
+    { "id": "shutter_down", "name": "Shutter down", "intensity": 1000, "dwellDays": 16,
+      "expression": { "channel": "scene", "by": "stallkeeper", "scene": "scene_stall_evening_shutter",
+        "observe": "The evening shutter stays down. A handwritten notice says she will be back soon." } }
+  ],
+  "resolutions": [
+    { "id": "books_straightened", "name": "Books straightened", "outcome": "repaired",
+      "expression": { "channel": "scene", "by": "stallkeeper", "scene": "scene_stall_books_straightened",
+        "observe": "You find the missing line in the daybook together. The supplier is paid, and she shows you where the tumblers are kept." } },
+    { "id": "neighbourhood_supply", "name": "Shared stock run", "outcome": "settled",
+      "expression": { "channel": "conversation", "by": "stallkeeper",
+        "observe": "A few regulars take turns on the Thursday stock run. The stall keeps its hours." } },
+    { "id": "shorter_hours", "name": "Shorter hours", "outcome": "distance",
+      "expression": { "channel": "scene", "by": "stallkeeper", "scene": "scene_stall_shorter_hours",
+        "observe": "The stall settles into shorter hours. The school crowd finds another corner and she stops mentioning it." } }
+  ],
+  "defaultResolution": "shorter_hours",
+  "triggers": [
+    { "id": "daybook_reconciled", "armedFrom": "wet_mornings", "armedUntil": "shutter_down", "effect": "resolve", "resolution": "books_straightened",
+      "when": [ { "kind": "event", "event": "daybook_reconciled", "parties": ["player", "stallkeeper"] } ] },
+    { "id": "stock_run_shared", "armedFrom": "margin_thin", "armedUntil": "shutter_down", "effect": "resolve", "resolution": "neighbourhood_supply",
+      "when": [ { "kind": "event", "event": "stock_run_shared", "parties": ["player", "stallkeeper"], "count": 2 } ] },
+    { "id": "regular_custom", "armedFrom": "margin_thin", "armedUntil": "short_hours", "effect": "ease",
+      "when": [ { "kind": "event", "event": "regular_custom", "parties": ["player", "stallkeeper"], "count": 3 } ] },
+    { "id": "festival_stock_worry", "armedFrom": "margin_thin", "armedUntil": "short_hours", "effect": "express",
+      "when": [ { "kind": "calendar", "span": "kali_puja_diwali", "phase": "during" } ],
+      "expression": { "channel": "conversation", "by": "stallkeeper",
+        "observe": "It is the busiest night of the year, and she cannot afford the stock to meet it." } }
+  ]
+}

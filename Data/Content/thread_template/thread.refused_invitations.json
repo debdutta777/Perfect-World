@@ -1,0 +1,55 @@
+{
+  "type": "thread_template",
+  "id": "thread.refused_invitations",
+  "name": "Refused invitations",
+  "situation": "friendship",
+  "kind": "grudge",
+  "opensWhen": "A friend has asked the player to join something three times, and the player has said no each time.",
+  "calendar": "calendar.nabapara_2042_43",
+  "note": "ALTERNATE_WORLD.md section 8: 'friendship strained by repeated refusal'. Accepting refusal is a legitimate choice (SCHOOL_AND_PROGRESSION.md, generosity farming); the thread shows its cost and never punishes the refusal itself. The invitation is a cricket evening or a pandal walk, not romance. Authored draft.",
+  "roles": [
+    { "id": "player", "name": "You" },
+    { "id": "friend", "name": "The friend who keeps asking" }
+  ],
+  "stages": [
+    { "id": "noticed", "name": "Noticed", "intensity": 200, "dwellDays": 14,
+      "expression": { "channel": "ambient", "by": "friend",
+        "observe": "They ask less often now, and they look at their phone while they wait for your answer." } },
+    { "id": "strained", "name": "Strained", "intensity": 500, "dwellDays": 14,
+      "expression": { "channel": "conversation", "by": "friend",
+        "observe": "They say 'it is fine' about the cricket evening in a way that is not fine." } },
+    { "id": "cooling", "name": "Cooling", "intensity": 800, "dwellDays": 21,
+      "expression": { "channel": "message", "by": "friend",
+        "observe": "The group message about the evening out goes round without your name on it." } },
+    { "id": "distant", "name": "Distant", "intensity": 1000, "dwellDays": 14,
+      "expression": { "channel": "scene", "by": "friend", "scene": "scene_friend_distance",
+        "observe": "In the corridor they nod politely, the way one nods to someone one used to know." } }
+  ],
+  "resolutions": [
+    { "id": "mended", "name": "Mended", "outcome": "repaired",
+      "expression": { "channel": "scene", "by": "friend", "scene": "scene_friend_mended",
+        "observe": "You say yes to the next invitation and mean it. It is a little awkward for ten minutes and then it is not." } },
+    { "id": "parted_kindly", "name": "Parted kindly", "outcome": "settled",
+      "expression": { "channel": "conversation", "by": "friend",
+        "observe": "You tell each other plainly that your evenings no longer fit. You stay friendly in the corridor and mean it." } },
+    { "id": "drifted_apart", "name": "Drifted apart", "outcome": "distance",
+      "expression": { "channel": "scene", "by": "friend", "scene": "scene_friend_drifted",
+        "observe": "Nobody decides it. They sit with other people at lunch and you do not mind enough to say so." } }
+  ],
+  "defaultResolution": "drifted_apart",
+  "triggers": [
+    { "id": "said_yes_at_last", "armedFrom": "noticed", "armedUntil": "cooling", "effect": "resolve", "resolution": "mended",
+      "when": [ { "kind": "event", "event": "invitation_accepted", "parties": ["player", "friend"] } ] },
+    { "id": "explained_why_not", "armedFrom": "noticed", "armedUntil": "cooling", "effect": "ease",
+      "when": [ { "kind": "event", "event": "reason_explained", "parties": ["player", "friend"] } ] },
+    { "id": "parted_on_good_terms", "armedFrom": "cooling", "armedUntil": "distant", "effect": "resolve", "resolution": "parted_kindly",
+      "when": [ { "kind": "event", "event": "parted_on_good_terms", "parties": ["player", "friend"] } ] },
+    { "id": "two_more_refusals", "armedFrom": "noticed", "armedUntil": "strained", "effect": "escalate",
+      "when": [ { "kind": "event", "event": "invitation_refused", "parties": ["player", "friend"], "count": 2 } ] },
+    { "id": "one_more_ask_in_puja_week", "armedFrom": "noticed", "armedUntil": "cooling", "effect": "express",
+      "when": [ { "kind": "calendar", "span": "durga_puja", "phase": "during" },
+                { "kind": "relationship", "a": "player", "b": "friend", "dimension": "warmth", "op": "at_least", "value": -5000 } ],
+      "expression": { "channel": "conversation", "by": "friend",
+        "observe": "Puja week begins and they ask once more, carefully, whether you will walk round the pandals with them." } }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "type": "thread_template",
+  "id": "thread.hidden_pickup",
+  "name": "The early departures",
+  "situation": "friendship",
+  "kind": "secret",
+  "opensWhen": "The player notices a classmate leaving before the last bell and learns, or guesses, that it is to collect a younger sibling.",
+  "calendar": "calendar.nabapara_2042_43",
+  "note": "INDIA_WORLD_BIBLE.md: Tara Das, whose disciplined scheduling conceals strain at home. The strain is time and care work, never a stereotype of any community. Keeping or breaking a confidence is the player's choice, and either can be right. Authored draft.",
+  "roles": [
+    { "id": "player", "name": "You" },
+    { "id": "peer", "name": "The classmate who leaves early" },
+    { "id": "adviser", "name": "The class adviser" }
+  ],
+  "stages": [
+    { "id": "leaves_early", "name": "Leaves early", "intensity": 200, "dwellDays": 10,
+      "expression": { "channel": "ambient", "by": "peer",
+        "observe": "They pack up before the last bell on some days and say it is nothing." } },
+    { "id": "slipping", "name": "Slipping", "intensity": 500, "dwellDays": 14,
+      "expression": { "channel": "conversation", "by": "adviser",
+        "observe": "The class adviser asks you, lightly, whether you know why their attendance is thin." } },
+    { "id": "found_out", "name": "Found out", "intensity": 800, "dwellDays": 14,
+      "expression": { "channel": "message", "by": "peer",
+        "observe": "A late message asks you not to say anything, and then asks why you have not replied." } },
+    { "id": "named_aloud", "name": "Named aloud", "intensity": 1000, "dwellDays": 14,
+      "expression": { "channel": "scene", "by": "peer", "scene": "scene_pickup_secret_aloud",
+        "observe": "It comes out in the corridor, sooner and louder than they wanted." } }
+  ],
+  "resolutions": [
+    { "id": "lightened", "name": "Lightened", "outcome": "repaired",
+      "expression": { "channel": "scene", "by": "peer", "scene": "scene_pickup_lightened",
+        "observe": "You cover a pickup and take their notes. They say nothing and sit beside you the next day." } },
+    { "id": "support_found", "name": "Support found", "outcome": "repaired",
+      "expression": { "channel": "conversation", "by": "adviser",
+        "observe": "They speak to the adviser themselves. The timetable bends a little and the attendance note is dropped." } },
+    { "id": "trust_broken", "name": "Trust broken", "outcome": "loss",
+      "expression": { "channel": "scene", "by": "peer", "scene": "scene_pickup_trust_broken",
+        "observe": "They know who told. They do not shout; they simply stop telling you things." } },
+    { "id": "carried_alone", "name": "Carried alone", "outcome": "distance",
+      "expression": { "channel": "scene", "by": "peer", "scene": "scene_pickup_carried_alone",
+        "observe": "The departures go on unremarked. You never quite found the moment to ask." } }
+  ],
+  "defaultResolution": "carried_alone",
+  "triggers": [
+    { "id": "confided_in", "armedFrom": "leaves_early", "armedUntil": "found_out", "effect": "ease",
+      "when": [ { "kind": "event", "event": "confidence_shared", "parties": ["player", "peer"] } ] },
+    { "id": "pickup_covered", "armedFrom": "leaves_early", "armedUntil": "named_aloud", "effect": "resolve", "resolution": "lightened",
+      "when": [ { "kind": "event", "event": "pickup_covered", "parties": ["player", "peer"] } ] },
+    { "id": "adviser_consulted", "armedFrom": "slipping", "armedUntil": "named_aloud", "effect": "resolve", "resolution": "support_found",
+      "when": [ { "kind": "event", "event": "adviser_consulted", "parties": ["peer", "adviser"] } ] },
+    { "id": "confidence_broken", "armedFrom": "leaves_early", "armedUntil": "found_out", "effect": "resolve", "resolution": "trust_broken",
+      "when": [ { "kind": "event", "event": "confidence_broken", "parties": ["player", "peer"] } ] },
+    { "id": "class_test_pressure", "armedFrom": "leaves_early", "armedUntil": "slipping", "effect": "escalate",
+      "when": [ { "kind": "calendar", "span": "january_class_test", "phase": "during" } ] }
+  ]
+}

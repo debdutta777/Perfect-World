@@ -1010,3 +1010,25 @@ Built by a Sonnet 5.5 subagent. The agent was cut off twice by session ends befo
 **Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 129/129, the awakening tests included; `pwcontent validate Data/Content`: `PASS: 134 files, 170 records`. The worktree build had already passed 129/129 on its own.
 
 **Open questions:** the signal weights, the 60:40 mix, the floors, budgets and recipes are all tuning, not documented values. The conduct-to-Tattva mapping needs the owner's review together with the conduct dimensions from M4-01.
+
+## Checkpoint — M3-06 threads, 2026-10-11
+
+Built by a Sonnet 5.5 subagent. The agent was cut off by session ends before writing its report, so I built and tested its worktree myself (122/122 there), reviewed it, and merged it here. The registration lines, CMake entries and pinned counts were merged by hand next to M3-07's and M4-02's.
+
+**Files changed:**
+- New: `Public/Threads.h`, `Private/{Threads.cpp, ThreadsRun.cpp, ThreadsText.cpp, ThreadsInternal.h, ThreadTemplates.cpp, ThreadTemplateRules.cpp, ContentThreadSchemas.cpp}` and `Tests/Threads{,Content,Run,Equivalence,Save}Tests.cpp` plus `ThreadsTestSupport.h`.
+- Registration lines in `ContentSchemas.{h,cpp}`.
+- Data: six `Data/Content/thread_template/*.json` (borrowed notes, a canal-side stall, an evening rota, a hidden pickup, refused invitations, a sports-day rival).
+- The `bad_thread` fixtures (13 rules).
+- `CMakeLists.txt`.
+- Pinned parity counts, now 140 files and 176 records.
+
+**Design** (from `SYSTEMS_CATALOGUE.md` "Threads" and `ALTERNATE_WORLD.md` §8):
+- **Templates:** each names 2 to 4 roles (never people) and 3 to 6 stages forming an escalation clock (rising intensity, dwell in days, a default resolution). Triggers are plain data with one effect each, and expressions are what the player can observe.
+- **Validator:** the first stage must be quiet; the default resolution must not be a repair; every resolution must be reachable; the player must have at least one way to change the course; every role must be used; calendar references must exist.
+- **Fairness:** no template may depend on religion, caste, language, stream, gender or family background.
+- **Instances:** each binds roles to registered identities and advances at event boundaries, replay-stable. The text save refuses truncation.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 143/143, `PerfectWorldThreadTests` `PASS: 176142 checks`; `pwcontent validate Data/Content`: `PASS: 140 files, 176 records`.
+
+**Remaining:** not in the world state, the day loop or the save; the 140/176 parity counts need Rung 2 and an editor run.

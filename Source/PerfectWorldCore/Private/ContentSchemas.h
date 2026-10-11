@@ -104,6 +104,10 @@ void CheckAssessmentSemantics(const ContentDb& db, std::vector<ContentIssue>& is
 const TypeSchema& AbilityRecipeSchema();
 void CheckAbilitySemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
 
+/** The thread template record type (ContentThreadSchemas.cpp, ROADMAP M3-06) and its rules (Threads.h). */
+const TypeSchema& ThreadTemplateSchema();
+void CheckThreadSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
+
 /** Cross-record rules, run after every reference has resolved. */
 void CheckSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
 } // namespace PerfectWorld::ContentSchema

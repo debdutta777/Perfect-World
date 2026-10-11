@@ -94,6 +94,12 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/AwakeningResolve.cpp
     Source/PerfectWorldCore/Private/AwakeningRecipes.cpp
     Source/PerfectWorldCore/Private/AwakeningProfile.cpp
+    Source/PerfectWorldCore/Private/ContentThreadSchemas.cpp
+    Source/PerfectWorldCore/Private/ThreadTemplates.cpp
+    Source/PerfectWorldCore/Private/ThreadTemplateRules.cpp
+    Source/PerfectWorldCore/Private/Threads.cpp
+    Source/PerfectWorldCore/Private/ThreadsRun.cpp
+    Source/PerfectWorldCore/Private/ThreadsText.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -190,6 +196,11 @@ add_test(NAME PerfectWorldAssessmentTests COMMAND PerfectWorldAssessmentTests ${
 add_executable(PerfectWorldAwakeningTests Tests/AwakeningTests.cpp Tests/AwakeningPersonaTests.cpp Tests/AwakeningProfileTests.cpp)
 target_link_libraries(PerfectWorldAwakeningTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldAwakeningTests COMMAND PerfectWorldAwakeningTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+add_executable(PerfectWorldThreadTests Tests/ThreadsTests.cpp Tests/ThreadsContentTests.cpp Tests/ThreadsRunTests.cpp
+               Tests/ThreadsEquivalenceTests.cpp Tests/ThreadsSaveTests.cpp)
+target_link_libraries(PerfectWorldThreadTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldThreadTests COMMAND PerfectWorldThreadTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
 add_executable(PerfectWorldRealmTests Tests/RealmCoordinateTests.cpp)
 target_link_libraries(PerfectWorldRealmTests PRIVATE PerfectWorldCore)
@@ -397,6 +408,30 @@ foreach(fixture_and_issue
         "bad_ability_set|no_fallback|the tattva vayu has 0 fallback recipes"
         "bad_ability_set|conduct_only|the tattva jala has no evidence recipe a student who never entered the dungeon can earn"
         "bad_ability_set|no_evidence|the tattva akasha has no evidence recipe")
+    string(REPLACE "|" ";" parts "${fixture_and_issue}")
+    list(GET parts 0 fixture)
+    list(GET parts 1 rule)
+    list(GET parts 2 issue)
+    add_test(NAME PerfectWorldContentFixture_${fixture}_${rule}
+             COMMAND pwcontent validate ${CMAKE_SOURCE_DIR}/Tests/Fixtures/Content/${fixture} --expect-issue "${issue}")
+endforeach()
+
+# Thread templates (ROADMAP M3-06): one fixture directory carries a template per rule (and the calendar they name), so an
+# entry is "directory|test name|issue text" and every issue text is unique to its rule.
+foreach(fixture_and_issue
+        "bad_thread|intensity|stage s2 intensity 400 does not rise above 600"
+        "bad_thread|clock|the clock runs 300 days in total, over the limit of 200"
+        "bad_thread|few_stages|needs 3 to 6 stages, found 2"
+        "bad_thread|scene_first|the first stage must not be a scene: a thread begins quietly"
+        "bad_thread|default_repaired|the default resolution mended is repaired: an untouched thread does not mend itself"
+        "bad_thread|unreachable|resolution mended is never reached: no trigger resolves it and it is not the default"
+        "bad_thread|no_agency|no event trigger eases or resolves the thread, so nothing the player does can change its course"
+        "bad_thread|role_unused|role bystander is never used by an expression or a condition"
+        "bad_thread|calendar_span|names the calendar span 'pongal', which calendar.nabapara_2042_43 does not have"
+        "bad_thread|fair_role|role religion_peer is keyed on 'religion', which no thread may depend on"
+        "bad_thread|fair_event|event type 'spoke_same_language' is keyed on 'language', which no thread may depend on"
+        "bad_thread|unknown_stage|armedFrom 's7' is not a stage of the template"
+        "bad_thread|trigger_role|names the role 'stranger', which is not a role of the template")
     string(REPLACE "|" ";" parts "${fixture_and_issue}")
     list(GET parts 0 fixture)
     list(GET parts 1 rule)

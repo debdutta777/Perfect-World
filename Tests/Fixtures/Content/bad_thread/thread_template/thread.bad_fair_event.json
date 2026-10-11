@@ -1,0 +1,18 @@
+{
+  "type": "thread_template", "id": "thread.bad_fair_event", "name": "Fixture", "situation": "school", "kind": "debt",
+  "opensWhen": "Fixture.", "calendar": "calendar.nabapara_2042_43",
+  "roles": [ {"id":"player","name":"You"}, {"id":"other","name":"Other"} ],
+  "stages": [
+    {"id":"s1","name":"One","intensity":200,"dwellDays":10,"expression":{"channel":"ambient","by":"other","observe":"One."}},
+    {"id":"s2","name":"Two","intensity":600,"dwellDays":10,"expression":{"channel":"conversation","by":"other","observe":"Two."}},
+    {"id":"s3","name":"Three","intensity":1000,"dwellDays":10,"expression":{"channel":"scene","by":"other","scene":"scene_x","observe":"Three."}}
+  ],
+  "resolutions": [
+    {"id":"mended","name":"Mended","outcome":"repaired","expression":{"channel":"conversation","by":"other","observe":"Mended."}},
+    {"id":"faded","name":"Faded","outcome":"distance","expression":{"channel":"conversation","by":"other","observe":"Faded."}}
+  ],
+  "defaultResolution": "faded",
+  "triggers": [
+    {"id":"t_mend","armedFrom":"s1","effect":"resolve","resolution":"mended","when":[{"kind":"event","event":"spoke_same_language","parties":["player","other"]}]}
+  ]
+}

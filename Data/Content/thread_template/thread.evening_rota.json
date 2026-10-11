@@ -1,0 +1,57 @@
+{
+  "type": "thread_template",
+  "id": "thread.evening_rota",
+  "name": "The evening rota",
+  "situation": "home",
+  "kind": "obligation",
+  "opensWhen": "The household's evening jobs and the player's study window collide on three evenings in a row.",
+  "calendar": "calendar.nabapara_2042_43",
+  "note": "SCHOOL_AND_PROGRESSION.md innovation 7: 'Obligations can be redesigned' - a required outcome, not a compulsory animation. The carer role is the guardian of any household template, or children's-home staff at Household Resources rank 0 (INDIA_WORLD_BIBLE.md, opening household life). Nobody in the thread is a villain. Authored draft.",
+  "roles": [
+    { "id": "player", "name": "You" },
+    { "id": "carer", "name": "The adult or staff member who sets the evening jobs" }
+  ],
+  "stages": [
+    { "id": "asked", "name": "Asked", "intensity": 150, "dwellDays": 7,
+      "expression": { "channel": "ambient", "by": "carer",
+        "observe": "The jobs are on the list by the door: the water, the shop run, the washing up." } },
+    { "id": "squeezed", "name": "Squeezed", "intensity": 400, "dwellDays": 10,
+      "expression": { "channel": "conversation", "by": "carer",
+        "observe": "They notice the study light is on late and that the shop run was done in a hurry." } },
+    { "id": "resentful", "name": "Resentful", "intensity": 700, "dwellDays": 14,
+      "expression": { "channel": "message", "by": "carer",
+        "observe": "A short, tired message: the shop run was forgotten and the evening was harder for it." } },
+    { "id": "breaking", "name": "Breaking", "intensity": 1000, "dwellDays": 14,
+      "expression": { "channel": "scene", "by": "carer", "scene": "scene_rota_argument",
+        "observe": "Voices carry across the room. You are both right about the same evening." } }
+  ],
+  "resolutions": [
+    { "id": "redesigned", "name": "Redesigned", "outcome": "repaired",
+      "expression": { "channel": "scene", "by": "carer", "scene": "scene_rota_redesigned",
+        "observe": "You agree what has to be done and not who has to do it. The shop run moves to Saturday, and an hour comes back every weekday." } },
+    { "id": "shared_out", "name": "Shared out", "outcome": "settled",
+      "expression": { "channel": "conversation", "by": "carer",
+        "observe": "The jobs are shared more evenly, and it stops being a debate." } },
+    { "id": "stayed_as_was", "name": "Stayed as it was", "outcome": "distance",
+      "expression": { "channel": "scene", "by": "carer", "scene": "scene_rota_unchanged",
+        "observe": "The rota stays as it was. Nobody mentions it, and nobody is pleased." } }
+  ],
+  "defaultResolution": "stayed_as_was",
+  "triggers": [
+    { "id": "renegotiated_rota", "armedFrom": "asked", "armedUntil": "breaking", "effect": "resolve", "resolution": "redesigned",
+      "when": [ { "kind": "event", "event": "rota_renegotiated", "parties": ["player", "carer"] } ] },
+    { "id": "jobs_shared", "armedFrom": "squeezed", "armedUntil": "breaking", "effect": "resolve", "resolution": "shared_out",
+      "when": [ { "kind": "event", "event": "jobs_shared", "parties": ["player", "carer"] } ] },
+    { "id": "someone_covered", "armedFrom": "squeezed", "armedUntil": "resentful", "effect": "ease",
+      "when": [ { "kind": "event", "event": "obligation_covered", "parties": ["player", "carer"] } ] },
+    { "id": "two_missed_in_a_stage", "armedFrom": "asked", "armedUntil": "resentful", "effect": "escalate",
+      "when": [ { "kind": "event", "event": "obligation_missed", "parties": ["player", "carer"], "count": 2, "window": "stage" } ] },
+    { "id": "trust_gives_room", "armedFrom": "squeezed", "armedUntil": "resentful", "effect": "ease",
+      "when": [ { "kind": "relationship", "a": "carer", "b": "player", "dimension": "trust", "op": "at_least", "value": 12000 },
+                { "kind": "days_in_stage", "days": 3 } ] },
+    { "id": "half_yearly_offer", "armedFrom": "asked", "armedUntil": "squeezed", "effect": "express",
+      "when": [ { "kind": "calendar", "span": "half_yearly", "phase": "during" } ],
+      "expression": { "channel": "conversation", "by": "carer",
+        "observe": "It is half-yearly week. They offer to move the shop run, if you ask." } }
+  ]
+}

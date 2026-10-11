@@ -1,0 +1,64 @@
+{
+  "type": "calendar",
+  "id": "calendar.nabapara_2042_43",
+  "name": "Nabapara Vidyalaya, Class XI, West Bengal, 2042-43",
+  "institution": "institution.nabapara_vidyalaya",
+  "stage": "stage.higher_secondary",
+  "state": "West Bengal",
+  "yearStart": "2042-06-02",
+  "yearEnd": "2043-02-27",
+  "awakeningDate": "2043-01-23",
+  "examinationDate": "2043-02-02",
+  "schoolWeekdays": [1, 2, 3, 4, 5],
+  "terms": [
+    { "id": "term_1", "name": "Term 1 (monsoon term)", "start": "2042-06-02", "end": "2042-10-17", "status": "unverified",
+      "note": "Opens on the first Monday of Class XI (GAME_PLAN.md Phase 2). The end date is a production assumption: the term closes the Friday before the Puja vacation." },
+    { "id": "term_2", "name": "Term 2 (autumn term)", "start": "2042-11-03", "end": "2042-12-23", "status": "unverified",
+      "note": "Production assumption: the term resumes on the first Monday after the Puja vacation and closes before the winter break." },
+    { "id": "term_3", "name": "Term 3 (winter term)", "start": "2043-01-05", "end": "2043-02-27", "status": "unverified",
+      "note": "Awakening Day (23 January 2043) is its last day of ordinary school. The term then pauses for the ten days to the national examination (break ten_days) and resumes on 3 February 2043. How school runs after the examination is not yet designed; the term end is a production assumption that keeps the post-examination weeks and Saraswati Puja inside the calendar." }
+  ],
+  "breaks": [
+    { "id": "puja_vacation", "name": "Puja vacation", "start": "2042-10-18", "end": "2042-11-02", "status": "unverified",
+      "note": "Covers Durga Puja and runs to the Sunday before term 2. Production assumption in the style of a West Bengal school calendar; the length and the end date are to be confirmed." },
+    { "id": "winter_break", "name": "Winter break", "start": "2042-12-24", "end": "2043-01-04", "status": "unverified",
+      "note": "Christmas to the first Sunday of January. Production assumption in the style of a West Bengal school calendar, to be confirmed." },
+    { "id": "ten_days", "name": "The ten days (Awakening to examination)", "start": "2043-01-24", "end": "2043-02-02", "status": "unverified",
+      "note": "The ten days from the evening of Awakening Day to examination morning (AWAKENING_AND_EXAM.md). Assumed: the school keeps no timetable in these days. To be settled with M4 (the ten days)." }
+  ],
+  "holidays": [
+    { "id": "independence_day", "name": "Independence Day", "kind": "national", "start": "2042-08-15", "end": "2042-08-15",
+      "dateBasis": "fixed", "status": "unverified",
+      "note": "Fixed date, Friday 15 August 2042. Flagged unverified like every date until the reviewer clears it (M3-20)." },
+    { "id": "gandhi_jayanti", "name": "Gandhi Jayanti", "kind": "national", "start": "2042-10-02", "end": "2042-10-02",
+      "dateBasis": "fixed", "status": "unverified", "note": "Fixed date, Thursday 2 October 2042." },
+    { "id": "durga_puja", "name": "Durga Puja (Shashthi to Vijaya Dashami)", "kind": "festival", "start": "2042-10-20", "end": "2042-10-24",
+      "dateBasis": "lunisolar_approximate", "status": "unverified",
+      "note": "The date is approximate, to be confirmed. Lunisolar: worked out from the new moon of 14 October 2042 (Mahalaya), Shashthi on Monday 20 October and Vijaya Dashami on Friday 24 October. The reviewer must check these against the 2042 almanac (panjika)." },
+    { "id": "kali_puja_diwali", "name": "Kali Puja and Diwali", "kind": "festival", "start": "2042-11-12", "end": "2042-11-12",
+      "dateBasis": "lunisolar_approximate", "status": "unverified",
+      "note": "The date is approximate, to be confirmed. Lunisolar: the new moon falls early on 13 November 2042, so the amavasya night of Kali Puja and Diwali is taken as Wednesday 12 November. The reviewer must check this against the 2042 almanac; it could be Thursday 13 November." },
+    { "id": "christmas", "name": "Christmas Day", "kind": "state", "start": "2042-12-25", "end": "2042-12-25",
+      "dateBasis": "fixed", "status": "unverified", "note": "Fixed date, Thursday 25 December 2042, inside the winter break." },
+    { "id": "republic_day", "name": "Republic Day", "kind": "national", "start": "2043-01-26", "end": "2043-01-26",
+      "dateBasis": "fixed", "status": "unverified", "note": "Fixed date, Monday 26 January 2043, inside the ten days." },
+    { "id": "saraswati_puja", "name": "Saraswati Puja (Basant Panchami)", "kind": "festival", "start": "2043-02-14", "end": "2043-02-14",
+      "dateBasis": "lunisolar_approximate", "status": "unverified",
+      "note": "The date is approximate, to be confirmed. Lunisolar: Magh Shukla Panchami after the new moon of 9 February 2043 gives Saturday 14 February 2043, which is after the Awakening and the examination, not inside the Class XI latent-life year the planning documents imply. The reviewer must check the date and decide where the festival belongs." }
+  ],
+  "assessments": [
+    { "id": "unit_test_1", "name": "Unit test 1", "term": "term_1", "start": "2042-07-28", "end": "2042-08-01", "status": "unverified",
+      "note": "Production assumption: one week, Monday to Friday." },
+    { "id": "half_yearly", "name": "Half-yearly examination", "term": "term_1", "start": "2042-09-15", "end": "2042-09-26", "status": "unverified",
+      "note": "Production assumption: two weeks, Monday to Friday, before the Puja vacation." },
+    { "id": "unit_test_2", "name": "Unit test 2", "term": "term_2", "start": "2042-12-08", "end": "2042-12-12", "status": "unverified",
+      "note": "Production assumption: one week, Monday to Friday, after the sports day." },
+    { "id": "january_class_test", "name": "January class test", "term": "term_3", "start": "2043-01-12", "end": "2043-01-16", "status": "unverified",
+      "note": "Production assumption: the last full week of testing before the Awakening." }
+  ],
+  "events": [
+    { "id": "sports_day", "name": "Annual sports day", "kind": "sports_day", "date": "2042-12-05", "status": "unverified",
+      "note": "Production assumption: Friday 5 December 2042. The school stays open; the timetable gives way to the sports programme (SCHOOL_AND_PROGRESSION.md, Physical assessment)." }
+  ],
+  "note": "The 2042-43 school calendar for the opening school. Day 0 is Monday 2 June 2042 (the campaign start). The Awakening is Friday 23 January 2043 and the national examination Monday 2 February 2043 (GAME_PLAN.md). Every entry is flagged unverified: fixed dates are documented, festival dates follow the lunisolar calendar and are chosen approximations, and the term and assessment dates are production assumptions in the style of a West Bengal school calendar, all to be confirmed by a cultural reviewer and an education consultant (ROADMAP M3-20)."
+}

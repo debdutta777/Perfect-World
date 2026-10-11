@@ -1,0 +1,53 @@
+{
+  "type": "thread_template",
+  "id": "thread.sports_day_rival",
+  "name": "The relay sheet",
+  "situation": "school",
+  "kind": "rivalry",
+  "opensWhen": "The sports-day relay sheet is posted and the player and a classmate are entered for the same event.",
+  "calendar": "calendar.nabapara_2042_43",
+  "note": "SCHOOL_AND_PROGRESSION.md, 'Physical assessment' and innovation 10: rivals spend the same calendar. The rival is a role; a rivalry is a contest, not an enmity, and winning is not the only good ending. Authored draft.",
+  "roles": [
+    { "id": "player", "name": "You" },
+    { "id": "rival", "name": "The classmate entered for the same event" }
+  ],
+  "stages": [
+    { "id": "same_sheet", "name": "Same sheet", "intensity": 200, "dwellDays": 14,
+      "expression": { "channel": "ambient", "by": "rival",
+        "observe": "Both names are on the relay sheet. They check the stopwatch whenever you walk past." } },
+    { "id": "practice_gap", "name": "Practice gap", "intensity": 500, "dwellDays": 14,
+      "expression": { "channel": "conversation", "by": "rival",
+        "observe": "They train on the maidan before school, and you hear their times before you hear their name." } },
+    { "id": "heats_posted", "name": "Heats posted", "intensity": 800, "dwellDays": 7,
+      "expression": { "channel": "message", "by": "rival",
+        "observe": "The heats are posted. Their message is polite, and a little too exact." } },
+    { "id": "race_day", "name": "Race day", "intensity": 1000, "dwellDays": 3,
+      "expression": { "channel": "scene", "by": "rival", "scene": "scene_sports_day_final",
+        "observe": "The final is on the school ground. Both of you know who is watching." } }
+  ],
+  "resolutions": [
+    { "id": "respect_earned", "name": "Respect earned", "outcome": "repaired",
+      "expression": { "channel": "scene", "by": "rival", "scene": "scene_sports_day_respect",
+        "observe": "Whatever the stopwatch said, they shake your hand and mean it. Next year you will train together." } },
+    { "id": "bad_blood", "name": "Bad blood", "outcome": "loss",
+      "expression": { "channel": "scene", "by": "rival", "scene": "scene_sports_day_bad_blood",
+        "observe": "The result is disputed in front of the whole line. Neither of you walks home the same way." } },
+    { "id": "settled_quietly", "name": "Settled quietly", "outcome": "settled",
+      "expression": { "channel": "conversation", "by": "rival",
+        "observe": "The race is run and the sheet is taken down. It was a race, and now it is over." } }
+  ],
+  "defaultResolution": "settled_quietly",
+  "triggers": [
+    { "id": "shared_practice", "armedFrom": "same_sheet", "armedUntil": "heats_posted", "effect": "ease",
+      "when": [ { "kind": "event", "event": "practice_shared", "parties": ["player", "rival"] } ] },
+    { "id": "result_shared_graciously", "armedFrom": "heats_posted", "armedUntil": "race_day", "effect": "resolve", "resolution": "respect_earned",
+      "when": [ { "kind": "event", "event": "result_shared_graciously", "parties": ["player", "rival"] } ] },
+    { "id": "result_disputed", "armedFrom": "heats_posted", "armedUntil": "race_day", "effect": "resolve", "resolution": "bad_blood",
+      "when": [ { "kind": "event", "event": "result_disputed", "parties": ["player", "rival"] } ] },
+    { "id": "sports_day_morning", "armedFrom": "same_sheet", "armedUntil": "practice_gap", "effect": "escalate",
+      "when": [ { "kind": "calendar", "span": "sports_day", "phase": "during" } ] },
+    { "id": "mutual_respect", "armedFrom": "practice_gap", "armedUntil": "heats_posted", "effect": "ease",
+      "when": [ { "kind": "relationship", "a": "player", "b": "rival", "dimension": "respect", "op": "at_least", "value": 8000 },
+                { "kind": "days_in_stage", "days": 2 } ] }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "type": "thread_template",
+  "id": "thread.borrowed_notes",
+  "name": "Borrowed notes",
+  "situation": "school",
+  "kind": "debt",
+  "opensWhen": "The player takes a classmate's compressed notes to prepare for the first unit test and does not give them back that week.",
+  "calendar": "calendar.nabapara_2042_43",
+  "note": "SCHOOL_AND_PROGRESSION.md, 'Notes need translation' (innovation 6) and the same-evening-unequal-time idea (innovation 3). A debt of attention, not of money. Authored draft: the owner edits every line (ROADMAP M3-12).",
+  "roles": [
+    { "id": "player", "name": "You" },
+    { "id": "classmate", "name": "The classmate who lent the notes" }
+  ],
+  "stages": [
+    { "id": "lent", "name": "Lent", "intensity": 200, "dwellDays": 10,
+      "expression": { "channel": "ambient", "by": "classmate",
+        "observe": "Their notes sit in your bag, written in a shorthand you only half follow. They have not asked for them back." } },
+    { "id": "due", "name": "Due", "intensity": 450, "dwellDays": 8,
+      "expression": { "channel": "conversation", "by": "classmate",
+        "observe": "They mention, lightly, that they need the notes for their own revision before the next test." } },
+    { "id": "awkward", "name": "Awkward", "intensity": 750, "dwellDays": 10,
+      "expression": { "channel": "message", "by": "classmate",
+        "observe": "They stop saving you the seat at the back. A short message asks whether you still have the notes." } },
+    { "id": "owed", "name": "Owed", "intensity": 1000, "dwellDays": 14,
+      "expression": { "channel": "scene", "by": "classmate", "scene": "scene_notes_confrontation",
+        "observe": "In front of two others they say the notes were a favour, and that the favour has become a problem." } }
+  ],
+  "resolutions": [
+    { "id": "returned", "name": "Returned with thanks", "outcome": "settled",
+      "expression": { "channel": "conversation", "by": "classmate",
+        "observe": "The notes go back with a proper thank-you. The favour closes cleanly and neither of you mentions it again." } },
+    { "id": "shared_understanding", "name": "Worked through together", "outcome": "repaired",
+      "expression": { "channel": "scene", "by": "classmate", "scene": "scene_notes_worked_through",
+        "observe": "You sit down together and turn their shorthand into something both of you can use. They find a gap in their own method while explaining it." } },
+    { "id": "faded", "name": "Faded", "outcome": "distance",
+      "expression": { "channel": "scene", "by": "classmate", "scene": "scene_notes_faded",
+        "observe": "The notes stay in your bag until neither of you mentions them. The seat beside you is only a seat now." } }
+  ],
+  "defaultResolution": "faded",
+  "triggers": [
+    { "id": "returned_in_time", "armedFrom": "lent", "armedUntil": "awkward", "effect": "resolve", "resolution": "returned",
+      "when": [ { "kind": "event", "event": "notes_returned", "parties": ["player", "classmate"] } ] },
+    { "id": "worked_through_together", "armedFrom": "lent", "armedUntil": "owed", "effect": "resolve", "resolution": "shared_understanding",
+      "when": [ { "kind": "event", "event": "notes_explained_together", "parties": ["player", "classmate"] } ] },
+    { "id": "test_week_over", "armedFrom": "lent", "armedUntil": "due", "effect": "escalate",
+      "when": [ { "kind": "calendar", "span": "unit_test_1", "phase": "ended" }, { "kind": "days_in_stage", "days": 2 } ] },
+    { "id": "debt_acknowledged", "armedFrom": "lent", "armedUntil": "due", "effect": "express",
+      "when": [ { "kind": "relationship", "a": "player", "b": "classmate", "dimension": "owed", "op": "at_least", "value": 3000 } ],
+      "expression": { "channel": "conversation", "by": "classmate",
+        "observe": "'No hurry,' they say, in the tone people use when there is a hurry." } }
+  ]
+}
