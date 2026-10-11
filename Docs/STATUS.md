@@ -1,3 +1,11 @@
+# Front-end redesign phase 1 — 11 October 2026
+
+- **Implemented in source, uncommitted:** cancellable delayed focus with hidden/disabled subtree rejection; Cancel-first save-slot selection and explicit replacement confirmation; pause departure confirmations; in-session save recovery; responsive creator shell with a persistent stepper/footer and one scrolling body; shared palette, typography, controls and dialog shadow; title scrim, save-aware primary action, Credits and bounded camera drift.
+- Hind Siliguri uses one style-owned composite family, matching static weights and full shaping. Filename-backed faces use `EFontLoadingPolicy::LazyLoad`; inspected UE 5.8's font cache calls `FFileHelper::LoadFileToArray`, compatible with UFS staging. `DefaultGame.ini` stages all of `UIResources`, including the existing OFL licence.
+- **Static validation only:** reviewed local UE 5.8 headers for font constructors/loading, gradient/box painting, animation, render transforms, opacity setters, scroll navigation and text shaping. Modified C++ files include their own header first, stay below 500 lines and pass delimiter checks. UE 5.8 exposes render opacity as a construction argument, so animation updates it through `SetRenderOpacity` in Tick; translation remains a render attribute and layout is not rebuilt.
+- **Not verified:** Unreal compilation, PIE, cooked UFS loading, Bengali IME/rendering, or mouse/keyboard/controller interaction at 1280×720, 1366×768, 1600×900 and 1920×1080. No Unreal build was run, as requested. Portable core, Data, Tests, DefaultEngine.ini and DefaultInput.ini were not edited.
+- **Next:** phase 2 should redesign the trait rows/inspector and household/stream previews, obtaining numeric effects and any mutation/undo support from the portable core rather than duplicating rules in Slate. Run the phase-1 Unreal and packaged interaction checks before visual acceptance.
+
 # Starter checkpoint — 19 September 2026
 
 ## Completed

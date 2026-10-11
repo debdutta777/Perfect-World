@@ -5,7 +5,6 @@
 #include "UI/PWWidgets.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
-#include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
 
@@ -100,12 +99,8 @@ void SPWReviewPage::Construct(const FArguments& InArgs, const TSharedRef<FPWCrea
         ]
         + SVerticalBox::Slot().FillHeight(1.0f)
         [
-            SNew(SScrollBox)
-            .ScrollBarStyle(&Style.ScrollBar)
-            .AllowOverscroll(EAllowOverscroll::No)
-            .NavigationDestination(EDescendantScrollDestination::IntoView)
-            .ScrollWhenFocusChanges(EScrollWhenFocusChanges::AnimatedScroll)
-            + SScrollBox::Slot().Padding(0.0f, 0.0f, 12.0f, 0.0f)
+            SNew(SVerticalBox)
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 12.0f, 0.0f)
             [
                 SNew(SHorizontalBox)
                 + SHorizontalBox::Slot().FillWidth(1.0f).Padding(0.0f, 0.0f, 14.0f, 0.0f)
@@ -156,7 +151,7 @@ TSharedRef<SWidget> SPWReviewPage::BuildVerdict()
         TAttribute<FText>::CreateLambda([this]()
         {
             return FText::Join(FText::FromString(TEXT("\n\n")), Model->Summary.Warnings);
-        }), 16, Style.Warn, false, true);
+        }), 16, Style.TextSecondary, false, true);
     Warnings->SetVisibility(TAttribute<EVisibility>::CreateLambda(
         [this]() { return Model->Summary.Warnings.Num() > 0 ? EVisibility::Visible : EVisibility::Collapsed; }));
 

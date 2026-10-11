@@ -15,6 +15,7 @@
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
+#include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
 
@@ -27,6 +28,7 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
     OnStartLife = InArgs._OnStartLife;
     OnBackToTitle = InArgs._OnBackToTitle;
     CurrentStep = FMath::Clamp(InArgs._InitialStep, 0, PWUI::CreationStepCount - 1);
+    PageReveal = PageTransition.AddCurve(0.0f, 0.18f, ECurveEaseFunction::CubicOut);
 
     const FText StepNames[PWUI::CreationStepCount] = {
         LOCTEXT("StepHousehold", "Household"), LOCTEXT("StepTraits", "Traits"), LOCTEXT("StepIdentity", "Identity"),
@@ -35,7 +37,7 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
     const TSharedRef<SHorizontalBox> StepRow = SNew(SHorizontalBox);
     for (int32 Step = 0; Step < PWUI::CreationStepCount; ++Step)
     {
-        StepRow->AddSlot().AutoWidth().Padding(0.0f, 0.0f, 10.0f, 0.0f)
+        StepRow->AddSlot().FillWidth(1.0f).Padding(0.0f, 0.0f, 8.0f, 0.0f)
         [
             PWUI::MakeButton(
                 FText::Format(LOCTEXT("StepChipFmt", "{0}  {1}"), FText::AsNumber(Step + 1), StepNames[Step]),
@@ -45,7 +47,7 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
                     GoToStep(Step);
                     return FReply::Handled();
                 }),
-                true, 16, 0.0f,
+                true, 15, 0.0f,
                 TAttribute<bool>::CreateLambda([this, Step]() { return CurrentStep == Step; }))
         ];
     }
@@ -117,7 +119,8 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
         LOCTEXT("ConfirmStart", "Begin this life"), PWUI::EButtonKind::Primary,
         FOnClicked::CreateLambda([this]()
         {
-            bConfirmingStart = false;
+            // The confirmation stays up while Start Life runs, so a slot chooser opened from here remembers a
+            // visible button to return focus to; RequestStartLife closes it once the outcome is known.
             RequestStartLife();
             return FReply::Handled();
         }),
@@ -132,10 +135,6 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
             + SVerticalBox::Slot().AutoHeight()
             [
                 SNew(SHorizontalBox)
-                + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0.0f, 0.0f, 28.0f, 0.0f)
-                [
-                    PWUI::MakeText(LOCTEXT("NewLife", "NEW LIFE"), 15, Style.Accent, true)
-                ]
                 + SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Center)
                 [
                     StepRow
@@ -147,7 +146,19 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
             ]
             + SVerticalBox::Slot().FillHeight(1.0f)
             [
-                Pages.ToSharedRef()
+                SAssignNew(PageBody, SScrollBox)
+                .ScrollBarStyle(&Style.ScrollBar)
+                .AllowOverscroll(EAllowOverscroll::No)
+                .NavigationDestination(EDescendantScrollDestination::IntoView)
+                .ScrollWhenFocusChanges(EScrollWhenFocusChanges::InstantScroll)
+                .RenderTransform_Lambda([this]()
+                {
+                    return FSlateRenderTransform(FVector2f(0.0f, 8.0f * (1.0f - PageReveal.GetLerp())));
+                })
+                + SScrollBox::Slot().Padding(0.0f, 0.0f, 12.0f, 0.0f)
+                [
+                    Pages.ToSharedRef()
+                ]
             ]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 16.0f, 0.0f, 16.0f)
             [
@@ -194,14 +205,22 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
                     ConfirmButton
                 ]
             ],
-            FMargin(36.0f, 28.0f))
+            FMargin(24.0f, 16.0f))
     ];
 
     GoToStep(CurrentStep);
 }
 
+void SPWCreationFlow::Tick(const FGeometry& AllottedGeometry, double InCurrentTime, float InDeltaTime)
+{
+    SCompoundWidget::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
+    PageBody->SetRenderOpacity(PageReveal.GetLerp());
+}
+
 void SPWCreationFlow::GoToStep(int32 Step)
 {
+    PWUI::CancelPendingFocus(AsShared());
+    PageTransition.JumpToEnd();
     CurrentStep = FMath::Clamp(Step, 0, PWUI::CreationStepCount - 1);
     bConfirmingStart = false;
     Model->ClearMessage();
@@ -224,6 +243,8 @@ void SPWCreationFlow::GoToStep(int32 Step)
         }
     }
     Model->Refresh();
+    if (PageBody.IsValid()) PageBody->ScrollToStart();
+    PageTransition.Play(AsShared());
     FocusActivePage();
 }
 
@@ -246,7 +267,10 @@ void SPWCreationFlow::RequestStartLife()
     const FText Problem = OnStartLife.Execute();
     if (!Problem.IsEmpty())
     {
+        // Refused: drop the confirmation and return focus to the page, so focus never rests on a collapsed button.
         Model->Message = Problem;
+        bConfirmingStart = false;
+        FocusActivePage();
     }
 }
 
@@ -257,10 +281,12 @@ void SPWCreationFlow::BeginStartConfirmation()
         return;
     }
     Model->ClearMessage();
+    PWUI::CancelPendingFocus(AsShared());
     bConfirmingStart = true;
-    if (CancelStartButton.IsValid() && FSlateApplication::IsInitialized())
+    // The Cancel button only becomes visible on the next layout pass, so focus it once it can take focus.
+    if (CancelStartButton.IsValid())
     {
-        FSlateApplication::Get().SetKeyboardFocus(CancelStartButton, EFocusCause::SetDirectly);
+        PWUI::FocusWhenReady(AsShared(), CancelStartButton);
     }
 }
 
@@ -280,6 +306,11 @@ void SPWCreationFlow::FocusActivePage()
 
 FReply SPWCreationFlow::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent)
 {
+    // A held key auto-repeats; menus react to the first press only.
+    if (InKeyEvent.IsRepeat())
+    {
+        return FReply::Handled();
+    }
     if (InKeyEvent.GetKey() == EKeys::Escape || InKeyEvent.GetKey() == EKeys::Gamepad_FaceButton_Right)
     {
         if (bConfirmingStart)

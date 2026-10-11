@@ -21,7 +21,7 @@ namespace
 /** Slate draws viewport content in Z order; the front end sits above everything the game adds. */
 constexpr int32 FrontEndZOrder = 100;
 /** The title view is a slow turn of the camera, so the block scene reads as a place and not a backdrop. */
-constexpr float TitleTurnDegreesPerSecond = 2.5f;
+constexpr float TitleDriftPeriod = 40.0f;
 constexpr float TitleViewPitchDegrees = -6.0f;
 
 /** The core usually explains a refusal; this stands in only if a message ever comes back empty. */
@@ -83,7 +83,8 @@ void APerfectWorldFrontEndHUD::Tick(float DeltaSeconds)
     Super::Tick(DeltaSeconds);
     if (Mode == EFrontEndMode::Title && PlayerOwner != nullptr)
     {
-        TitleYaw = FRotator::NormalizeAxis(TitleYaw + DeltaSeconds * TitleTurnDegreesPerSecond);
+        TitleDriftSeconds = FMath::Fmod(TitleDriftSeconds + DeltaSeconds, TitleDriftPeriod);
+        TitleYaw = 6.0f * FMath::Sin(TitleDriftSeconds * 2.0f * PI / TitleDriftPeriod);
         FaceTitleView();
     }
 }
@@ -229,14 +230,21 @@ FText APerfectWorldFrontEndHUD::SaveActiveGame(bool& bOutSucceeded)
     const int32 Slot = ActiveSlot >= 0 ? ActiveSlot : UPerfectWorldCharacterCreatorSubsystem::FindFirstEmptySaveSlot();
     if (Slot < 0)
     {
-        return LOCTEXT("NoFreeSlot",
-                       "All three save slots are in use and this life has none of its own. Quit to the title screen, "
-                       "then start a new game to choose a slot to replace.");
+        if (Root.IsValid()) Root->OpenSaveChooser();
+        return FText::GetEmpty();
     }
-    bOutSucceeded = Creator->SaveToSlot(Slot);
+    return SaveGameToSlot(Slot, bOutSucceeded);
+}
+
+FText APerfectWorldFrontEndHUD::SaveGameToSlot(int32 SlotIndex, bool& bOutSucceeded)
+{
+    bOutSucceeded = false;
+    UPerfectWorldCharacterCreatorSubsystem* Creator = GetCreator();
+    if (Creator == nullptr) return LOCTEXT("NothingToSaveInSlot", "There is no life to save.");
+    bOutSucceeded = Creator->SaveToSlot(SlotIndex);
     if (bOutSucceeded)
     {
-        ActiveSlot = Slot;
+        ActiveSlot = SlotIndex;
     }
     return HudMessageOrFallback(Creator->GetLastErrorMessage());
 }
@@ -309,7 +317,8 @@ void APerfectWorldFrontEndHUD::FaceTitleView()
 {
     if (PlayerOwner != nullptr)
     {
-        PlayerOwner->SetControlRotation(FRotator(TitleViewPitchDegrees, TitleYaw, 0.0f));
+        const float Pitch = TitleViewPitchDegrees + 0.4f * FMath::Sin(TitleDriftSeconds * 2.0f * PI / TitleDriftPeriod);
+        PlayerOwner->SetControlRotation(FRotator(Pitch, TitleYaw, 0.0f));
     }
 }
 

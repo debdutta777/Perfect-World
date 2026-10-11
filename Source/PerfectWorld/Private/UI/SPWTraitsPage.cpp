@@ -9,7 +9,6 @@
 #include "Widgets/Input/SSlider.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
-#include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SWrapBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/SNullWidget.h"
@@ -219,11 +218,7 @@ TSharedRef<SWidget> SPWTraitsPage::BuildPresetRow()
 TSharedRef<SWidget> SPWTraitsPage::BuildTraitList()
 {
     const PWUI::FStyle& Style = PWUI::FStyle::Get();
-    const TSharedRef<SScrollBox> List = SNew(SScrollBox)
-        .ScrollBarStyle(&Style.ScrollBar)
-        .AllowOverscroll(EAllowOverscroll::No)
-        .NavigationDestination(EDescendantScrollDestination::IntoView)
-        .ScrollWhenFocusChanges(EScrollWhenFocusChanges::AnimatedScroll);
+    const TSharedRef<SVerticalBox> List = SNew(SVerticalBox);
 
     FName LastGroup = NAME_None;
     for (int32 Index = 0; Index < Model->Traits.Num(); ++Index)
@@ -232,12 +227,12 @@ TSharedRef<SWidget> SPWTraitsPage::BuildTraitList()
         if (Trait.Group != LastGroup)
         {
             LastGroup = Trait.Group;
-            List->AddSlot().Padding(2.0f, Index == 0 ? 0.0f : 14.0f, 0.0f, 6.0f)
+            List->AddSlot().AutoHeight().Padding(2.0f, Index == 0 ? 0.0f : 14.0f, 0.0f, 6.0f)
             [
                 PWUI::MakeText(PWUI::GetGroupTitle(Trait.Group), 14, Style.Accent, true)
             ];
         }
-        List->AddSlot().Padding(0.0f, 0.0f, 12.0f, 8.0f)
+        List->AddSlot().AutoHeight().Padding(0.0f, 0.0f, 12.0f, 8.0f)
         [
             BuildTraitRow(Index)
         ];
@@ -300,7 +295,7 @@ TSharedRef<SWidget> SPWTraitsPage::BuildTraitRow(int32 Index)
                 [
                     SNew(SBox)
                     .WidthOverride(210.0f)
-                    .HeightOverride(30.0f)
+                    .HeightOverride(44.0f)
                     [
                         SNew(SSlider)
                         .Style(&Style.Slider)

@@ -1,5 +1,6 @@
 #include "UI/SPWStreamPage.h"
 
+#include "Fonts/FontCache.h"
 #include "UI/PWCreationModel.h"
 #include "UI/PWStyle.h"
 #include "UI/PWWidgets.h"
@@ -23,6 +24,7 @@ void SPWStreamPage::Construct(const FArguments& InArgs, const TSharedRef<FPWCrea
 
     ReasonBox = SNew(SEditableTextBox)
         .Style(&Style.TextBox)
+        .TextShapingMethod(ETextShapingMethod::FullShaping)
         .Text(FText::FromString(Model->SchoolReason))
         .HintText(LOCTEXT("ReasonHint", "Optional: why this stream?"))
         .MaximumLength(60)
