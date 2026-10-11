@@ -4,17 +4,18 @@
 #include "GameFramework/GameModeBase.h"
 #include "PerfectWorldBlockTestGameMode.generated.h"
 
+class UMaterialInterface;
 class UStaticMesh;
 
 /**
- * A temporary block test scene for the first packaged build (ROADMAP M0-15).
+ * A temporary block scene for the first packaged build (ROADMAP M0-15) and the front end's backdrop.
  *
- * It lays out a field of one-metre blocks, a few block towers, a sky and a
- * sun around the player when play starts, so the cooked game has something
- * to show before the asset pipeline (M1-07 to M1-10) and real maps exist.
- * The player is the engine's default flying pawn: WASD and the mouse to look
- * around. It holds no game state and is not game content; world entry
- * (M1-15) replaces it with a per-map game mode.
+ * When play starts it builds an early-morning block-built Kolkata lane around the player (see
+ * Private/PerfectWorldKolkataLane.h): a road along +X with footpaths, two rows of block buildings with
+ * shopfronts, balconies and rooftop tanks, overhead wires and a skyline, lit by a low warm sun, a sky and a
+ * touch of fog. The player is the engine's default flying pawn at the origin, two metres above the road:
+ * WASD and the mouse to look around. It holds no game state and is not game content; world entry (M1-15)
+ * replaces it with a per-map game mode.
  */
 UCLASS()
 class PERFECTWORLD_API APerfectWorldBlockTestGameMode : public AGameModeBase
@@ -27,10 +28,14 @@ public:
     virtual void StartPlay() override;
 
 private:
-    void BuildBlockField();
+    void BuildLane();
     void BuildSkyAndSun();
 
     /** The engine's one-metre cube, referenced here so the cook includes it. */
     UPROPERTY()
     TObjectPtr<UStaticMesh> BlockMesh;
+
+    /** The engine's basic shape material, painted per colour through dynamic instances ("Color" parameter). */
+    UPROPERTY()
+    TObjectPtr<UMaterialInterface> BlockMaterial;
 };
