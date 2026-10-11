@@ -1,0 +1,10 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.vayu_light_step",
+  "name": "Light Step",
+  "tattva": "vayu",
+  "fallback": true,
+  "requires": [],
+  "effect": "Takes some of the effort out of carrying or moving for a short while: a heavy load feels lighter and a long way shorter.",
+  "note": "Vayu's fallback."
+}

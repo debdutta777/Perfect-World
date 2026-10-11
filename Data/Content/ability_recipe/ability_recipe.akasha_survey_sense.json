@@ -1,0 +1,13 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.akasha_survey_sense",
+  "name": "Survey Sense",
+  "tattva": "akasha",
+  "fallback": false,
+  "requires": [
+    { "signal": "study", "min": 250 },
+    { "signal": "senses", "min": 250 }
+  ],
+  "effect": "Perceives the layout and measurements of a space, such as its walls, openings and clearances, without a tape.",
+  "note": "Latent evidence only, so a student who never entered the dungeon can earn it."
+}

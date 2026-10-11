@@ -1,0 +1,13 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.prithvi_tally_stone",
+  "name": "Tally Stone",
+  "tattva": "prithvi",
+  "fallback": false,
+  "requires": [
+    { "signal": "order", "min": 300 },
+    { "signal": "resolve", "min": 200 }
+  ],
+  "effect": "Fixes a place or a load in mind so that you always know its weight, position and drift. Useful in stores, depots and wards.",
+  "note": "Latent evidence only, so a student who never entered the dungeon can earn it."
+}

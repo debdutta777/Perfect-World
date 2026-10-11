@@ -1,0 +1,10 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.unknown_field",
+  "name": "Power number",
+  "tattva": "agni",
+  "fallback": true,
+  "requires": [],
+  "effect": "A recipe carries words, never a number of power.",
+  "outputMilli": 5000
+}

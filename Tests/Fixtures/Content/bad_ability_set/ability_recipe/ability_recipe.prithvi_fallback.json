@@ -1,0 +1,4 @@
+{
+  "type": "ability_recipe", "id": "ability_recipe.prithvi_fallback", "name": "Prithvi fallback", "tattva": "prithvi",
+  "fallback": true, "requires": [], "effect": "Fine."
+}

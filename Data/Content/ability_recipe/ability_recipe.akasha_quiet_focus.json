@@ -1,0 +1,13 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.akasha_quiet_focus",
+  "name": "Quiet Focus",
+  "tattva": "akasha",
+  "fallback": false,
+  "requires": [
+    { "signal": "attentiveness", "min": 300 },
+    { "signal": "resolve", "min": 200 }
+  ],
+  "effect": "Narrows attention to one signal among many: a single voice, a fault tone in a machine, a pulse.",
+  "note": "Needs the dungeon's attentiveness evidence as well as steady habits."
+}

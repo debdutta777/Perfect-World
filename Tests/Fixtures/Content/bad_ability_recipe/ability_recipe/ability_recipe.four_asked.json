@@ -1,0 +1,14 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.four_asked",
+  "name": "Evidence recipe that asks too much",
+  "tattva": "agni",
+  "fallback": false,
+  "requires": [
+    { "signal": "study", "min": 300 },
+    { "signal": "craft", "min": 300 },
+    { "signal": "people", "min": 300 },
+    { "signal": "order", "min": 300 }
+  ],
+  "effect": "Four requirements are more than a recipe may ask."
+}

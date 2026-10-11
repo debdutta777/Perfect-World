@@ -1,0 +1,9 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.none_asked",
+  "name": "Evidence recipe that asks nothing",
+  "tattva": "jala",
+  "fallback": false,
+  "requires": [],
+  "effect": "An evidence recipe must name its evidence."
+}

@@ -1,0 +1,9 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.min_range",
+  "name": "Minimum out of range",
+  "tattva": "akasha",
+  "fallback": false,
+  "requires": [ { "signal": "senses", "min": 2000 } ],
+  "effect": "A reading is 0 to 1000."
+}

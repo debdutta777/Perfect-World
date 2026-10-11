@@ -1,0 +1,13 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.jala_common_ground",
+  "name": "Common Ground",
+  "tattva": "jala",
+  "fallback": false,
+  "requires": [
+    { "signal": "people", "min": 300 },
+    { "signal": "senses", "min": 150 }
+  ],
+  "effect": "Makes each speaker's meaning clearer to the others in a conversation. It improves clarity; it cannot create agreement, consent or belief (PATHS_AND_PROGRESSION, the power problem B).",
+  "note": "Latent evidence only, so a student who never entered the dungeon can earn it."
+}

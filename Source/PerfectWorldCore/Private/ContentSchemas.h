@@ -100,6 +100,10 @@ void CheckCalendarSemantics(const ContentDb& db, std::vector<ContentIssue>& issu
 const TypeSchema& AssessmentPaperSchema();
 void CheckAssessmentSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
 
+/** The ability recipe record type (ContentAbilitySchemas.cpp, ROADMAP M4-02) and its rules (Awakening.h). */
+const TypeSchema& AbilityRecipeSchema();
+void CheckAbilitySemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
+
 /** Cross-record rules, run after every reference has resolved. */
 void CheckSemantics(const ContentDb& db, std::vector<ContentIssue>& issues);
 } // namespace PerfectWorld::ContentSchema

@@ -1,0 +1,4 @@
+{
+  "type": "ability_recipe", "id": "ability_recipe.akasha_fallback", "name": "Akasha fallback", "tattva": "akasha",
+  "fallback": true, "requires": [], "effect": "There is no Akasha evidence recipe."
+}

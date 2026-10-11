@@ -89,6 +89,11 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/Assessment.cpp
     Source/PerfectWorldCore/Private/AssessmentRun.cpp
     Source/PerfectWorldCore/Private/AssessmentText.cpp
+    Source/PerfectWorldCore/Private/ContentAbilitySchemas.cpp
+    Source/PerfectWorldCore/Private/AwakeningSignals.cpp
+    Source/PerfectWorldCore/Private/AwakeningResolve.cpp
+    Source/PerfectWorldCore/Private/AwakeningRecipes.cpp
+    Source/PerfectWorldCore/Private/AwakeningProfile.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -181,6 +186,10 @@ add_executable(PerfectWorldAssessmentTests Tests/AssessmentTests.cpp Tests/Asses
                Tests/AssessmentContentTests.cpp)
 target_link_libraries(PerfectWorldAssessmentTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldAssessmentTests COMMAND PerfectWorldAssessmentTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+add_executable(PerfectWorldAwakeningTests Tests/AwakeningTests.cpp Tests/AwakeningPersonaTests.cpp Tests/AwakeningProfileTests.cpp)
+target_link_libraries(PerfectWorldAwakeningTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldAwakeningTests COMMAND PerfectWorldAwakeningTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
 add_executable(PerfectWorldRealmTests Tests/RealmCoordinateTests.cpp)
 target_link_libraries(PerfectWorldRealmTests PRIVATE PerfectWorldCore)
@@ -366,6 +375,28 @@ foreach(fixture_and_issue
         "bad_assessment_paper|case_type|a calendar, but its structure model needs a problem_case"
         "bad_assessment_paper|repeat_case|group g2 repeats the case problem_case.a"
         "bad_assessment_paper|window|has no assessment window quarterly")
+    string(REPLACE "|" ";" parts "${fixture_and_issue}")
+    list(GET parts 0 fixture)
+    list(GET parts 1 rule)
+    list(GET parts 2 issue)
+    add_test(NAME PerfectWorldContentFixture_${fixture}_${rule}
+             COMMAND pwcontent validate ${CMAKE_SOURCE_DIR}/Tests/Fixtures/Content/${fixture} --expect-issue "${issue}")
+endforeach()
+
+# Ability recipes (ROADMAP M4-02): one fixture directory carries a recipe per rule, so an entry is
+# "directory|test name|issue text" and every issue text is unique to its rule.
+foreach(fixture_and_issue
+        "bad_ability_recipe|fallback_asks|a fallback recipe asks for no evidence"
+        "bad_ability_recipe|none_asked|an evidence recipe needs 1 to 3 requirements, found 0"
+        "bad_ability_recipe|four_asked|an evidence recipe needs 1 to 3 requirements, found 4"
+        "bad_ability_recipe|twice|requires the signal bodywork twice"
+        "bad_ability_shape|unknown_signal|has an unknown value"
+        "bad_ability_shape|min_range|is 2000, outside 1..1000"
+        "bad_ability_shape|unknown_field|in ability_recipe"
+        "bad_ability_set|two_fallbacks|the tattva agni has 2 fallback recipes"
+        "bad_ability_set|no_fallback|the tattva vayu has 0 fallback recipes"
+        "bad_ability_set|conduct_only|the tattva jala has no evidence recipe a student who never entered the dungeon can earn"
+        "bad_ability_set|no_evidence|the tattva akasha has no evidence recipe")
     string(REPLACE "|" ";" parts "${fixture_and_issue}")
     list(GET parts 0 fixture)
     list(GET parts 1 rule)

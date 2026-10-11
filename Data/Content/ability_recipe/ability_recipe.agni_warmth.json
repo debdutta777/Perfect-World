@@ -1,0 +1,10 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.agni_warmth",
+  "name": "Warmth",
+  "tattva": "agni",
+  "fallback": true,
+  "requires": [],
+  "effect": "Raises the temperature of a small object by a few degrees: a meal, a cold lock, a hand.",
+  "note": "Agni's fallback."
+}

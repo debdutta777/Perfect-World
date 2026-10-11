@@ -1,0 +1,13 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.vayu_relay",
+  "name": "Relay",
+  "tattva": "vayu",
+  "fallback": false,
+  "requires": [
+    { "signal": "people", "min": 250 },
+    { "signal": "resourcefulness", "min": 250 }
+  ],
+  "effect": "Carries a short message or a small object across a gap to a person or place you have already mapped. It needs a mapped, calibrated destination.",
+  "note": "Needs the dungeon's resourcefulness evidence as well as a practice of working with people."
+}

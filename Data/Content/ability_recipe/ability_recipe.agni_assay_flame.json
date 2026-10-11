@@ -1,0 +1,13 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.agni_assay_flame",
+  "name": "Assay Flame",
+  "tattva": "agni",
+  "fallback": false,
+  "requires": [
+    { "signal": "study", "min": 300 },
+    { "signal": "craft", "min": 150 }
+  ],
+  "effect": "Heats a sample steadily and evenly so that its parts separate and can be read. Used in laboratories, kitchens and workshops; it consumes feedstock and makes nothing from nothing.",
+  "note": "Latent evidence only, so a student who never entered the dungeon can earn it."
+}

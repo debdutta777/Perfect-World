@@ -1,0 +1,13 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.prithvi_shoring",
+  "name": "Shoring",
+  "tattva": "prithvi",
+  "fallback": false,
+  "requires": [
+    { "signal": "steadfastness", "min": 300 },
+    { "signal": "craft", "min": 200 }
+  ],
+  "effect": "Braces a failing support or doorway for a few minutes while people and goods are moved clear.",
+  "note": "Needs the dungeon's steadfastness evidence as well as a hand for building."
+}

@@ -1,0 +1,5 @@
+{
+  "type": "ability_recipe", "id": "ability_recipe.jala_conduct_only", "name": "Jala conduct only", "tattva": "jala",
+  "fallback": false, "requires": [ { "signal": "care", "min": 300 }, { "signal": "people", "min": 200 } ],
+  "effect": "Needs the dungeon, so a student absent on the day could never earn it."
+}

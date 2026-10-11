@@ -1,0 +1,4 @@
+{
+  "type": "ability_recipe", "id": "ability_recipe.jala_fallback", "name": "Jala fallback", "tattva": "jala",
+  "fallback": true, "requires": [], "effect": "Fine."
+}

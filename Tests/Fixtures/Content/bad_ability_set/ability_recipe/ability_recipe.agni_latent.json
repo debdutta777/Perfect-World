@@ -1,0 +1,4 @@
+{
+  "type": "ability_recipe", "id": "ability_recipe.agni_latent", "name": "Agni latent", "tattva": "agni",
+  "fallback": false, "requires": [ { "signal": "craft", "min": 300 } ], "effect": "Fine."
+}

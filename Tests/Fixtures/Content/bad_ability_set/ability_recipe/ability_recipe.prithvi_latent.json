@@ -1,0 +1,4 @@
+{
+  "type": "ability_recipe", "id": "ability_recipe.prithvi_latent", "name": "Prithvi latent", "tattva": "prithvi",
+  "fallback": false, "requires": [ { "signal": "order", "min": 300 } ], "effect": "Fine."
+}

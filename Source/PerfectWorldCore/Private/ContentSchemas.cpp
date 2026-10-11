@@ -175,7 +175,7 @@ const std::vector<const TypeSchema*>& TopLevelSchemas()
                                                        &ProblemCaseSchema(), &BellScheduleSchema(), &ExplainFamilySchema(),
                                                        &ExplainCaseSchema(), &InvestigateFamilySchema(), &InvestigateCaseSchema(),
                                                        &CoordinateFamilySchema(), &CoordinateCaseSchema(), &CalendarSchema(),
-                                                       &AssessmentPaperSchema()};
+                                                       &AssessmentPaperSchema(), &AbilityRecipeSchema()};
     return all;
 }
 
@@ -239,6 +239,7 @@ void CheckSemantics(const ContentDb& db, std::vector<ContentIssue>& issues)
     CheckBellScheduleSemantics(db, issues);
     CheckCalendarSemantics(db, issues);
     CheckAssessmentSemantics(db, issues);
+    CheckAbilitySemantics(db, issues);
     for (const ContentRecord* skill : db.OfType("skill"))
         SeedCheck(issues, *skill, "xpByRank");
     const std::vector<const ContentRecord*> attributes = db.OfType("attribute");

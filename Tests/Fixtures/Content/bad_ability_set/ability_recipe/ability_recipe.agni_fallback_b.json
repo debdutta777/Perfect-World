@@ -1,0 +1,4 @@
+{
+  "type": "ability_recipe", "id": "ability_recipe.agni_fallback_b", "name": "Agni fallback B", "tattva": "agni",
+  "fallback": true, "requires": [], "effect": "A second fallback for one Tattva."
+}

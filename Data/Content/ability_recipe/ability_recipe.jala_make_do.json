@@ -1,0 +1,13 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.jala_make_do",
+  "name": "Make-Do",
+  "tattva": "jala",
+  "fallback": false,
+  "requires": [
+    { "signal": "resourcefulness", "min": 300 },
+    { "signal": "craft", "min": 150 }
+  ],
+  "effect": "Lets a tool or a part serve a different purpose for a few minutes. It returns to its own shape afterwards.",
+  "note": "Needs the dungeon's resourcefulness evidence as well as a hand for making things work."
+}

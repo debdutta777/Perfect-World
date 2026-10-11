@@ -1,0 +1,13 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.agni_fine_heat",
+  "name": "Fine Heat",
+  "tattva": "agni",
+  "fallback": false,
+  "requires": [
+    { "signal": "making", "min": 300 },
+    { "signal": "resourcefulness", "min": 200 }
+  ],
+  "effect": "Concentrates heat on a point no wider than a pin, for joining, shaping or sealing work.",
+  "note": "Needs the dungeon's resourcefulness evidence as well as a maker's practice."
+}

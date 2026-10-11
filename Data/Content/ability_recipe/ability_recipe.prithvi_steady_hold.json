@@ -1,0 +1,10 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.prithvi_steady_hold",
+  "name": "Steady Hold",
+  "tattva": "prithvi",
+  "fallback": true,
+  "requires": [],
+  "effect": "For a short while, keeps a surface or object you are touching in the shape it has under load. It holds what the material already allows and no more.",
+  "note": "Prithvi's fallback: granted when no evidence recipe qualifies, so every awakening grants exactly one ability (Awakening.h point 5)."
+}

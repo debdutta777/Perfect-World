@@ -1,0 +1,10 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.akasha_open_sense",
+  "name": "Open Sense",
+  "tattva": "akasha",
+  "fallback": true,
+  "requires": [],
+  "effect": "Notices small details in a room or a street that are usually missed: a loose step, a draught, a sound out of place. It collects signals; reading them stays learned work.",
+  "note": "Akasha's fallback."
+}

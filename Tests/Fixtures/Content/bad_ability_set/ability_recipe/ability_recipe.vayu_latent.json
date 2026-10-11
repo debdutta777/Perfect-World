@@ -1,0 +1,4 @@
+{
+  "type": "ability_recipe", "id": "ability_recipe.vayu_latent", "name": "Vayu latent", "tattva": "vayu",
+  "fallback": false, "requires": [ { "signal": "bodywork", "min": 300 } ], "effect": "There is no Vayu fallback."
+}

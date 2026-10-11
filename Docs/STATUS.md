@@ -986,3 +986,27 @@ Built by a Sonnet 5.5 subagent, reviewed and merged here.
 3. The 119/155 parity counts need Rung 2 and an editor run.
 
 **Engine verification of M4-01, the attendance calendar change and M3-07 (D: clone at `3abffe8`):** Rung 2 **Succeeded** (28 actions, no warnings or error lines). Unreal MCP `RunTestsByFilter "StartsWith:PerfectWorld.Core"`: **4/4 Success**, with `ContentLoadsInEngine` at 119 files and 155 records.
+
+## Checkpoint — M4-02 the Unified Awakening, and M1-34 the starting profile, 2026-10-11
+
+Built by a Sonnet 5.5 subagent. The agent was cut off twice by session ends before writing its report, so I built and tested its worktree myself, reviewed it, and merged it here.
+
+**Files changed:**
+- New: `Public/Awakening.h`, `Private/{AwakeningSignals.cpp, AwakeningResolve.cpp, AwakeningRecipes.cpp, AwakeningProfile.cpp, AwakeningInternal.h, ContentAbilitySchemas.cpp}` and `Tests/{AwakeningTests.cpp, AwakeningPersonaTests.cpp, AwakeningProfileTests.cpp, AwakeningPersonas.h, AwakeningTestSupport.h}`.
+- Registration lines in `ContentSchemas.{h,cpp}`.
+- Data: 15 `Data/Content/ability_recipe/*.json`, three per Tattva (prithvi, jala, agni, vayu, akasha).
+- Bad fixtures.
+- `CMakeLists.txt`.
+- Pinned parity counts, now 134 files and 170 records.
+
+**Design** (from `AWAKENING_AND_EXAM.md`, `AWAKENED_GRADES.md` §1 and §4, `PATHS_AND_PROGRESSION.md` and the catalogue; every number is a named constant, chosen where the docs are silent):
+- **Inputs:** a pure function of the conduct summary, latent stats, the aptitude projection and the world seed. Inputs are reduced to thirteen readings: eight from the sixteen years of life and five from conduct. Missing evidence reads as zero, never as weakness.
+- **Tattva distribution:** five values summing to 100,000, mixing life and conduct 60:40. Every Tattva keeps a floor.
+- **Capability:** six ratings, each a life term plus a share of a fixed conduct budget. Conduct decides where the dungeon's contribution goes, never how much, so withdrawing, rescuing and being absent all receive the same total. Ratings are at most 130, below grade F's ceiling of 149.
+- **Absence:** an absent student is not penalised. The conduct share is dropped and the budget split evenly.
+- **Ability:** exactly one ability, from the qualifying evidence recipe with the best score in the leading Tattvas, or else the leading Tattva's fallback.
+- **Fairness:** stream, household, appearance, pronouns, languages and names are not inputs.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm`. **Result:** PASS, 129/129, the awakening tests included; `pwcontent validate Data/Content`: `PASS: 134 files, 170 records`. The worktree build had already passed 129/129 on its own.
+
+**Open questions:** the signal weights, the 60:40 mix, the floors, budgets and recipes are all tuning, not documented values. The conduct-to-Tattva mapping needs the owner's review together with the conduct dimensions from M4-01.

@@ -1,0 +1,9 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.fallback_asks",
+  "name": "Fallback that asks",
+  "tattva": "prithvi",
+  "fallback": true,
+  "requires": [ { "signal": "study", "min": 300 } ],
+  "effect": "A fallback must ask for nothing."
+}

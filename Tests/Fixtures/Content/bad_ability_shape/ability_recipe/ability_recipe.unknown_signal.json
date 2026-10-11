@@ -1,0 +1,9 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.unknown_signal",
+  "name": "Unknown signal",
+  "tattva": "akasha",
+  "fallback": false,
+  "requires": [ { "signal": "bravery", "min": 300 } ],
+  "effect": "Only the thirteen signals can be asked for."
+}

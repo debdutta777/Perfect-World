@@ -1,0 +1,12 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.twice",
+  "name": "Evidence recipe that repeats a signal",
+  "tattva": "vayu",
+  "fallback": false,
+  "requires": [
+    { "signal": "bodywork", "min": 300 },
+    { "signal": "bodywork", "min": 500 }
+  ],
+  "effect": "A signal counts once."
+}

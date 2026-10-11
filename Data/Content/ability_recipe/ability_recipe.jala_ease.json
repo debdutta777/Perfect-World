@@ -1,0 +1,10 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.jala_ease",
+  "name": "Easing",
+  "tattva": "jala",
+  "fallback": true,
+  "requires": [],
+  "effect": "Takes the friction out of a hinge, a lock, a seal or a stuck drawer for a short while. It works on things, never on anyone's decision.",
+  "note": "Jala's fallback."
+}

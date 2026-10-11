@@ -1,0 +1,13 @@
+{
+  "type": "ability_recipe",
+  "id": "ability_recipe.vayu_swiftline",
+  "name": "Swiftline",
+  "tattva": "vayu",
+  "fallback": false,
+  "requires": [
+    { "signal": "order", "min": 250 },
+    { "signal": "bodywork", "min": 250 }
+  ],
+  "effect": "Quickens movement along a route you have already planned. The plan matters more than the speed.",
+  "note": "Latent evidence only, so a student who never entered the dungeon can earn it."
+}
