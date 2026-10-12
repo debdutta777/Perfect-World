@@ -34,7 +34,9 @@ public:
         Stops.Emplace(FVector2D(W * .42f, 0), PWUI::Srgb(16, 26, 29, 220) * WidgetStyle.GetColorAndOpacityTint());
         Stops.Emplace(FVector2D(W * .78f, 0), PWUI::Srgb(16, 26, 29, 55) * WidgetStyle.GetColorAndOpacityTint());
         Stops.Emplace(FVector2D(W, 0), FLinearColor::Transparent);
-        FSlateDrawElement::MakeGradient(Elements, Layer, Geometry.ToPaintGeometry(), Stops, Orient_Horizontal);
+        // Slate names the orientation of the colour bands, not of the fade: a left-to-right fade (stops along X)
+        // is Orient_Vertical, as in SComplexGradient. Orient_Horizontal put the stops along Y, off the panel.
+        FSlateDrawElement::MakeGradient(Elements, Layer, Geometry.ToPaintGeometry(), Stops, Orient_Vertical);
         return Layer;
     }
 };
