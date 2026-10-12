@@ -15,6 +15,12 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/WeekCompressionPlan.cpp
     Source/PerfectWorldCore/Private/WeekCompressionRun.cpp
     Source/PerfectWorldCore/Private/WeekCompressionCompare.cpp
+    Source/PerfectWorldCore/Private/CountdownContent.cpp
+    Source/PerfectWorldCore/Private/CountdownRules.cpp
+    Source/PerfectWorldCore/Private/CountdownProfile.cpp
+    Source/PerfectWorldCore/Private/CountdownOffers.cpp
+    Source/PerfectWorldCore/Private/CountdownRun.cpp
+    Source/PerfectWorldCore/Private/CountdownText.cpp
     Source/PerfectWorldCore/Private/StateDiff.cpp
     Source/PerfectWorldCore/Private/StateDiffLines.cpp
     Source/PerfectWorldCore/Private/CreationPresentation.cpp
@@ -477,3 +483,9 @@ add_executable(PerfectWorldWeekTests Tests/WeekCompressionTests.cpp Tests/WeekCo
 target_link_libraries(PerfectWorldWeekTests PRIVATE PerfectWorldCore)
 add_dependencies(PerfectWorldWeekTests pwstatediff)
 add_test(NAME PerfectWorldWeekTests COMMAND PerfectWorldWeekTests ${CMAKE_SOURCE_DIR}/Data/Content $<TARGET_FILE:pwstatediff>)
+
+# The ten days (ROADMAP M4-03).
+add_executable(PerfectWorldCountdownTests Tests/CountdownTests.cpp Tests/CountdownRulesTests.cpp Tests/CountdownObligationTests.cpp
+               Tests/CountdownReloadTests.cpp Tests/CountdownStrategyTests.cpp)
+target_link_libraries(PerfectWorldCountdownTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldCountdownTests COMMAND PerfectWorldCountdownTests ${CMAKE_SOURCE_DIR}/Data/Content)
