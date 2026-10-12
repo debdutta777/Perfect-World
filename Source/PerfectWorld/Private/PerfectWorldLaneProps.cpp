@@ -5,7 +5,8 @@ namespace PWLane
 namespace
 {
 constexpr double GZ = GroundZ;
-constexpr double PoleTopWire = 664.0; // wire height above the ground at the cross-arm
+constexpr double PoleHeight = 900.0;  // a 9 m street pole
+constexpr double PoleTopWire = 849.0; // wire height above the ground at the cross-arm
 constexpr double PoleOffsetY = 268.0; // pole centre from the road centre line, on the footpath edge
 
 struct FPole
@@ -24,17 +25,19 @@ const double ArmOffsets[3] = {-60.0, 0.0, 60.0};
 void AddPole(FLaneBlocks& K, const FPole& P)
 {
     const double Y = P.Side * PoleOffsetY;
-    K.Box(ELaneColour::Concrete, FVector(P.X - 14.0, Y - 14.0, GZ), FVector(P.X + 14.0, Y + 14.0, GZ + 715.0));
-    K.Box(ELaneColour::TrimDark, FVector(P.X - 7.0, Y - 75.0, GZ + 640.0), FVector(P.X + 7.0, Y + 75.0, GZ + 652.0));
+    K.Box(ELaneColour::Concrete, FVector(P.X - 14.0, Y - 14.0, GZ), FVector(P.X + 14.0, Y + 14.0, GZ + PoleHeight));
+    K.Box(ELaneColour::TrimDark, FVector(P.X - 7.0, Y - 75.0, GZ + 825.0), FVector(P.X + 7.0, Y + 75.0, GZ + 837.0));
     for (const double Offset : ArmOffsets)
     {
-        K.Box(ELaneColour::TrimLight, FVector(P.X - 4.0, Y + Offset - 4.0, GZ + 652.0),
-              FVector(P.X + 4.0, Y + Offset + 4.0, GZ + 666.0));
+        K.Box(ELaneColour::TrimLight, FVector(P.X - 4.0, Y + Offset - 4.0, GZ + 837.0),
+              FVector(P.X + 4.0, Y + Offset + 4.0, GZ + 851.0));
     }
     if (P.bTransformer)
     {
-        K.Box(ELaneColour::TankLid, FVector(P.X - 30.0, Y - 30.0, GZ + 470.0), FVector(P.X + 30.0, Y + 30.0, GZ + 570.0));
+        K.Box(ELaneColour::TankLid, FVector(P.X - 30.0, Y - 30.0, GZ + 590.0), FVector(P.X + 30.0, Y + 30.0, GZ + 690.0));
     }
+    // The pole stands on the footpath edge and is solid to the walking player.
+    K.Barrier(FVector(P.X - 16.0, Y - 16.0, GZ), FVector(P.X + 16.0, Y + 16.0, GZ + 300.0));
 }
 
 void AddPoleWires(FLaneScene& S)
@@ -110,6 +113,7 @@ void AddTree(FLaneBlocks& K, double X, int32 Side)
 {
     const double Y = Side * 335.0;
     K.Box(ELaneColour::Trunk, FVector(X - 13.0, Y - 13.0, GZ), FVector(X + 13.0, Y + 13.0, GZ + 330.0));
+    K.Barrier(FVector(X - 15.0, Y - 15.0, GZ), FVector(X + 15.0, Y + 15.0, GZ + 300.0)); // the canopy starts above head height
     K.Box(ELaneColour::LeafDark, FVector(X - 120.0, Y - 120.0, GZ + 300.0), FVector(X + 120.0, Y + 120.0, GZ + 410.0));
     K.Box(ELaneColour::LeafLight, FVector(X - 90.0, Y - 90.0, GZ + 400.0), FVector(X + 90.0, Y + 90.0, GZ + 500.0));
     K.Box(ELaneColour::LeafDark, FVector(X - 60.0, Y - 60.0, GZ + 495.0), FVector(X + 60.0, Y + 60.0, GZ + 560.0));
@@ -117,34 +121,39 @@ void AddTree(FLaneBlocks& K, double X, int32 Side)
     K.Tilted(ELaneColour::LeafLight, FVector(X, Y, GZ + 450.0), FVector(170.0, 170.0, 90.0), FRotator(0.0, 30.0, 0.0));
 }
 
-/** A yellow taxi of the classic shape, parked along the lane facing +X. */
+/** A yellow taxi of the classic shape (an Ambassador-like saloon, about 436 x 165 x 160), parked along the lane facing +X. */
 void AddTaxi(FLaneBlocks& K, double X, double Y)
 {
-    K.Box(ELaneColour::TaxiYellow, FVector(X - 220.0, Y - 87.0, GZ + 25.0), FVector(X + 220.0, Y + 87.0, GZ + 85.0));
-    K.Box(ELaneColour::TaxiGlass, FVector(X - 125.0, Y - 80.0, GZ + 85.0), FVector(X + 95.0, Y + 80.0, GZ + 138.0));
-    K.Box(ELaneColour::TaxiYellow, FVector(X - 130.0, Y - 84.0, GZ + 138.0), FVector(X + 100.0, Y + 84.0, GZ + 146.0));
+    K.Box(ELaneColour::TaxiYellow, FVector(X - 210.0, Y - 82.5, GZ + 25.0), FVector(X + 210.0, Y + 82.5, GZ + 85.0));
+    K.Box(ELaneColour::TaxiGlass, FVector(X - 120.0, Y - 77.0, GZ + 85.0), FVector(X + 95.0, Y + 77.0, GZ + 138.0));
+    K.Box(ELaneColour::TaxiYellow, FVector(X - 125.0, Y - 79.0, GZ + 138.0), FVector(X + 100.0, Y + 79.0, GZ + 146.0));
     K.Box(ELaneColour::TrimLight, FVector(X - 10.0, Y - 25.0, GZ + 146.0), FVector(X + 10.0, Y + 25.0, GZ + 160.0));
-    for (const double Sx : {-140.0, 140.0})
+    // Wheels: about 62 cm tall on a 236 cm wheelbase, tucked just inside the body width.
+    for (const double Sx : {-118.0, 118.0})
     {
-        for (const double Sy : {-90.0, 90.0})
+        for (const double Sy : {-72.0, 72.0})
         {
-            K.Box(ELaneColour::TankBlack, FVector(X + Sx - 28.0, Y + Sy - 12.0, GZ), FVector(X + Sx + 28.0, Y + Sy + 12.0, GZ + 56.0));
+            K.Box(ELaneColour::TankBlack, FVector(X + Sx - 31.0, Y + Sy - 10.0, GZ), FVector(X + Sx + 31.0, Y + Sy + 10.0, GZ + 62.0));
         }
     }
-    K.Box(ELaneColour::Chrome, FVector(X + 220.0, Y - 85.0, GZ + 30.0), FVector(X + 232.0, Y + 85.0, GZ + 46.0));
-    K.Box(ELaneColour::Chrome, FVector(X - 232.0, Y - 85.0, GZ + 30.0), FVector(X - 220.0, Y + 85.0, GZ + 46.0));
-    K.Box(ELaneColour::TrimLight, FVector(X + 218.0, Y + 45.0, GZ + 58.0), FVector(X + 224.0, Y + 75.0, GZ + 74.0));
-    K.Box(ELaneColour::TrimLight, FVector(X + 218.0, Y - 75.0, GZ + 58.0), FVector(X + 224.0, Y - 45.0, GZ + 74.0));
+    K.Box(ELaneColour::Chrome, FVector(X + 210.0, Y - 82.0, GZ + 30.0), FVector(X + 218.0, Y + 82.0, GZ + 46.0));
+    K.Box(ELaneColour::Chrome, FVector(X - 218.0, Y - 82.0, GZ + 30.0), FVector(X - 210.0, Y + 82.0, GZ + 46.0));
+    K.Box(ELaneColour::TrimLight, FVector(X + 208.0, Y + 42.0, GZ + 58.0), FVector(X + 214.0, Y + 70.0, GZ + 74.0));
+    K.Box(ELaneColour::TrimLight, FVector(X + 208.0, Y - 70.0, GZ + 58.0), FVector(X + 214.0, Y - 42.0, GZ + 74.0));
+    K.Barrier(FVector(X - 218.0, Y - 84.0, GZ), FVector(X + 218.0, Y + 84.0, GZ + 170.0));
 }
 
+/** A scooter of the Activa class (about 190 x 70 x 112), parked facing +X. */
 void AddScooter(FLaneBlocks& K, double X, double Y, ELaneColour Body)
 {
-    K.Box(Body, FVector(X - 70.0, Y - 18.0, GZ + 28.0), FVector(X + 60.0, Y + 18.0, GZ + 62.0));
-    K.Box(ELaneColour::TankBlack, FVector(X - 60.0, Y - 16.0, GZ + 62.0), FVector(X, Y + 16.0, GZ + 74.0));
+    K.Box(Body, FVector(X - 85.0, Y - 18.0, GZ + 28.0), FVector(X + 65.0, Y + 18.0, GZ + 62.0));
+    K.Box(ELaneColour::TankBlack, FVector(X - 70.0, Y - 16.0, GZ + 62.0), FVector(X - 5.0, Y + 16.0, GZ + 74.0));
     K.Box(Body, FVector(X + 55.0, Y - 14.0, GZ + 62.0), FVector(X + 66.0, Y + 14.0, GZ + 110.0));
     K.Box(ELaneColour::TankLid, FVector(X + 52.0, Y - 34.0, GZ + 104.0), FVector(X + 62.0, Y + 34.0, GZ + 112.0));
-    K.Box(ELaneColour::TankBlack, FVector(X + 40.0, Y - 6.0, GZ), FVector(X + 80.0, Y + 6.0, GZ + 40.0));
-    K.Box(ELaneColour::TankBlack, FVector(X - 80.0, Y - 6.0, GZ), FVector(X - 40.0, Y + 6.0, GZ + 40.0));
+    // Wheels: 12 inch, about 50 cm.
+    K.Box(ELaneColour::TankBlack, FVector(X + 45.0, Y - 6.0, GZ), FVector(X + 95.0, Y + 6.0, GZ + 50.0));
+    K.Box(ELaneColour::TankBlack, FVector(X - 95.0, Y - 6.0, GZ), FVector(X - 45.0, Y + 6.0, GZ + 50.0));
+    K.Barrier(FVector(X - 97.0, Y - 36.0, GZ), FVector(X + 97.0, Y + 36.0, GZ + 115.0));
 }
 
 /** A blue handcart loaded with crates of produce. */
@@ -161,6 +170,7 @@ void AddHandcart(FLaneBlocks& K, double X, double Y)
         const double A = X - 84.0 + I * 58.0;
         K.Box(Goods[I], FVector(A, Y - 38.0, GZ + 60.0), FVector(A + 52.0, Y + 38.0, GZ + 92.0));
     }
+    K.Barrier(FVector(X - 150.0, Y - 52.0, GZ), FVector(X + 92.0, Y + 52.0, GZ + 95.0));
 }
 } // namespace
 

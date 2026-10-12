@@ -7,6 +7,8 @@ namespace PWLane
 namespace
 {
 constexpr double FootTop = FootpathHeight;
+constexpr double ShutterTop = FootTop + 240.0; // a 240 cm clear opening above the footpath; the drum box above it ends at 270
+constexpr double StallCounterTop = FootTop + 90.0; // a stall counter is about 90 cm above the pavement
 
 ELaneColour GoodsColour(uint32 R)
 {
@@ -38,12 +40,12 @@ void AddShutterBay(FLaneBlocks& K, const FLaneFrame& F, double U0, double U1, ui
 {
     static const ELaneColour Panels[] = {ELaneColour::ShutterSteel, ELaneColour::ShutterBlue, ELaneColour::ShutterGreen,
                                          ELaneColour::ShutterSteel};
-    F.Add(K, Panels[R % UE_ARRAY_COUNT(Panels)], U0, U1, -4.0, 0.0, FootTop, 252.0);
-    for (double Z = 30.0; Z < 244.0; Z += 26.0)
+    F.Add(K, Panels[R % UE_ARRAY_COUNT(Panels)], U0, U1, -4.0, 0.0, FootTop, ShutterTop);
+    for (double Z = 30.0; Z < ShutterTop - 8.0; Z += 26.0)
     {
         F.Add(K, ELaneColour::ShutterStripe, U0 + 2.0, U1 - 2.0, -6.0, -4.0, Z, Z + 5.0);
     }
-    F.Add(K, ELaneColour::ShutterStripe, U0, U1, -9.0, -4.0, 250.0, 268.0);
+    F.Add(K, ELaneColour::ShutterStripe, U0, U1, -9.0, -4.0, ShutterTop - 2.0, ShutterTop + 15.0);
     AddSign(K, F, U0 - 10.0, U1 + 10.0, R >> 4);
 }
 
@@ -54,6 +56,7 @@ void AddPot(FLaneBlocks& K, const FLaneFrame& F, double U, uint32 R)
     F.Add(K, ELaneColour::LeafDark, U - 22.0, U + 22.0, -52.0, -8.0, FootTop + 32.0, FootTop + 78.0);
     K.Tilted(ELaneColour::LeafLight, F.Pt(U, -30.0, FootTop + 88.0), FVector(30.0, 30.0, 22.0),
              FRotator(0.0, 20.0 + static_cast<double>(R % 50u), 0.0));
+    K.Barrier(F.Pt(U - 18.0, -48.0, 0.0), F.Pt(U + 18.0, -12.0, FootTop + 90.0));
 }
 
 /** An open stall: dark interior with shelves and goods, a counter on the footpath, a bulb, a striped awning. */
@@ -84,16 +87,19 @@ void AddOpenStall(FLaneScene& S, const FLaneBuilding& B, double U0, double U1, u
     }
 
     // The counter stands on the footpath, with a cloth on top and crates of fruit and sacks.
-    F.Add(K, ELaneColour::WoodLight, U0 + 10.0, U1 - 10.0, -85.0, -38.0, FootTop, 70.0);
-    F.Add(K, ELaneColour::TrimLight, U0 + 6.0, U1 - 6.0, -89.0, -34.0, 70.0, 75.0);
+    F.Add(K, ELaneColour::WoodLight, U0 + 10.0, U1 - 10.0, -85.0, -38.0, FootTop, StallCounterTop - 5.0);
+    F.Add(K, ELaneColour::TrimLight, U0 + 6.0, U1 - 6.0, -89.0, -34.0, StallCounterTop - 5.0, StallCounterTop);
     const int32 Crates = FMath::Clamp(FMath::FloorToInt((U1 - U0 - 20.0) / 50.0), 2, 6);
     const double CrateWidth = (U1 - U0 - 20.0) / Crates;
     for (int32 I = 0; I < Crates; ++I)
     {
         const uint32 G = LaneHash(static_cast<int32>(R), 40, I);
         const double A = U0 + 10.0 + I * CrateWidth;
-        F.Add(K, GoodsColour(G), A + 3.0, A + CrateWidth - 3.0, -82.0, -44.0, 75.0, 95.0 + static_cast<double>((G >> 5) % 14u));
+        F.Add(K, GoodsColour(G), A + 3.0, A + CrateWidth - 3.0, -82.0, -44.0, StallCounterTop, StallCounterTop + 20.0 + static_cast<double>((G >> 5) % 14u));
     }
+
+    // The counter and its goods are solid to the walking player (the stall behind it is too shallow to enter).
+    K.Barrier(F.Pt(U0 + 4.0, -92.0, 0.0), F.Pt(U1 - 4.0, -34.0, StallCounterTop + 40.0));
 
     // A bare bulb in the opening.
     F.Add(K, ELaneColour::GlassLit, Mid - 6.0, Mid + 6.0, -26.0, -14.0, 232.0, 246.0);
@@ -134,12 +140,13 @@ void AddResidence(FLaneScene& S, const FLaneBuilding& B)
     const bool bDoorLeft = (B.Seed & 1u) != 0u;
     const double DoorU = W * (bDoorLeft ? 0.30 : 0.70);
 
-    F.Add(K, ELaneColour::TrimDark, DoorU - 50.0, DoorU + 50.0, -3.0, 0.0, FootTop, 238.0);
-    F.Add(K, ELaneColour::DoorWood, DoorU - 40.0, DoorU + 40.0, -5.0, -3.0, FootTop, 226.0);
-    F.Add(K, ELaneColour::TrimDark, DoorU - 2.0, DoorU + 2.0, -7.0, -5.0, FootTop, 226.0);
-    F.Add(K, ELaneColour::GlassDusk, DoorU - 24.0, DoorU + 24.0, -7.0, -5.0, 150.0, 206.0);
+    // A 90 x 210 door (the leaf is the clear opening) in a 7 cm frame.
+    F.Add(K, ELaneColour::TrimDark, DoorU - 52.0, DoorU + 52.0, -3.0, 0.0, FootTop, FootTop + 217.0);
+    F.Add(K, ELaneColour::DoorWood, DoorU - 45.0, DoorU + 45.0, -5.0, -3.0, FootTop, FootTop + 210.0);
+    F.Add(K, ELaneColour::TrimDark, DoorU - 2.0, DoorU + 2.0, -7.0, -5.0, FootTop, FootTop + 210.0);
+    F.Add(K, ELaneColour::GlassDusk, DoorU - 28.0, DoorU + 28.0, -7.0, -5.0, 145.0, 205.0);
     F.Add(K, ELaneColour::Concrete, DoorU - 62.0, DoorU + 62.0, -42.0, 0.0, FootTop, FootTop + 13.0);
-    F.Add(K, ELaneColour::GlassLit, DoorU - 8.0, DoorU + 8.0, -12.0, -2.0, 244.0, 262.0);
+    F.Add(K, ELaneColour::GlassLit, DoorU - 8.0, DoorU + 8.0, -12.0, -2.0, 240.0, 258.0);
 
     if (W >= 700.0)
     {
@@ -151,14 +158,18 @@ void AddResidence(FLaneScene& S, const FLaneBuilding& B)
     {
         const double WinU = bDoorLeft ? W - 95.0 : 95.0;
         const bool bLit = ((B.Seed >> 9) % 3u) == 0u;
-        F.Add(K, ELaneColour::TrimDark, WinU - 58.0, WinU + 58.0, -3.0, 0.0, 95.0, 225.0);
-        F.Add(K, bLit ? ELaneColour::GlassLit : ELaneColour::GlassDusk, WinU - 48.0, WinU + 48.0, -5.0, -3.0, 105.0, 215.0);
-        for (int32 I = 0; I < 5; ++I)
+        // A 120 x 135 opening with the sill 75 above the floor (the floor sits on the footpath), barred, with a 45 cm chhajja.
+        constexpr double SillZ = FootTop + 75.0;
+        constexpr double TopZ = SillZ + 135.0;
+        F.Add(K, ELaneColour::TrimDark, WinU - 60.0, WinU + 60.0, -3.0, 0.0, SillZ, TopZ);
+        F.Add(K, bLit ? ELaneColour::GlassLit : ELaneColour::GlassDusk, WinU - 53.0, WinU + 53.0, -5.0, -3.0, SillZ + 7.0, TopZ - 7.0);
+        for (int32 I = 0; I < 6; ++I)
         {
-            const double A = WinU - 40.0 + I * 20.0;
-            F.Add(K, ELaneColour::TrimDark, A, A + 3.0, -9.0, -5.0, 105.0, 215.0);
+            const double A = WinU - 45.0 + I * 18.0;
+            F.Add(K, ELaneColour::TrimDark, A, A + 3.0, -9.0, -5.0, SillZ + 7.0, TopZ - 7.0);
         }
-        F.Add(K, ELaneColour::TrimLight, WinU - 66.0, WinU + 66.0, -12.0, -2.0, 89.0, 97.0);
+        F.Add(K, ELaneColour::TrimLight, WinU - 66.0, WinU + 66.0, -12.0, -2.0, SillZ - 8.0, SillZ);
+        F.Add(K, ELaneColour::TrimLight, WinU - 70.0, WinU + 70.0, -45.0, 0.0, TopZ + 2.0, TopZ + 8.0);
     }
 }
 } // namespace

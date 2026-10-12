@@ -3,6 +3,7 @@
 #include "Components/PointLightComponent.h"
 #include "Engine/PointLight.h"
 #include "Engine/World.h"
+#include "PerfectWorldLaneBarriers.h"
 #include "PerfectWorldLaneBlocks.h"
 #include "PerfectWorldLaneBuildings.h"
 #include "PerfectWorldLaneProps.h"
@@ -78,6 +79,7 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     AddGroundAndRoad(Scene.Blocks);
     BuildLaneRows(Scene);
     BuildLaneProps(Scene);
+    BuildLaneBarriers(Scene);
 
     int32 Instances = 0;
     const int32 Components = Scene.Blocks.Commit(World, Cube, BaseMaterial, Instances);

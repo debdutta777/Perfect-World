@@ -15,7 +15,7 @@ class UWorld;
  */
 namespace PWLane
 {
-constexpr double GroundZ = -200.0;        // top of the road; the camera sits 2 m above it
+constexpr double GroundZ = -200.0;        // top of the road; the player's feet rest here
 constexpr double RoadHalfWidth = 250.0;   // a 5 m road
 constexpr double FootpathOuter = 400.0;   // |Y| of a building front with no setback (footpath is 1.5 m)
 constexpr double FootpathHeight = 15.0;
@@ -84,6 +84,7 @@ enum class ELaneColour : uint8
     TaxiGlass,
     Chrome,
     AcUnit,
+    Barrier, // invisible; blocks the walking player only (never the camera). Must stay last before Count.
     Count
 };
 
@@ -117,6 +118,12 @@ public:
 
     /** A rotated box: Size is the full extent along the box's own X, Y and Z. */
     void Tilted(ELaneColour Colour, const FVector& Centre, const FVector& Size, const FRotator& Rotation);
+
+    /** An invisible axis-aligned box that blocks the walking player (the Pawn channel) and nothing else. */
+    void Barrier(const FVector& CornerA, const FVector& CornerB)
+    {
+        Box(ELaneColour::Barrier, CornerA, CornerB);
+    }
 
     /** A thin stretched cube from one point to another (overhead wires, bunting lines). */
     void Wire(ELaneColour Colour, const FVector& From, const FVector& To, double Thickness);
