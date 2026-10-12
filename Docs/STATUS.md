@@ -1143,3 +1143,16 @@ gpt-6-astra (Codex, medium effort) edited only the English strings in `Source/Pe
 - **Rank 0:** reads "You bring everyday experience, with room to learn as you go." Household Resources rank 0 still states institutional care in a children's home, with no family household and no reserve, written with equal dignity.
 
 **Exact check:** `python Scripts/build_core.py --build-dir D:/pwm` on `integrate/ui-phase1-lane-week`: **100% tests passed out of 146**.
+
+## Checkpoint — UI phase 1, Kolkata lane and week compression verified in the packaged build, 2026-10-12
+
+These results are for `integrate/ui-phase1-lane-week` at `662b26f`, built from the D: clone:
+- **Rung 1:** `build_core.py`, **146/146**.
+- **Rung 2:** `build_unreal.py`, **Succeeded**. The shared PCHs were pre-warmed first.
+- **Rung 4:** `package_windows.py`, exit 0, `BUILD SUCCESSFUL`.
+
+**Seen in the packaged build** (windowed, 1600×900):
+- **Title:** it renders over the block-built Kolkata lane. The left panel fades from left to right, which confirms the `Orient_Vertical` fix. The save-aware **Continue** shows the slot note beneath it. See `Docs/Images/title-phase1-lane.png`.
+- **Household page:** it renders in the new palette and in Hind Siliguri, with the cyan focus outline. See `Docs/Images/household-phase1.png`.
+
+**Not walked through on screen:** the cloud PC's virtual gamepad presses the focused button within seconds of launch, so the rest of the flow went untested on screen. That covers the Identity, Stream and Review pages, the pause menu, and controller navigation.
