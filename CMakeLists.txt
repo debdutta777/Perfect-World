@@ -109,6 +109,7 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/AwakeningResolve.cpp
     Source/PerfectWorldCore/Private/AwakeningRecipes.cpp
     Source/PerfectWorldCore/Private/AwakeningProfile.cpp
+    Source/PerfectWorldCore/Private/Tower.cpp
     Source/PerfectWorldCore/Private/ContentThreadSchemas.cpp
     Source/PerfectWorldCore/Private/ThreadTemplates.cpp
     Source/PerfectWorldCore/Private/ThreadTemplateRules.cpp
@@ -224,6 +225,10 @@ add_test(NAME PerfectWorldAssessmentTests COMMAND PerfectWorldAssessmentTests ${
 add_executable(PerfectWorldAwakeningTests Tests/AwakeningTests.cpp Tests/AwakeningPersonaTests.cpp Tests/AwakeningProfileTests.cpp)
 target_link_libraries(PerfectWorldAwakeningTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldAwakeningTests COMMAND PerfectWorldAwakeningTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+add_executable(PerfectWorldTowerTests Tests/TowerTests.cpp)
+target_link_libraries(PerfectWorldTowerTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldTowerTests COMMAND PerfectWorldTowerTests)
 
 add_executable(PerfectWorldThreadTests Tests/ThreadsTests.cpp Tests/ThreadsContentTests.cpp Tests/ThreadsRunTests.cpp
                Tests/ThreadsEquivalenceTests.cpp Tests/ThreadsSaveTests.cpp)
