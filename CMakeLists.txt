@@ -12,6 +12,11 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/CharacterCreation.cpp
     Source/PerfectWorldCore/Private/CreationPresets.cpp
     Source/PerfectWorldCore/Private/CreationEdits.cpp
+    Source/PerfectWorldCore/Private/WeekCompressionPlan.cpp
+    Source/PerfectWorldCore/Private/WeekCompressionRun.cpp
+    Source/PerfectWorldCore/Private/WeekCompressionCompare.cpp
+    Source/PerfectWorldCore/Private/StateDiff.cpp
+    Source/PerfectWorldCore/Private/StateDiffLines.cpp
     Source/PerfectWorldCore/Private/CreationPresentation.cpp
     Source/PerfectWorldCore/Private/CreationSaveSerialization.cpp
     Source/PerfectWorldCore/Private/CreationIdentity.cpp
@@ -456,3 +461,14 @@ foreach(fixture_and_issue
     add_test(NAME PerfectWorldContentFixture_${fixture}_${rule}
              COMMAND pwcontent validate ${CMAKE_SOURCE_DIR}/Tests/Fixtures/Content/${fixture} --expect-issue "${issue}")
 endforeach()
+
+# Week compression and the persistent-state diff (ROADMAP M3-02). The tool is built first and its path is
+# the test's second argument, so the test can run the real command line.
+add_executable(pwstatediff Tools/StateDiff/main.cpp)
+target_link_libraries(pwstatediff PRIVATE PerfectWorldCore)
+add_executable(PerfectWorldWeekTests Tests/WeekCompressionTests.cpp Tests/WeekCompressionRefusalTests.cpp
+               Tests/WeekCompressionRulesTests.cpp Tests/WeekCompressionRandomTests.cpp Tests/StateDiffTests.cpp
+               Tests/StateDiffMutationTests.cpp Tests/StateDiffSaveTests.cpp)
+target_link_libraries(PerfectWorldWeekTests PRIVATE PerfectWorldCore)
+add_dependencies(PerfectWorldWeekTests pwstatediff)
+add_test(NAME PerfectWorldWeekTests COMMAND PerfectWorldWeekTests ${CMAKE_SOURCE_DIR}/Data/Content $<TARGET_FILE:pwstatediff>)
