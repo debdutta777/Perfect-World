@@ -1212,3 +1212,31 @@ These results are for `integrate/ui-phase1-lane-week` at `662b26f`, built from t
 - **Rung 2:** **Succeeded**, no warnings.
 
 **Not yet verified:** packaged screenshots and a walk-through of the new pages.
+
+## Checkpoint — M4-03 the ten days (portable), 2026-10-12
+
+Built by Claude Sonnet 5.5 in its own worktree and merged as `0c5c0d7`.
+
+**Files:**
+- New: `Public/{Countdown.h, CountdownContent.h}` and `Private/Countdown{Content,Rules,Profile,Offers,Run,Text}.cpp`, plus `CountdownInternal.h`.
+- New tests: six files `Tests/Countdown*`.
+
+**What it adds:**
+- **Span:** from 18:00 on Awakening Day to 06:00 on exam morning, resolved only through `CompressWeek`.
+- **Opportunities:** twelve, with mutual-exclusion groups and time-overlap refusal.
+- **Odds:** shown before committing, and moved by relationships.
+- **Seeds:** stored at commit, so a reload never rerolls. A byte-identical replay is tested.
+- **Obligations:** three. Each stands by default and can be negotiated once, with its cost shown first.
+- **World event:** one Gate event at a fixed time.
+- **Strategies:** study, people and rest end with different but comparable profiles, also across six more seeds.
+
+**Design choices:** 11 places where the docs were silent; each is marked `// Design choice (M4-03):` in the code. Examples: six preparation dimensions mirroring the tower floor types, and a definition of "comparable" as totals within 25%.
+
+**Not yet done:**
+- not in `WorldState`, the world hash or the save;
+- relationship requests are carried but not applied;
+- no institutional-care obligation variant yet.
+
+**Exact checks:**
+- **Rung 1:** `build_core.py --build-dir D:/pwm`, **148/148**, `PerfectWorld countdown: 6250 checks passed`.
+- **Rung 2:** **Succeeded**.
