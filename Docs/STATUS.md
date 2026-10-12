@@ -1176,3 +1176,39 @@ These results are for `integrate/ui-phase1-lane-week` at `662b26f`, built from t
 - **Household page:** it renders in the new palette and in Hind Siliguri, with the cyan focus outline. See `Docs/Images/household-phase1.png`.
 
 **Not walked through on screen:** the cloud PC's virtual gamepad presses the focused button within seconds of launch, so the rest of the flow went untested on screen. That covers the Identity, Stream and Review pages, the pause menu, and controller navigation.
+
+## Checkpoint — UI phase 2: Traits, Household and Stream, with the review fixes, 2026-10-12
+
+**Who did what:**
+- **gpt-6.1-sol (Codex, medium):** wrote phase 2 per `UI_FRONTEND_SPEC.md` §2–4 (`1027ee0`); its report is `Docs/UI_PHASE2_STATUS.md`.
+- **Traits page:** a 0–4 rank selector, an inspector comparing the current and proposed rank, a sticky budget strip, a "Choose a starting background" drawer with preview-before-apply, Undo and Redo, and Clear and Reset under More.
+- **Household and Stream:** redesigned with a 35/65 and a 60/40 split.
+- **Integrator:** dropped Codex's unrequested `STATUS.md` split and audit script.
+- **gpt-6-astra (Codex, medium, read-only review):** found no compile or crash defects. It asked for changes:
+  - five input and focus defects;
+  - the UI computing group totals and the strongest traits itself;
+  - the Stream page's missing sample-day and route content;
+  - localisation of core strings, which is deferred.
+- **Fixes:**
+  - **gpt-6.1-sol (`08b8e01`), five input fixes:**
+    - stick input reaches the rank selector, and the Traits page owns the stick latches;
+    - drawer traversal at the scroll bounds;
+    - Escape and B cancel a proposal before leaving Traits;
+    - held-key repeats are consumed;
+    - the ladder toggle keeps focus.
+
+    The integrator changed one thing: the stick now only scrolls the preview, because analog events arrive every frame.
+  - **Claude Sonnet (`0bb8471`):**
+    - new core APIs `GroupAllocationTotals` and `StrongestTraits`, which previews now carry;
+    - new `StreamPresentation.{h,cpp}` holding the spec's stream copy verbatim: card summaries, four sample-day rows, captions, and the routes and equal-XP text;
+    - the adapter and Stream page now read the core;
+    - new test `PerfectWorldStreamPresentationTests`.
+- **Integrator fixes:**
+  - Unreal has a global `ETextRole`, so `using PWUI::ETextRole;` failed to compile; the name is now qualified;
+  - the deprecated `EKeys::Virtual_Accept` is dropped.
+
+**Exact checks on `41d599d`:**
+- **Rung 1:** `build_core.py --build-dir D:/pwm`, **147/147**.
+- **Rung 2:** **Succeeded**, no warnings.
+
+**Not yet verified:** packaged screenshots and a walk-through of the new pages.
