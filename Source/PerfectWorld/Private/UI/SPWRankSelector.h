@@ -7,6 +7,7 @@
 class SButton;
 DECLARE_DELEGATE_OneParam(FPWProposeRank, int32);
 DECLARE_DELEGATE_RetVal_OneParam(TSharedPtr<SWidget>, FPWRankTraversal, bool);
+DECLARE_DELEGATE_RetVal_TwoParams(bool, FPWRankAnalogGate, bool, float);
 
 /** A five-position rank picker which participates in focus traversal as one control. */
 class SPWRankSelector : public SCompoundWidget
@@ -22,6 +23,7 @@ public:
         /** Receives -1 for the previous row and +1 for the next row. */
         SLATE_EVENT(FPWProposeRank, OnMoveRow)
         SLATE_EVENT(FPWRankTraversal, OnTraverse)
+        SLATE_EVENT(FPWRankAnalogGate, OnAnalogGate)
     SLATE_END_ARGS()
 
     void Construct(const FArguments& InArgs);
@@ -50,7 +52,6 @@ private:
     FSimpleDelegate OnCancel;
     FPWProposeRank OnMoveRow;
     FPWRankTraversal OnTraverse;
+    FPWRankAnalogGate OnAnalogGate;
     TArray<TSharedPtr<SButton>> Positions;
-    bool bAnalogHorizontalHeld = false;
-    bool bAnalogVerticalHeld = false;
 };

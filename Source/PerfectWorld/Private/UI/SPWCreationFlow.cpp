@@ -383,7 +383,7 @@ FReply SPWCreationFlow::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& 
         }
         else
         {
-            GoBack();
+            if (CurrentStep != 1 || !TraitsPage->CancelPendingProposal()) GoBack();
         }
         return FReply::Handled();
     }

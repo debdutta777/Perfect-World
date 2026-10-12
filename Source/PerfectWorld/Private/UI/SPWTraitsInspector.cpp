@@ -57,15 +57,15 @@ TSharedRef<SWidget> SPWTraitsPage::BuildInspector()
     Content->AddSlot().AutoHeight()
     [PWUI::MakeButton(LOCTEXT("Apply", "Apply rank"), PWUI::EButtonKind::Primary,
         FOnClicked::CreateLambda([this]() { ApplyRank(); return FReply::Handled(); }), Proposal.bCanApply, 16)];
-    Content->AddSlot().AutoHeight().Padding(0, 8, 0, 8)
-    [PWUI::MakeButton(bShowRanks ? LOCTEXT("Hide", "Hide all ranks") : LOCTEXT("Show", "Show all ranks"), PWUI::EButtonKind::Secondary,
+    LadderToggle = PWUI::MakeButton(bShowRanks ? LOCTEXT("Hide", "Hide all ranks") : LOCTEXT("Show", "Show all ranks"), PWUI::EButtonKind::Secondary,
         FOnClicked::CreateLambda([this]()
         {
             bShowRanks = !bShowRanks;
             RefreshInspector();
-            PWUI::FocusWhenReady(AsShared(), Inspector);
+            PWUI::FocusWhenReady(AsShared(), LadderToggle);
             return FReply::Handled();
-        }), true, 16)];
+        }), true, 16);
+    Content->AddSlot().AutoHeight().Padding(0, 8, 0, 8)[LadderToggle.ToSharedRef()];
     if (bShowRanks) for (const auto& Rank : Definition.Ranks)
         Content->AddSlot().AutoHeight().Padding(0, 8, 0, 8)[BuildRank(Rank, FText::GetEmpty())];
     if (Definition.Id == FName(TEXT("household_resources")))

@@ -1,6 +1,9 @@
 #include "UI/SPWTraitsPage.h"
 
 #include "Framework/Application/SlateApplication.h"
+#include "Input/Events.h"
+#include "Input/NavigationReply.h"
+#include "InputCoreTypes.h"
 #include "UI/PWCreationModel.h"
 #include "UI/PWStyle.h"
 #include "UI/PWWidgets.h"
@@ -11,6 +14,26 @@
 #include "Widgets/Text/STextBlock.h"
 
 #define LOCTEXT_NAMESPACE "PerfectWorldTraitsDrawer"
+
+namespace
+{
+class SPWDrawerScroll final : public SScrollBox
+{
+public:
+    virtual FReply OnAnalogValueChanged(const FGeometry& Geometry, const FAnalogInputEvent& Event) override
+    {
+        if (Event.GetKey() == EKeys::Gamepad_LeftX || Event.GetKey() == EKeys::Gamepad_LeftY)
+            return FReply::Unhandled();
+        return SScrollBox::OnAnalogValueChanged(Geometry, Event);
+    }
+
+    virtual FNavigationReply OnNavigation(const FGeometry& Geometry, const FNavigationEvent& Event) override
+    {
+        // The flow owns the explicit preset -> preview -> actions sequence.
+        return SCompoundWidget::OnNavigation(Geometry, Event);
+    }
+};
+}
 
 void SPWTraitsPage::OpenDrawer(FName Preset, int32 Operation)
 {
@@ -35,7 +58,7 @@ void SPWTraitsPage::OpenDrawer(FName Preset, int32 Operation)
     }
     ScrollContent->AddSlot().AutoHeight().Padding(0, 12, 0, 0)[DrawerPreview.ToSharedRef()];
     Content->AddSlot().FillHeight(1)
-    [SNew(SScrollBox).ScrollBarStyle(&Style.ScrollBar).AllowOverscroll(EAllowOverscroll::No)
+    [SNew(SPWDrawerScroll).ScrollBarStyle(&Style.ScrollBar).AllowOverscroll(EAllowOverscroll::No)
         .NavigationDestination(EDescendantScrollDestination::IntoView).ScrollWhenFocusChanges(EScrollWhenFocusChanges::InstantScroll)
         + SScrollBox::Slot()[ScrollContent]];
     const auto Cancel = PWUI::MakeButton(LOCTEXT("Cancel", "Cancel"), PWUI::EButtonKind::Secondary,

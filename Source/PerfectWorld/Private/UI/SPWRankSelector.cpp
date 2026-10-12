@@ -15,6 +15,21 @@
 
 #define LOCTEXT_NAMESPACE "PerfectWorldRankSelector"
 
+namespace
+{
+class SPWRankPosition final : public SButton
+{
+public:
+    virtual FReply OnAnalogValueChanged(const FGeometry& Geometry, const FAnalogInputEvent& Event) override
+    {
+        // Bubble these axes to the composite before SWidget converts them into navigation.
+        if (Event.GetKey() == EKeys::Gamepad_LeftX || Event.GetKey() == EKeys::Gamepad_LeftY)
+            return FReply::Unhandled();
+        return SButton::OnAnalogValueChanged(Geometry, Event);
+    }
+};
+}
+
 void SPWRankSelector::Construct(const FArguments& InArgs)
 {
     CurrentRank = InArgs._CurrentRank;
@@ -25,6 +40,7 @@ void SPWRankSelector::Construct(const FArguments& InArgs)
     OnCancel = InArgs._OnCancel;
     OnMoveRow = InArgs._OnMoveRow;
     OnTraverse = InArgs._OnTraverse;
+    OnAnalogGate = InArgs._OnAnalogGate;
     Positions.Reset();
 
     const PWUI::FStyle& Style = PWUI::FStyle::Get();
@@ -63,7 +79,7 @@ TSharedRef<SWidget> SPWRankSelector::BuildPosition(int32 Rank)
     const PWUI::FStyle& Style = PWUI::FStyle::Get();
     const TSharedRef<TWeakPtr<SButton>> Handle = MakeShared<TWeakPtr<SButton>>();
     TSharedPtr<SButton> Button;
-    SAssignNew(Button, SButton)
+    SAssignNew(Button, SPWRankPosition)
         .ButtonStyle(&Style.NoButton)
         .ContentPadding(0.0f)
         .IsFocusable(true)
@@ -168,6 +184,7 @@ FReply SPWRankSelector::OnPreviewKeyDown(const FGeometry& Geometry, const FKeyEv
     // Handling Accept here prevents SButton from arming a second click for key release.
     if (Event.GetKey() == EKeys::Tab)
     {
+        if (Event.IsRepeat()) return FReply::Handled();
         if (OnTraverse.IsBound())
             if (const auto Target = OnTraverse.Execute(Event.IsShiftDown()))
                 return FReply::Handled().SetUserFocus(Target.ToSharedRef(), EFocusCause::Navigation);
@@ -179,6 +196,9 @@ FReply SPWRankSelector::OnPreviewKeyDown(const FGeometry& Geometry, const FKeyEv
 FReply SPWRankSelector::OnKeyDown(const FGeometry& Geometry, const FKeyEvent& Event)
 {
     const FKey Key = Event.GetKey();
+    if (Event.IsRepeat() && (Key == EKeys::Left || Key == EKeys::Right || Key == EKeys::Up || Key == EKeys::Down ||
+        Key == EKeys::Gamepad_DPad_Left || Key == EKeys::Gamepad_DPad_Right ||
+        Key == EKeys::Gamepad_DPad_Up || Key == EKeys::Gamepad_DPad_Down)) return FReply::Handled();
     if (Key == EKeys::Left || Key == EKeys::Gamepad_DPad_Left)
     {
         const int32 Rank = FMath::Clamp(ProposedRank.Get(0) - 1, 0, 4);
@@ -227,10 +247,8 @@ FReply SPWRankSelector::OnAnalogValueChanged(const FGeometry& Geometry, const FA
     const float Value = Event.GetAnalogValue();
     if (Event.GetKey() == EKeys::Gamepad_LeftX)
     {
-        if (FMath::Abs(Value) < 0.35f) bAnalogHorizontalHeld = false;
-        else if (!bAnalogHorizontalHeld)
+        if (OnAnalogGate.IsBound() && OnAnalogGate.Execute(true, Value))
         {
-            bAnalogHorizontalHeld = true;
             const int32 Rank = FMath::Clamp(ProposedRank.Get(0) + (Value < 0.0f ? -1 : 1), 0, 4);
             FocusPosition(Rank, EFocusCause::Navigation);
             return Propose(Rank);
@@ -239,10 +257,8 @@ FReply SPWRankSelector::OnAnalogValueChanged(const FGeometry& Geometry, const FA
     }
     if (Event.GetKey() == EKeys::Gamepad_LeftY)
     {
-        if (FMath::Abs(Value) < 0.35f) bAnalogVerticalHeld = false;
-        else if (!bAnalogVerticalHeld)
+        if (OnAnalogGate.IsBound() && OnAnalogGate.Execute(false, Value))
         {
-            bAnalogVerticalHeld = true;
             OnMoveRow.ExecuteIfBound(Value > 0.0f ? -1 : 1);
         }
         return FReply::Handled();

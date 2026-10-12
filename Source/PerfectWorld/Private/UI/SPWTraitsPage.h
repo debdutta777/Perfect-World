@@ -28,6 +28,7 @@ public:
     TSharedRef<SWidget> BuildBudget();
     void InspectResources();
     void DiscardProposal();
+    bool CancelPendingProposal();
     void FocusRegion(bool bReverse);
 
 private:
@@ -50,7 +51,7 @@ private:
 
     TSharedPtr<FPWCreationModel> Model;
     TSharedPtr<SBox> Body, Inspector, DrawerPreview;
-    TSharedPtr<SWidget> Toolbar, Navigator;
+    TSharedPtr<SWidget> Toolbar, Navigator, LadderToggle;
     TSharedPtr<SComboButton> MoreMenu;
     TArray<TSharedPtr<SWidget>> Selectors, Rows;
     FPWTraitChangePreview Proposal;
@@ -64,5 +65,6 @@ private:
     FName Group, DrawerPreset;
     int32 SelectedIndex = 0, DrawerOperation = 0, Region = 0;
     bool bNarrow = false, bShowRanks = false;
+    bool bAnalogHorizontalHeld = false, bAnalogVerticalHeld = false;
     TAttribute<bool> NarrowLayout;
 };

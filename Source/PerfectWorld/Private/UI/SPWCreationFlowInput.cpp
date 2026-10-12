@@ -17,7 +17,7 @@ namespace
 void GatherModalActions(const TSharedRef<SWidget>& Widget, TArray<TSharedPtr<SWidget>>& Actions)
 {
     if (!Widget->GetVisibility().IsVisible() || !Widget->IsEnabled()) return;
-    const bool bScrollRegion = Widget->GetType() == FName(TEXT("SScrollBox"));
+    const bool bScrollRegion = Widget->GetType() == FName(TEXT("SScrollBox")) || Widget->GetType() == FName(TEXT("SPWDrawerScroll"));
     if (Widget->SupportsKeyboardFocus() && !bScrollRegion) Actions.Add(Widget);
     if (FChildren* Children = Widget->GetChildren())
         for (int32 Index = 0; Index < Children->Num(); ++Index) GatherModalActions(Children->GetChildAt(Index), Actions);
@@ -26,7 +26,8 @@ void GatherModalActions(const TSharedRef<SWidget>& Widget, TArray<TSharedPtr<SWi
 
 TSharedPtr<SScrollBox> FindModalScroll(const TSharedRef<SWidget>& Widget)
 {
-    if (Widget->GetType() == FName(TEXT("SScrollBox"))) return StaticCastSharedRef<SScrollBox>(Widget);
+    if (Widget->GetType() == FName(TEXT("SScrollBox")) || Widget->GetType() == FName(TEXT("SPWDrawerScroll")))
+        return StaticCastSharedRef<SScrollBox>(Widget);
     if (FChildren* Children = Widget->GetChildren())
         for (int32 Index = 0; Index < Children->Num(); ++Index)
             if (auto Found = FindModalScroll(Children->GetChildAt(Index))) return Found;
@@ -70,6 +71,25 @@ void SPWCreationFlow::FocusDetails(TSharedPtr<SWidget> Target)
     PageBody->ScrollDescendantIntoView(Target, false, EDescendantScrollDestination::TopOrLeft);
 }
 
+void SPWCreationFlow::TraverseModal(bool bReverse)
+{
+    TArray<TSharedPtr<SWidget>> Actions;
+    GatherModalActions(AllocationModal.ToSharedRef(), Actions);
+    if (Actions.IsEmpty()) return;
+    const int32 Current = Actions.IndexOfByKey(FSlateApplication::Get().GetKeyboardFocusedWidget());
+    const int32 Next = Current == INDEX_NONE ? 0 : (Current + (bReverse ? Actions.Num() - 1 : 1)) % Actions.Num();
+    FSlateApplication::Get().SetKeyboardFocus(Actions[Next], EFocusCause::Navigation);
+}
+
+bool SPWCreationFlow::ScrollModal(float Amount)
+{
+    const float Offset = ModalScroll->GetScrollOffset();
+    const float End = FMath::Max(0.f, ModalScroll->GetScrollOffsetOfEnd());
+    if ((Amount < 0.f && Offset <= 0.f) || (Amount > 0.f && Offset >= End)) return false;
+    ModalScroll->SetScrollOffset(FMath::Clamp(Offset + Amount, 0.f, End));
+    return true;
+}
+
 FReply SPWCreationFlow::OnPreviewKeyDown(const FGeometry& Geometry, const FKeyEvent& Event)
 {
     const FKey Key = Event.GetKey();
@@ -85,26 +105,23 @@ FReply SPWCreationFlow::OnPreviewKeyDown(const FGeometry& Geometry, const FKeyEv
             (Key == EKeys::Up || Key == EKeys::Down || Key == EKeys::Gamepad_DPad_Up || Key == EKeys::Gamepad_DPad_Down))
         {
             const bool bUp = Key == EKeys::Up || Key == EKeys::Gamepad_DPad_Up;
-            ModalScroll->SetScrollOffset(FMath::Max(0.f, ModalScroll->GetScrollOffset() + (bUp ? -48.f : 48.f)));
+            // Repeats deliberately scroll, but cannot leave the preview at its boundary.
+            if (!ScrollModal(bUp ? -48.f : 48.f) && !Event.IsRepeat()) TraverseModal(bUp);
             return FReply::Handled();
         }
-        if (Key == EKeys::Tab || Key == EKeys::F6 || Key == EKeys::Gamepad_DPad_Up || Key == EKeys::Gamepad_DPad_Down)
+        if (Event.IsRepeat() && (Key == EKeys::Left || Key == EKeys::Right ||
+            Key == EKeys::Gamepad_DPad_Left || Key == EKeys::Gamepad_DPad_Right)) return FReply::Handled();
+        if (Key == EKeys::Tab || Key == EKeys::F6 || Key == EKeys::Up || Key == EKeys::Down ||
+            Key == EKeys::Gamepad_DPad_Up || Key == EKeys::Gamepad_DPad_Down)
         {
-            TArray<TSharedPtr<SWidget>> Actions;
-            GatherModalActions(AllocationModal.ToSharedRef(), Actions);
-            if (!Actions.IsEmpty())
-            {
-                const int32 Current = Actions.IndexOfByKey(FSlateApplication::Get().GetKeyboardFocusedWidget());
-                const bool bReverse = Event.IsShiftDown() || Key == EKeys::Gamepad_DPad_Up;
-                const int32 Next = Current == INDEX_NONE ? 0 : (Current + (bReverse ? Actions.Num() - 1 : 1)) % Actions.Num();
-                FSlateApplication::Get().SetKeyboardFocus(Actions[Next], EFocusCause::Navigation);
-            }
+            if (!Event.IsRepeat()) TraverseModal(Event.IsShiftDown() || Key == EKeys::Up || Key == EKeys::Gamepad_DPad_Up);
             return FReply::Handled();
         }
         if (Key == EKeys::Gamepad_LeftShoulder || Key == EKeys::Gamepad_RightShoulder || Event.IsControlDown()) return FReply::Handled();
     }
     else if (!bConfirmingStart && Key == EKeys::F6 && (CurrentStep == 0 || CurrentStep == 1 || CurrentStep == 3))
     {
+        if (Event.IsRepeat()) return FReply::Handled();
         const bool bFromFooter = FooterControls->HasKeyboardFocus() || FooterControls->HasFocusedDescendants();
         if (CurrentStep == 0) HouseholdPage->FocusRegion(Event.IsShiftDown(), bFromFooter);
         else if (CurrentStep == 1) TraitsPage->FocusRegion(Event.IsShiftDown());
@@ -153,7 +170,7 @@ FReply SPWCreationFlow::OnAnalogValueChanged(const FGeometry& Geometry, const FA
     if (bAllocationModal && ModalScroll.IsValid() && ModalScroll->HasKeyboardFocus() && Event.GetKey() == EKeys::Gamepad_LeftY)
     {
         if (FMath::Abs(Event.GetAnalogValue()) > .35f)
-            ModalScroll->SetScrollOffset(FMath::Max(0.f, ModalScroll->GetScrollOffset() - Event.GetAnalogValue() * 24.f));
+            ScrollModal(-Event.GetAnalogValue() * 24.f); // The stick only scrolls; analog events arrive every frame.
         return FReply::Handled();
     }
     if (!bAllocationModal && PageBody->HasKeyboardFocus() && Event.GetKey() == EKeys::Gamepad_LeftY)

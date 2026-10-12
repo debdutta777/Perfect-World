@@ -192,6 +192,14 @@ TSharedRef<SWidget> SPWTraitsPage::BuildRow(int32 Index)
             .OnPropose(FPWProposeRank::CreateLambda([this, Index](int32 Rank) { Propose(Index, Rank); }))
             .OnApply(FSimpleDelegate::CreateSP(this, &SPWTraitsPage::ApplyRank))
             .OnCancel(FSimpleDelegate::CreateSP(this, &SPWTraitsPage::DiscardProposal))
+            .OnAnalogGate(FPWRankAnalogGate::CreateLambda([this](bool bHorizontal, float Value)
+            {
+                bool& bHeld = bHorizontal ? bAnalogHorizontalHeld : bAnalogVerticalHeld;
+                if (FMath::Abs(Value) < .35f) { bHeld = false; return false; }
+                if (bHeld) return false;
+                bHeld = true;
+                return true;
+            }))
             .OnMoveRow(FPWProposeRank::CreateLambda([this, Index](int32 Direction)
             {
                 for (int32 Next = Index + Direction; Model->Traits.IsValidIndex(Next); Next += Direction)
@@ -236,6 +244,13 @@ void SPWTraitsPage::Propose(int32 Index, int32 Rank)
 void SPWTraitsPage::DiscardProposal()
 {
     if (Model->Traits.IsValidIndex(SelectedIndex)) Propose(SelectedIndex, Model->Traits[SelectedIndex].Rank);
+}
+
+bool SPWTraitsPage::CancelPendingProposal()
+{
+    if (Proposal.CurrentRank == Proposal.ProposedRank) return false;
+    DiscardProposal();
+    return true;
 }
 
 void SPWTraitsPage::ApplyRank()
@@ -286,11 +301,11 @@ void SPWTraitsPage::FocusRegion(bool bReverse)
 
 FReply SPWTraitsPage::OnKeyDown(const FGeometry& Geometry, const FKeyEvent& Event)
 {
-    if (Event.GetKey() == EKeys::F6) { FocusRegion(Event.IsShiftDown()); return FReply::Handled(); }
+    if (Event.GetKey() == EKeys::F6) { if (!Event.IsRepeat()) FocusRegion(Event.IsShiftDown()); return FReply::Handled(); }
     if (Event.IsControlDown() && !Event.IsRepeat() && (Event.GetKey() == EKeys::Z || Event.GetKey() == EKeys::Y))
     { History(Event.GetKey() == EKeys::Y); return FReply::Handled(); }
     if ((Event.GetKey() == EKeys::Escape || Event.GetKey() == EKeys::Gamepad_FaceButton_Right) && Proposal.CurrentRank != Proposal.ProposedRank)
-    { DiscardProposal(); return FReply::Handled(); }
+    { if (!Event.IsRepeat()) CancelPendingProposal(); return FReply::Handled(); }
     return SCompoundWidget::OnKeyDown(Geometry, Event);
 }
 

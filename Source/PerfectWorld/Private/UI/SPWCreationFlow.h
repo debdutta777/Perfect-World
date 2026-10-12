@@ -54,6 +54,8 @@ private:
     void GoBack();
     void OpenAllocationModal(TSharedRef<SWidget> Content, TSharedPtr<SWidget> SafeAction);
     void CloseAllocationModal();
+    void TraverseModal(bool bReverse);
+    bool ScrollModal(float Amount);
     void EditResources();
     void FocusDetails(TSharedPtr<SWidget> Target);
     void RequestStartLife();
