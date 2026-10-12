@@ -1240,3 +1240,28 @@ Built by Claude Sonnet 5.5 in its own worktree and merged as `0c5c0d7`.
 **Exact checks:**
 - **Rung 1:** `build_core.py --build-dir D:/pwm`, **148/148**, `PerfectWorld countdown: 6250 checks passed`.
 - **Rung 2:** **Succeeded**.
+
+## Checkpoint — M1-13 walking player and the scale audit, 2026-10-12
+
+Built by Claude Sonnet 5.5 in its own worktree (`7743105`) and merged as `fcb17d9`.
+
+**The player:** `APerfectWorldPlayerCharacter` replaces the flying `ADefaultPawn`.
+- Capsule radius 34 cm, half-height 82.5 cm.
+- First-person camera on the capsule at 155 cm eye height. The old camera sat 2 m above the road.
+- Walk 140 cm/s, run 400 cm/s, step height 45 cm.
+- Third person on a 300 cm spring arm, adjustable from 120 to 600 cm. V or gamepad Y toggles it without changing position or facing.
+- A block body, hidden in first person.
+
+**Input:** Enhanced Input actions and a mapping context are built in C++ at runtime, with no config edits. `APerfectWorldPlayerController` forces the Enhanced player-input class, and a legacy fallback is logged if it is ever needed.
+
+**Collision:** walls, road, footpath and ground block. Invisible pawn-only barriers seal the gaps between buildings and the alleys. Poles, vehicles and stall counters also block. Decoration does not.
+
+**Scale:** `Docs/SCALE_AUDIT.md` has the full table.
+- Stair-room door 70 × 175 → 90 × 210; balcony and residence doors → 90 × 210.
+- Windows 120 × 135, sill at 75, with a 45 cm chhajja.
+- Railings 100, parapet 100, shutters 240, stall counters 90, poles 900.
+- Taxi 436 × 165 × 160; scooter 190 long.
+
+**Exact check:** Rung 2 on `fcb17d9`, **Succeeded** on the first compile.
+
+**Not yet verified:** walking, collision, camera toggling and the feel in play. The owner's desktop was in use, so the game was not launched.
