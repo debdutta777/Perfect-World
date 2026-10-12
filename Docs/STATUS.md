@@ -1135,3 +1135,11 @@ Built by a Claude Sonnet 5.5 subagent and merged here as a straight copy (its ba
 **Check:** `python Scripts/build_core.py --build-dir D:/pwc_tpres` in the agent's worktree: **100% tests passed out of 145**, no warnings. The same run on main was still in progress at commit time and is recorded separately.
 
 **For review:** the agent wrote the 80 rank meanings (ranks 1–4) itself. The doc gives only effect numbers, so the wording needs a narrative pass.
+
+## Checkpoint — trait rank meanings rewritten for tone and fairness (gpt-6-astra), 2026-10-12
+
+gpt-6-astra (Codex, medium effort) edited only the English strings in `Source/PerfectWorldCore/Private/CreationPresentation.cpp`: the 20 one-line descriptions and the rank meanings. No number, unit, direction, effect subject, rule note, ID or structure changed; I checked the diff for that.
+- **Framing:** abilities are lived experience and practice, not innate superiority. Unsupported promises (reflexes, illness, academic results) are removed. Household reserve is kept separate from affection and stability, and caregiver wording includes children's-home staff.
+- **Rank 0:** reads "You bring everyday experience, with room to learn as you go." Household Resources rank 0 still states institutional care in a children's home, with no family household and no reserve, written with equal dignity.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm` on `integrate/ui-phase1-lane-week`: **100% tests passed out of 146**.
