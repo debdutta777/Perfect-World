@@ -290,7 +290,7 @@ bool SPWRankSelector::HasPendingProposal() const
 
 bool SPWRankSelector::IsActivationKey(const FKey& Key) const
 {
-    return Key == EKeys::Enter || Key == EKeys::Virtual_Accept || Key == EKeys::Gamepad_FaceButton_Bottom;
+    return Key == EKeys::Enter || Key == EKeys::Gamepad_FaceButton_Bottom;
 }
 
 #undef LOCTEXT_NAMESPACE
