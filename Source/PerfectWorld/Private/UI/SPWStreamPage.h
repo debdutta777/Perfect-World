@@ -28,6 +28,8 @@ private:
     void RebuildLayout(bool bUseNarrowLayout);
     TSharedRef<SWidget> BuildCard(int32 Index);
     TSharedRef<SWidget> BuildDetails();
+    /** Rebuilds the sample-day rows from the selected stream's view. */
+    void PopulateSampleRows();
     void CommitReason(const FText& Text, ETextCommit::Type CommitType);
     FName SelectedStreamId() const;
     const FPWStreamView* SelectedStream() const;
@@ -37,6 +39,7 @@ private:
     TArray<TSharedPtr<SWidget>> CardContents;
     TSharedPtr<SWidget> Details;
     TSharedPtr<SWidget> SampleDayRegion;
+    TSharedPtr<SVerticalBox> SampleRowsBox;
     TSharedPtr<SEditableTextBox> ReasonBox;
     FCurveSequence DetailTransition;
     FCurveHandle DetailReveal;

@@ -121,16 +121,18 @@ FPWAllocationPreview AdaptPreview(const PerfectWorld::CharacterCreator& Creator,
         Change.BeforeRank = Before.Allocations[Index].Rank;
         Change.AfterRank = Source.Review.Allocations[Index].Rank;
     }
-    for (int32 Rank = PerfectWorld::MaxRank; Rank >= 0 && View.StrongestTraits.Num() < 3; --Rank)
+    // The core ranks the strongest traits; the preview only looks them up for names and ranks.
+    for (const std::string_view StrongestId : Source.StrongestTraits)
     {
-        for (std::size_t Index = 0; Index < Definitions.size() && View.StrongestTraits.Num() < 3; ++Index)
+        for (std::size_t Index = 0; Index < Definitions.size(); ++Index)
         {
-            if (Source.Review.Allocations[Index].Rank != Rank) continue;
+            if (Definitions[Index].Id != StrongestId) continue;
             FPWAllocationChangeView& Trait = View.StrongestTraits.AddDefaulted_GetRef();
             Trait.TraitId = FName(PWCreatorFlow::FromUtf8(Definitions[Index].Id));
             Trait.DisplayName = FText::FromString(PWCreatorFlow::FromUtf8(Definitions[Index].DisplayName));
             Trait.BeforeRank = Before.Allocations[Index].Rank;
-            Trait.AfterRank = Rank;
+            Trait.AfterRank = Source.Review.Allocations[Index].Rank;
+            break;
         }
     }
     View.Spent = Source.Review.Spent;
@@ -151,8 +153,7 @@ FPWAllocationPreview AdaptPreview(const PerfectWorld::CharacterCreator& Creator,
 
 TArray<FPWTraitGroupView> UPerfectWorldCharacterCreatorSubsystem::GetTraitGroups() const
 {
-    TMap<FName, int32> Totals;
-    for (const FPWTraitView& Trait : GetTraits()) Totals.FindOrAdd(Trait.Group) += Trait.Cost;
+    const auto Totals = PerfectWorld::GroupAllocationTotals(Creator.Review().Allocations);
     TArray<FPWTraitGroupView> Views;
     for (const PerfectWorld::TraitGroup& Group : PerfectWorld::TraitGroups())
     {
@@ -160,7 +161,7 @@ TArray<FPWTraitGroupView> UPerfectWorldCharacterCreatorSubsystem::GetTraitGroups
         View.Id = FName(PWCreatorFlow::FromUtf8(Group.Id));
         View.DisplayName = FText::FromString(PWCreatorFlow::FromUtf8(Group.DisplayName));
         View.DisplayOrder = Group.DisplayOrder;
-        View.AllocatedPoints = Totals.FindRef(View.Id);
+        View.AllocatedPoints = Totals[static_cast<std::size_t>(Group.DisplayOrder)];
     }
     return Views;
 }
