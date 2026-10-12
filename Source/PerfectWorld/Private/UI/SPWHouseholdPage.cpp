@@ -12,7 +12,6 @@
 
 #define LOCTEXT_NAMESPACE "PerfectWorldHouseholdPage"
 
-using PWUI::ETextRole;
 
 void SPWHouseholdPage::Construct(const FArguments& InArgs, const TSharedRef<FPWCreationModel>& InModel)
 {
@@ -50,14 +49,14 @@ void SPWHouseholdPage::RebuildLayout(bool bUseNarrowLayout)
     bLayoutInitialized = true;
     Root->ClearChildren();
     const PWUI::FStyle& Style = PWUI::FStyle::Get();
-    Root->AddSlot().AutoHeight()[PWUI::MakeText(LOCTEXT("Title", "Where did you grow up?"), ETextRole::PageHeading, Style.TextPrimary)];
+    Root->AddSlot().AutoHeight()[PWUI::MakeText(LOCTEXT("Title", "Where did you grow up?"), PWUI::ETextRole::PageHeading, Style.TextPrimary)];
     Root->AddSlot().AutoHeight().Padding(0, 6, 0, 18)
-    [PWUI::MakeText(LOCTEXT("Intro", "Choose your starting household. This choice costs no points. Household Resources can change your opening home."), ETextRole::Body, Style.TextSecondary, true)];
+    [PWUI::MakeText(LOCTEXT("Intro", "Choose your starting household. This choice costs no points. Household Resources can change your opening home."), PWUI::ETextRole::Body, Style.TextSecondary, true)];
     const TSharedRef<SVerticalBox> List = SNew(SVerticalBox);
     List->AddSlot().AutoHeight().Padding(0, 0, 0, 8)
-    [PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return Model->OpeningHome.bGrewUpInCare ? LOCTEXT("RememberedHousehold", "Remembered household") : FText::GetEmpty(); }), ETextRole::Meta, Style.TextMuted)];
+    [PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return Model->OpeningHome.bGrewUpInCare ? LOCTEXT("RememberedHousehold", "Remembered household") : FText::GetEmpty(); }), PWUI::ETextRole::Meta, Style.TextMuted)];
     for (const TSharedPtr<SWidget>& Row : HouseholdRows) List->AddSlot().AutoHeight().Padding(0, 0, 0, 8)[Row.ToSharedRef()];
-    List->AddSlot().AutoHeight()[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return HouseholdProblem; }), ETextRole::Body, Style.Error, true)];
+    List->AddSlot().AutoHeight()[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return HouseholdProblem; }), PWUI::ETextRole::Body, Style.Error, true)];
     if (bNarrow)
     {
         Root->AddSlot().AutoHeight()[List];
@@ -102,10 +101,10 @@ TSharedRef<SWidget> SPWHouseholdPage::BuildHouseholdRow(int32 Index)
     const FPWHouseholdView& Household = Model->Households[Index];
     const FName Id = Household.Id;
     const TSharedRef<SWidget> Content = SNew(SVerticalBox)
-        + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(Household.DisplayName, ETextRole::Control, Style.TextPrimary)]
-        + SVerticalBox::Slot().AutoHeight().Padding(0, 3, 0, 0)[PWUI::MakeText(Household.GuardianExamples, ETextRole::Meta, Style.TextSecondary, true)]
+        + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(Household.DisplayName, PWUI::ETextRole::Control, Style.TextPrimary)]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 3, 0, 0)[PWUI::MakeText(Household.GuardianExamples, PWUI::ETextRole::Meta, Style.TextSecondary, true)]
         + SVerticalBox::Slot().AutoHeight().Padding(0, 3, 0, 0)
-          [PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return Model->OpeningHome.bGrewUpInCare ? LOCTEXT("RememberedForRanks", "Remembered for ranks 1–4") : FText::GetEmpty(); }), ETextRole::Meta, Style.TextMuted, true)];
+          [PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return Model->OpeningHome.bGrewUpInCare ? LOCTEXT("RememberedForRanks", "Remembered for ranks 1–4") : FText::GetEmpty(); }), PWUI::ETextRole::Meta, Style.TextMuted, true)];
     return PWUI::MakeContentButton(Content, PWUI::EButtonKind::TextRow,
         FOnClicked::CreateLambda([this, Id]()
         {
@@ -122,18 +121,18 @@ TSharedRef<SWidget> SPWHouseholdPage::BuildDetails()
         FOnClicked::CreateLambda([this]() { OnEditResources.ExecuteIfBound(); return FReply::Handled(); }),
         true, 16);
     return PWUI::MakePanel(SNew(SVerticalBox)
-        + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return Model->OpeningHome.bGrewUpInCare ? LOCTEXT("CareTitle", "Growing up in a children's home") : LOCTEXT("HomeTitle", "Your opening home"); }), ETextRole::SectionHeading, Style.TextPrimary, true)]
-        + SVerticalBox::Slot().AutoHeight().Padding(0, 8, 0, 0)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return FText::Format(LOCTEXT("HomeFmt", "{0} · {1}"), Model->OpeningHome.HomeKitName, Model->OpeningHome.DressingTierName); }), ETextRole::Control, Style.Accent, true)]
-        + SVerticalBox::Slot().AutoHeight().Padding(0, 5, 0, 18)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return Model->OpeningHome.DressingDescription; }), ETextRole::Body, Style.TextSecondary, true)]
-        + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(LOCTEXT("EverydayHeading", "Everyday life"), ETextRole::SectionHeading, Style.TextPrimary)]
-        + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 18)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return EverydayText(); }), ETextRole::Body, Style.TextSecondary, true)]
-        + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(LOCTEXT("CareHeading", "Care and support"), ETextRole::SectionHeading, Style.TextPrimary)]
-        + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 8)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return Model->OpeningHome.bGrewUpInCare ? LOCTEXT("StaffCaregiver", "A staff caregiver") : Model->Summary.GuardianText; }), ETextRole::Control, Style.TextPrimary, true)]
-        + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(LOCTEXT("CommonCare", "Resources, support and housing security are separate choices. Every starting home has a place to sleep, meals, storage and access to school."), ETextRole::Body, Style.TextSecondary, true)]
-        + SVerticalBox::Slot().AutoHeight().Padding(0, 16, 0, 0)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return Model->OpeningHome.bGrewUpInCare ? LOCTEXT("RememberedStoryHeading", "Remembered household: story emphasis") : LOCTEXT("StoryHeading", "Story emphasis"); }), ETextRole::SectionHeading, Style.TextPrimary, true)]
-        + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { for (const FPWHouseholdView& Household : Model->Households) if (Household.bSelected) return Household.StoryEmphasis; return FText::GetEmpty(); }), ETextRole::Body, Style.TextSecondary, true)]
+        + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return Model->OpeningHome.bGrewUpInCare ? LOCTEXT("CareTitle", "Growing up in a children's home") : LOCTEXT("HomeTitle", "Your opening home"); }), PWUI::ETextRole::SectionHeading, Style.TextPrimary, true)]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 8, 0, 0)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return FText::Format(LOCTEXT("HomeFmt", "{0} · {1}"), Model->OpeningHome.HomeKitName, Model->OpeningHome.DressingTierName); }), PWUI::ETextRole::Control, Style.Accent, true)]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 5, 0, 18)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return Model->OpeningHome.DressingDescription; }), PWUI::ETextRole::Body, Style.TextSecondary, true)]
+        + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(LOCTEXT("EverydayHeading", "Everyday life"), PWUI::ETextRole::SectionHeading, Style.TextPrimary)]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 18)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return EverydayText(); }), PWUI::ETextRole::Body, Style.TextSecondary, true)]
+        + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(LOCTEXT("CareHeading", "Care and support"), PWUI::ETextRole::SectionHeading, Style.TextPrimary)]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 8)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return Model->OpeningHome.bGrewUpInCare ? LOCTEXT("StaffCaregiver", "A staff caregiver") : Model->Summary.GuardianText; }), PWUI::ETextRole::Control, Style.TextPrimary, true)]
+        + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(LOCTEXT("CommonCare", "Resources, support and housing security are separate choices. Every starting home has a place to sleep, meals, storage and access to school."), PWUI::ETextRole::Body, Style.TextSecondary, true)]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 16, 0, 0)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return Model->OpeningHome.bGrewUpInCare ? LOCTEXT("RememberedStoryHeading", "Remembered household: story emphasis") : LOCTEXT("StoryHeading", "Story emphasis"); }), PWUI::ETextRole::SectionHeading, Style.TextPrimary, true)]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { for (const FPWHouseholdView& Household : Model->Households) if (Household.bSelected) return Household.StoryEmphasis; return FText::GetEmpty(); }), PWUI::ETextRole::Body, Style.TextSecondary, true)]
         + SVerticalBox::Slot().AutoHeight().Padding(0, 12, 0, 0)
-          [PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return Model->OpeningHome.bGrewUpInCare ? LOCTEXT("CareExplanation", "Household Resources is rank 0. Your opening home is a children's home. Your household choice is remembered for ranks 1–4.") : FText::GetEmpty(); }), ETextRole::Body, Style.TextSecondary, true)]
+          [PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return Model->OpeningHome.bGrewUpInCare ? LOCTEXT("CareExplanation", "Household Resources is rank 0. Your opening home is a children's home. Your household choice is remembered for ranks 1–4.") : FText::GetEmpty(); }), PWUI::ETextRole::Body, Style.TextSecondary, true)]
         + SVerticalBox::Slot().AutoHeight().Padding(0, 10, 0, 0)
           [EditResourcesWidget.ToSharedRef()]);
 }

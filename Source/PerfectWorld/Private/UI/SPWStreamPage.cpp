@@ -14,7 +14,6 @@
 
 #define LOCTEXT_NAMESPACE "PerfectWorldStreamPage"
 
-using PWUI::ETextRole;
 
 void SPWStreamPage::Construct(const FArguments& InArgs, const TSharedRef<FPWCreationModel>& InModel)
 {
@@ -56,13 +55,13 @@ void SPWStreamPage::RebuildLayout(bool bUseNarrowLayout)
     Details.Reset();
     Details = BuildDetails();
     const PWUI::FStyle& Style = PWUI::FStyle::Get();
-    Root->AddSlot().AutoHeight()[PWUI::MakeText(LOCTEXT("Title", "Which stream will you study?"), ETextRole::PageHeading, Style.TextPrimary)];
-    Root->AddSlot().AutoHeight().Padding(0, 6, 0, 18)[PWUI::MakeText(LOCTEXT("Intro", "A stream sets a timetable, not a destiny."), ETextRole::Body, Style.TextSecondary)];
+    Root->AddSlot().AutoHeight()[PWUI::MakeText(LOCTEXT("Title", "Which stream will you study?"), PWUI::ETextRole::PageHeading, Style.TextPrimary)];
+    Root->AddSlot().AutoHeight().Padding(0, 6, 0, 18)[PWUI::MakeText(LOCTEXT("Intro", "A stream sets a timetable, not a destiny."), PWUI::ETextRole::Body, Style.TextSecondary)];
     if (bNarrow)
     {
         const TSharedRef<SVerticalBox> Body = SNew(SVerticalBox);
         for (const TSharedPtr<SWidget>& Card : Cards) Body->AddSlot().AutoHeight().Padding(0, 0, 0, 8)[Card.ToSharedRef()];
-        Body->AddSlot().AutoHeight()[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return StreamProblem; }), ETextRole::Body, Style.Error, true)];
+        Body->AddSlot().AutoHeight()[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return StreamProblem; }), PWUI::ETextRole::Body, Style.Error, true)];
         Body->AddSlot().AutoHeight().Padding(0, 10, 0, 0)[Details.ToSharedRef()];
         Root->AddSlot().AutoHeight()[Body];
     }
@@ -71,7 +70,7 @@ void SPWStreamPage::RebuildLayout(bool bUseNarrowLayout)
         const TSharedRef<SHorizontalBox> CardRow = SNew(SHorizontalBox);
         for (const TSharedPtr<SWidget>& Card : Cards) CardRow->AddSlot().FillWidth(1).Padding(0, 0, 12, 0)[Card.ToSharedRef()];
         Root->AddSlot().AutoHeight()[CardRow];
-        Root->AddSlot().AutoHeight()[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return StreamProblem; }), ETextRole::Body, Style.Error, true)];
+        Root->AddSlot().AutoHeight()[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return StreamProblem; }), PWUI::ETextRole::Body, Style.Error, true)];
         Root->AddSlot().AutoHeight().Padding(0, 18, 0, 0)[Details.ToSharedRef()];
     }
     if (Focused.IsValid()) FSlateApplication::Get().SetKeyboardFocus(Focused, EFocusCause::SetDirectly);
@@ -111,8 +110,8 @@ TSharedRef<SWidget> SPWStreamPage::BuildCard(int32 Index)
     const FPWStreamView& Stream = Model->Streams[Index];
     const FName Id = Stream.Id;
     const TSharedRef<SWidget> Content = SNew(SVerticalBox)
-        + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(Stream.DisplayName, ETextRole::SectionHeading, Style.TextPrimary, true)]
-        + SVerticalBox::Slot().AutoHeight().Padding(0, 8, 0, 0)[PWUI::MakeText(Stream.TimetableSummary, ETextRole::Body, Style.TextSecondary, true)];
+        + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(Stream.DisplayName, PWUI::ETextRole::SectionHeading, Style.TextPrimary, true)]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 8, 0, 0)[PWUI::MakeText(Stream.TimetableSummary, PWUI::ETextRole::Body, Style.TextSecondary, true)];
     CardContents.Add(Content);
     return PWUI::MakeContentButton(SNew(SBox).MinDesiredHeight_Lambda([this]()
         {
@@ -133,7 +132,7 @@ TSharedRef<SWidget> SPWStreamPage::BuildDetails()
 {
     const PWUI::FStyle& Style = PWUI::FStyle::Get();
     SampleDayRegion = PWUI::MakePanel(SNew(SVerticalBox)
-            + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(LOCTEXT("SampleHeading", "A sample school day"), ETextRole::SectionHeading, Style.TextPrimary)]
+            + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(LOCTEXT("SampleHeading", "A sample school day"), PWUI::ETextRole::SectionHeading, Style.TextPrimary)]
             // TODO(core adapter): replace this timetable-summary fallback when SampleDay rows are published.
             + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]()
             {
@@ -143,17 +142,17 @@ TSharedRef<SWidget> SPWStreamPage::BuildDetails()
                 TArray<FText> Lines;
                 for (const auto& Row : Stream->SampleDay) Lines.Add(FText::Format(LOCTEXT("SampleRow", "{0} — {1}"), Row.Label, Row.Description));
                 return FText::Join(LOCTEXT("SampleBreak", "\n\n"), Lines);
-            }), ETextRole::Body, Style.TextSecondary, true)]);
+            }), PWUI::ETextRole::Body, Style.TextSecondary, true)]);
     const TSharedRef<SWidget> ReasonPanel = PWUI::MakePanel(SNew(SVerticalBox)
             + SVerticalBox::Slot().AutoHeight()[SNew(SBox).Visibility_Lambda([this]() { const FPWStreamView* Stream = SelectedStream(); return Stream && !Stream->RouteFlexibilityText.IsEmpty() ? EVisibility::Visible : EVisibility::Collapsed; })
-                [PWUI::MakeText(LOCTEXT("RoutesHeading", "Room to change direction"), ETextRole::SectionHeading, Style.TextPrimary)]]
+                [PWUI::MakeText(LOCTEXT("RoutesHeading", "Room to change direction"), PWUI::ETextRole::SectionHeading, Style.TextPrimary)]]
             // TODO(core adapter): this remains collapsed until route text is published.
-            + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { const FPWStreamView* Stream = SelectedStream(); return Stream ? Stream->RouteFlexibilityText : FText::GetEmpty(); }), ETextRole::Body, Style.TextSecondary, true)]
-            + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { const FPWStreamView* Stream = SelectedStream(); return Stream ? Stream->EqualStartingXPText : FText::GetEmpty(); }), ETextRole::Body, Style.TextSecondary, true)]
-            + SVerticalBox::Slot().AutoHeight().Padding(0, 16, 0, 6)[PWUI::MakeText(LOCTEXT("ReasonLabel", "Your reason (optional)"), ETextRole::Control, Style.TextPrimary)]
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { const FPWStreamView* Stream = SelectedStream(); return Stream ? Stream->RouteFlexibilityText : FText::GetEmpty(); }), PWUI::ETextRole::Body, Style.TextSecondary, true)]
+            + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { const FPWStreamView* Stream = SelectedStream(); return Stream ? Stream->EqualStartingXPText : FText::GetEmpty(); }), PWUI::ETextRole::Body, Style.TextSecondary, true)]
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 16, 0, 6)[PWUI::MakeText(LOCTEXT("ReasonLabel", "Your reason (optional)"), PWUI::ETextRole::Control, Style.TextPrimary)]
             + SVerticalBox::Slot().AutoHeight()[ReasonBox.ToSharedRef()]
-            + SVerticalBox::Slot().AutoHeight().Padding(0, 5, 0, 0)[PWUI::MakeText(LOCTEXT("ReasonHelper", "This is your note. It does not change your stats."), ETextRole::Meta, Style.TextMuted, true)]
-            + SVerticalBox::Slot().AutoHeight().Padding(0, 8, 0, 0)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return ReasonProblem; }), ETextRole::Body, Style.Error, true)]);
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 5, 0, 0)[PWUI::MakeText(LOCTEXT("ReasonHelper", "This is your note. It does not change your stats."), PWUI::ETextRole::Meta, Style.TextMuted, true)]
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 8, 0, 0)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { return ReasonProblem; }), PWUI::ETextRole::Body, Style.Error, true)]);
     if (bNarrow) return SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight()[SampleDayRegion.ToSharedRef()]
         + SVerticalBox::Slot().AutoHeight().Padding(0, 14, 0, 0)[ReasonPanel];
