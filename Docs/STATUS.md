@@ -1265,3 +1265,25 @@ Built by Claude Sonnet 5.5 in its own worktree (`7743105`) and merged as `fcb17d
 **Exact check:** Rung 2 on `fcb17d9`, **Succeeded** on the first compile.
 
 **Not yet verified:** walking, collision, camera toggling and the feel in play. The owner's desktop was in use, so the game was not launched.
+
+## Checkpoint — M4-04 tower route matrix and scoring (portable), and the walking build packaged, 2026-10-12
+
+**Who did what:**
+- **gpt-6.1-sol (Codex, medium):** started M4-04 and was cut off twice, first by a network error and then by the account usage limit. Its partial `Tower.{h,cpp}` and tests were kept.
+- **Claude Sonnet 5.5:** finished it (`core/m4-04-tower`).
+- **Integrator:** added a `static_assert` and an id test tying `TowerMethod` to M4-03's `CountdownDimension`, and settled the countdown's `TODO (M4-04)`.
+
+**What it adds:**
+- **Routes:** nine, three per floor, mirroring M4-10 to M4-12. Every route has a non-combat completion. The one combat-capable route earns the same ceiling.
+- **Disciplines:** every one is reachable by at least two routes. Hunter is reached through team transit.
+- **Mission clock:** resolved once through `TimeContract`.
+- **Defeat:** costs rank at every depth. The score is signed, and defeat ranks below withdrawing.
+- **Credentials:** one per aptitude path.
+- **Rank:** against a uniform synthetic cohort of 999, to be calibrated at M6.
+- **Offers:** at least four at any result, including a retake. The hunter licence is gated by credential, not by combat.
+- **Top decile:** every non-combat route combination reaches it at the same quality, about 785 per floor.
+
+**Exact checks:**
+- **Rung 1:** `build_core.py --build-dir D:/pwm`, **149/149**, `PerfectWorld tower: 9628 checks passed` (before the integrator's alignment checks were added).
+- **Rung 2:** on `e5dfddf`, **Succeeded**.
+- **Rung 4:** packaging of the M1-13 walking build at `49d0550` to `D:\PWBuilds`, `BUILD SUCCESSFUL`. The build was not launched, because the owner's desktop was in use.
