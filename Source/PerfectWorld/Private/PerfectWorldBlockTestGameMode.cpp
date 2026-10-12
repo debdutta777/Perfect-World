@@ -9,11 +9,12 @@
 #include "Engine/SkyLight.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
-#include "GameFramework/DefaultPawn.h"
 #include "Materials/MaterialInterface.h"
 #include "PerfectWorldFrontEndHUD.h"
 #include "PerfectWorldKolkataLane.h"
 #include "PerfectWorldLaneBlocks.h"
+#include "PerfectWorldPlayerCharacter.h"
+#include "PerfectWorldPlayerController.h"
 #include "UObject/ConstructorHelpers.h"
 
 namespace
@@ -40,9 +41,21 @@ APerfectWorldBlockTestGameMode::APerfectWorldBlockTestGameMode()
     {
         BlockMaterial = Paint.Object;
     }
-    DefaultPawnClass = ADefaultPawn::StaticClass();
+    // The player walks (first person by default, third person on V); input is read through Enhanced Input.
+    DefaultPawnClass = APerfectWorldPlayerCharacter::StaticClass();
+    PlayerControllerClass = APerfectWorldPlayerController::StaticClass();
     // The front end (title, creation flow, pause menu) is drawn over this scene by the HUD.
     HUDClass = APerfectWorldFrontEndHUD::StaticClass();
+}
+
+APawn* APerfectWorldBlockTestGameMode::SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer, const FTransform& SpawnTransform)
+{
+    // The player used to hover 2 m above the road at the world origin. Keep that X, Y and facing, but stand on the road:
+    // the capsule's centre sits half its height plus 2 cm above the road top, so it settles onto the surface at once.
+    FVector Location = SpawnTransform.GetLocation();
+    Location.Z = PWLane::GroundZ + PWPlayer::CapsuleHalfHeight + 2.0;
+    const FRotator Facing(0.0, SpawnTransform.Rotator().Yaw, 0.0);
+    return Super::SpawnDefaultPawnAtTransform_Implementation(NewPlayer, FTransform(Facing, Location));
 }
 
 void APerfectWorldBlockTestGameMode::StartPlay()

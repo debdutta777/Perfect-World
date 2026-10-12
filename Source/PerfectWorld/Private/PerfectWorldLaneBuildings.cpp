@@ -13,38 +13,46 @@ ELaneColour WallColour(int32 Index)
     return static_cast<ELaneColour>(FMath::Clamp(Index, 0, WallColourCount - 1));
 }
 
-/** A window: dark frame, glass (warm if someone is up), mullions, a pale sill, and green shutters on some buildings. */
+/**
+ * A window, to the contract in ASSET_PIPELINE.md: a 120 x 135 opening with its sill at 75, a pale sill slab, a 45 cm
+ * chhajja (concrete sunshade) above, glass (warm if someone is up), mullions, and green shutters on some buildings.
+ */
 void AddWindow(FLaneBlocks& K, const FLaneFrame& F, double Uc, double Z, bool bLit, bool bShutters)
 {
-    F.Add(K, ELaneColour::TrimDark, Uc - 55.0, Uc + 55.0, -3.0, 0.0, Z + 85.0, Z + 235.0);
-    F.Add(K, bLit ? ELaneColour::GlassLit : ELaneColour::GlassDusk, Uc - 46.0, Uc + 46.0, -5.0, -3.0, Z + 94.0, Z + 226.0);
-    F.Add(K, ELaneColour::TrimDark, Uc - 2.0, Uc + 2.0, -7.0, -4.0, Z + 94.0, Z + 226.0);
-    F.Add(K, ELaneColour::TrimDark, Uc - 46.0, Uc + 46.0, -7.0, -4.0, Z + 158.0, Z + 162.0);
-    F.Add(K, ELaneColour::TrimLight, Uc - 62.0, Uc + 62.0, -9.0, -2.0, Z + 79.0, Z + 87.0);
+    constexpr double SillZ = 75.0;
+    constexpr double TopZ = SillZ + 135.0;
+    F.Add(K, ELaneColour::TrimDark, Uc - 60.0, Uc + 60.0, -3.0, 0.0, Z + SillZ, Z + TopZ);
+    F.Add(K, bLit ? ELaneColour::GlassLit : ELaneColour::GlassDusk, Uc - 53.0, Uc + 53.0, -5.0, -3.0, Z + SillZ + 7.0, Z + TopZ - 7.0);
+    F.Add(K, ELaneColour::TrimDark, Uc - 2.0, Uc + 2.0, -7.0, -4.0, Z + SillZ + 7.0, Z + TopZ - 7.0);
+    F.Add(K, ELaneColour::TrimDark, Uc - 53.0, Uc + 53.0, -7.0, -4.0, Z + 140.0, Z + 144.0);
+    F.Add(K, ELaneColour::TrimLight, Uc - 66.0, Uc + 66.0, -9.0, -2.0, Z + SillZ - 8.0, Z + SillZ);
+    F.Add(K, ELaneColour::TrimLight, Uc - 70.0, Uc + 70.0, -45.0, 0.0, Z + TopZ + 2.0, Z + TopZ + 8.0);
     if (bShutters)
     {
-        F.Add(K, ELaneColour::ShutterGreen, Uc - 92.0, Uc - 56.0, -5.0, 0.0, Z + 85.0, Z + 235.0);
-        F.Add(K, ELaneColour::ShutterGreen, Uc + 56.0, Uc + 92.0, -5.0, 0.0, Z + 85.0, Z + 235.0);
+        F.Add(K, ELaneColour::ShutterGreen, Uc - 96.0, Uc - 60.0, -5.0, 0.0, Z + SillZ, Z + TopZ);
+        F.Add(K, ELaneColour::ShutterGreen, Uc + 60.0, Uc + 96.0, -5.0, 0.0, Z + SillZ, Z + TopZ);
     }
 }
 
 /** A balcony: door, slab, railing with balusters, and sometimes a pot plant and washing on the rail. */
 void AddBalcony(FLaneBlocks& K, const FLaneFrame& F, double Uc, double Z, uint32 R)
 {
-    F.Add(K, ELaneColour::TrimDark, Uc - 52.0, Uc + 52.0, -3.0, 0.0, Z + 2.0, Z + 234.0);
-    F.Add(K, ELaneColour::DoorWood, Uc - 44.0, Uc + 44.0, -5.0, -3.0, Z + 2.0, Z + 226.0);
-    F.Add(K, ELaneColour::TrimDark, Uc - 2.0, Uc + 2.0, -8.0, -5.0, Z + 2.0, Z + 226.0);
-    F.Add(K, (R & 4u) != 0u ? ELaneColour::GlassLit : ELaneColour::GlassDusk, Uc - 34.0, Uc + 34.0, -7.0, -5.0, Z + 130.0, Z + 210.0);
+    // A 90 x 210 door (the leaf is the clear opening) in a 7 cm frame, standing on the slab.
+    F.Add(K, ELaneColour::TrimDark, Uc - 52.0, Uc + 52.0, -3.0, 0.0, Z + 2.0, Z + 219.0);
+    F.Add(K, ELaneColour::DoorWood, Uc - 45.0, Uc + 45.0, -5.0, -3.0, Z + 2.0, Z + 212.0);
+    F.Add(K, ELaneColour::TrimDark, Uc - 2.0, Uc + 2.0, -8.0, -5.0, Z + 2.0, Z + 212.0);
+    F.Add(K, (R & 4u) != 0u ? ELaneColour::GlassLit : ELaneColour::GlassDusk, Uc - 34.0, Uc + 34.0, -7.0, -5.0, Z + 120.0, Z + 198.0);
 
+    // The slab, and a 100 cm railing: top rail at 100, a mid rail, and balusters.
     F.Add(K, ELaneColour::Concrete, Uc - 88.0, Uc + 88.0, -100.0, 0.0, Z - 14.0, Z);
-    F.Add(K, ELaneColour::Rail, Uc - 88.0, Uc + 88.0, -100.0, -94.0, Z + 96.0, Z + 104.0);
+    F.Add(K, ELaneColour::Rail, Uc - 88.0, Uc + 88.0, -100.0, -94.0, Z + 92.0, Z + 100.0);
     F.Add(K, ELaneColour::Rail, Uc - 88.0, Uc + 88.0, -100.0, -96.0, Z + 50.0, Z + 55.0);
-    F.Add(K, ELaneColour::Rail, Uc - 88.0, Uc - 82.0, -100.0, 0.0, Z + 96.0, Z + 104.0);
-    F.Add(K, ELaneColour::Rail, Uc + 82.0, Uc + 88.0, -100.0, 0.0, Z + 96.0, Z + 104.0);
+    F.Add(K, ELaneColour::Rail, Uc - 88.0, Uc - 82.0, -100.0, 0.0, Z + 92.0, Z + 100.0);
+    F.Add(K, ELaneColour::Rail, Uc + 82.0, Uc + 88.0, -100.0, 0.0, Z + 92.0, Z + 100.0);
     for (int32 I = 0; I < 6; ++I)
     {
         const double A = Uc - 80.0 + I * 31.0;
-        F.Add(K, ELaneColour::Rail, A, A + 4.0, -100.0, -96.0, Z, Z + 96.0);
+        F.Add(K, ELaneColour::Rail, A, A + 4.0, -100.0, -96.0, Z, Z + 92.0);
     }
 
     if ((R & 1u) != 0u)
@@ -56,8 +64,8 @@ void AddBalcony(FLaneBlocks& K, const FLaneFrame& F, double Uc, double Z, uint32
     {
         static const ELaneColour Cloth[] = {ELaneColour::ClothMagenta, ELaneColour::ClothMustard, ELaneColour::ClothTeal,
                                             ELaneColour::TrimLight};
-        F.Add(K, Cloth[(R >> 6) % UE_ARRAY_COUNT(Cloth)], Uc - 40.0, Uc - 4.0, -103.0, -101.0, Z + 20.0, Z + 102.0);
-        F.Add(K, Cloth[(R >> 9) % UE_ARRAY_COUNT(Cloth)], Uc + 8.0, Uc + 60.0, -103.0, -101.0, Z + 30.0, Z + 102.0);
+        F.Add(K, Cloth[(R >> 6) % UE_ARRAY_COUNT(Cloth)], Uc - 40.0, Uc - 4.0, -103.0, -101.0, Z + 20.0, Z + 100.0);
+        F.Add(K, Cloth[(R >> 9) % UE_ARRAY_COUNT(Cloth)], Uc + 8.0, Uc + 60.0, -103.0, -101.0, Z + 30.0, Z + 100.0);
     }
 }
 
@@ -68,11 +76,12 @@ void AddRoof(FLaneBlocks& K, const FLaneFrame& F, const FLaneBuilding& B, double
     const double D = B.Depth;
     const uint32 R = B.Seed;
 
-    F.Add(K, B.Wall, 0.0, W, -2.0, 12.0, H, H + 75.0);
-    F.Add(K, B.Wall, 0.0, W, D - 14.0, D, H, H + 75.0);
-    F.Add(K, B.Wall, 0.0, 14.0, 12.0, D - 14.0, H, H + 75.0);
-    F.Add(K, B.Wall, W - 14.0, W, 12.0, D - 14.0, H, H + 75.0);
-    F.Add(K, ELaneColour::TrimLight, 0.0, W, -8.0, 18.0, H + 75.0, H + 85.0);
+    // A roof parapet 100 cm high (90 of wall and a 10 cm coping), the same as a railing.
+    F.Add(K, B.Wall, 0.0, W, -2.0, 12.0, H, H + 90.0);
+    F.Add(K, B.Wall, 0.0, W, D - 14.0, D, H, H + 90.0);
+    F.Add(K, B.Wall, 0.0, 14.0, 12.0, D - 14.0, H, H + 90.0);
+    F.Add(K, B.Wall, W - 14.0, W, 12.0, D - 14.0, H, H + 90.0);
+    F.Add(K, ELaneColour::TrimLight, 0.0, W, -8.0, 18.0, H + 90.0, H + 100.0);
 
     // Tanks: a square block and the same block turned 45 degrees make an eight-sided drum.
     const int32 Tanks = ((R >> 3) % 3u == 0u) ? 2 : 1;
@@ -98,7 +107,7 @@ void AddRoof(FLaneBlocks& K, const FLaneFrame& F, const FLaneBuilding& B, double
         const double Um = W * 0.62;
         F.Add(K, B.Wall, Um - 130.0, Um + 130.0, D - 300.0, D - 60.0, H, H + 235.0);
         F.Add(K, ELaneColour::TrimDark, Um - 140.0, Um + 140.0, D - 310.0, D - 50.0, H + 235.0, H + 247.0);
-        F.Add(K, ELaneColour::DoorWood, Um - 35.0, Um + 35.0, D - 302.0, D - 300.0, H, H + 175.0);
+        F.Add(K, ELaneColour::DoorWood, Um - 45.0, Um + 45.0, D - 302.0, D - 300.0, H, H + 210.0);
     }
     if (((R >> 11) & 1u) != 0u)
     {
@@ -136,7 +145,7 @@ void AddUpperFloors(FLaneBlocks& K, const FLaneFrame& F, const FLaneBuilding& B)
             if (R % 7u == 0u)
             {
                 // A window air-conditioner hung under the sill.
-                F.Add(K, ELaneColour::AcUnit, Uc - 30.0, Uc + 30.0, -34.0, 0.0, Z + 30.0, Z + 75.0);
+                F.Add(K, ELaneColour::AcUnit, Uc - 30.0, Uc + 30.0, -34.0, 0.0, Z + 22.0, Z + 67.0);
             }
         }
     }
@@ -198,9 +207,9 @@ void BuildMedium(FLaneScene& S, const FLaneBuilding& B)
         {
             const double Uc = (Bay + 0.5) * Pitch;
             const uint32 R = LaneHash(static_cast<int32>(B.Seed), Floor, Bay);
-            F.Add(K, ELaneColour::TrimDark, Uc - 60.0, Uc + 60.0, -3.0, 0.0, Z + 80.0, Z + 230.0);
-            F.Add(K, ((R >> 4) % 100u) < 22u ? ELaneColour::GlassLit : ELaneColour::GlassDusk, Uc - 48.0, Uc + 48.0, -5.0, -3.0,
-                  Z + 90.0, Z + 220.0);
+            F.Add(K, ELaneColour::TrimDark, Uc - 60.0, Uc + 60.0, -3.0, 0.0, Z + 75.0, Z + 210.0);
+            F.Add(K, ((R >> 4) % 100u) < 22u ? ELaneColour::GlassLit : ELaneColour::GlassDusk, Uc - 53.0, Uc + 53.0, -5.0, -3.0,
+                  Z + 82.0, Z + 203.0);
         }
     }
     F.Add(K, ELaneColour::TrimLight, 0.0, W, -12.0, 0.0, H - 20.0, H);

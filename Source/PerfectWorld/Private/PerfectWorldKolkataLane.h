@@ -17,6 +17,10 @@ namespace PWLane
  * as instances grouped by colour (one instanced mesh component and one dynamic material per colour). A few small
  * warm point lights are added near the starting view. Nothing ticks.
  *
+ * Collision (for the walking player, M1-13): walls, ground, road and footpaths block everything; small decoration
+ * (trim, wires, signs, awnings, goods, leaves) has none; props the player could bump into and the gaps between
+ * buildings are closed by invisible Pawn-only barriers (ELaneColour::Barrier).
+ *
  * BaseMaterial is /Engine/BasicShapes/BasicShapeMaterial (vector parameter "Color"); if it is null the blocks keep
  * the cube's own material and the scene is shown unpainted rather than not at all.
  */

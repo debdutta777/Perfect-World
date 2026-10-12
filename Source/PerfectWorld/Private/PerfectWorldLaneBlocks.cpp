@@ -2,6 +2,7 @@
 
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/SceneComponent.h"
+#include "Engine/CollisionProfile.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
@@ -76,6 +77,7 @@ const FLaneColourSpec ColourTable[] = {
     {TEXT("TaxiGlass"), FColor(30, 40, 48), false, false},
     {TEXT("Chrome"), FColor(172, 174, 178), false, true},
     {TEXT("AcUnit"), FColor(208, 210, 208), false, true},
+    {TEXT("Barrier"), FColor(255, 0, 255), true, false},
 };
 
 static_assert(UE_ARRAY_COUNT(ColourTable) == ColourCount, "ColourTable must have one row per ELaneColour");
@@ -166,9 +168,29 @@ int32 FLaneBlocks::Commit(UWorld& World, UStaticMesh& Cube, UMaterialInterface* 
         Blocks->SetMobility(EComponentMobility::Static);
         Blocks->SetupAttachment(Root);
         Blocks->SetCastShadow(Spec.bCastShadow);
-        Blocks->SetCollisionEnabled(Spec.bSolid ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
         Blocks->SetCanEverAffectNavigation(false);
-        if (BaseMaterial != nullptr)
+        const bool bBarrier = Index == static_cast<int32>(ELaneColour::Barrier);
+        if (!Spec.bSolid)
+        {
+            Blocks->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        }
+        else if (bBarrier)
+        {
+            // Invisible fence: blocks the walking player only. Cameras, traces and everything else pass through.
+            Blocks->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+            Blocks->SetCollisionObjectType(ECC_WorldStatic);
+            Blocks->SetCollisionResponseToAllChannels(ECR_Ignore);
+            Blocks->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+            Blocks->SetVisibility(false);
+            Blocks->SetHiddenInGame(true);
+        }
+        else
+        {
+            // Walls, ground, road and footpath: block the player, the camera boom and traces. Queries only, nothing simulates.
+            Blocks->SetCollisionProfileName(UCollisionProfile::BlockAll_ProfileName);
+            Blocks->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+        }
+        if (BaseMaterial != nullptr && !bBarrier)
         {
             // BasicShapeMaterial exposes its base colour as the vector parameter "Color". "BaseColor" is set too
             // so a differently named parameter would still pick the colour up; unknown names are ignored.
