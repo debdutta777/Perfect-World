@@ -113,6 +113,7 @@ TSharedRef<SWidget> MakeContentButton(TSharedRef<SWidget> Content, EButtonKind K
         case EButtonKind::TextRow:
             if (!bOn) return &Style.BrushTextRow;
             if (bDown) return &Style.BrushTextRowPressed;
+            if (bPicked) return bHot ? &Style.BrushCardSelectedHover : &Style.BrushCardSelected;
             return bHot ? &Style.BrushTextRowHover : &Style.BrushTextRow;
         case EButtonKind::Chip:
             if (!bOn) return &Style.BrushDisabled;
@@ -162,7 +163,7 @@ TSharedRef<SWidget> MakeContentButton(TSharedRef<SWidget> Content, EButtonKind K
                             .ColorAndOpacity(FSlateColor(FStyle::Get().Accent))
                             .Visibility_Lambda([Kind, bSelected]()
                             {
-                                return Kind == EButtonKind::Card && bSelected.Get(false)
+                                return (Kind == EButtonKind::Card || Kind == EButtonKind::TextRow || Kind == EButtonKind::Chip) && bSelected.Get(false)
                                     ? EVisibility::HitTestInvisible : EVisibility::Collapsed;
                             })
                         ]
@@ -195,6 +196,13 @@ TSharedRef<SWidget> MakeContentButton(TSharedRef<SWidget> Content, EButtonKind K
             ]
         ];
     *Handle = Button;
+#if WITH_ACCESSIBILITY
+    Button->SetAccessibleBehavior(EAccessibleBehavior::Custom, TAttribute<FText>::CreateLambda([Content, bSelected]()
+    {
+        const FText Description = Content->GetAccessibleText(EAccessibleType::Summary);
+        return bSelected.Get(false) ? FText::Format(LOCTEXT("AccessibleSelected", "{0}, Selected"), Description) : Description;
+    }));
+#endif
     return Button.ToSharedRef();
 }
 
@@ -212,6 +220,7 @@ TSharedRef<SWidget> MakeButton(const TAttribute<FText>& Label, EButtonKind Kind,
             .Font(Font(FontSize, EFontWeight::Medium))
             .ColorAndOpacity(FSlateColor::UseForeground())
             .Justification(Kind == EButtonKind::TextRow ? ETextJustify::Left : ETextJustify::Center)
+            .AutoWrapText(true)
         ];
     return MakeContentButton(Content, Kind, OnClicked, bSelected, bEnabled, FMargin(22.0f, 12.0f));
 }
@@ -304,7 +313,7 @@ void FocusWhenReady(const TSharedRef<SWidget>& Host, const TWeakPtr<SWidget>& Ta
                 return EActiveTimerReturnType::Continue;
             }
             FSlateApplication::Get().SetKeyboardFocus(Found, EFocusCause::SetDirectly);
-            return FSlateApplication::Get().GetKeyboardFocusedWidget() == Found ? EActiveTimerReturnType::Stop
+            return FSlateApplication::Get().GetKeyboardFocusedWidget() == Found || Found->HasFocusedDescendants() ? EActiveTimerReturnType::Stop
                                                                               : EActiveTimerReturnType::Continue;
         }));
     PendingFocus.Add({Host, Timer});

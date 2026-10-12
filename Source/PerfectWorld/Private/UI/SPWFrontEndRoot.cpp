@@ -169,10 +169,19 @@ void SPWFrontEndRoot::ShowCreation(int32 Step)
               SNew(SBox).HAlign(HAlign_Center).VAlign(VAlign_Center)
               [
                   SNew(SBox)
-                  .WidthOverride_Lambda([this]() { return FMath::Min(1500.0f, static_cast<float>(GetCachedGeometry().GetLocalSize().X) * 0.94f); })
-                  .HeightOverride_Lambda([this]() { return static_cast<float>(GetCachedGeometry().GetLocalSize().Y) * 0.94f; })
+                  .WidthOverride_Lambda([this]()
+                  {
+                      const float Width = GetCachedGeometry().GetLocalSize().X;
+                      return Width < 1440.0f ? FMath::Max(1.0f, Width - 48.0f) : Width * .9f;
+                  })
+                  .HeightOverride_Lambda([this]()
+                  {
+                      const FVector2D Size = GetCachedGeometry().GetLocalSize();
+                      return Size.X < 1440.0f ? FMath::Max(1.0f, Size.Y - 32.0f) : Size.Y * .9f;
+                  })
                   [
                       SAssignNew(Flow, SPWCreationFlow, Owner->GetCreator())
+                        .NarrowLayout_Lambda([this]() { return GetCachedGeometry().GetLocalSize().X < 1440.f; })
                       .InitialStep(Step)
                       .OnStartLife(FPWTryDelegate::CreateSP(this, &SPWFrontEndRoot::HandleStartLife))
                       .OnBackToTitle(FSimpleDelegate::CreateSP(this, &SPWFrontEndRoot::ShowTitle))

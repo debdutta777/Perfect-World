@@ -1,6 +1,7 @@
 #include "PerfectWorldCharacterCreatorSubsystem.h"
 
 #include "CreationSaveSerialization.h"
+#include "PerfectWorldCreationAdapter.h"
 #include "HAL/FileManager.h"
 #include "Misc/Paths.h"
 #include "SaveStore.h"
@@ -262,6 +263,7 @@ TArray<FPWHouseholdView> UPerfectWorldCharacterCreatorSubsystem::GetHouseholds()
         View.HomeKitId = FName(ToFString(Definition.HomeKitId));
         View.HomeKitName = FText::FromString(ToFString(Definition.HomeKitName));
         View.StoryEmphasis = FText::FromString(ToFString(Definition.StoryEmphasis));
+        View.EverydayText = PWCreationPresentation::HouseholdEverydayText(View.Id);
         View.bSelected = Definition.Id == Selected;
     }
     return Households;

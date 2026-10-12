@@ -17,6 +17,7 @@
 #include "Widgets/Layout/SWidgetSwitcher.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
+#include "Widgets/SOverlay.h"
 #include "Widgets/Text/STextBlock.h"
 
 #define LOCTEXT_NAMESPACE "PerfectWorldCreationFlowUI"
@@ -25,10 +26,12 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
 {
     const PWUI::FStyle& Style = PWUI::FStyle::Get();
     Model = MakeShared<FPWCreationModel>(InSubsystem);
+    NarrowLayout = InArgs._NarrowLayout;
     OnStartLife = InArgs._OnStartLife;
     OnBackToTitle = InArgs._OnBackToTitle;
     CurrentStep = FMath::Clamp(InArgs._InitialStep, 0, PWUI::CreationStepCount - 1);
-    PageReveal = PageTransition.AddCurve(0.0f, 0.18f, ECurveEaseFunction::CubicOut);
+    PageReveal = PageTransition.AddCurve(0.0f, 0.16f, ECurveEaseFunction::CubicOut);
+    ModalReveal = ModalTransition.AddCurve(0.0f, 0.18f, ECurveEaseFunction::CubicOut);
 
     const FText StepNames[PWUI::CreationStepCount] = {
         LOCTEXT("StepHousehold", "Household"), LOCTEXT("StepTraits", "Traits"), LOCTEXT("StepIdentity", "Identity"),
@@ -37,9 +40,7 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
     const TSharedRef<SHorizontalBox> StepRow = SNew(SHorizontalBox);
     for (int32 Step = 0; Step < PWUI::CreationStepCount; ++Step)
     {
-        StepRow->AddSlot().FillWidth(1.0f).Padding(0.0f, 0.0f, 8.0f, 0.0f)
-        [
-            PWUI::MakeButton(
+        const auto StepButton = PWUI::MakeButton(
                 FText::Format(LOCTEXT("StepChipFmt", "{0}  {1}"), FText::AsNumber(Step + 1), StepNames[Step]),
                 PWUI::EButtonKind::Chip,
                 FOnClicked::CreateLambda([this, Step]()
@@ -48,16 +49,39 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
                     return FReply::Handled();
                 }),
                 true, 15, 0.0f,
-                TAttribute<bool>::CreateLambda([this, Step]() { return CurrentStep == Step; }))
-        ];
+                TAttribute<bool>::CreateLambda([this, Step]() { return CurrentStep == Step; }));
+#if WITH_ACCESSIBILITY
+        StepButton->SetAccessibleBehavior(EAccessibleBehavior::Custom, TAttribute<FText>::CreateLambda([this, Step, Name = StepNames[Step]]()
+        {
+            const FText Status = CurrentStep == Step ? LOCTEXT("StepCurrent", "Current")
+                : Model->Summary.bReadyToStart ? LOCTEXT("StepComplete", "Complete") : LOCTEXT("StepAttention", "Needs attention");
+            return FText::Format(LOCTEXT("AccessibleStep", "Step {0}: {1}, {2}"), FText::AsNumber(Step + 1), Name, Status);
+        }));
+#endif
+        StepRow->AddSlot().FillWidth(1.0f).Padding(0.0f, 0.0f, 8.0f, 0.0f)[StepButton];
     }
 
     Pages = SNew(SWidgetSwitcher)
         .WidgetIndex_Lambda([this]() { return CurrentStep; })
-        + SWidgetSwitcher::Slot()[SNew(SPWHouseholdPage, Model.ToSharedRef())]
-        + SWidgetSwitcher::Slot()[SNew(SPWTraitsPage, Model.ToSharedRef())]
+        + SWidgetSwitcher::Slot()[SAssignNew(HouseholdPage, SPWHouseholdPage, Model.ToSharedRef())
+            .NarrowLayout(NarrowLayout)
+            .OnEditResources(FSimpleDelegate::CreateSP(this, &SPWCreationFlow::EditResources))
+            .OnFocusDetails(FPWWidgetDelegate::CreateSP(this, &SPWCreationFlow::FocusDetails))
+            .OnFocusFooter(FSimpleDelegate::CreateLambda([this]() { PWUI::FocusWhenReady(AsShared(), FooterControls); }))]
+        + SWidgetSwitcher::Slot()[SAssignNew(TraitsPage, SPWTraitsPage, Model.ToSharedRef())
+            .NarrowLayout(NarrowLayout)
+            .OnOpenModal(FPWCreationModalDelegate::CreateSP(this, &SPWCreationFlow::OpenAllocationModal))
+            .OnCloseModal(FSimpleDelegate::CreateSP(this, &SPWCreationFlow::CloseAllocationModal))
+            .OnFocusFooter(FSimpleDelegate::CreateLambda([this]() { PWUI::FocusWhenReady(AsShared(), FooterControls); }))
+            .OnRevealInspector(FPWCreationRevealDelegate::CreateLambda([this](TSharedPtr<SWidget> Target)
+            {
+                if (PageBody.IsValid()) PageBody->ScrollDescendantIntoView(Target, false, EDescendantScrollDestination::TopOrLeft);
+            }))]
         + SWidgetSwitcher::Slot()[SNew(SPWIdentityPage, Model.ToSharedRef())]
-        + SWidgetSwitcher::Slot()[SNew(SPWStreamPage, Model.ToSharedRef())]
+        + SWidgetSwitcher::Slot()[SAssignNew(StreamPage, SPWStreamPage, Model.ToSharedRef())
+            .NarrowLayout(NarrowLayout)
+            .OnFocusDetails(FPWWidgetDelegate::CreateSP(this, &SPWCreationFlow::FocusDetails))
+            .OnFocusFooter(FSimpleDelegate::CreateLambda([this]() { PWUI::FocusWhenReady(AsShared(), FooterControls); }))]
         + SWidgetSwitcher::Slot()
         [
             SNew(SPWReviewPage, Model.ToSharedRef())
@@ -130,14 +154,23 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
 
     ChildSlot
     [
-        PWUI::MakePanel(
+        SNew(SOverlay)
+        + SOverlay::Slot()
+        [
+        SNew(SBox).IsEnabled_Lambda([this]() { return !bAllocationModal; })
+        [
+        SNew(SBorder).BorderImage(&Style.BrushPanel)
+        .Padding_Lambda([this]() { return NarrowLayout.Get(false) ? FMargin(16) : FMargin(32); })
+        [
             SNew(SVerticalBox)
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 8)
+            [PWUI::MakeText(LOCTEXT("NewLife", "New life"), PWUI::ETextRole::Meta, Style.TextSecondary)]
             + SVerticalBox::Slot().AutoHeight()
             [
                 SNew(SHorizontalBox)
                 + SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Center)
                 [
-                    StepRow
+                    SNew(SBox).MinDesiredHeight_Lambda([this]() { return NarrowLayout.Get(false) ? 48.f : 64.f; })[StepRow]
                 ]
             ]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 16.0f, 0.0f, 20.0f)
@@ -151,14 +184,15 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
                 .AllowOverscroll(EAllowOverscroll::No)
                 .NavigationDestination(EDescendantScrollDestination::IntoView)
                 .ScrollWhenFocusChanges(EScrollWhenFocusChanges::InstantScroll)
-                .RenderTransform_Lambda([this]()
-                {
-                    return FSlateRenderTransform(FVector2f(0.0f, 8.0f * (1.0f - PageReveal.GetLerp())));
-                })
                 + SScrollBox::Slot().Padding(0.0f, 0.0f, 12.0f, 0.0f)
                 [
                     Pages.ToSharedRef()
                 ]
+            ]
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 8, 0, 0)
+            [
+                SNew(SBox).Visibility_Lambda([this]() { return CurrentStep == 1 ? EVisibility::Visible : EVisibility::Collapsed; })
+                [TraitsPage->BuildBudget()]
             ]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 16.0f, 0.0f, 16.0f)
             [
@@ -166,6 +200,9 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
             ]
             + SVerticalBox::Slot().AutoHeight()
             [
+                SAssignNew(FooterControls, SBox)
+                .MinDesiredHeight_Lambda([this]() { return NarrowLayout.Get(false) ? 56.f : 72.f; })
+                [
                 SNew(SHorizontalBox)
                 + SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Center).Padding(0.0f, 0.0f, 24.0f, 0.0f)
                 [
@@ -204,10 +241,28 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
                 [
                     ConfirmButton
                 ]
-            ],
-            FMargin(24.0f, 16.0f))
+                ]
+            ]
+        ]
+        ]
+        ]
+        + SOverlay::Slot()
+        [
+            SNew(SBorder).BorderImage(&Style.BrushScrim).Padding(16)
+            .Visibility_Lambda([this]() { return bAllocationModal ? EVisibility::Visible : EVisibility::Collapsed; })
+            .HAlign(HAlign_Right).VAlign(VAlign_Fill)
+            [
+                SAssignNew(AllocationModal, SBox)
+                .WidthOverride_Lambda([this]()
+                {
+                    const float Width = GetCachedGeometry().GetLocalSize().X;
+                    return FMath::Max(1.0f, NarrowLayout.Get(Width < 1320.0f) ? Width - 32.0f : Width * .55f);
+                })
+            ]
+        ]
     ];
 
+    PageBody->SetIsFocusable(true);
     GoToStep(CurrentStep);
 }
 
@@ -215,10 +270,12 @@ void SPWCreationFlow::Tick(const FGeometry& AllottedGeometry, double InCurrentTi
 {
     SCompoundWidget::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
     PageBody->SetRenderOpacity(PageReveal.GetLerp());
+    if (bAllocationModal) AllocationModal->SetRenderOpacity(ModalReveal.GetLerp());
 }
 
 void SPWCreationFlow::GoToStep(int32 Step)
 {
+    if (bAllocationModal) return;
     PWUI::CancelPendingFocus(AsShared());
     PageTransition.JumpToEnd();
     CurrentStep = FMath::Clamp(Step, 0, PWUI::CreationStepCount - 1);
@@ -243,6 +300,7 @@ void SPWCreationFlow::GoToStep(int32 Step)
         }
     }
     Model->Refresh();
+    if (TraitsPage.IsValid()) TraitsPage->DiscardProposal();
     if (PageBody.IsValid()) PageBody->ScrollToStart();
     PageTransition.Play(AsShared());
     FocusActivePage();
@@ -313,6 +371,12 @@ FReply SPWCreationFlow::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& 
     }
     if (InKeyEvent.GetKey() == EKeys::Escape || InKeyEvent.GetKey() == EKeys::Gamepad_FaceButton_Right)
     {
+        const auto Focus = FSlateApplication::Get().GetKeyboardFocusedWidget();
+        if (Focus.IsValid() && Focus->GetTypeAsString().Contains(TEXT("EditableText")))
+        {
+            // The text editor handles IME/Escape first. If it bubbles, close editing before page Back.
+            return FReply::Handled().SetUserFocus(PageBody.ToSharedRef(), EFocusCause::Navigation);
+        }
         if (bConfirmingStart)
         {
             CancelStartConfirmation();

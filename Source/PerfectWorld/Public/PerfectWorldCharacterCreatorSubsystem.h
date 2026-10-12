@@ -116,6 +116,14 @@ struct FPWHouseholdView
     UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
     FText StoryEmphasis;
 
+    /** TODO(core): HouseholdDefinition does not publish the authored everyday-life text yet. */
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
+    FText EverydayTextUnavailableFromCore;
+
+    /** Authored front-end copy, awaiting a portable household-presentation field. */
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
+    FText EverydayText;
+
     UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
     bool bSelected = false;
 };
@@ -232,6 +240,18 @@ class PERFECTWORLD_API UPerfectWorldCharacterCreatorSubsystem : public UGameInst
     GENERATED_BODY()
 
 public:
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Creation|Traits") TArray<FPWTraitGroupView> GetTraitGroups() const;
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Creation|Traits") FPWTraitDefinitionView GetTraitDefinition(FName TraitId) const;
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Creation|Traits") FPWTraitChangePreview PreviewTraitRank(FName TraitId, int32 ProposedRank) const;
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Creation|Traits") FPWAllocationPreview PreviewPreset(FName PresetId) const;
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Creation|Traits") FPWAllocationPreview PreviewClearAllocation() const;
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Creation|Traits") FPWAllocationPreview PreviewResetAllocation() const;
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Creation|Traits") FPWAllocationHistory GetAllocationHistory() const;
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Creation|Traits") bool ClearAllocation();
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Creation|Traits") bool ResetAllocation();
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Creation|Traits") bool UndoAllocation();
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Creation|Traits") bool RedoAllocation();
+
     UFUNCTION(BlueprintPure, Category = "Perfect World|Creation")
     TArray<FPWTraitView> GetTraits() const;
 

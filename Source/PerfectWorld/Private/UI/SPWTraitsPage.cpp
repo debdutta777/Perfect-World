@@ -1,13 +1,13 @@
 #include "UI/SPWTraitsPage.h"
 
-#include "CharacterCreation.h"
+#include "Framework/Application/SlateApplication.h"
+#include "Input/Events.h"
+#include "InputCoreTypes.h"
 #include "UI/PWCreationModel.h"
 #include "UI/PWStyle.h"
-#include "UI/PWTraitText.h"
 #include "UI/PWWidgets.h"
-#include "Widgets/Images/SImage.h"
-#include "Widgets/Input/SSlider.h"
-#include "Widgets/Layout/SBorder.h"
+#include "UI/SPWRankSelector.h"
+#include "Widgets/Input/SComboButton.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SWrapBox.h"
 #include "Widgets/SBoxPanel.h"
@@ -19,358 +19,279 @@
 void SPWTraitsPage::Construct(const FArguments& InArgs, const TSharedRef<FPWCreationModel>& InModel)
 {
     Model = InModel;
-    const PWUI::FStyle& Style = PWUI::FStyle::Get();
-
+    NarrowLayout = InArgs._NarrowLayout;
+    InspectorReveal = InspectorTransition.AddCurve(0, .16f, ECurveEaseFunction::CubicOut);
+    OnOpenModal = InArgs._OnOpenModal;
+    OnCloseModal = InArgs._OnCloseModal;
+    OnFocusFooter = InArgs._OnFocusFooter;
+    OnRevealInspector = InArgs._OnRevealInspector;
+    if (!Model->Traits.IsEmpty()) Group = Model->Traits[0].Group;
+    Inspector = SNew(SBox);
+    Body = SNew(SBox);
+    Selectors.SetNum(Model->Traits.Num());
+    for (int32 Index = 0; Index < Model->Traits.Num(); ++Index) Rows.Add(BuildRow(Index));
+    Toolbar = BuildToolbar();
+    const auto& Style = PWUI::FStyle::Get();
     ChildSlot
     [
         SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight()
-        [
-            PWUI::MakeText(LOCTEXT("Title", "What is your background?"), 32, Style.TextPrimary, true)
-        ]
-        + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 6.0f, 0.0f, 14.0f)
-        [
-            PWUI::MakeText(LOCTEXT("Subtitle",
-                "Spend exactly 1,000 points across twenty traits. Each rank costs more than the one before, so a broad "
-                "history holds up as well as a specialised one. At most four traits may reach rank 4."),
-                16, Style.TextSecondary, false, true)
-        ]
-        + SVerticalBox::Slot().AutoHeight()
-        [
-            BuildPointsBar()
-        ]
-        + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 14.0f, 0.0f, 14.0f)
-        [
-            BuildPresetRow()
-        ]
-        + SVerticalBox::Slot().FillHeight(1.0f)
-        [
-            BuildTraitList()
-        ]
+        [PWUI::MakeText(LOCTEXT("Title", "What is your background?"), PWUI::ETextRole::PageHeading, Style.TextPrimary)]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 16)
+        [PWUI::MakeText(LOCTEXT("Intro", "Spend exactly 1,000 points across twenty traits. You can change any choice before starting."), 16, Style.TextSecondary, false, true)]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 16)[Toolbar.ToSharedRef()]
+        + SVerticalBox::Slot().AutoHeight()[Body.ToSharedRef()]
     ];
+    DiscardProposal();
+    Reflow();
 }
 
-TSharedRef<SWidget> SPWTraitsPage::BuildPointsBar()
+void SPWTraitsPage::Tick(const FGeometry& Geometry, double Time, float Delta)
 {
-    const PWUI::FStyle& Style = PWUI::FStyle::Get();
-
-    const auto StatusColor = [this]() -> FLinearColor
+    SCompoundWidget::Tick(Geometry, Time, Delta);
+    // Descendant rank positions may receive focus directly from Tab, mouse or accessibility.
+    for (int32 Index = 0; Index < Selectors.Num(); ++Index)
+        if (Selectors[Index].IsValid() && (Selectors[Index]->HasKeyboardFocus() || Selectors[Index]->HasFocusedDescendants()))
+        { SelectTrait(Index); break; }
+    Inspector->SetRenderOpacity(InspectorReveal.GetLerp());
+    const bool bNewNarrow = NarrowLayout.Get(Geometry.GetLocalSize().X < 1280.0f);
+    if (bNewNarrow != bNarrow)
     {
-        const PWUI::FStyle& S = PWUI::FStyle::Get();
-        if (Model->Summary.Spent > Model->Summary.TotalBudget) return S.Danger;
-        return Model->Summary.Remaining == 0 ? S.Good : S.Accent;
-    };
-    const auto Fraction = [this]() -> float
-    {
-        const int32 Total = FMath::Max(1, Model->Summary.TotalBudget);
-        return FMath::Clamp(static_cast<float>(Model->Summary.Spent) / static_cast<float>(Total), 0.0f, 1.0f);
-    };
-
-    return SNew(SBorder)
-        .BorderImage(&Style.BrushInset)
-        .Padding(FMargin(22.0f, 14.0f))
-        [
-            SNew(SHorizontalBox)
-            + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
-            [
-                SNew(STextBlock)
-                .Text_Lambda([this]()
-                {
-                    return FText::Format(LOCTEXT("PointsFmt", "{0} / {1}"), FText::AsNumber(Model->Summary.Spent),
-                                         FText::AsNumber(Model->Summary.TotalBudget));
-                })
-                .Font(PWUI::Font(34, true))
-                .ColorAndOpacity_Lambda([StatusColor]() { return FSlateColor(StatusColor()); })
-            ]
-            + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(10.0f, 6.0f, 22.0f, 0.0f)
-            [
-                PWUI::MakeText(LOCTEXT("PointsLabel", "points spent"), 16, Style.TextSecondary)
-            ]
-            + SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Center)
-            [
-                SNew(SBorder)
-                .BorderImage(&Style.BrushTrack)
-                .Padding(3.0f)
-                [
-                    SNew(SBox)
-                    .HeightOverride(18.0f)
-                    [
-                        SNew(SHorizontalBox)
-                        + SHorizontalBox::Slot().FillWidth(TAttribute<float>::CreateLambda([Fraction]() { return Fraction(); }))
-                        [
-                            SNew(SImage)
-                            .Image_Lambda([this]() -> const FSlateBrush*
-                            {
-                                const PWUI::FStyle& S = PWUI::FStyle::Get();
-                                if (Model->Summary.Spent > Model->Summary.TotalBudget) return &S.BrushFillDanger;
-                                return Model->Summary.Remaining == 0 ? &S.BrushFillGood : &S.BrushFillAccent;
-                            })
-                        ]
-                        + SHorizontalBox::Slot().FillWidth(TAttribute<float>::CreateLambda([Fraction]() { return 1.0f - Fraction(); }))
-                        [
-                            SNullWidget::NullWidget
-                        ]
-                    ]
-                ]
-            ]
-            + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(22.0f, 0.0f, 0.0f, 0.0f)
-            [
-                SNew(STextBlock)
-                .Text_Lambda([this]()
-                {
-                    return FText::Format(LOCTEXT("RemainingFmt", "{0} left"), FText::AsNumber(Model->Summary.Remaining));
-                })
-                .Font(PWUI::Font(20, true))
-                .ColorAndOpacity_Lambda([StatusColor]() { return FSlateColor(StatusColor()); })
-            ]
-            + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(26.0f, 0.0f, 0.0f, 0.0f)
-            [
-                SNew(STextBlock)
-                .Text_Lambda([this]()
-                {
-                    return FText::Format(LOCTEXT("RankFourFmt", "Rank 4 slots: {0} / {1}"),
-                                         FText::AsNumber(Model->Summary.RankFourCount),
-                                         FText::AsNumber(Model->Summary.MaxRankFour));
-                })
-                .Font(PWUI::Font(16))
-                .ColorAndOpacity(FSlateColor(Style.TextSecondary))
-            ]
-        ];
-}
-
-TSharedRef<SWidget> SPWTraitsPage::BuildPresetRow()
-{
-    const PWUI::FStyle& Style = PWUI::FStyle::Get();
-    const TSharedRef<SWrapBox> Row = SNew(SWrapBox).UseAllottedSize(true).InnerSlotPadding(FVector2D(10.0, 10.0));
-
-    Row->AddSlot().VAlign(VAlign_Center)
-    [
-        PWUI::MakeText(LOCTEXT("PresetsLabel", "Start from a preset:"), 16, Style.TextSecondary)
-    ];
-
-    for (int32 Index = 0; Index < Model->Presets.Num(); ++Index)
-    {
-        const FName PresetId = Model->Presets[Index].Id;
-        Row->AddSlot().VAlign(VAlign_Center)
-        [
-            PWUI::MakeButton(
-                Model->Presets[Index].DisplayName, PWUI::EButtonKind::Chip,
-                FOnClicked::CreateLambda([this, PresetId]()
-                {
-                    Model->Edit([PresetId](UPerfectWorldCharacterCreatorSubsystem& Creator)
-                    {
-                        return Creator.ApplyPreset(PresetId);
-                    });
-                    return FReply::Handled();
-                }),
-                true, 16, 0.0f,
-                TAttribute<bool>::CreateLambda([this, Index]()
-                {
-                    return Model->Presets.IsValidIndex(Index) && Model->Presets[Index].bMatchesCurrent;
-                }))
-        ];
+        const auto Focus = FSlateApplication::Get().GetKeyboardFocusedWidget();
+        const bool bNavFocused = Navigator.IsValid() && (Navigator->HasKeyboardFocus() || Navigator->HasFocusedDescendants());
+        const bool bInspectorFocused = Inspector->HasFocusedDescendants();
+        bNarrow = bNewNarrow;
+        RefreshInspector();
+        Reflow();
+        if (bNavFocused) PWUI::FocusWhenReady(AsShared(), Navigator);
+        else if (bInspectorFocused) PWUI::FocusWhenReady(AsShared(), Inspector);
+        else if (Focus.IsValid() && Focus->IsEnabled()) PWUI::FocusWhenReady(AsShared(), Focus);
     }
-
-    Row->AddSlot().VAlign(VAlign_Center)
-    [
-        PWUI::MakeButton(
-            LOCTEXT("ClearAll", "Clear all"), PWUI::EButtonKind::Secondary,
-            FOnClicked::CreateLambda([this]()
-            {
-                Model->Edit([](UPerfectWorldCharacterCreatorSubsystem& Creator)
-                {
-                    bool bAllCleared = true;
-                    for (const FPWTraitView& Trait : Creator.GetTraits())
-                    {
-                        if (Trait.Rank > 0)
-                        {
-                            bAllCleared = Creator.SetTraitRank(Trait.Id, 0) && bAllCleared;
-                        }
-                    }
-                    return bAllCleared;
-                });
-                return FReply::Handled();
-            }),
-            true, 16)
-    ];
-
-    Row->AddSlot().VAlign(VAlign_Center)
-    [
-        PWUI::MakeButton(
-            LOCTEXT("ResetDefault", "Reset to default"), PWUI::EButtonKind::Secondary,
-            FOnClicked::CreateLambda([this]()
-            {
-                if (Model->Presets.Num() > 0)
-                {
-                    const FName DefaultId = Model->Presets[0].Id;
-                    Model->Edit([DefaultId](UPerfectWorldCharacterCreatorSubsystem& Creator)
-                    {
-                        return Creator.ApplyPreset(DefaultId);
-                    });
-                }
-                return FReply::Handled();
-            }),
-            true, 16)
-    ];
-    return Row;
 }
 
-TSharedRef<SWidget> SPWTraitsPage::BuildTraitList()
+TSharedRef<SWidget> SPWTraitsPage::BuildToolbar()
 {
-    const PWUI::FStyle& Style = PWUI::FStyle::Get();
-    const TSharedRef<SVerticalBox> List = SNew(SVerticalBox);
-
-    FName LastGroup = NAME_None;
-    for (int32 Index = 0; Index < Model->Traits.Num(); ++Index)
+    const auto Row = SNew(SWrapBox).UseAllottedSize(true).InnerSlotPadding(FVector2D(8, 8));
+    Row->AddSlot().VAlign(VAlign_Center)[PWUI::MakeText(LOCTEXT("InputHints", "← / → Change rank · Enter / A Apply rank · Esc / B Back"), 12, PWUI::FStyle::Get().TextSecondary, false, true)];
+    Row->AddSlot()[PWUI::MakeButton(LOCTEXT("Background", "Choose a starting background"), PWUI::EButtonKind::Secondary,
+        FOnClicked::CreateLambda([this]() { OpenDrawer(Model->Presets.IsEmpty() ? NAME_None : Model->Presets[0].Id, 0); return FReply::Handled(); }), true, 16)];
+    Row->AddSlot().VAlign(VAlign_Center)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]()
     {
-        const FPWTraitView& Trait = Model->Traits[Index];
-        if (Trait.Group != LastGroup)
+        for (const auto& Preset : Model->Presets) if (Preset.bMatchesCurrent) return Preset.DisplayName;
+        return LOCTEXT("Custom", "Custom");
+    }), 16, PWUI::FStyle::Get().TextSecondary)];
+    for (bool bRedo : {false, true})
+    {
+        Row->AddSlot()[PWUI::MakeButton(bRedo ? LOCTEXT("Redo", "Redo") : LOCTEXT("Undo", "Undo"), PWUI::EButtonKind::Secondary,
+            FOnClicked::CreateLambda([this, bRedo]() { History(bRedo); return FReply::Handled(); }),
+            TAttribute<bool>::CreateLambda([this, bRedo]()
+            {
+                const auto* Creator = Model->GetSubsystem();
+                if (!Creator) return false;
+                const auto State = Creator->GetAllocationHistory();
+                return bRedo ? State.bCanRedo : State.bCanUndo;
+            }), 16)];
+    }
+    Row->AddSlot()
+    [
+        SAssignNew(MoreMenu, SComboButton)
+        .ButtonStyle(&PWUI::FStyle::Get().NoButton)
+        .ButtonContent()[PWUI::MakeText(LOCTEXT("More", "More"), 16, PWUI::FStyle::Get().TextPrimary)]
+        .OnGetMenuContent_Lambda([this]() -> TSharedRef<SWidget>
         {
-            LastGroup = Trait.Group;
-            List->AddSlot().AutoHeight().Padding(2.0f, Index == 0 ? 0.0f : 14.0f, 0.0f, 6.0f)
-            [
-                PWUI::MakeText(PWUI::GetGroupTitle(Trait.Group), 14, Style.Accent, true)
-            ];
-        }
-        List->AddSlot().AutoHeight().Padding(0.0f, 0.0f, 12.0f, 8.0f)
-        [
-            BuildTraitRow(Index)
-        ];
-    }
-    return List;
-}
-
-TSharedRef<SWidget> SPWTraitsPage::BuildTraitRow(int32 Index)
-{
-    const PWUI::FStyle& Style = PWUI::FStyle::Get();
-    const FPWTraitView& Trait = Model->Traits[Index];
-    const PWUI::FTraitText& Text = PWUI::GetTraitText(Trait.Id);
-    const FName TraitId = Trait.Id;
-
-    const FText Tip = FText::Format(
-        LOCTEXT("TraitTip", "{0}\n{1}\n\n{2}\n\nCumulative cost: rank 1 = {3}, rank 2 = {4}, rank 3 = {5}, rank 4 = {6} points."),
-        Trait.DisplayName, Text.Short, Text.Effect,
-        FText::AsNumber(PerfectWorld::CharacterCreator::CostForRank(1)),
-        FText::AsNumber(PerfectWorld::CharacterCreator::CostForRank(2)),
-        FText::AsNumber(PerfectWorld::CharacterCreator::CostForRank(3)),
-        FText::AsNumber(PerfectWorld::CharacterCreator::CostForRank(4)));
-
-    const TSharedRef<SBorder> Row =
-        SNew(SBorder)
-        .BorderImage(&Style.BrushCard)
-        .Padding(FMargin(18.0f, 12.0f))
-        [
-            SNew(SHorizontalBox)
-            + SHorizontalBox::Slot().FillWidth(0.30f).VAlign(VAlign_Center)
-            [
-                SNew(SVerticalBox)
-                + SVerticalBox::Slot().AutoHeight()
-                [
-                    PWUI::MakeText(Trait.DisplayName, 20, Style.TextPrimary, true)
-                ]
-                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 2.0f, 0.0f, 0.0f)
-                [
-                    PWUI::MakeText(Text.Short, 14, Style.TextSecondary, false, true)
-                ]
-            ]
-            + SHorizontalBox::Slot().FillWidth(0.34f).VAlign(VAlign_Center).Padding(18.0f, 0.0f)
-            [
-                PWUI::MakeText(Text.Effect, 14, Style.TextMuted, false, true)
-            ]
-            + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
-            [
-                SNew(SHorizontalBox)
-                + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
-                [
-                    PWUI::MakeButton(
-                        INVTEXT("-"), PWUI::EButtonKind::Secondary,
-                        FOnClicked::CreateLambda([this, TraitId, Index]()
-                        {
-                            SetRank(TraitId, RankAt(Index) - 1);
-                            return FReply::Handled();
-                        }),
-                        TAttribute<bool>::CreateLambda([this, Index]() { return RankAt(Index) > 0; }), 22, 40.0f)
-                ]
-                + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(10.0f, 0.0f)
-                [
-                    SNew(SBox)
-                    .WidthOverride(210.0f)
-                    .HeightOverride(44.0f)
-                    [
-                        SNew(SSlider)
-                        .Style(&Style.Slider)
-                        .MinValue(0.0f)
-                        .MaxValue(static_cast<float>(PerfectWorld::MaxRank))
-                        .StepSize(1.0f)
-                        .MouseUsesStep(true)
-                        .IsFocusable(false)
-                        .Value_Lambda([this, Index]() { return static_cast<float>(RankAt(Index)); })
-                        .OnValueChanged_Lambda([this, TraitId, Index](float Value)
-                        {
-                            const int32 Target = FMath::RoundToInt(Value);
-                            if (Target != RankAt(Index))
-                            {
-                                SetRank(TraitId, Target);
-                            }
-                        })
-                    ]
-                ]
-                + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
-                [
-                    PWUI::MakeButton(
-                        INVTEXT("+"), PWUI::EButtonKind::Secondary,
-                        FOnClicked::CreateLambda([this, TraitId, Index]()
-                        {
-                            SetRank(TraitId, RankAt(Index) + 1);
-                            return FReply::Handled();
-                        }),
-                        TAttribute<bool>::CreateLambda([this, Index]() { return RankAt(Index) < PerfectWorld::MaxRank; }), 22, 40.0f)
-                ]
-                + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(16.0f, 0.0f, 0.0f, 0.0f)
-                [
-                    SNew(SBox)
-                    .WidthOverride(170.0f)
-                    [
-                        SNew(STextBlock)
-                        .Text_Lambda([this, Index]() { return RankSummary(Index); })
-                        .Font(PWUI::Font(14, true))
-                        .ColorAndOpacity(FSlateColor(Style.TextPrimary))
-                    ]
-                ]
-            ]
-        ];
-    Row->SetToolTipText(Tip);
+            return SNew(SVerticalBox)
+                + SVerticalBox::Slot().AutoHeight()[PWUI::MakeButton(LOCTEXT("Clear", "Clear allocation"), PWUI::EButtonKind::TextRow,
+                    FOnClicked::CreateLambda([this]() { FSlateApplication::Get().DismissAllMenus(); PWUI::FocusFirstFocusable(MoreMenu.ToSharedRef()); OpenDrawer(NAME_None, 1); return FReply::Handled(); }), true, 16)]
+                + SVerticalBox::Slot().AutoHeight()[PWUI::MakeButton(LOCTEXT("Reset", "Reset to Balanced Scholar"), PWUI::EButtonKind::TextRow,
+                    FOnClicked::CreateLambda([this]() { FSlateApplication::Get().DismissAllMenus(); PWUI::FocusFirstFocusable(MoreMenu.ToSharedRef()); OpenDrawer(NAME_None, 2); return FReply::Handled(); }), true, 16)];
+        })
+    ];
+    Row->AddSlot().VAlign(VAlign_Center)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]()
+    {
+        const auto* Creator = Model->GetSubsystem();
+        if (!Creator) return LOCTEXT("HistoryUnavailable", "Allocation history is unavailable.");
+        if (Model->Summary.bHasStarted) return LOCTEXT("FixedBackground", "This life has already started. Its starting background is fixed.");
+        const auto HistoryState = Creator->GetAllocationHistory();
+        if (!HistoryState.bCanUndo && !HistoryState.bCanRedo) return LOCTEXT("NoHistory", "Undo and Redo: no allocation changes yet.");
+        if (!HistoryState.bCanUndo) return LOCTEXT("NoUndo", "Undo: no earlier allocation.");
+        if (!HistoryState.bCanRedo) return LOCTEXT("NoRedo", "Redo: no later allocation.");
+        return FText::GetEmpty();
+    }), 12, PWUI::FStyle::Get().TextSecondary, false, true)];
     return Row;
 }
 
-void SPWTraitsPage::SetRank(FName TraitId, int32 Rank)
+TSharedRef<SWidget> SPWTraitsPage::BuildNavigator()
 {
-    Model->Edit([TraitId, Rank](UPerfectWorldCharacterCreatorSubsystem& Creator)
+    const auto List = SNew(SVerticalBox);
+    const auto* Creator = Model->GetSubsystem();
+    if (Creator) for (const auto& Entry : Creator->GetTraitGroups())
     {
-        return Creator.SetTraitRank(TraitId, Rank);
-    });
+        const FName Id = Entry.Id;
+        List->AddSlot().AutoHeight().Padding(0, 0, 0, 8)
+        [PWUI::MakeButton(TAttribute<FText>::CreateLambda([this, Id]()
+        {
+            if (const auto* Source = Model->GetSubsystem()) for (const auto& Item : Source->GetTraitGroups())
+                if (Item.Id == Id) return FText::Format(LOCTEXT("Group", "{0}\n{1} points"), Item.DisplayName, FText::AsNumber(Item.AllocatedPoints));
+            return FText::GetEmpty();
+        }), PWUI::EButtonKind::Chip, FOnClicked::CreateLambda([this, Id]()
+        {
+            Group = Id;
+            FSlateApplication::Get().DismissAllMenus();
+            for (int32 Index = 0; Index < Model->Traits.Num(); ++Index) if (Model->Traits[Index].Group == Id) { SelectedIndex = Index; break; }
+            DiscardProposal();
+            Reflow();
+            PWUI::FocusWhenReady(AsShared(), Selectors[SelectedIndex]);
+            return FReply::Handled();
+        }), true, 14, 0, TAttribute<bool>::CreateLambda([this, Id]() { return Group == Id; }))];
+    }
+    if (!bNarrow) return List;
+    return SNew(SComboButton).ButtonStyle(&PWUI::FStyle::Get().NoButton)
+        .ButtonContent()[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]()
+        {
+            if (const auto* Source = Model->GetSubsystem()) for (const auto& Item : Source->GetTraitGroups())
+                if (Item.Id == Group) return FText::Format(LOCTEXT("Selector", "{0} · {1} points"), Item.DisplayName, FText::AsNumber(Item.AllocatedPoints));
+            return FText::GetEmpty();
+        }), 16, PWUI::FStyle::Get().TextPrimary)]
+        .MenuContent()[List];
 }
 
-int32 SPWTraitsPage::RankAt(int32 Index) const
+void SPWTraitsPage::Reflow()
 {
-    return Model->Traits.IsValidIndex(Index) ? Model->Traits[Index].Rank : 0;
+    // Detach the single inspector before moving it between the column and a row.
+    Body->SetContent(SNullWidget::NullWidget);
+    Navigator = BuildNavigator();
+    const auto List = SNew(SVerticalBox);
+    for (int32 Index = 0; Index < Rows.Num(); ++Index) if (Model->Traits[Index].Group == Group)
+    {
+        List->AddSlot().AutoHeight().Padding(0, 0, 0, 8)[Rows[Index].ToSharedRef()];
+        if (bNarrow && Index == SelectedIndex) List->AddSlot().AutoHeight().Padding(0, 0, 0, 16)[Inspector.ToSharedRef()];
+    }
+    if (bNarrow) Body->SetContent(SNew(SVerticalBox)
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 16)[Navigator.ToSharedRef()]
+        + SVerticalBox::Slot().AutoHeight()[List]);
+    else Body->SetContent(SNew(SHorizontalBox)
+        + SHorizontalBox::Slot().FillWidth(.18f).Padding(0, 0, 24, 0)[Navigator.ToSharedRef()]
+        + SHorizontalBox::Slot().FillWidth(.47f).Padding(0, 0, 24, 0)[List]
+        + SHorizontalBox::Slot().FillWidth(.35f)[Inspector.ToSharedRef()]);
 }
 
-FText SPWTraitsPage::RankSummary(int32 Index) const
+TSharedRef<SWidget> SPWTraitsPage::BuildRow(int32 Index)
 {
-    if (!Model->Traits.IsValidIndex(Index))
+    const auto& Trait = Model->Traits[Index];
+    const auto* Creator = Model->GetSubsystem();
+    const auto Definition = Creator ? Creator->GetTraitDefinition(Trait.Id) : FPWTraitDefinitionView{};
+    const auto& Style = PWUI::FStyle::Get();
+    return PWUI::MakePanel(SNew(SVerticalBox)
+        + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(Trait.DisplayName, 20, Style.TextPrimary, true, true)]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 4, 0, 8)[PWUI::MakeText(Definition.ShortDescription, 14, Style.TextSecondary, false, true)]
+        + SVerticalBox::Slot().AutoHeight()
+        [SAssignNew(Selectors[Index], SPWRankSelector)
+            .CurrentRank_Lambda([this, Index]() { return Model->Traits[Index].Rank; })
+            .ProposedRank_Lambda([this, Index]() { return Index == SelectedIndex ? Proposal.ProposedRank : Model->Traits[Index].Rank; })
+            .OnInspect(FSimpleDelegate::CreateLambda([this, Index]() { SelectTrait(Index); }))
+            .OnPropose(FPWProposeRank::CreateLambda([this, Index](int32 Rank) { Propose(Index, Rank); }))
+            .OnApply(FSimpleDelegate::CreateSP(this, &SPWTraitsPage::ApplyRank))
+            .OnCancel(FSimpleDelegate::CreateSP(this, &SPWTraitsPage::DiscardProposal))
+            .OnMoveRow(FPWProposeRank::CreateLambda([this, Index](int32 Direction)
+            {
+                for (int32 Next = Index + Direction; Model->Traits.IsValidIndex(Next); Next += Direction)
+                    if (Model->Traits[Next].Group == Group) { SelectTrait(Next); FSlateApplication::Get().SetKeyboardFocus(Selectors[Next], EFocusCause::Navigation); break; }
+            }))
+            .OnTraverse(FPWRankTraversal::CreateLambda([this, Index](bool bReverse) { return TraverseRank(Index, bReverse); }))]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)
+        [PWUI::MakeText(TAttribute<FText>::CreateLambda([this, Index]()
+        { return FText::Format(LOCTEXT("Allocated", "{0} points allocated"), FText::AsNumber(Model->Traits[Index].Cost)); }), 14, Style.TextSecondary)]
+        + SVerticalBox::Slot().AutoHeight()
+        [PWUI::MakeText(TAttribute<FText>::CreateLambda([this, Index]()
+        { return SelectedIndex == Index && !Proposal.bCanApply ? Proposal.Message : FText::GetEmpty(); }), 14, Style.TextPrimary, false, true)], FMargin(16));
+}
+
+void SPWTraitsPage::SelectTrait(int32 Index)
+{
+    if (!Model->Traits.IsValidIndex(Index) || Model->Traits[Index].Group != Group) return;
+    if (SelectedIndex == Index) return;
+    SelectedIndex = Index;
+    bShowRanks = false;
+    DiscardProposal();
+    if (bNarrow) Reflow();
+    if (bNarrow) OnRevealInspector.ExecuteIfBound(Inspector);
+}
+
+TSharedPtr<SWidget> SPWTraitsPage::TraverseRank(int32 Index, bool bReverse)
+{
+    if (bNarrow && !bReverse) return PWUI::FindFirstFocusable(Inspector.ToSharedRef());
+    const int32 Direction = bReverse ? -1 : 1;
+    for (int32 Next = Index + Direction; Model->Traits.IsValidIndex(Next); Next += Direction)
+        if (Model->Traits[Next].Group == Group) return Selectors[Next];
+    return PWUI::FindFirstFocusable((bReverse ? Navigator : Inspector).ToSharedRef());
+}
+
+void SPWTraitsPage::Propose(int32 Index, int32 Rank)
+{
+    SelectTrait(Index);
+    if (const auto* Creator = Model->GetSubsystem()) Proposal = Creator->PreviewTraitRank(Model->Traits[Index].Id, Rank);
+    RefreshInspector();
+}
+
+void SPWTraitsPage::DiscardProposal()
+{
+    if (Model->Traits.IsValidIndex(SelectedIndex)) Propose(SelectedIndex, Model->Traits[SelectedIndex].Rank);
+}
+
+void SPWTraitsPage::ApplyRank()
+{
+    if (!Proposal.bCanApply || Proposal.CurrentRank == Proposal.ProposedRank) return;
+    const FName Id = Model->Traits[SelectedIndex].Id;
+    const int32 Rank = Proposal.ProposedRank;
+    if (const auto* Creator = Model->GetSubsystem())
     {
-        return FText::GetEmpty();
+        const auto Fresh = Creator->PreviewTraitRank(Id, Rank);
+        if (Fresh.SourceDraftSnapshot != Proposal.SourceDraftSnapshot) { Proposal = Fresh; RefreshInspector(); return; }
+        if (!Fresh.bCanApply) { Proposal = Fresh; RefreshInspector(); return; }
     }
-    const int32 Rank = Model->Traits[Index].Rank;
-    const int32 Cost = Model->Traits[Index].Cost;
-    if (Rank >= PerfectWorld::MaxRank)
+    Model->Edit([Id, Rank](UPerfectWorldCharacterCreatorSubsystem& Creator) { return Creator.SetTraitRank(Id, Rank); });
+    DiscardProposal();
+    PWUI::FocusWhenReady(AsShared(), Selectors[SelectedIndex]);
+}
+
+void SPWTraitsPage::History(bool bRedo)
+{
+    Model->Edit([bRedo](UPerfectWorldCharacterCreatorSubsystem& Creator) { return bRedo ? Creator.RedoAllocation() : Creator.UndoAllocation(); });
+    DiscardProposal();
+}
+
+void SPWTraitsPage::InspectResources()
+{
+    for (int32 Index = 0; Index < Model->Traits.Num(); ++Index) if (Model->Traits[Index].Id == FName(TEXT("household_resources")))
     {
-        return FText::Format(LOCTEXT("RankMaxFmt", "Rank {0} (max)\n{1} pts"), FText::AsNumber(Rank), FText::AsNumber(Cost));
+        Group = Model->Traits[Index].Group;
+        SelectedIndex = Index;
+        DiscardProposal(); Reflow();
+        PWUI::FocusWhenReady(AsShared(), Selectors[Index]);
+        break;
     }
-    const int32 NextCost = PerfectWorld::CharacterCreator::CostForRank(Rank + 1) - PerfectWorld::CharacterCreator::CostForRank(Rank);
-    return FText::Format(LOCTEXT("RankFmt", "Rank {0}\n{1} pts · next +{2}"), FText::AsNumber(Rank),
-                         FText::AsNumber(Cost), FText::AsNumber(NextCost));
+}
+
+void SPWTraitsPage::FocusRegion(bool bReverse)
+{
+    const TSharedPtr<SWidget> CurrentRegions[] = {Toolbar, Navigator, Selectors.IsValidIndex(SelectedIndex) ? Selectors[SelectedIndex] : nullptr, Inspector};
+    for (int32 Index = 0; Index < UE_ARRAY_COUNT(CurrentRegions); ++Index)
+        if (CurrentRegions[Index].IsValid() && (CurrentRegions[Index]->HasKeyboardFocus() || CurrentRegions[Index]->HasFocusedDescendants())) Region = Index;
+    if (!HasKeyboardFocus() && !HasFocusedDescendants()) Region = 4;
+    Region = (Region + (bReverse ? 4 : 1)) % 5;
+    if (Region == 4) { OnFocusFooter.ExecuteIfBound(); return; }
+    const TSharedPtr<SWidget> Targets[] = {Toolbar, Navigator, Selectors.IsValidIndex(SelectedIndex) ? Selectors[SelectedIndex] : nullptr, Inspector};
+    if (Targets[Region].IsValid()) PWUI::FocusWhenReady(AsShared(), Targets[Region]);
+}
+
+FReply SPWTraitsPage::OnKeyDown(const FGeometry& Geometry, const FKeyEvent& Event)
+{
+    if (Event.GetKey() == EKeys::F6) { FocusRegion(Event.IsShiftDown()); return FReply::Handled(); }
+    if (Event.IsControlDown() && !Event.IsRepeat() && (Event.GetKey() == EKeys::Z || Event.GetKey() == EKeys::Y))
+    { History(Event.GetKey() == EKeys::Y); return FReply::Handled(); }
+    if ((Event.GetKey() == EKeys::Escape || Event.GetKey() == EKeys::Gamepad_FaceButton_Right) && Proposal.CurrentRank != Proposal.ProposedRank)
+    { DiscardProposal(); return FReply::Handled(); }
+    return SCompoundWidget::OnKeyDown(Geometry, Event);
 }
 
 #undef LOCTEXT_NAMESPACE
