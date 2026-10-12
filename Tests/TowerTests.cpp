@@ -1,5 +1,7 @@
 #include "Tower.h"
 
+#include "CountdownContent.h"
+
 #include <algorithm>
 #include <array>
 #include <cstdlib>
@@ -70,6 +72,22 @@ void ExpectOffers(const TowerResult& result)
         support = std::max(support, offer->SupportPaise);
     }
     Expect(result.SupportEnvelopePaise == support, "support is the best envelope, never summed");
+}
+
+// The countdown's preparation dimensions are, by index and id, the tower's methods (Tower.h VOCABULARY).
+static_assert(TowerMethodCount == CountdownDimensionCount, "the tower methods and countdown dimensions stay one list");
+
+void TestCountdownAlignment()
+{
+    for (std::size_t index = 0; index < TowerMethodCount; ++index)
+    {
+        const auto method = static_cast<TowerMethod>(index);
+        const auto dimension = static_cast<CountdownDimension>(index);
+        Expect(TowerMethodId(method) == CountdownDimensionName(dimension), "tower method and countdown dimension share an id");
+        TowerMethod parsed = TowerMethod::Analysis;
+        Expect(TowerMethodFromId(CountdownDimensionName(dimension), parsed) && parsed == method,
+               "a countdown dimension name parses to the same tower method");
+    }
 }
 
 void TestMatrix()
@@ -404,6 +422,7 @@ int main()
     TestDefeatAndPortfolio();
     TestClock();
     TestRefusals();
+    TestCountdownAlignment();
     std::cout << "PerfectWorld tower: " << Assertions << " checks passed\n";
     return 0;
 }

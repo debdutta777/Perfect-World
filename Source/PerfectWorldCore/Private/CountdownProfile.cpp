@@ -26,7 +26,8 @@ struct CreditRule
 // The practice window (PracticeWindow.h) already makes cramming pay less than regular practice, so a student who studies once or
 // twice a day banks more than one who studies five times; the divisors put a steady ten days near 220 points and let a cap
 // (CountdownDayLoopPrepCap) stop any one habit from filling a dimension alone.
-// TODO (M4-04): the tower's route matrix may want its own mapping; this one is the countdown's.
+// Settled with M4-04: the tower does not re-map skills; it reads runner metrics per TowerMethod, whose order and ids
+// equal CountdownDimension's (TowerTests checks), so this day-loop credit mapping stays the countdown's own.
 constexpr CreditRule CreditRules[] = {
     {"skill.academics", CountdownDimension::Analysis, 100},
     {"skill.computing", CountdownDimension::Analysis, 100},
