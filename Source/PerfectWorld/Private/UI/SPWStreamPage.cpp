@@ -39,6 +39,7 @@ void SPWStreamPage::Tick(const FGeometry& AllottedGeometry, double InCurrentTime
     if (LastStream != SelectedStreamId())
     {
         LastStream = SelectedStreamId();
+        PopulateSampleRows();
         DetailTransition.Play(AsShared());
     }
     Details->SetRenderOpacity(DetailReveal.GetLerp());
@@ -111,7 +112,7 @@ TSharedRef<SWidget> SPWStreamPage::BuildCard(int32 Index)
     const FName Id = Stream.Id;
     const TSharedRef<SWidget> Content = SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(Stream.DisplayName, PWUI::ETextRole::SectionHeading, Style.TextPrimary, true)]
-        + SVerticalBox::Slot().AutoHeight().Padding(0, 8, 0, 0)[PWUI::MakeText(Stream.TimetableSummary, PWUI::ETextRole::Body, Style.TextSecondary, true)];
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 8, 0, 0)[PWUI::MakeText(Stream.CardSummary.IsEmpty() ? Stream.TimetableSummary : Stream.CardSummary, PWUI::ETextRole::Body, Style.TextSecondary, true)];
     CardContents.Add(Content);
     return PWUI::MakeContentButton(SNew(SBox).MinDesiredHeight_Lambda([this]()
         {
@@ -131,24 +132,38 @@ TSharedRef<SWidget> SPWStreamPage::BuildCard(int32 Index)
 TSharedRef<SWidget> SPWStreamPage::BuildDetails()
 {
     const PWUI::FStyle& Style = PWUI::FStyle::Get();
-    SampleDayRegion = PWUI::MakePanel(SNew(SVerticalBox)
+    // The sample day is core-authored. When the view carries none, the whole region collapses:
+    // a timetable summary is never relabelled as a sample day.
+    const auto HasSampleDay = [this]()
+    {
+        const FPWStreamView* Stream = SelectedStream();
+        return Stream && !Stream->SampleDay.IsEmpty();
+    };
+    const auto TextOf = [this](FText FPWStreamView::* Member)
+    {
+        return TAttribute<FText>::CreateLambda([this, Member]() { const FPWStreamView* Stream = SelectedStream(); return Stream ? Stream->*Member : FText::GetEmpty(); });
+    };
+    const auto VisibleWhenNotEmpty = [this](FText FPWStreamView::* Member)
+    {
+        return TAttribute<EVisibility>::CreateLambda([this, Member]() { const FPWStreamView* Stream = SelectedStream(); return Stream && !(Stream->*Member).IsEmpty() ? EVisibility::Visible : EVisibility::Collapsed; });
+    };
+    SAssignNew(SampleRowsBox, SVerticalBox);
+    PopulateSampleRows();
+    SampleDayRegion = SNew(SBox).Visibility_Lambda([HasSampleDay]() { return HasSampleDay() ? EVisibility::Visible : EVisibility::Collapsed; })
+        [PWUI::MakePanel(SNew(SVerticalBox)
             + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(LOCTEXT("SampleHeading", "A sample school day"), PWUI::ETextRole::SectionHeading, Style.TextPrimary)]
-            // TODO(core adapter): replace this timetable-summary fallback when SampleDay rows are published.
-            + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]()
-            {
-                const FPWStreamView* Stream = SelectedStream();
-                if (!Stream) return FText::GetEmpty();
-                if (Stream->SampleDay.IsEmpty()) return Stream->TimetableSummary;
-                TArray<FText> Lines;
-                for (const auto& Row : Stream->SampleDay) Lines.Add(FText::Format(LOCTEXT("SampleRow", "{0} — {1}"), Row.Label, Row.Description));
-                return FText::Join(LOCTEXT("SampleBreak", "\n\n"), Lines);
-            }), PWUI::ETextRole::Body, Style.TextSecondary, true)]);
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)[SNew(SBox).Visibility(VisibleWhenNotEmpty(&FPWStreamView::SampleDayCaption))
+                [PWUI::MakeText(TextOf(&FPWStreamView::SampleDayCaption), PWUI::ETextRole::Meta, Style.TextMuted, true)]]
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 12, 0, 0)[SampleRowsBox.ToSharedRef()]
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 12, 0, 0)[SNew(SBox).Visibility(VisibleWhenNotEmpty(&FPWStreamView::ClosingCaption))
+                [PWUI::MakeText(TextOf(&FPWStreamView::ClosingCaption), PWUI::ETextRole::Meta, Style.TextMuted, true)]])];
     const TSharedRef<SWidget> ReasonPanel = PWUI::MakePanel(SNew(SVerticalBox)
-            + SVerticalBox::Slot().AutoHeight()[SNew(SBox).Visibility_Lambda([this]() { const FPWStreamView* Stream = SelectedStream(); return Stream && !Stream->RouteFlexibilityText.IsEmpty() ? EVisibility::Visible : EVisibility::Collapsed; })
-                [PWUI::MakeText(LOCTEXT("RoutesHeading", "Room to change direction"), PWUI::ETextRole::SectionHeading, Style.TextPrimary)]]
-            // TODO(core adapter): this remains collapsed until route text is published.
-            + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { const FPWStreamView* Stream = SelectedStream(); return Stream ? Stream->RouteFlexibilityText : FText::GetEmpty(); }), PWUI::ETextRole::Body, Style.TextSecondary, true)]
-            + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(TAttribute<FText>::CreateLambda([this]() { const FPWStreamView* Stream = SelectedStream(); return Stream ? Stream->EqualStartingXPText : FText::GetEmpty(); }), PWUI::ETextRole::Body, Style.TextSecondary, true)]
+            + SVerticalBox::Slot().AutoHeight()[SNew(SBox).Visibility(VisibleWhenNotEmpty(&FPWStreamView::RouteHeading))
+                [PWUI::MakeText(TextOf(&FPWStreamView::RouteHeading), PWUI::ETextRole::SectionHeading, Style.TextPrimary)]]
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)[SNew(SBox).Visibility(VisibleWhenNotEmpty(&FPWStreamView::EqualStartingXPText))
+                [PWUI::MakeText(TextOf(&FPWStreamView::EqualStartingXPText), PWUI::ETextRole::Body, Style.TextSecondary, true)]]
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)[SNew(SBox).Visibility(VisibleWhenNotEmpty(&FPWStreamView::RouteFlexibilityText))
+                [PWUI::MakeText(TextOf(&FPWStreamView::RouteFlexibilityText), PWUI::ETextRole::Body, Style.TextSecondary, true)]]
             + SVerticalBox::Slot().AutoHeight().Padding(0, 16, 0, 6)[PWUI::MakeText(LOCTEXT("ReasonLabel", "Your reason (optional)"), PWUI::ETextRole::Control, Style.TextPrimary)]
             + SVerticalBox::Slot().AutoHeight()[ReasonBox.ToSharedRef()]
             + SVerticalBox::Slot().AutoHeight().Padding(0, 5, 0, 0)[PWUI::MakeText(LOCTEXT("ReasonHelper", "This is your note. It does not change your stats."), PWUI::ETextRole::Meta, Style.TextMuted, true)]
@@ -159,6 +174,24 @@ TSharedRef<SWidget> SPWStreamPage::BuildDetails()
     return SNew(SHorizontalBox)
         + SHorizontalBox::Slot().FillWidth(.6f).Padding(0, 0, 24, 0)[SampleDayRegion.ToSharedRef()]
         + SHorizontalBox::Slot().FillWidth(.4f)[ReasonPanel];
+}
+
+void SPWStreamPage::PopulateSampleRows()
+{
+    if (!SampleRowsBox.IsValid()) return;
+    const PWUI::FStyle& Style = PWUI::FStyle::Get();
+    SampleRowsBox->ClearChildren();
+    const FPWStreamView* Stream = SelectedStream();
+    if (!Stream) return;
+    for (const FPWStreamSampleDayView& Row : Stream->SampleDay)
+    {
+        SampleRowsBox->AddSlot().AutoHeight().Padding(0, 0, 0, 10)
+        [
+            SNew(SVerticalBox)
+            + SVerticalBox::Slot().AutoHeight()[PWUI::MakeText(Row.Label, PWUI::ETextRole::Control, Style.TextPrimary, true)]
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 2, 0, 0)[PWUI::MakeText(Row.Description, PWUI::ETextRole::Body, Style.TextSecondary, true)]
+        ];
+    }
 }
 
 void SPWStreamPage::CommitReason(const FText& Text, ETextCommit::Type CommitType)

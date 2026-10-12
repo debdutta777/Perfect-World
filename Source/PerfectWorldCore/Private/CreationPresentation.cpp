@@ -282,4 +282,45 @@ RankChange CostOfNextRank(std::int32_t fromRank) noexcept
     }
     return CostOfRankChange(fromRank, fromRank + 1);
 }
+
+std::array<std::int32_t, TraitGroupCount> GroupAllocationTotals(const std::vector<TraitAllocation>& allocations) noexcept
+{
+    std::array<std::int32_t, TraitGroupCount> totals{};
+    for (const TraitAllocation& allocation : allocations)
+    {
+        const TraitPresentationEntry* entry = TraitPresentation(allocation.Id);
+        const TraitGroup* group = entry == nullptr ? nullptr : FindTraitGroup(entry->GroupId);
+        if (group == nullptr || group->DisplayOrder < 0 || static_cast<std::size_t>(group->DisplayOrder) >= TraitGroupCount)
+        {
+            continue;
+        }
+        totals[static_cast<std::size_t>(group->DisplayOrder)] += allocation.Cost;
+    }
+    return totals;
+}
+
+std::vector<std::string_view> StrongestTraits(const std::vector<TraitAllocation>& allocations, std::size_t count)
+{
+    std::vector<const TraitAllocation*> ranked;
+    for (const TraitAllocation& allocation : allocations)
+    {
+        if (allocation.Rank > 0)
+        {
+            ranked.push_back(&allocation);
+        }
+    }
+    std::stable_sort(ranked.begin(), ranked.end(), [](const TraitAllocation* left, const TraitAllocation* right) {
+        if (left->Rank != right->Rank)
+        {
+            return left->Rank > right->Rank;
+        }
+        return left->Cost > right->Cost;
+    });
+    std::vector<std::string_view> result;
+    for (std::size_t index = 0; index < ranked.size() && index < count; ++index)
+    {
+        result.push_back(ranked[index]->Id);
+    }
+    return result;
+}
 } // namespace PerfectWorld

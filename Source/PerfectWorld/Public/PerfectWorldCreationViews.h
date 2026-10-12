@@ -147,22 +147,22 @@ struct FPWStreamView
     UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
     FText TimetableSummary;
 
-    /** TODO(core): SchoolStreamDefinition does not publish sample-day rows yet. */
+    /** The one-sentence summary on the stream card, from the core's stream presentation. */
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
+    FText CardSummary;
+
+    /** True only if the core published no sample day for this stream; the screen then shows none. */
     UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
     bool bSampleDayUnavailableFromCore = true;
 
     UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
     TArray<FPWStreamSampleDayView> SampleDay;
 
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText SampleDayCaption;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText ClosingCaption;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText RouteHeading;
     UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText RouteFlexibilityText;
     UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText EqualStartingXPText;
-
-    /** TODO(core): these authored stream fields are not published yet. */
-    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
-    FText RouteFlexibilityTextUnavailableFromCore;
-
-    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
-    FText EqualStartingXPTextUnavailableFromCore;
 
     UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
     bool bSelected = false;

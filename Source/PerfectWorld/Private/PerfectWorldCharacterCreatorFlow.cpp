@@ -4,6 +4,7 @@
 #include "HAL/FileManager.h"
 #include "Misc/DateTime.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
+#include "StreamPresentation.h"
 
 #define LOCTEXT_NAMESPACE "PerfectWorldCreationFlow"
 
@@ -139,8 +140,22 @@ TArray<FPWStreamView> UPerfectWorldCharacterCreatorSubsystem::GetSchoolStreams()
         View.Id = FName(PWCreatorFlow::FromUtf8(Stream.Id));
         View.DisplayName = FText::FromString(PWCreatorFlow::FromUtf8(Stream.DisplayName));
         View.TimetableSummary = FText::FromString(PWCreatorFlow::FromUtf8(Stream.TimetableSummary));
-        // TODO(core stream presentation): publish SampleDay, RouteFlexibilityText and EqualStartingXPText.
-        // Keep the existing description until those fields exist; never synthesize a timetable or route rules.
+        if (const PerfectWorld::StreamPresentationEntry* Presentation = PerfectWorld::StreamPresentation(Stream.Id))
+        {
+            View.CardSummary = FText::FromString(PWCreatorFlow::FromUtf8(Presentation->CardSummary));
+            for (const PerfectWorld::StreamSampleRow& Row : Presentation->SampleDay)
+            {
+                FPWStreamSampleDayView& Sample = View.SampleDay.AddDefaulted_GetRef();
+                Sample.Label = FText::FromString(PWCreatorFlow::FromUtf8(Row.Label));
+                Sample.Description = FText::FromString(PWCreatorFlow::FromUtf8(Row.Description));
+            }
+            View.bSampleDayUnavailableFromCore = View.SampleDay.IsEmpty();
+            View.SampleDayCaption = FText::FromString(PWCreatorFlow::FromUtf8(Presentation->SampleDayCaption));
+            View.ClosingCaption = FText::FromString(PWCreatorFlow::FromUtf8(Presentation->ClosingCaption));
+            View.RouteHeading = FText::FromString(PWCreatorFlow::FromUtf8(Presentation->RouteHeading));
+            View.RouteFlexibilityText = FText::FromString(PWCreatorFlow::FromUtf8(Presentation->RouteFlexibilityText));
+            View.EqualStartingXPText = FText::FromString(PWCreatorFlow::FromUtf8(Presentation->EqualStartingXPText));
+        }
         View.bSelected = Stream.Id == Creator.School().StreamId;
     }
     return Result;

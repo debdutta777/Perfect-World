@@ -18,6 +18,7 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/StateDiff.cpp
     Source/PerfectWorldCore/Private/StateDiffLines.cpp
     Source/PerfectWorldCore/Private/CreationPresentation.cpp
+    Source/PerfectWorldCore/Private/StreamPresentation.cpp
     Source/PerfectWorldCore/Private/CreationSaveSerialization.cpp
     Source/PerfectWorldCore/Private/CreationIdentity.cpp
     Source/PerfectWorldCore/Private/CreationIdentityText.cpp
@@ -135,6 +136,10 @@ add_test(NAME PerfectWorldCreationPresetTests COMMAND PerfectWorldCreationPreset
 add_executable(PerfectWorldCreationPresentationTests Tests/CreationPresentationTests.cpp)
 target_link_libraries(PerfectWorldCreationPresentationTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldCreationPresentationTests COMMAND PerfectWorldCreationPresentationTests)
+
+add_executable(PerfectWorldStreamPresentationTests Tests/StreamPresentationTests.cpp)
+target_link_libraries(PerfectWorldStreamPresentationTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldStreamPresentationTests COMMAND PerfectWorldStreamPresentationTests)
 
 add_executable(PerfectWorldCreationIdentityTests Tests/CreationIdentityTests.cpp)
 target_link_libraries(PerfectWorldCreationIdentityTests PRIVATE PerfectWorldCore)
