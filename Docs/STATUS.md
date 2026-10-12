@@ -1144,6 +1144,26 @@ gpt-6-astra (Codex, medium effort) edited only the English strings in `Source/Pe
 
 **Exact check:** `python Scripts/build_core.py --build-dir D:/pwm` on `integrate/ui-phase1-lane-week`: **100% tests passed out of 146**.
 
+## Checkpoint — M3-02 week compression and the state diff tool, 2026-10-12
+
+Commit `2606af6`.
+
+**Files:**
+- New: `Public/{WeekCompression.h, StateDiff.h}`, `Private/WeekCompression{Plan,Run,Compare}.cpp` and `Private/StateDiff{,Lines}.cpp`.
+- New tool: `Tools/StateDiff/main.cpp` (`pwstatediff`).
+- New tests: seven test files under `Tests/` (`WeekCompression*`, `StateDiff*`).
+
+**What it adds:**
+- **Two resolvers:** `CompressWeek` and `PlayWeekStepByStep` resolve the same plan through `ApplyDayCommand`.
+- **Equivalence:** the two must give identical persistent state, field by field, except for the quantities the time contract excludes.
+- **Interrupts:** at most one per week.
+- **Firsts:** a first-of-kind entry always stops compression for play.
+- **Disclosures:** every choice taken by standing order is listed.
+
+**Exact check:** Rung 1 on `integrate/ui-phase1-lane-week`, **146/146**.
+
+**Not yet done:** the week planner (M3-15) does not use it.
+
 ## Checkpoint — UI phase 1, Kolkata lane and week compression verified in the packaged build, 2026-10-12
 
 These results are for `integrate/ui-phase1-lane-week` at `662b26f`, built from the D: clone:
