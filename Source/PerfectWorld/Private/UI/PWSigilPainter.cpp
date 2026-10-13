@@ -1,6 +1,7 @@
 #include "UI/PWSigilPainter.h"
 
 #include "Brushes/SlateColorBrush.h"
+#include "Brushes/SlateRoundedBoxBrush.h"
 #include "Rendering/DrawElements.h"
 #include "Styling/WidgetStyle.h"
 #include "UI/PWStyle.h"
@@ -94,13 +95,30 @@ int32 FPWSigilPainter::Paint(const FPWSigilGeometry& Paths, EPWSigilSizeClass Si
     const auto Colour = [&Tint](FLinearColor Token, float Alpha) { return Token.CopyWithNewOpacity(Alpha) * Tint; };
     const ESlateDrawEffect Effects = bEnabled ? ESlateDrawEffect::None : ESlateDrawEffect::DisabledEffect;
     const bool bSmall = FMath::Min(Paths.Size.X, Paths.Size.Y) < 48.0f;
-    const float AccentAlpha = SizeClass == EPWSigilSizeClass::Seal ? .70f : .40f;
-    for (const auto& Path : Paths.Outer) Line(Elements, Layer, Geometry, Path, Colour(Palette.Accent, AccentAlpha), 1.5f, Effects);
+    const bool bAperture = SizeClass == EPWSigilSizeClass::Aperture;
+    // Over the live street a 40% amber hairline vanished against sunlit walls (packaged capture, 2026-10-13), so the
+    // full aperture sits on a soft dark lens of the background token and draws heavier, stronger strokes. Seals sit on
+    // panels and keep the specified weights.
+    if (bAperture && !bSmall)
+    {
+        const float R = FMath::Min(Paths.Size.X, Paths.Size.Y) / 3.0f;
+        for (const float Scale : {1.32f, 1.16f, 1.0f})
+        {
+            const float Side = 2.0f * Scale * R;
+            const FSlateRoundedBoxBrush Disc(FLinearColor::White, Side * .5f);
+            FSlateDrawElement::MakeBox(Elements, Layer, Geometry.ToPaintGeometry(FVector2f(Side, Side),
+                FSlateLayoutTransform(Paths.Centre - FVector2f(Side * .5f, Side * .5f))), &Disc, Effects,
+                Colour(Palette.Background, .20f));
+        }
+    }
+    const float AccentAlpha = bAperture ? .72f : .70f;
+    const float Stroke = bAperture ? 2.25f : 1.5f;
+    for (const auto& Path : Paths.Outer) Line(Elements, Layer, Geometry, Path, Colour(Palette.Accent, AccentAlpha), Stroke, Effects);
     if (!bSmall)
     {
-        for (const auto& Path : Paths.Inner) Line(Elements, Layer, Geometry, Path, Colour(Palette.Divider, .45f), 1.0f, Effects);
-        for (const auto& Path : Paths.Ends) Line(Elements, Layer, Geometry, Path, Colour(Palette.Accent, AccentAlpha), 1.5f, Effects);
-        for (const auto& Path : Paths.Chevrons) Line(Elements, Layer, Geometry, Path, Colour(Palette.Accent, AccentAlpha), 1.5f, Effects);
+        for (const auto& Path : Paths.Inner) Line(Elements, Layer, Geometry, Path, Colour(Palette.TextSecondary, bAperture ? .50f : .45f), bAperture ? 1.5f : 1.0f, Effects);
+        for (const auto& Path : Paths.Ends) Line(Elements, Layer, Geometry, Path, Colour(Palette.Accent, AccentAlpha), Stroke, Effects);
+        for (const auto& Path : Paths.Chevrons) Line(Elements, Layer, Geometry, Path, Colour(Palette.Accent, AccentAlpha), Stroke, Effects);
         const float Cos = FMath::Cos(Rotation), Sin = FMath::Sin(Rotation);
         for (const auto& Path : Paths.Ticks)
         {
@@ -110,7 +128,7 @@ int32 FPWSigilPainter::Paint(const FPWSigilGeometry& Paths, EPWSigilSizeClass Si
                 const FVector2f P = Point - Paths.Centre;
                 Rotated.Add(Paths.Centre + FVector2f(P.X * Cos - P.Y * Sin, P.X * Sin + P.Y * Cos));
             }
-            Line(Elements, Layer, Geometry, MoveTemp(Rotated), Colour(Palette.TextSecondary, .28f), 1.0f, Effects);
+            Line(Elements, Layer, Geometry, MoveTemp(Rotated), Colour(Palette.TextSecondary, bAperture ? .55f : .28f), bAperture ? 1.5f : 1.0f, Effects);
         }
         if (bMotes && SizeClass == EPWSigilSizeClass::Aperture)
         {
@@ -120,7 +138,7 @@ int32 FPWSigilPainter::Paint(const FPWSigilGeometry& Paths, EPWSigilSizeClass Si
                 const float Side = Index % 2 == 0 ? 2.0f : 3.0f;
                 const FVector2f Offset = Paths.Motes[Index] - FVector2f(Side * .5f, Side * .5f);
                 FSlateDrawElement::MakeBox(Elements, Layer, Geometry.ToPaintGeometry(FVector2f(Side, Side), FSlateLayoutTransform(Offset)),
-                                          &Solid, Effects, Colour(Palette.TextSecondary, .25f));
+                                          &Solid, Effects, Colour(Palette.TextPrimary, .45f));
             }
         }
     }
