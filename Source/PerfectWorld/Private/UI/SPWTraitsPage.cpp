@@ -49,11 +49,12 @@ void SPWTraitsPage::Construct(const FArguments& InArgs, const TSharedRef<FPWCrea
 void SPWTraitsPage::Tick(const FGeometry& Geometry, double Time, float Delta)
 {
     SCompoundWidget::Tick(Geometry, Time, Delta);
+    if (PWUI::IsReducedMotion()) InspectorTransition.JumpToEnd();
     // Descendant rank positions may receive focus directly from Tab, mouse or accessibility.
     for (int32 Index = 0; Index < Selectors.Num(); ++Index)
         if (Selectors[Index].IsValid() && (Selectors[Index]->HasKeyboardFocus() || Selectors[Index]->HasFocusedDescendants()))
         { SelectTrait(Index); break; }
-    Inspector->SetRenderOpacity(InspectorReveal.GetLerp());
+    Inspector->SetRenderOpacity(PWUI::MotionLerp(InspectorReveal.GetLerp()));
     const bool bNewNarrow = NarrowLayout.Get(Geometry.GetLocalSize().X < 1280.0f);
     if (bNewNarrow != bNarrow)
     {

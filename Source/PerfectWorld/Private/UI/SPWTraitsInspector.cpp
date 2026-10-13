@@ -80,7 +80,7 @@ void SPWTraitsPage::RefreshInspector()
     if (Inspector.IsValid())
     {
         Inspector->SetContent(BuildInspector());
-        InspectorTransition.Play(AsShared());
+        PWUI::PlayMotion(InspectorTransition, AsShared());
     }
 }
 

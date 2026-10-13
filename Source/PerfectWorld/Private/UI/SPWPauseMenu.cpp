@@ -5,6 +5,7 @@
 #include "PerfectWorldFrontEndHUD.h"
 #include "UI/PWStyle.h"
 #include "UI/PWWidgets.h"
+#include "UI/SPWAwakeningSigil.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
@@ -54,8 +55,10 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
             return FReply::Handled();
         }), true, 22, 0.0f);
 
-    TSharedRef<SWidget> Content = PWUI::MakePanel(
+    TSharedRef<SWidget> Content = PWUI::MakeBracketPanel(
             SNew(SVerticalBox)
+            + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center).Padding(0, 0, 0, 12)
+            [SNew(SPWAwakeningSigil).SizeClass(EPWSigilSizeClass::Seal).Diameter(48)]
             + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center)
             [
                 PWUI::MakeText(LOCTEXT("Title", "Paused"), 38, Style.TextPrimary, true)

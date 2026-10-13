@@ -3,6 +3,7 @@
 #include "UI/PWCreationModel.h"
 #include "UI/PWStyle.h"
 #include "UI/PWWidgets.h"
+#include "UI/SPWAwakeningSigil.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/SBoxPanel.h"
@@ -93,6 +94,14 @@ void SPWReviewPage::Construct(const FArguments& InArgs, const TSharedRef<FPWCrea
         [
             PWUI::MakeText(LOCTEXT("Title", "Ready to begin?"), 32, Style.TextPrimary, true)
         ]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 14, 0, 0)
+        [PWUI::MakeBracketPanel(
+            SNew(SHorizontalBox)
+            + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0, 0, 20, 0)
+            [SNew(SPWAwakeningSigil).Diameter(160).Pictogram(EPWSigilPictogram::FirstMorning)
+                .Motes_Lambda([this]() { return GetCachedGeometry().GetLocalSize().X >= 1440.0f; })]
+            + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)
+            [PWUI::MakeText(LOCTEXT("FirstMorning", "Your first morning"), 24, Style.TextPrimary, true, true)])]
         + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 14.0f, 0.0f, 14.0f)
         [
             BuildVerdict()

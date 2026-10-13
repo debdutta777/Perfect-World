@@ -5,10 +5,12 @@
 #include "Input/Events.h"
 #include "InputCoreTypes.h"
 #include "Misc/ConfigCacheIni.h"
+#include "PerfectWorldPresentationSettings.h"
 #include "UI/PWStyle.h"
 #include "UI/PWWidgets.h"
 #include "Widgets/Input/SSlider.h"
 #include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
 
@@ -38,8 +40,23 @@ void SPWSettingsPanel::Construct(const FArguments& InArgs)
     ChildSlot
     [
         SNew(SBox)
-        .WidthOverride(760.0f)
+        .WidthOverride_Lambda([this]()
+        {
+            const auto Parent = GetParentWidget();
+            const float Width = Parent.IsValid() ? static_cast<float>(Parent->GetCachedGeometry().GetLocalSize().X) : 760.0f;
+            return FMath::Clamp(Width - 48.0f, 1.0f, 760.0f);
+        })
+        .MaxDesiredHeight_Lambda([this]()
+        {
+            const auto Parent = GetParentWidget();
+            const float Height = Parent.IsValid() ? static_cast<float>(Parent->GetCachedGeometry().GetLocalSize().Y) : 720.0f;
+            return FMath::Max(1.0f, Height - 32.0f);
+        })
         [
+            SNew(SScrollBox).ScrollBarStyle(&Style.ScrollBar)
+            .ScrollWhenFocusChanges(EScrollWhenFocusChanges::InstantScroll)
+            + SScrollBox::Slot()
+            [
             PWUI::MakePanel(
                 SNew(SVerticalBox)
                 + SVerticalBox::Slot().AutoHeight()
@@ -69,6 +86,25 @@ void SPWSettingsPanel::Construct(const FArguments& InArgs)
                             }),
                             true, 20, 360.0f)
                     ]
+                ]
+                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 28.0f, 0.0f, 0.0f)
+                [
+                    PWUI::MakeButton(
+                        TAttribute<FText>::CreateLambda([]()
+                        {
+                            return PWUI::IsReducedMotion() ? LOCTEXT("ReducedOn", "Reduced motion: On")
+                                                           : LOCTEXT("ReducedOff", "Reduced motion: Off");
+                        }), PWUI::EButtonKind::Chip,
+                        FOnClicked::CreateLambda([]()
+                        {
+                            UPerfectWorldPresentationSettings::Get().SetReducedMotion(!PWUI::IsReducedMotion());
+                            return FReply::Handled();
+                        }), true, 20, 0.0f, TAttribute<bool>::CreateLambda([]() { return PWUI::IsReducedMotion(); }))
+                ]
+                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 8.0f, 0.0f, 0.0f)
+                [
+                    PWUI::MakeText(LOCTEXT("ReducedNote", "Show motion instantly and keep decorative previews and the title camera still."),
+                                   15, Style.TextSecondary, false, true)
                 ]
                 + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 28.0f, 0.0f, 0.0f)
                 [
@@ -153,6 +189,7 @@ void SPWSettingsPanel::Construct(const FArguments& InArgs)
                     ]
                 ],
                 FMargin(36.0f, 30.0f))
+            ]
         ]
     ];
 

@@ -27,7 +27,7 @@ void SPWFrontEndRoot::Construct(const FArguments& InArgs)
 {
     const PWUI::FStyle& Style = PWUI::FStyle::Get();
     Hud = InArgs._Hud;
-    PageReveal = PageTransition.AddCurve(0.0f, 0.18f, ECurveEaseFunction::CubicOut);
+    PageReveal = PageTransition.AddCurve(0.0f, 0.16f, ECurveEaseFunction::CubicOut);
 
     SetVisibility(TAttribute<EVisibility>::CreateLambda([this]()
     {
@@ -47,10 +47,6 @@ void SPWFrontEndRoot::Construct(const FArguments& InArgs)
         [
             SAssignNew(ScreenHolder, SBox)
             .IsEnabled_Lambda([this]() { return !bChooserOpen; })
-            .RenderTransform_Lambda([this]()
-            {
-                return FSlateRenderTransform(FVector2f(0.0f, 8.0f * (1.0f - PageReveal.GetLerp())));
-            })
         ]
         + SOverlay::Slot()
         [
@@ -87,7 +83,8 @@ void SPWFrontEndRoot::Construct(const FArguments& InArgs)
 void SPWFrontEndRoot::Tick(const FGeometry& AllottedGeometry, double InCurrentTime, float InDeltaTime)
 {
     SCompoundWidget::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
-    ScreenHolder->SetRenderOpacity(PageReveal.GetLerp());
+    if (PWUI::IsReducedMotion()) PageTransition.JumpToEnd();
+    ScreenHolder->SetRenderOpacity(PWUI::MotionLerp(PageReveal.GetLerp()));
 }
 
 void SPWFrontEndRoot::SetScreen(EScreen NewScreen, const TSharedRef<SWidget>& Content)
@@ -96,7 +93,7 @@ void SPWFrontEndRoot::SetScreen(EScreen NewScreen, const TSharedRef<SWidget>& Co
     PageTransition.JumpToEnd();
     Screen = NewScreen;
     ScreenHolder->SetContent(Content);
-    if (NewScreen != EScreen::None && NewScreen != EScreen::Creation) PageTransition.Play(AsShared());
+    if (NewScreen != EScreen::None && NewScreen != EScreen::Creation) PWUI::PlayMotion(PageTransition, AsShared());
     if (NewScreen != EScreen::None) PWUI::FocusWhenReady(AsShared(), Content);
 }
 

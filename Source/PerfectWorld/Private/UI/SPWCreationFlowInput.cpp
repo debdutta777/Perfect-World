@@ -43,7 +43,7 @@ void SPWCreationFlow::OpenAllocationModal(TSharedRef<SWidget> Content, TSharedPt
     AllocationModal->SetContent(Content);
     ModalScroll = FindModalScroll(Content);
     if (ModalScroll.IsValid()) ModalScroll->SetIsFocusable(true);
-    ModalTransition.Play(AsShared());
+    PWUI::PlayMotion(ModalTransition, AsShared());
     if (SafeAction.IsValid()) PWUI::FocusWhenReady(AsShared(), SafeAction);
 }
 
