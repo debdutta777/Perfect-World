@@ -1365,3 +1365,16 @@ Built by Claude Sonnet 5.5 from `LANE_LIFE_PLAN.md` §D and `LANE_LIFE_IMPLEMENT
 - 720p and 150% text;
 - the pause and review seals;
 - whether astra accepts the contrast change.
+
+## Planning note — next batch, 2026-10-13
+
+**The batch-planning call failed.** The owner asked gpt-6-astra to lead planning. Its call to pick the next batch hit the ChatGPT usage limit, which resets 2026-10-14 00:09. It was not retried.
+
+**The batch instead:** the integrator took the next steps directly from astra's existing `LANE_LIFE_PLAN.md`: stage 3, "One home and one adult".
+
+**Who builds it:** Codex is unavailable, so three Claude Sonnet 5.5 agents run in parallel, each owning separate files.
+- **A, portable core:** `Doors` holds door definitions, door state and access refusals. `Conversation` holds the household adult's authored lines, selection by time and remembered facts, and costs charged exactly once.
+- **B, Unreal:** `PerfectWorldLaneInteriors`, a walkable, furnished shell for the opening home. `APWDoorActor` is a hinged door. B also owns the shared `IPWInteractable` interface.
+- **C, Unreal:** `UPWInteractionComponent`, which handles reach, the view cone, priority, stickiness and an E/X action, plus an interaction prompt, a conversation panel and presenter, and `APWNpcCharacter`.
+
+The integrator then wires the doors and the conversation through the core.
