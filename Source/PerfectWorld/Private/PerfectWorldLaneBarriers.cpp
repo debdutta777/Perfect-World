@@ -22,7 +22,12 @@ void SealGap(FLaneBlocks& K, int32 Side, double XA, double XB)
     }
     else
     {
-        K.Barrier(FVector(XA - Overlap, Sign * FootpathOuter, Z0), FVector(XB + Overlap, Sign * GapFillAbsY, Z1));
+        // Abuts the neighbouring walls exactly (no sink-in along X), so it never stands on a setback neighbour's footpath.
+        K.Barrier(FVector(XA, Sign * FootpathOuter, Z0), FVector(XB, Sign * GapFillAbsY, Z1));
+        // The footpath carries on across the gap, so the walking route along it is unbroken (same level, same kerb).
+        K.Box(ELaneColour::Footpath, FVector(XA, Sign * RoadHalfWidth, GroundZ - 20.0), FVector(XB, Sign * FootpathOuter, GroundZ + FootpathHeight));
+        K.Box(ELaneColour::Concrete, FVector(XA, Sign * RoadHalfWidth, GroundZ - 20.0),
+              FVector(XB, Sign * (RoadHalfWidth + 12.0), GroundZ + FootpathHeight + 2.0));
     }
 }
 } // namespace
