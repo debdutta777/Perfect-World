@@ -12,7 +12,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
 #include "Math/RotationMatrix.h"
-#include "PerfectWorldFrontEndHUD.h"
+#include "PerfectWorldInteractionComponent.h"
 #include "UObject/ConstructorHelpers.h"
 
 namespace
@@ -95,6 +95,9 @@ APerfectWorldPlayerCharacter::APerfectWorldPlayerCharacter()
     ThirdPersonCamera->SetupAttachment(BoomArm, USpringArmComponent::SocketName);
     ThirdPersonCamera->bUsePawnControlRotation = false; // the boom already carries the controller rotation
     ThirdPersonCamera->bAutoActivate = false;
+
+    // Targeting measures from the capsule, so it is the same in both cameras; see PWInteraction in its header.
+    Interaction = CreateDefaultSubobject<UPWInteractionComponent>(TEXT("Interaction"));
 
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> Paint(TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"));
     if (Paint.Succeeded())
@@ -211,10 +214,8 @@ float APerfectWorldPlayerCharacter::GetThirdPersonDistance() const
 
 bool APerfectWorldPlayerCharacter::IsInputBlocked() const
 {
-    // While the title, creation flow or pause menu is up the world does not take play input.
-    const APlayerController* PlayerController = Cast<APlayerController>(GetController());
-    const APerfectWorldFrontEndHUD* Hud = PlayerController != nullptr ? Cast<APerfectWorldFrontEndHUD>(PlayerController->GetHUD()) : nullptr;
-    return Hud != nullptr && Hud->IsMenuOpen();
+    // While the title, creation flow, pause menu or a conversation is up the world does not take play input.
+    return UPWInteractionComponent::IsWorldInputBlocked(this);
 }
 
 void APerfectWorldPlayerCharacter::ApplyMove(float Right, float Forward)
