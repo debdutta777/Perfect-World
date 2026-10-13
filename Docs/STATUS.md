@@ -1312,3 +1312,33 @@ Built by Claude Sonnet 5.5 in its own worktree (`7743105`) and merged as `fcb17d
 **Not yet judged:** the movement feel, which needs the owner; the controller; and 20 camera toggles.
 
 **Capture helper:** an earlier capture helper copied screen pixels and photographed another full-screen app that was on top. It also once froze the game through `PrintWindow`. Captures are now taken only while the game window is in the foreground.
+
+## Checkpoint — lane circulation and floor datums, verified in the packaged build, 2026-10-13
+
+Built by Claude Sonnet 5.5 from `LANE_LIFE_PLAN.md` §D and `LANE_LIFE_IMPLEMENTATION.md` §C, and merged as `968f7f7`.
+
+**What it changes:**
+- **Stalls:** recessed into 100 cm niches inside the building.
+- **Kerb side:** poles and trees sit at the kerb edge, with collision ending at |Y| 279.
+- **Pots:** placed only where a setback leaves at least 129 cm.
+- **Awnings:** they clear 210 cm above the footpath; zero-setback awnings are held by stay rods instead of poles.
+- **Residence thresholds:** run from 0 to 15.5 cm, so the opening is a true 90 × 210.
+- **Floor heights:** `FloorZ(n) = 15 + n × StoreyHeightCm` per building, 300 cm by default with 360 cm available. Upper floors rise 15 cm.
+- **Collision:** colour rows now carry explicit collision roles. Solid props block the Pawn, Camera and Visibility channels within 5 cm of their visible geometry. The lane boundary stays Pawn-only.
+- **Props:** the tank, scooter and taxi are rebuilt to their references.
+- **`SCALE_AUDIT.md`:** rewritten, including the work still to track.
+
+**Exact checks:**
+- **Rung 4:** at `968f7f7`, `BUILD SUCCESSFUL`, with no compile warnings or errors.
+- **Development-only route check:** logs `Lane footpath route: continuous; narrowest clear width 121 cm at X -714 on side -1 (3278 samples)`.
+- **In play:** strafed onto the right footpath and walked 7 s along it, past the recessed stalls, without obstruction. The third-person view works under the awnings.
+- **Screenshots:** `Docs/Images/walk-footpath-recessed-stalls.png` and `walk-footpath-third-person.png`.
+
+**Still tracked:**
+- solid building volumes and interiors;
+- filled door and window frames;
+- balcony and roof collision;
+- navigation geometry;
+- visible alley-end architecture;
+- the registered door, window and counter assets disagreeing with the lane;
+- run speed 4 m/s against the 3.5 m/s reference.
