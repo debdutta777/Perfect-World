@@ -77,6 +77,13 @@ const FLaneColourSpec ColourTable[] = {
     {TEXT("TaxiGlass"), FColor(30, 40, 48), ELaneCollision::None, false},
     {TEXT("Chrome"), FColor(172, 174, 178), ELaneCollision::None, true},
     {TEXT("AcUnit"), FColor(208, 210, 208), ELaneCollision::None, true},
+    {TEXT("PlasterWarm"), FColor(232, 205, 160), ELaneCollision::None, false},
+    {TEXT("PlasterPale"), FColor(186, 206, 190), ELaneCollision::None, false},
+    {TEXT("TileKitchen"), FColor(230, 222, 186), ELaneCollision::None, false},
+    {TEXT("TileWash"), FColor(150, 196, 200), ELaneCollision::None, false},
+    {TEXT("FloorOxide"), FColor(160, 70, 56), ELaneCollision::None, false},
+    {TEXT("FloorTile"), FColor(200, 196, 186), ELaneCollision::None, false},
+    {TEXT("CeilingWhite"), FColor(240, 236, 226), ELaneCollision::None, false},
     {TEXT("PropBlock"), FColor(255, 0, 255), ELaneCollision::Prop, false},
     {TEXT("Barrier"), FColor(255, 0, 255), ELaneCollision::Boundary, false},
 };

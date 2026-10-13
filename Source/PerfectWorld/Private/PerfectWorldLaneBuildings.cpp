@@ -1,5 +1,6 @@
 #include "PerfectWorldLaneBuildings.h"
 
+#include "PerfectWorldLaneInteriors.h"
 #include "PerfectWorldLaneShops.h"
 
 namespace PWLane
@@ -205,7 +206,16 @@ void BuildFull(FLaneScene& S, const FLaneBuilding& B)
     // stand inside the building and leave the footpath clear.
     TArray<FLaneSpan> Recesses;
     BuildLaneGroundFloor(S, B, Recesses);
-    AddWallVolume(K, F, B, H, Recesses);
+    if (IsOpeningHome(B))
+    {
+        // The opening home (first row, -Y side, Index 2, X -300 to 700) is hollow: walls with openings, rooms, a ceiling,
+        // and the solid upper storeys above it. See PerfectWorldLaneInteriors.h.
+        BuildOpeningHome(S, B);
+    }
+    else
+    {
+        AddWallVolume(K, F, B, H, Recesses);
+    }
 
     for (int32 Floor = 1; Floor < B.Storeys; ++Floor)
     {
