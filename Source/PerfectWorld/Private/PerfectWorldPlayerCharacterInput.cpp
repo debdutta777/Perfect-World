@@ -13,6 +13,7 @@
 #include "InputCoreTypes.h"
 #include "InputMappingContext.h"
 #include "InputModifiers.h"
+#include "PerfectWorldInteractionComponent.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPWPlayerInput, Log, All);
 
@@ -64,6 +65,8 @@ void APerfectWorldPlayerCharacter::BuildInputAssets()
     ToggleCameraAction = MakeAction(TEXT("IA_ToggleCamera"), EInputActionValueType::Boolean);
     ZoomWheelAction = MakeAction(TEXT("IA_ZoomWheel"), EInputActionValueType::Axis1D);
     ZoomHeldAction = MakeAction(TEXT("IA_ZoomHeld"), EInputActionValueType::Axis1D);
+    InteractAction = MakeAction(TEXT("IA_Interact"), EInputActionValueType::Boolean);
+    CycleTargetAction = MakeAction(TEXT("IA_CycleTarget"), EInputActionValueType::Boolean);
 
     WalkingContext = NewObject<UInputMappingContext>(this, TEXT("IMC_Walking"));
 
@@ -104,6 +107,14 @@ void APerfectWorldPlayerCharacter::BuildInputAssets()
     WalkingContext->MapKey(ZoomWheelAction, EKeys::MouseWheelAxis);
     WalkingContext->MapKey(ZoomHeldAction, EKeys::Gamepad_DPad_Up);
     WalkingContext->MapKey(ZoomHeldAction, EKeys::Gamepad_DPad_Down).Modifiers.Add(Negate());
+
+    // Interaction: E or X acts on the target; Tab or the right shoulder button picks the next one. Neither key is used above
+    // (A jumps, Y switches camera, the D-pad zooms, L3 runs, the menu button belongs to the front end HUD). B is left free
+    // because the conversation panel uses it to leave.
+    WalkingContext->MapKey(InteractAction, EKeys::E);
+    WalkingContext->MapKey(InteractAction, EKeys::Gamepad_FaceButton_Left);
+    WalkingContext->MapKey(CycleTargetAction, EKeys::Tab);
+    WalkingContext->MapKey(CycleTargetAction, EKeys::Gamepad_RightShoulder);
 }
 
 void APerfectWorldPlayerCharacter::BindEnhancedInput(UEnhancedInputComponent& Input)
@@ -117,6 +128,9 @@ void APerfectWorldPlayerCharacter::BindEnhancedInput(UEnhancedInputComponent& In
     Input.BindAction(ToggleCameraAction, ETriggerEvent::Started, this, &APerfectWorldPlayerCharacter::OnToggleCamera);
     Input.BindAction(ZoomWheelAction, ETriggerEvent::Triggered, this, &APerfectWorldPlayerCharacter::OnZoomWheel);
     Input.BindAction(ZoomHeldAction, ETriggerEvent::Triggered, this, &APerfectWorldPlayerCharacter::OnZoomHeld);
+    // Started fires once per press; holding the key never repeats the action.
+    Input.BindAction(InteractAction, ETriggerEvent::Started, this, &APerfectWorldPlayerCharacter::OnInteractStarted);
+    Input.BindAction(CycleTargetAction, ETriggerEvent::Started, this, &APerfectWorldPlayerCharacter::OnCycleTargetStarted);
 }
 
 void APerfectWorldPlayerCharacter::AddWalkingContext()
@@ -236,6 +250,22 @@ void APerfectWorldPlayerCharacter::OnToggleCamera()
     }
 }
 
+void APerfectWorldPlayerCharacter::OnInteractStarted()
+{
+    if (Interaction != nullptr && !IsInputBlocked())
+    {
+        Interaction->TryInteract();
+    }
+}
+
+void APerfectWorldPlayerCharacter::OnCycleTargetStarted()
+{
+    if (Interaction != nullptr && !IsInputBlocked())
+    {
+        Interaction->CycleTarget();
+    }
+}
+
 void APerfectWorldPlayerCharacter::OnZoomWheel(const FInputActionValue& Value)
 {
     ApplyZoomCentimetres(-Value.Get<float>() * ZoomCentimetresPerWheelNotch); // wheel up moves the camera closer
@@ -281,6 +311,14 @@ void APerfectWorldPlayerCharacter::BindLegacyInput(UInputComponent& Input)
     for (const FKey& Key : {EKeys::V, EKeys::Gamepad_FaceButton_Top})
     {
         Input.BindKey(Key, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnToggleCamera);
+    }
+    for (const FKey& Key : {EKeys::E, EKeys::Gamepad_FaceButton_Left})
+    {
+        Input.BindKey(Key, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnInteractStarted); // IE_Pressed ignores repeats
+    }
+    for (const FKey& Key : {EKeys::Tab, EKeys::Gamepad_RightShoulder})
+    {
+        Input.BindKey(Key, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnCycleTargetStarted);
     }
     Input.BindKey(EKeys::Gamepad_DPad_Up, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnLegacyZoomIn);
     Input.BindKey(EKeys::Gamepad_DPad_Down, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnLegacyZoomOut);

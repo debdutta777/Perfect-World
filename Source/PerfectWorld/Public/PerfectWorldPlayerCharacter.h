@@ -11,6 +11,7 @@ class UInputComponent;
 class UInputMappingContext;
 class UMaterialInstanceDynamic;
 class UMaterialInterface;
+class UPWInteractionComponent;
 class USpringArmComponent;
 class UStaticMeshComponent;
 struct FInputActionValue;
@@ -56,6 +57,10 @@ constexpr float BoomProbeSize = 12.0f;           // ASSET_PIPELINE.md: 12 cm pro
  *   Jump      Space             | A / cross (bottom face button)
  *   Camera    V                 | Y / triangle (top face button)
  *   Zoom      mouse wheel       | D-pad up and down (third person only)
+ *   Interact  E                 | X / square (left face button)
+ *   Next target  Tab            | right shoulder button (RB / R1)
+ * Interact and next-target are ignored while a menu or a conversation is open (UPWInteractionComponent::IsWorldInputBlocked),
+ * and a held key does not repeat them. Leaving a conversation is Escape or B, handled by the conversation panel.
  * Pause stays on Escape and the controller menu button (the front end HUD owns it). If the project's input classes
  * are not the Enhanced ones, APerfectWorldPlayerController and this class's input component override them; if that
  * ever fails, equivalent legacy bindings are created at runtime and the log says which path ran.
@@ -100,6 +105,10 @@ protected:
     UPROPERTY(VisibleAnywhere, Category = "Camera")
     TObjectPtr<UCameraComponent> ThirdPersonCamera;
 
+    /** Finds what can be acted on (doors, people), draws the prompt, and acts on it. */
+    UPROPERTY(VisibleAnywhere, Category = "Interaction")
+    TObjectPtr<UPWInteractionComponent> Interaction;
+
     /** The block body parts, in the order of the table in PerfectWorldPlayerCharacter.cpp. */
     UPROPERTY()
     TArray<TObjectPtr<UStaticMeshComponent>> BodyParts;
@@ -129,6 +138,10 @@ protected:
     TObjectPtr<UInputAction> ZoomWheelAction;
     UPROPERTY()
     TObjectPtr<UInputAction> ZoomHeldAction;
+    UPROPERTY()
+    TObjectPtr<UInputAction> InteractAction;
+    UPROPERTY()
+    TObjectPtr<UInputAction> CycleTargetAction;
 
 private:
     // Movement and look, shared by both input paths.
@@ -149,6 +162,8 @@ private:
     void OnToggleCamera();
     void OnZoomWheel(const FInputActionValue& Value);
     void OnZoomHeld(const FInputActionValue& Value);
+    void OnInteractStarted();
+    void OnCycleTargetStarted();
     bool WantsEnhancedInput() const;
     void AddWalkingContext();
     void RemoveWalkingContext(AController* FromController);
