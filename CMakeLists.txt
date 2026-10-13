@@ -121,6 +121,10 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/TimeContractText.cpp
     Source/PerfectWorldCore/Private/TimeContractContent.cpp
     Source/PerfectWorldCore/Private/TimeContractEquivalence.cpp
+    Source/PerfectWorldCore/Private/Doors.cpp
+    Source/PerfectWorldCore/Private/Conversation.cpp
+    Source/PerfectWorldCore/Private/ConversationContent.cpp
+    Source/PerfectWorldCore/Private/ConversationText.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -488,6 +492,16 @@ add_executable(PerfectWorldWeekTests Tests/WeekCompressionTests.cpp Tests/WeekCo
 target_link_libraries(PerfectWorldWeekTests PRIVATE PerfectWorldCore)
 add_dependencies(PerfectWorldWeekTests pwstatediff)
 add_test(NAME PerfectWorldWeekTests COMMAND PerfectWorldWeekTests ${CMAKE_SOURCE_DIR}/Data/Content $<TARGET_FILE:pwstatediff>)
+
+# Doors and conversation: the portable rules the first enterable home and the first talkable adult need
+# (LANE_LIFE_IMPLEMENTATION stage 3 rows 3.1/3.3 and stage 5 rows 5.1/5.2, minimal slice).
+add_executable(PerfectWorldDoorsTests Tests/DoorsTests.cpp)
+target_link_libraries(PerfectWorldDoorsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldDoorsTests COMMAND PerfectWorldDoorsTests)
+
+add_executable(PerfectWorldConversationTests Tests/ConversationTests.cpp)
+target_link_libraries(PerfectWorldConversationTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldConversationTests COMMAND PerfectWorldConversationTests)
 
 # The ten days (ROADMAP M4-03).
 add_executable(PerfectWorldCountdownTests Tests/CountdownTests.cpp Tests/CountdownRulesTests.cpp Tests/CountdownObligationTests.cpp
