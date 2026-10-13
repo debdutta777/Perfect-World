@@ -1,9 +1,11 @@
 #include "UI/PWWidgets.h"
 
+#include "PerfectWorldPresentationSettings.h"
 #include "Brushes/SlateRoundedBoxBrush.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Rendering/DrawElements.h"
 #include "UI/PWStyle.h"
+#include "UI/SPWAwakeningSigil.h"
 #include "Widgets/Images/SImage.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Layout/SBorder.h"
@@ -17,6 +19,14 @@
 
 namespace PWUI
 {
+bool IsReducedMotion() { return UPerfectWorldPresentationSettings::Get().IsReducedMotion(); }
+float MotionLerp(float AnimatedLerp) { return IsReducedMotion() ? 1.0f : AnimatedLerp; }
+void PlayMotion(FCurveSequence& Sequence, const TSharedRef<SWidget>& Owner)
+{
+    if (IsReducedMotion()) Sequence.JumpToEnd();
+    else Sequence.Play(Owner);
+}
+
 namespace
 {
 struct FPendingFocus
@@ -238,6 +248,14 @@ TSharedRef<SWidget> MakePanel(TSharedRef<SWidget> Content, const FMargin& Paddin
         [
             Content
         ];
+}
+
+TSharedRef<SWidget> MakeBracketPanel(TSharedRef<SWidget> Content, const FMargin& Padding)
+{
+    return SNew(SBorder).BorderImage(&FStyle::Get().BrushPanel).Padding(0)
+        [SNew(SOverlay)
+            + SOverlay::Slot()[SNew(SPWCornerBrackets)]
+            + SOverlay::Slot().Padding(Padding)[Content]];
 }
 
 TSharedRef<SWidget> MakeDialog(TSharedRef<SWidget> Content, const FMargin& Padding)

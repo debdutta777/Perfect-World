@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Animation/CurveSequence.h"
 #include "Framework/SlateDelegates.h"
 #include "Input/Reply.h"
 #include "Layout/Margin.h"
@@ -15,6 +16,11 @@ class SWidget;
 /** Small builders that keep every screen's widgets looking and behaving the same. */
 namespace PWUI
 {
+/** One presentation policy for every decorative motion consumer. */
+bool IsReducedMotion();
+float MotionLerp(float AnimatedLerp);
+void PlayMotion(FCurveSequence& Sequence, const TSharedRef<SWidget>& Owner);
+
 enum class EButtonKind : uint8
 {
     /** The one saffron call to action on a screen. */
@@ -46,6 +52,8 @@ TSharedRef<SWidget> MakeContentButton(TSharedRef<SWidget> Content, EButtonKind K
 
 /** A rounded dark panel. */
 TSharedRef<SWidget> MakePanel(TSharedRef<SWidget> Content, const FMargin& Padding = FMargin(24.0f));
+/** Sparse brackets inside a reading surface's padding, beneath its text and controls. */
+TSharedRef<SWidget> MakeBracketPanel(TSharedRef<SWidget> Content, const FMargin& Padding = FMargin(24.0f));
 
 /** A radius-14 modal surface with the visual system's only soft shadow. */
 TSharedRef<SWidget> MakeDialog(TSharedRef<SWidget> Content, const FMargin& Padding = FMargin(24.0f));

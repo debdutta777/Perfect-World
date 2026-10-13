@@ -10,6 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
+#include "PerfectWorldPresentationSettings.h"
 #include "UI/PWDelegates.h"
 #include "UI/SPWFrontEndRoot.h"
 #include "Widgets/SWeakWidget.h"
@@ -81,7 +82,7 @@ void APerfectWorldFrontEndHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void APerfectWorldFrontEndHUD::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
-    if (Mode == EFrontEndMode::Title && PlayerOwner != nullptr)
+    if (Mode == EFrontEndMode::Title && PlayerOwner != nullptr && !UPerfectWorldPresentationSettings::Get().IsReducedMotion())
     {
         TitleDriftSeconds = FMath::Fmod(TitleDriftSeconds + DeltaSeconds, TitleDriftPeriod);
         TitleYaw = 6.0f * FMath::Sin(TitleDriftSeconds * 2.0f * PI / TitleDriftPeriod);

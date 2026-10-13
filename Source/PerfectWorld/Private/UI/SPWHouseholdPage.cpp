@@ -31,13 +31,14 @@ void SPWHouseholdPage::Construct(const FArguments& InArgs, const TSharedRef<FPWC
 void SPWHouseholdPage::Tick(const FGeometry& AllottedGeometry, double InCurrentTime, float InDeltaTime)
 {
     SCompoundWidget::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
+    if (PWUI::IsReducedMotion()) DetailTransition.JumpToEnd();
     if (LastHousehold != Model->OpeningHome.HouseholdTemplateId || LastResourceRank != Model->OpeningHome.ResourceRank)
     {
         LastHousehold = Model->OpeningHome.HouseholdTemplateId;
         LastResourceRank = Model->OpeningHome.ResourceRank;
-        DetailTransition.Play(AsShared());
+        PWUI::PlayMotion(DetailTransition, AsShared());
     }
-    Details->SetRenderOpacity(DetailReveal.GetLerp());
+    Details->SetRenderOpacity(PWUI::MotionLerp(DetailReveal.GetLerp()));
     const bool bShouldBeNarrow = NarrowLayout.Get(AllottedGeometry.GetLocalSize().X < 1280.0f);
     if (!bLayoutInitialized || bShouldBeNarrow != bNarrow) RebuildLayout(bShouldBeNarrow);
 }

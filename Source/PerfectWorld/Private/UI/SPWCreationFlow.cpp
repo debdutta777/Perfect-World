@@ -12,6 +12,7 @@
 #include "UI/SPWReviewPage.h"
 #include "UI/SPWStreamPage.h"
 #include "UI/SPWTraitsPage.h"
+#include "UI/SPWAwakeningSigil.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
@@ -38,18 +39,21 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
         LOCTEXT("StepStream", "Stream"), LOCTEXT("StepReview", "Review")};
 
     const TSharedRef<SHorizontalBox> StepRow = SNew(SHorizontalBox);
+    const EPWSigilPictogram Pictograms[PWUI::CreationStepCount] = {
+        EPWSigilPictogram::Doorway, EPWSigilPictogram::Ledger, EPWSigilPictogram::Person,
+        EPWSigilPictogram::Paths, EPWSigilPictogram::FirstMorning};
     for (int32 Step = 0; Step < PWUI::CreationStepCount; ++Step)
     {
-        const auto StepButton = PWUI::MakeButton(
-                FText::Format(LOCTEXT("StepChipFmt", "{0}  {1}"), FText::AsNumber(Step + 1), StepNames[Step]),
+        const auto StepButton = PWUI::MakeContentButton(
+                PWUI::MakeText(FText::Format(LOCTEXT("StepChipFmt", "{0}  {1}"), FText::AsNumber(Step + 1), StepNames[Step]),
+                               15, Style.TextPrimary, false, true),
                 PWUI::EButtonKind::Chip,
                 FOnClicked::CreateLambda([this, Step]()
                 {
                     GoToStep(Step);
                     return FReply::Handled();
                 }),
-                true, 15, 0.0f,
-                TAttribute<bool>::CreateLambda([this, Step]() { return CurrentStep == Step; }));
+                TAttribute<bool>::CreateLambda([this, Step]() { return CurrentStep == Step; }), true, FMargin(8));
 #if WITH_ACCESSIBILITY
         StepButton->SetAccessibleBehavior(EAccessibleBehavior::Custom, TAttribute<FText>::CreateLambda([this, Step, Name = StepNames[Step]]()
         {
@@ -58,7 +62,11 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
             return FText::Format(LOCTEXT("AccessibleStep", "Step {0}: {1}, {2}"), FText::AsNumber(Step + 1), Name, Status);
         }));
 #endif
-        StepRow->AddSlot().FillWidth(1.0f).Padding(0.0f, 0.0f, 8.0f, 0.0f)[StepButton];
+        StepRow->AddSlot().FillWidth(1.0f).Padding(0.0f, 0.0f, 8.0f, 0.0f)
+        [SNew(SHorizontalBox)
+            + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0, 0, 4, 0)
+            [SNew(SPWAwakeningSigil).SizeClass(EPWSigilSizeClass::Seal).Diameter(32).Pictogram(Pictograms[Step])]
+            + SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Center)[StepButton]];
     }
 
     Pages = SNew(SWidgetSwitcher)
@@ -269,8 +277,13 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
 void SPWCreationFlow::Tick(const FGeometry& AllottedGeometry, double InCurrentTime, float InDeltaTime)
 {
     SCompoundWidget::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
-    PageBody->SetRenderOpacity(PageReveal.GetLerp());
-    if (bAllocationModal) AllocationModal->SetRenderOpacity(ModalReveal.GetLerp());
+    if (PWUI::IsReducedMotion())
+    {
+        PageTransition.JumpToEnd();
+        ModalTransition.JumpToEnd();
+    }
+    PageBody->SetRenderOpacity(PWUI::MotionLerp(PageReveal.GetLerp()));
+    if (bAllocationModal) AllocationModal->SetRenderOpacity(PWUI::MotionLerp(ModalReveal.GetLerp()));
 }
 
 void SPWCreationFlow::GoToStep(int32 Step)
@@ -302,7 +315,7 @@ void SPWCreationFlow::GoToStep(int32 Step)
     Model->Refresh();
     if (TraitsPage.IsValid()) TraitsPage->DiscardProposal();
     if (PageBody.IsValid()) PageBody->ScrollToStart();
-    PageTransition.Play(AsShared());
+    PWUI::PlayMotion(PageTransition, AsShared());
     FocusActivePage();
 }
 

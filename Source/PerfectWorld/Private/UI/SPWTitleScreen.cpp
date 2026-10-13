@@ -6,6 +6,7 @@
 #include "Rendering/DrawElements.h"
 #include "UI/PWStyle.h"
 #include "UI/PWWidgets.h"
+#include "UI/SPWAwakeningSigil.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SScaleBox.h"
 #include "Widgets/Layout/SScrollBox.h"
@@ -50,7 +51,7 @@ TSharedRef<SWidget> FixedWidth(const TSharedRef<SWidget>& Content)
 void SPWTitleScreen::Construct(const FArguments& InArgs, UPerfectWorldCharacterCreatorSubsystem* InCreator)
 {
     const PWUI::FStyle& Style = PWUI::FStyle::Get();
-    PageReveal = PageTransition.AddCurve(0.0f, 0.18f, ECurveEaseFunction::CubicOut);
+    PageReveal = PageTransition.AddCurve(0.0f, 0.16f, ECurveEaseFunction::CubicOut);
     PageTransition.JumpToEnd();
     OnContinue = InArgs._OnContinue;
     ContinueSlot = UPerfectWorldCharacterCreatorSubsystem::FindMostRecentSaveSlot();
@@ -96,8 +97,11 @@ void SPWTitleScreen::Construct(const FArguments& InArgs, UPerfectWorldCharacterC
         + SScrollBox::Slot().Padding(FMargin(64, 34, 24, 24))
         [SNew(SVerticalBox)
             + SVerticalBox::Slot().AutoHeight()
-            [SNew(SScaleBox).Stretch(EStretch::ScaleToFitX).StretchDirection(EStretchDirection::DownOnly)
-                [PWUI::MakeText(LOCTEXT("TitleMain", "PERFECT WORLD"), PWUI::ETextRole::Title, Style.TextPrimary)]]
+            [SNew(SOverlay)
+                + SOverlay::Slot()[SNew(SPWCornerBrackets)]
+                + SOverlay::Slot().Padding(24, 16)
+                [SNew(SScaleBox).Stretch(EStretch::ScaleToFitX).StretchDirection(EStretchDirection::DownOnly)
+                    [PWUI::MakeText(LOCTEXT("TitleMain", "PERFECT WORLD"), PWUI::ETextRole::Title, Style.TextPrimary)]]]
             + SVerticalBox::Slot().AutoHeight().Padding(2, 2, 0, 0)
             [PWUI::MakeText(LOCTEXT("TitleSub", "AWAKENING"), 25, Style.Accent, true)]
             + SVerticalBox::Slot().AutoHeight().Padding(2, 14, 0, 0)
@@ -123,12 +127,21 @@ void SPWTitleScreen::Construct(const FArguments& InArgs, UPerfectWorldCharacterC
 
     ChildSlot[SNew(SOverlay)
         + SOverlay::Slot()[SNew(SPWTitleGradient)]
+        + SOverlay::Slot().HAlign(HAlign_Right).VAlign(VAlign_Center).Padding(0, 0, 24, 0)
+        [SNew(SBox)
+            .WidthOverride_Lambda([this]() { return FMath::Max(1.0f, static_cast<float>(GetCachedGeometry().GetLocalSize().X) / 3.0f - 24.0f); })
+            .HeightOverride_Lambda([this]() { return FMath::Max(1.0f, static_cast<float>(GetCachedGeometry().GetLocalSize().Y) - 48.0f); })
+            [SNew(SBox).HAlign(HAlign_Center).VAlign(VAlign_Center)
+                [SNew(SPWAwakeningSigil).Reveal(true).Rotation(true)
+                    .Diameter_Lambda([this]()
+                    {
+                        const FVector2D Size = GetCachedGeometry().GetLocalSize();
+                        const float Available = FMath::Min(static_cast<float>(Size.X / 3.0 - 24), static_cast<float>(Size.Y - 48)) / 1.5f;
+                        return FMath::Max(1.0f, FMath::Min(FMath::Clamp(static_cast<float>(Size.Y) * .42f, 340.0f, 460.0f), Available));
+                    })
+                    .Motes_Lambda([this]() { return GetCachedGeometry().GetLocalSize().X >= 1440.0f; })]]]
         + SOverlay::Slot().HAlign(HAlign_Left)
         [SAssignNew(ViewSwitcher, SWidgetSwitcher)
-            .RenderTransform_Lambda([this]()
-            {
-                return FSlateRenderTransform(FVector2f(0.0f, 8.0f * (1.0f - PageReveal.GetLerp())));
-            })
             + SWidgetSwitcher::Slot()[MainView] + SWidgetSwitcher::Slot()[CreditsView]]];
     PWUI::FocusWhenReady(AsShared(), MainFocusTarget);
 }
@@ -136,7 +149,8 @@ void SPWTitleScreen::Construct(const FArguments& InArgs, UPerfectWorldCharacterC
 void SPWTitleScreen::Tick(const FGeometry& AllottedGeometry, double InCurrentTime, float InDeltaTime)
 {
     SCompoundWidget::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
-    ViewSwitcher->SetRenderOpacity(PageReveal.GetLerp());
+    if (PWUI::IsReducedMotion()) PageTransition.JumpToEnd();
+    ViewSwitcher->SetRenderOpacity(PWUI::MotionLerp(PageReveal.GetLerp()));
 }
 
 FReply SPWTitleScreen::ShowCredits()
@@ -144,7 +158,7 @@ FReply SPWTitleScreen::ShowCredits()
     bShowingCredits = true;
     ViewSwitcher->SetActiveWidgetIndex(1);
     PageTransition.JumpToEnd();
-    PageTransition.Play(AsShared());
+    PWUI::PlayMotion(PageTransition, AsShared());
     PWUI::CancelPendingFocus(AsShared());
     PWUI::FocusWhenReady(AsShared(), CreditsFocusTarget);
     return FReply::Handled();
@@ -155,7 +169,7 @@ FReply SPWTitleScreen::CloseCredits()
     bShowingCredits = false;
     ViewSwitcher->SetActiveWidgetIndex(0);
     PageTransition.JumpToEnd();
-    PageTransition.Play(AsShared());
+    PWUI::PlayMotion(PageTransition, AsShared());
     PWUI::CancelPendingFocus(AsShared());
     PWUI::FocusWhenReady(AsShared(), MainFocusTarget);
     return FReply::Handled();
