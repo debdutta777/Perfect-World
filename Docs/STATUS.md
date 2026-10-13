@@ -1342,3 +1342,26 @@ Built by Claude Sonnet 5.5 from `LANE_LIFE_PLAN.md` §D and `LANE_LIFE_IMPLEMENT
 - visible alley-end architecture;
 - the registered door, window and counter assets disagreeing with the lane;
 - run speed 4 m/s against the 3.5 m/s reference.
+
+## Checkpoint — Fivefold Aperture and reduced motion (lane life stage 1), seen in the packaged build, 2026-10-13
+
+**Who did what:**
+- **gpt-6.1-sol (Codex, medium):** built `LANE_LIFE_PLAN.md` §A, merged as `d27345b`.
+  - `UI/PWSigilPainter` and `UI/SPWAwakeningSigil` are procedural Slate (`MakeLines`/`MakeBox`) with geometry cached per size. The widget is non-focusable, hidden from hit tests and excluded from accessibility.
+  - The title has one aperture: five equal 48° sectors, open chevrons, calibration ticks with only the outer ring rotating (90 s per turn), and motes.
+  - The creation stepper, pause and review screens have seals with the specified pictograms.
+  - Reduced motion is a `Config=GameUserSettings` preference with a Settings toggle. It stops the sigils, page transitions, the traits drawer and the title camera drift at once.
+  - The Start Life flourish is deferred until start-and-save is transactional (`TODO_StartLifeTransactionalFlourish`).
+- **Integrator:**
+  - **Exit-crash guard:** the sigil's destructor no longer touches UObjects after shutdown.
+  - **Contrast change (`de95ce3`):** a deliberate departure from the plan's 25–45% opacity, for the full title aperture only; seals keep the specified weights. The first packaged capture showed the aperture almost invisible against a sunlit wall. It now sits on a soft dark lens of the Background token, with 2.25 px strokes at 72% amber and brighter ticks and motes.
+
+**Exact checks:**
+- **Rung 4:** at `d27345b` and again at `de95ce3`, `BUILD SUCCESSFUL`, with no compile errors or warnings.
+- **Seen in the packaged build at 1600×900:** the title aperture (`Docs/Images/title-fivefold-aperture.png`) and the creator step seals on the phase 2 household page (`Docs/Images/creator-step-seals-household.png`).
+
+**Not yet checked:**
+- the reduced-motion toggle in use;
+- 720p and 150% text;
+- the pause and review seals;
+- whether astra accepts the contrast change.
