@@ -197,9 +197,14 @@ TSharedRef<SWidget> MakeContentButton(TSharedRef<SWidget> Content, EButtonKind K
         ];
     *Handle = Button;
 #if WITH_ACCESSIBILITY
-    Button->SetAccessibleBehavior(EAccessibleBehavior::Custom, TAttribute<FText>::CreateLambda([Content, bSelected]()
+    // Weak: Slate keeps this attribute in a locked registry, and a strong reference here made destroying the button
+    // destroy Content from inside that registry's removal, re-entering its lock (a game-thread deadlock on entering
+    // the world as the title screen was torn down).
+    const TWeakPtr<SWidget> WeakContent = Content;
+    Button->SetAccessibleBehavior(EAccessibleBehavior::Custom, TAttribute<FText>::CreateLambda([WeakContent, bSelected]()
     {
-        const FText Description = Content->GetAccessibleText(EAccessibleType::Summary);
+        const TSharedPtr<SWidget> Pinned = WeakContent.Pin();
+        const FText Description = Pinned.IsValid() ? Pinned->GetAccessibleText(EAccessibleType::Summary) : FText::GetEmpty();
         return bSelected.Get(false) ? FText::Format(LOCTEXT("AccessibleSelected", "{0}, Selected"), Description) : Description;
     }));
 #endif
