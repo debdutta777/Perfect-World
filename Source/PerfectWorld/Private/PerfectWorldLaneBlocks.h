@@ -19,7 +19,16 @@ constexpr double GroundZ = -200.0;        // top of the road; the player's feet 
 constexpr double RoadHalfWidth = 250.0;   // a 5 m road
 constexpr double FootpathOuter = 400.0;   // |Y| of a building front with no setback (footpath is 1.5 m)
 constexpr double FootpathHeight = 15.0;
-constexpr double StoreyHeight = 300.0;
+constexpr double StoreyHeight = 300.0;       // floor to floor for flats (the default); see FLaneBuilding::StoreyHeightCm
+constexpr double OlderStoreyHeight = 360.0;  // available to buildings authored as older houses or the school
+constexpr double GroundFloorZ = FootpathHeight; // finished ground floor: level with the footpath, above GroundZ
+
+/** Finished-floor height of storey n (0 = ground floor), measured from GroundZ like every other Z in the lane. */
+inline double FloorZ(int32 Storey, double StoreyHeightCm = StoreyHeight)
+{
+    return GroundFloorZ + static_cast<double>(Storey) * StoreyHeightCm;
+}
+
 constexpr double LaneX0 = -2400.0;        // the lane is closed by a building here, behind the start camera
 constexpr double LaneX1 = 6400.0;         // and by a building here, at the far end of the view
 
@@ -84,8 +93,18 @@ enum class ELaneColour : uint8
     TaxiGlass,
     Chrome,
     AcUnit,
-    Barrier, // invisible; blocks the walking player only (never the camera). Must stay last before Count.
+    PropBlock, // invisible collision that follows a visible solid prop; blocks Pawn, Camera and Visibility
+    Barrier,   // invisible lane boundary; blocks the walking player only (never the camera). Must stay last before Count.
     Count
+};
+
+/** Who a colour bucket blocks. Set explicitly per row in the table in PerfectWorldLaneBlocks.cpp. */
+enum class ELaneCollision : uint8
+{
+    None,     // walk-through decoration
+    World,    // visible solid surface (walls, road, footpath, ground): blocks Pawn, Camera and Visibility
+    Prop,     // invisible box hugging a visible solid prop (within about 5 cm): blocks Pawn, Camera and Visibility
+    Boundary  // invisible lane boundary: blocks the Pawn channel only
 };
 
 constexpr int32 ColourCount = static_cast<int32>(ELaneColour::Count);
@@ -119,10 +138,20 @@ public:
     /** A rotated box: Size is the full extent along the box's own X, Y and Z. */
     void Tilted(ELaneColour Colour, const FVector& Centre, const FVector& Size, const FRotator& Rotation);
 
-    /** An invisible axis-aligned box that blocks the walking player (the Pawn channel) and nothing else. */
+    /** An invisible lane-boundary box that blocks the walking player (the Pawn channel) and nothing else. */
     void Barrier(const FVector& CornerA, const FVector& CornerB)
     {
         Box(ELaneColour::Barrier, CornerA, CornerB);
+    }
+
+    /**
+     * An invisible collision box for a visible solid prop (pole, trunk, vehicle, counter, pot). It blocks the Pawn,
+     * the Camera (so the third-person boom stops at it) and Visibility traces. Keep it within about 5 cm of the
+     * visible geometry it stands for; use several boxes for a stepped shape.
+     */
+    void PropCollision(const FVector& CornerA, const FVector& CornerB)
+    {
+        Box(ELaneColour::PropBlock, CornerA, CornerB);
     }
 
     /** A thin stretched cube from one point to another (overhead wires, bunting lines). */
@@ -134,8 +163,19 @@ public:
     /** Spawns the actor and one instanced component per used colour. Returns the component count. */
     int32 Commit(UWorld& World, UStaticMesh& Cube, UMaterialInterface* BaseMaterial, int32& OutInstances);
 
+#if !UE_BUILD_SHIPPING
+    /** Debug only: the world boxes of every PropBlock and Barrier, for the footpath route report. */
+    const TArray<FBox>& BlockingBoxes() const
+    {
+        return BlockingBoxList;
+    }
+#endif
+
 private:
     TArray<FTransform> Instances[ColourCount];
+#if !UE_BUILD_SHIPPING
+    TArray<FBox> BlockingBoxList;
+#endif
 };
 
 /**

@@ -7,6 +7,7 @@
 #include "PerfectWorldLaneBlocks.h"
 #include "PerfectWorldLaneBuildings.h"
 #include "PerfectWorldLaneProps.h"
+#include "PerfectWorldLaneRoutes.h"
 
 namespace PWLane
 {
@@ -80,6 +81,7 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     BuildLaneRows(Scene);
     BuildLaneProps(Scene);
     BuildLaneBarriers(Scene);
+    ReportFootpathRoutes(Scene); // development builds only: logs the narrowest clear footpath width
 
     int32 Instances = 0;
     const int32 Components = Scene.Blocks.Commit(World, Cube, BaseMaterial, Instances);

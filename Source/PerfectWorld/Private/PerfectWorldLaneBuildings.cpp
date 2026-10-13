@@ -6,16 +6,15 @@ namespace PWLane
 {
 namespace
 {
-constexpr double Storey = StoreyHeight;
-
 ELaneColour WallColour(int32 Index)
 {
     return static_cast<ELaneColour>(FMath::Clamp(Index, 0, WallColourCount - 1));
 }
 
 /**
- * A window, to the contract in ASSET_PIPELINE.md: a 120 x 135 opening with its sill at 75, a pale sill slab, a 45 cm
- * chhajja (concrete sunshade) above, glass (warm if someone is up), mullions, and green shutters on some buildings.
+ * A window, to the contract in ASSET_PIPELINE.md: a 120 x 135 opening with its sill 75 above the room floor, a pale
+ * sill slab, a 45 cm chhajja (concrete sunshade) above, glass (warm if someone is up), mullions, and green shutters
+ * on some buildings. Z is the finished floor level of the room (FLaneBuilding::FloorZ).
  */
 void AddWindow(FLaneBlocks& K, const FLaneFrame& F, double Uc, double Z, bool bLit, bool bShutters)
 {
@@ -34,7 +33,7 @@ void AddWindow(FLaneBlocks& K, const FLaneFrame& F, double Uc, double Z, bool bL
     }
 }
 
-/** A balcony: door, slab, railing with balusters, and sometimes a pot plant and washing on the rail. */
+/** A balcony: door, slab, railing with balusters, and sometimes a pot plant and washing on the rail. Z is the room's floor level. */
 void AddBalcony(FLaneBlocks& K, const FLaneFrame& F, double Uc, double Z, uint32 R)
 {
     // A 90 x 210 door (the leaf is the clear opening) in a 7 cm frame, standing on the slab.
@@ -83,7 +82,7 @@ void AddRoof(FLaneBlocks& K, const FLaneFrame& F, const FLaneBuilding& B, double
     F.Add(K, B.Wall, W - 14.0, W, 12.0, D - 14.0, H, H + 90.0);
     F.Add(K, ELaneColour::TrimLight, 0.0, W, -8.0, 18.0, H + 90.0, H + 100.0);
 
-    // Tanks: a square block and the same block turned 45 degrees make an eight-sided drum.
+    // Tanks: a 1000 litre block tank on a concrete stand, 110 x 110 and 110 high with a 10 cm lid (120 above its stand).
     const int32 Tanks = ((R >> 3) % 3u == 0u) ? 2 : 1;
     if (W >= 400.0 || Tanks == 1)
     {
@@ -91,10 +90,9 @@ void AddRoof(FLaneBlocks& K, const FLaneFrame& F, const FLaneBuilding& B, double
         {
             const double Uc = (Tanks == 1) ? W * (0.25 + 0.5 * LaneUnit(R >> 5)) : W * (0.25 + 0.5 * T);
             const double Vc = 120.0 + 60.0 * LaneUnit(LaneHash(static_cast<int32>(R), T));
-            F.Add(K, ELaneColour::Concrete, Uc - 80.0, Uc + 80.0, Vc - 80.0, Vc + 80.0, H, H + 40.0);
-            F.Add(K, ELaneColour::TankBlack, Uc - 65.0, Uc + 65.0, Vc - 65.0, Vc + 65.0, H + 40.0, H + 150.0);
-            K.Tilted(ELaneColour::TankBlack, F.Pt(Uc, Vc, H + 95.0), FVector(130.0, 130.0, 110.0), FRotator(0.0, 45.0, 0.0));
-            K.Tilted(ELaneColour::TankLid, F.Pt(Uc, Vc, H + 155.0), FVector(70.0, 70.0, 10.0), FRotator(0.0, 45.0, 0.0));
+            F.Add(K, ELaneColour::Concrete, Uc - 65.0, Uc + 65.0, Vc - 65.0, Vc + 65.0, H, H + 40.0);
+            F.Add(K, ELaneColour::TankBlack, Uc - 55.0, Uc + 55.0, Vc - 55.0, Vc + 55.0, H + 40.0, H + 150.0);
+            F.Add(K, ELaneColour::TankLid, Uc - 35.0, Uc + 35.0, Vc - 35.0, Vc + 35.0, H + 150.0, H + 160.0);
         }
     }
 
@@ -131,7 +129,7 @@ void AddUpperFloors(FLaneBlocks& K, const FLaneFrame& F, const FLaneBuilding& B)
 
     for (int32 Floor = 1; Floor < B.Storeys; ++Floor)
     {
-        const double Z = Floor * Storey;
+        const double Z = B.FloorZ(Floor);
         for (int32 Bay = 0; Bay < Bays; ++Bay)
         {
             const double Uc = (Bay + 0.5) * Pitch;
@@ -151,7 +149,7 @@ void AddUpperFloors(FLaneBlocks& K, const FLaneFrame& F, const FLaneBuilding& B)
     }
 
     // Damp stains running down from the cornice.
-    const double H = B.Storeys * Storey;
+    const double H = B.RoofZ();
     for (int32 I = 0; I < 2; ++I)
     {
         const uint32 R = LaneHash(static_cast<int32>(Seed), 77, I);
@@ -161,26 +159,57 @@ void AddUpperFloors(FLaneBlocks& K, const FLaneFrame& F, const FLaneBuilding& B)
     }
 }
 
+/**
+ * The solid wall volume of a near building, with a niche cut into the ground floor wherever an open stall has
+ * its counter (Recesses, in increasing U). Solid spans are full-height boxes; each niche keeps a footpath-coloured
+ * floor at the footpath level, a back block StallRecessDepth in, and a lintel block above StallRecessTop.
+ * The decorative 75 cm plinth fascia runs along the solid spans only.
+ */
+void AddWallVolume(FLaneBlocks& K, const FLaneFrame& F, const FLaneBuilding& B, double H, const TArray<FLaneSpan>& Recesses)
+{
+    double Cursor = 0.0;
+    auto AddSolid = [&](double U0, double U1)
+    {
+        if (U1 - U0 < 0.5)
+        {
+            return;
+        }
+        F.Add(K, B.Wall, U0, U1, 0.0, B.Depth, 0.0, H);
+        F.Add(K, ELaneColour::Plinth, U0, U1, -2.0, 0.0, FootpathHeight, 75.0);
+    };
+    for (const FLaneSpan& Niche : Recesses)
+    {
+        AddSolid(Cursor, Niche.U0);
+        F.Add(K, ELaneColour::Footpath, Niche.U0, Niche.U1, 0.0, StallRecessDepth, 0.0, FootpathHeight);
+        F.Add(K, B.Wall, Niche.U0, Niche.U1, StallRecessDepth, B.Depth, 0.0, H);
+        F.Add(K, B.Wall, Niche.U0, Niche.U1, 0.0, StallRecessDepth, StallRecessTop, H);
+        Cursor = Niche.U1;
+    }
+    AddSolid(Cursor, B.Width);
+}
+
 /** A near building: forecourt, shopfront, window and balcony floors, trims and the roof. */
 void BuildFull(FLaneScene& S, const FLaneBuilding& B)
 {
     FLaneBlocks& K = S.Blocks;
     const FLaneFrame& F = B.Frame;
     const double W = B.Width;
-    const double H = B.Storeys * Storey;
+    const double H = B.RoofZ();
     const double Sb = B.Setback;
 
     // The footpath in front of this building, with a kerb stone on the road edge.
     F.Add(K, ELaneColour::Footpath, 0.0, W, -(150.0 + Sb), 0.0, -20.0, FootpathHeight);
     F.Add(K, ELaneColour::Concrete, 0.0, W, -(150.0 + Sb), -(138.0 + Sb), -20.0, FootpathHeight + 2.0);
 
-    F.Add(K, B.Wall, 0.0, W, 0.0, B.Depth, 0.0, H);
-    F.Add(K, ELaneColour::Plinth, 0.0, W, -2.0, 0.0, FootpathHeight, 75.0);
-    BuildLaneGroundFloor(S, B);
+    // The ground floor goes first: it reports the niches cut into the wall for open stalls, so that their counters
+    // stand inside the building and leave the footpath clear.
+    TArray<FLaneSpan> Recesses;
+    BuildLaneGroundFloor(S, B, Recesses);
+    AddWallVolume(K, F, B, H, Recesses);
 
     for (int32 Floor = 1; Floor < B.Storeys; ++Floor)
     {
-        F.Add(K, ELaneColour::TrimLight, 0.0, W, -5.0, 0.0, Floor * Storey - 6.0, Floor * Storey + 6.0);
+        F.Add(K, ELaneColour::TrimLight, 0.0, W, -5.0, 0.0, B.FloorZ(Floor) - 6.0, B.FloorZ(Floor) + 6.0);
     }
     F.Add(K, ELaneColour::TrimLight, 0.0, W, -14.0, 0.0, H - 22.0, H);
 
@@ -194,14 +223,14 @@ void BuildMedium(FLaneScene& S, const FLaneBuilding& B)
     FLaneBlocks& K = S.Blocks;
     const FLaneFrame& F = B.Frame;
     const double W = B.Width;
-    const double H = B.Storeys * Storey;
+    const double H = B.RoofZ();
 
     F.Add(K, B.Wall, 0.0, W, 0.0, B.Depth, 0.0, H);
     const int32 Bays = FMath::Max(1, FMath::FloorToInt(W / 300.0));
     const double Pitch = W / Bays;
     for (int32 Floor = 1; Floor < B.Storeys; ++Floor)
     {
-        const double Z = Floor * Storey;
+        const double Z = B.FloorZ(Floor);
         F.Add(K, ELaneColour::TrimLight, 0.0, W, -5.0, 0.0, Z - 6.0, Z + 6.0);
         for (int32 Bay = 0; Bay < Bays; ++Bay)
         {
@@ -209,8 +238,7 @@ void BuildMedium(FLaneScene& S, const FLaneBuilding& B)
             const uint32 R = LaneHash(static_cast<int32>(B.Seed), Floor, Bay);
             F.Add(K, ELaneColour::TrimDark, Uc - 60.0, Uc + 60.0, -3.0, 0.0, Z + 75.0, Z + 210.0);
             F.Add(K, ((R >> 4) % 100u) < 22u ? ELaneColour::GlassLit : ELaneColour::GlassDusk, Uc - 53.0, Uc + 53.0, -5.0, -3.0,
-                  Z + 82.0, Z + 203.0);
-        }
+                  Z + 82.0, Z + 203.0);        }
     }
     F.Add(K, ELaneColour::TrimLight, 0.0, W, -12.0, 0.0, H - 20.0, H);
     AddRoof(K, F, B, H, false);
@@ -222,14 +250,14 @@ void BuildLow(FLaneScene& S, const FLaneBuilding& B)
     FLaneBlocks& K = S.Blocks;
     const FLaneFrame& F = B.Frame;
     const double W = B.Width;
-    const double H = B.Storeys * Storey;
+    const double H = B.RoofZ();
 
     F.Add(K, B.Wall, 0.0, W, 0.0, B.Depth, 0.0, H);
     const int32 Bays = FMath::Max(1, FMath::FloorToInt(W / 420.0));
     const double Pitch = W / Bays;
     for (int32 Floor = 0; Floor < B.Storeys; ++Floor)
     {
-        const double Z = Floor * Storey;
+        const double Z = B.FloorZ(Floor);
         if (Floor > 0)
         {
             F.Add(K, ELaneColour::TrimLight, 0.0, W, -5.0, 0.0, Z - 6.0, Z + 6.0);

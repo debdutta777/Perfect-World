@@ -18,66 +18,67 @@ struct FLaneColourSpec
 {
     const TCHAR* Name;
     FColor Colour;     // sRGB
-    bool bSolid;       // collision on (walls, ground, road); everything else is walk-through decoration
+    ELaneCollision Collision; // who it blocks: walls, road and ground (World), invisible prop and boundary boxes; the rest is decoration
     bool bCastShadow;  // off for thin or tiny detail where a shadow is only noise
 };
 
 // Weathered pastels for the walls, darker trims, and a few saturated accents (shutters, awnings, cloth, bunting).
 // The order matches ELaneColour.
 const FLaneColourSpec ColourTable[] = {
-    {TEXT("WallOchre"), FColor(204, 160, 92), true, true},
-    {TEXT("WallTerracotta"), FColor(176, 98, 72), true, true},
-    {TEXT("WallTeal"), FColor(96, 148, 146), true, true},
-    {TEXT("WallCream"), FColor(226, 212, 176), true, true},
-    {TEXT("WallPink"), FColor(212, 148, 152), true, true},
-    {TEXT("WallButter"), FColor(224, 196, 112), true, true},
-    {TEXT("WallSage"), FColor(150, 168, 130), true, true},
-    {TEXT("WallDustyBlue"), FColor(128, 150, 178), true, true},
-    {TEXT("TrimLight"), FColor(234, 226, 206), false, true},
-    {TEXT("TrimDark"), FColor(74, 62, 56), false, true},
-    {TEXT("Plinth"), FColor(98, 86, 74), false, false},
-    {TEXT("Stain"), FColor(128, 112, 94), false, false},
-    {TEXT("ShutterGreen"), FColor(52, 104, 76), false, true},
-    {TEXT("ShutterSteel"), FColor(122, 136, 144), false, true},
-    {TEXT("ShutterBlue"), FColor(72, 112, 152), false, true},
-    {TEXT("ShutterStripe"), FColor(68, 78, 86), false, false},
-    {TEXT("ShopInterior"), FColor(48, 34, 28), false, false},
-    {TEXT("WoodLight"), FColor(172, 130, 86), false, true},
-    {TEXT("DoorWood"), FColor(92, 56, 38), false, true},
-    {TEXT("GlassDusk"), FColor(84, 104, 128), false, false},
-    {TEXT("GlassLit"), FColor(255, 200, 108), false, false},
-    {TEXT("Concrete"), FColor(152, 150, 144), false, true},
-    {TEXT("Asphalt"), FColor(68, 68, 72), true, true},
-    {TEXT("Footpath"), FColor(150, 142, 130), true, true},
-    {TEXT("Ground"), FColor(152, 134, 106), true, true},
-    {TEXT("Drain"), FColor(38, 36, 36), false, false},
-    {TEXT("RoadPatch"), FColor(96, 94, 92), false, false},
-    {TEXT("Rail"), FColor(56, 78, 66), false, true},
-    {TEXT("TankBlack"), FColor(24, 26, 28), false, true},
-    {TEXT("TankLid"), FColor(54, 58, 62), false, true},
-    {TEXT("PotTerracotta"), FColor(178, 98, 66), false, true},
-    {TEXT("LeafDark"), FColor(46, 94, 52), false, true},
-    {TEXT("LeafLight"), FColor(100, 146, 64), false, true},
-    {TEXT("Trunk"), FColor(94, 72, 52), false, true},
-    {TEXT("WireBlack"), FColor(20, 20, 22), false, false},
-    {TEXT("AwningRed"), FColor(180, 54, 46), false, true},
-    {TEXT("AwningBlue"), FColor(54, 94, 152), false, true},
-    {TEXT("AwningGreen"), FColor(60, 130, 94), false, true},
-    {TEXT("GoodsYellow"), FColor(238, 198, 54), false, false},
-    {TEXT("GoodsOrange"), FColor(222, 122, 42), false, false},
-    {TEXT("GoodsRed"), FColor(192, 52, 42), false, false},
-    {TEXT("GoodsGreen"), FColor(92, 152, 62), false, false},
-    {TEXT("SignBlue"), FColor(46, 86, 150), false, false},
-    {TEXT("SignRed"), FColor(176, 48, 44), false, false},
-    {TEXT("SignGreen"), FColor(40, 110, 80), false, false},
-    {TEXT("ClothMagenta"), FColor(192, 52, 112), false, false},
-    {TEXT("ClothMustard"), FColor(224, 172, 52), false, false},
-    {TEXT("ClothTeal"), FColor(42, 142, 152), false, false},
-    {TEXT("TaxiYellow"), FColor(234, 180, 26), false, true},
-    {TEXT("TaxiGlass"), FColor(30, 40, 48), false, false},
-    {TEXT("Chrome"), FColor(172, 174, 178), false, true},
-    {TEXT("AcUnit"), FColor(208, 210, 208), false, true},
-    {TEXT("Barrier"), FColor(255, 0, 255), true, false},
+    {TEXT("WallOchre"), FColor(204, 160, 92), ELaneCollision::World, true},
+    {TEXT("WallTerracotta"), FColor(176, 98, 72), ELaneCollision::World, true},
+    {TEXT("WallTeal"), FColor(96, 148, 146), ELaneCollision::World, true},
+    {TEXT("WallCream"), FColor(226, 212, 176), ELaneCollision::World, true},
+    {TEXT("WallPink"), FColor(212, 148, 152), ELaneCollision::World, true},
+    {TEXT("WallButter"), FColor(224, 196, 112), ELaneCollision::World, true},
+    {TEXT("WallSage"), FColor(150, 168, 130), ELaneCollision::World, true},
+    {TEXT("WallDustyBlue"), FColor(128, 150, 178), ELaneCollision::World, true},
+    {TEXT("TrimLight"), FColor(234, 226, 206), ELaneCollision::None, true},
+    {TEXT("TrimDark"), FColor(74, 62, 56), ELaneCollision::None, true},
+    {TEXT("Plinth"), FColor(98, 86, 74), ELaneCollision::None, false},
+    {TEXT("Stain"), FColor(128, 112, 94), ELaneCollision::None, false},
+    {TEXT("ShutterGreen"), FColor(52, 104, 76), ELaneCollision::None, true},
+    {TEXT("ShutterSteel"), FColor(122, 136, 144), ELaneCollision::None, true},
+    {TEXT("ShutterBlue"), FColor(72, 112, 152), ELaneCollision::None, true},
+    {TEXT("ShutterStripe"), FColor(68, 78, 86), ELaneCollision::None, false},
+    {TEXT("ShopInterior"), FColor(48, 34, 28), ELaneCollision::None, false},
+    {TEXT("WoodLight"), FColor(172, 130, 86), ELaneCollision::None, true},
+    {TEXT("DoorWood"), FColor(92, 56, 38), ELaneCollision::None, true},
+    {TEXT("GlassDusk"), FColor(84, 104, 128), ELaneCollision::None, false},
+    {TEXT("GlassLit"), FColor(255, 200, 108), ELaneCollision::None, false},
+    {TEXT("Concrete"), FColor(152, 150, 144), ELaneCollision::None, true},
+    {TEXT("Asphalt"), FColor(68, 68, 72), ELaneCollision::World, true},
+    {TEXT("Footpath"), FColor(150, 142, 130), ELaneCollision::World, true},
+    {TEXT("Ground"), FColor(152, 134, 106), ELaneCollision::World, true},
+    {TEXT("Drain"), FColor(38, 36, 36), ELaneCollision::None, false},
+    {TEXT("RoadPatch"), FColor(96, 94, 92), ELaneCollision::None, false},
+    {TEXT("Rail"), FColor(56, 78, 66), ELaneCollision::None, true},
+    {TEXT("TankBlack"), FColor(24, 26, 28), ELaneCollision::None, true},
+    {TEXT("TankLid"), FColor(54, 58, 62), ELaneCollision::None, true},
+    {TEXT("PotTerracotta"), FColor(178, 98, 66), ELaneCollision::None, true},
+    {TEXT("LeafDark"), FColor(46, 94, 52), ELaneCollision::None, true},
+    {TEXT("LeafLight"), FColor(100, 146, 64), ELaneCollision::None, true},
+    {TEXT("Trunk"), FColor(94, 72, 52), ELaneCollision::None, true},
+    {TEXT("WireBlack"), FColor(20, 20, 22), ELaneCollision::None, false},
+    {TEXT("AwningRed"), FColor(180, 54, 46), ELaneCollision::None, true},
+    {TEXT("AwningBlue"), FColor(54, 94, 152), ELaneCollision::None, true},
+    {TEXT("AwningGreen"), FColor(60, 130, 94), ELaneCollision::None, true},
+    {TEXT("GoodsYellow"), FColor(238, 198, 54), ELaneCollision::None, false},
+    {TEXT("GoodsOrange"), FColor(222, 122, 42), ELaneCollision::None, false},
+    {TEXT("GoodsRed"), FColor(192, 52, 42), ELaneCollision::None, false},
+    {TEXT("GoodsGreen"), FColor(92, 152, 62), ELaneCollision::None, false},
+    {TEXT("SignBlue"), FColor(46, 86, 150), ELaneCollision::None, false},
+    {TEXT("SignRed"), FColor(176, 48, 44), ELaneCollision::None, false},
+    {TEXT("SignGreen"), FColor(40, 110, 80), ELaneCollision::None, false},
+    {TEXT("ClothMagenta"), FColor(192, 52, 112), ELaneCollision::None, false},
+    {TEXT("ClothMustard"), FColor(224, 172, 52), ELaneCollision::None, false},
+    {TEXT("ClothTeal"), FColor(42, 142, 152), ELaneCollision::None, false},
+    {TEXT("TaxiYellow"), FColor(234, 180, 26), ELaneCollision::None, true},
+    {TEXT("TaxiGlass"), FColor(30, 40, 48), ELaneCollision::None, false},
+    {TEXT("Chrome"), FColor(172, 174, 178), ELaneCollision::None, true},
+    {TEXT("AcUnit"), FColor(208, 210, 208), ELaneCollision::None, true},
+    {TEXT("PropBlock"), FColor(255, 0, 255), ELaneCollision::Prop, false},
+    {TEXT("Barrier"), FColor(255, 0, 255), ELaneCollision::Boundary, false},
 };
 
 static_assert(UE_ARRAY_COUNT(ColourTable) == ColourCount, "ColourTable must have one row per ELaneColour");
@@ -106,6 +107,12 @@ void FLaneBlocks::Box(ELaneColour Colour, const FVector& CornerA, const FVector&
     }
     // The engine cube is 100 cm on a side, centred on its pivot.
     Instances[static_cast<int32>(Colour)].Add(FTransform(FQuat::Identity, (Min + Max) * 0.5, Size / 100.0));
+#if !UE_BUILD_SHIPPING
+    if (Colour == ELaneColour::PropBlock || Colour == ELaneColour::Barrier)
+    {
+        BlockingBoxList.Add(FBox(Min, Max));
+    }
+#endif
 }
 
 void FLaneBlocks::Tilted(ELaneColour Colour, const FVector& Centre, const FVector& Size, const FRotator& Rotation)
@@ -169,28 +176,40 @@ int32 FLaneBlocks::Commit(UWorld& World, UStaticMesh& Cube, UMaterialInterface* 
         Blocks->SetupAttachment(Root);
         Blocks->SetCastShadow(Spec.bCastShadow);
         Blocks->SetCanEverAffectNavigation(false);
-        const bool bBarrier = Index == static_cast<int32>(ELaneColour::Barrier);
-        if (!Spec.bSolid)
+        const bool bInvisible = Spec.Collision == ELaneCollision::Prop || Spec.Collision == ELaneCollision::Boundary;
+        switch (Spec.Collision)
         {
+        case ELaneCollision::None:
             Blocks->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-        }
-        else if (bBarrier)
-        {
+            break;
+        case ELaneCollision::Boundary:
             // Invisible fence: blocks the walking player only. Cameras, traces and everything else pass through.
             Blocks->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
             Blocks->SetCollisionObjectType(ECC_WorldStatic);
             Blocks->SetCollisionResponseToAllChannels(ECR_Ignore);
             Blocks->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
-            Blocks->SetVisibility(false);
-            Blocks->SetHiddenInGame(true);
-        }
-        else
-        {
+            break;
+        case ELaneCollision::Prop:
+            // Invisible collision hugging a visible solid prop: blocks the player, the camera boom and traces.
+            Blocks->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+            Blocks->SetCollisionObjectType(ECC_WorldStatic);
+            Blocks->SetCollisionResponseToAllChannels(ECR_Ignore);
+            Blocks->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+            Blocks->SetCollisionResponseToChannel(ECC_Camera, ECR_Block);
+            Blocks->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+            break;
+        case ELaneCollision::World:
             // Walls, ground, road and footpath: block the player, the camera boom and traces. Queries only, nothing simulates.
             Blocks->SetCollisionProfileName(UCollisionProfile::BlockAll_ProfileName);
             Blocks->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+            break;
         }
-        if (BaseMaterial != nullptr && !bBarrier)
+        if (bInvisible)
+        {
+            Blocks->SetVisibility(false);
+            Blocks->SetHiddenInGame(true);
+        }
+        if (BaseMaterial != nullptr && !bInvisible)
         {
             // BasicShapeMaterial exposes its base colour as the vector parameter "Color". "BaseColor" is set too
             // so a differently named parameter would still pick the colour up; unknown names are ignored.
