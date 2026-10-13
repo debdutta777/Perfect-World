@@ -6,7 +6,6 @@
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "PerfectWorldFrontEndHUD.h"
-#include "PerfectWorldTemporaryConversation.h"
 #include "UI/SPWConversationPanel.h"
 #include "Widgets/SWeakWidget.h"
 
@@ -51,15 +50,11 @@ bool UPWConversationPresenter::BeginConversationWith(const FName PersonId, const
     {
         return false;
     }
+    // No factory (or a factory that declines) means "cannot talk now". UPWLaneLifeSubsystem installs the one over the core.
     TSharedPtr<IPWConversationSession> NewSession;
     if (Factory)
     {
         NewSession = Factory(PersonId, DisplayName);
-    }
-    else
-    {
-        // TEMPORARY: the core Conversation module is not wired in yet.
-        NewSession = MakeShared<FPWTemporaryHouseholdConversation>(DisplayName);
     }
     return NewSession.IsValid() && Open(NewSession.ToSharedRef());
 }

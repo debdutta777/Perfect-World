@@ -28,8 +28,7 @@ struct FPWConversationView
 };
 
 /**
- * What the presenter talks to. The integrator implements it over the core Conversation module (talk.open, talk.choose,
- * talk.close); until then FPWTemporaryHouseholdConversation serves three authored lines.
+ * What the presenter talks to. UPWLaneLifeSubsystem implements it over the core Conversation module (FPWCoreConversationSession).
  *
  * The presenter calls GetView() when a conversation opens and again after every Choose(). Reading consumes nothing:
  * costs belong to Choose(), and only the session (the core behind it) applies them.
@@ -84,10 +83,10 @@ public:
     /** Shows the panel for this session. False (and nothing changes) if one is already open, a menu is up, or there is no screen. */
     bool Open(const TSharedRef<IPWConversationSession>& NewSession);
 
-    /** Asks the session factory for a session for this person and opens it. Until a factory is installed this is the temporary adapter. */
+    /** Asks the session factory for a session for this person and opens it. False when there is no factory or it declines. */
     bool BeginConversationWith(FName PersonId, const FText& DisplayName);
 
-    /** Replaces the session factory. An empty function restores the temporary household adapter. */
+    /** Replaces the session factory. An empty function means nobody can be talked to. */
     void SetSessionFactory(FPWConversationSessionFactory NewFactory);
 
     /** From the panel: the player picked a choice. */

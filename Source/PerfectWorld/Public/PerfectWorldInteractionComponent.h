@@ -7,6 +7,7 @@
 class APawn;
 class SPWInteractionPrompt;
 class SWeakWidget;
+class SWidget;
 class UWorld;
 
 /**
@@ -62,6 +63,14 @@ public:
     /** Moves the target to the next qualifying candidate, in priority-then-score order, and pins it. */
     void CycleTarget();
 
+    /**
+     * Shows a short message just above the prompt for a few seconds ("It's locked."), in the same toast style. A newer
+     * notice replaces the older. It is hidden while a menu or a conversation is open.
+     */
+    void ShowNotice(const FText& Message, float Seconds = 2.5f);
+    bool IsNoticeVisible() const;
+    FText GetNotice() const { return Notice; }
+
     /** True while a front-end menu or the conversation panel owns the input; play input (movement, interaction, camera) is ignored. */
     static bool IsWorldInputBlocked(const APawn* Pawn);
 
@@ -75,6 +84,7 @@ private:
     void RefreshActorList();
     void SetTarget(AActor* NewTarget, const FText& Verb, bool bPinnedByPlayer);
     void EnsurePrompt();
+    void EnsureNotice();
     void RemovePrompt();
 
     /** Every actor implementing IPWInteractable, rebuilt twice a second so spawned people and doors appear. */
@@ -86,6 +96,11 @@ private:
     bool bPinned = false;
     float SecondsToActorRefresh = 0.0f;
 
+    FText Notice;
+    double NoticeUntilSeconds = 0.0;
+
     TSharedPtr<SPWInteractionPrompt> Prompt;
     TSharedPtr<SWeakWidget> PromptHolder;
+    TSharedPtr<SWidget> NoticeContent; // SWeakWidget holds its content weakly, so the component keeps it alive
+    TSharedPtr<SWeakWidget> NoticeHolder;
 };

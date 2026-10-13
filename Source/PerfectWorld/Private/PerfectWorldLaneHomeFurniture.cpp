@@ -4,8 +4,6 @@ namespace PWLane
 {
 namespace
 {
-constexpr double Fl = FootpathHeight; // finished floor W 15
-constexpr double CeilingW = 289.0;    // ceiling underside
 constexpr double LightW = 272.0;      // lights hang just under the ceiling fixture
 
 /** Builds in building coordinates (U, V) with heights measured from the finished floor. */
@@ -17,21 +15,21 @@ struct FFit
     /** Decoration: visual only, no collision. */
     void Deco(ELaneColour C, double U0, double U1, double V0, double V1, double H0, double H1) const
     {
-        F.Add(K, C, U0, U1, V0, V1, Fl + H0, Fl + H1);
+        F.Add(K, C, U0, U1, V0, V1, HomeFloorW + H0, HomeFloorW + H1);
     }
 
     /** A solid piece: the visible box and an explicit collision box of the same size (Pawn, Camera, Visibility). */
     void Solid(ELaneColour C, double U0, double U1, double V0, double V1, double H0, double H1) const
     {
         Deco(C, U0, U1, V0, V1, H0, H1);
-        K.PropCollision(F.Pt(U0, V0, Fl + H0), F.Pt(U1, V1, Fl + H1));
+        K.PropCollision(F.Pt(U0, V0, HomeFloorW + H0), F.Pt(U1, V1, HomeFloorW + H1));
     }
 };
 
 /** A ceiling fan: rod, hub, and three blades whose underside is 244 cm above the floor (the contract needs 240 or more). */
 void AddFan(const FFit& T, double U, double V)
 {
-    T.K.Box(ELaneColour::TrimDark, T.F.Pt(U - 2.0, V - 2.0, 268.0), T.F.Pt(U + 2.0, V + 2.0, CeilingW));
+    T.K.Box(ELaneColour::TrimDark, T.F.Pt(U - 2.0, V - 2.0, 268.0), T.F.Pt(U + 2.0, V + 2.0, HomeCeilingW));
     T.K.Box(ELaneColour::TrimDark, T.F.Pt(U - 9.0, V - 9.0, 255.0), T.F.Pt(U + 9.0, V + 9.0, 268.0));
     for (int32 Blade = 0; Blade < 3; ++Blade)
     {
@@ -46,7 +44,7 @@ void AddFan(const FFit& T, double U, double V)
 /** A ceiling fitting and its point light. */
 void AddCeilingLight(FLaneScene& S, const FFit& T, double U, double V, float Radius, float Lumens)
 {
-    T.K.Box(ELaneColour::TrimLight, T.F.Pt(U - 11.0, V - 11.0, 285.0), T.F.Pt(U + 11.0, V + 11.0, CeilingW));
+    T.K.Box(ELaneColour::TrimLight, T.F.Pt(U - 11.0, V - 11.0, 285.0), T.F.Pt(U + 11.0, V + 11.0, HomeCeilingW));
     T.K.Box(ELaneColour::GlassLit, T.F.Pt(U - 8.0, V - 8.0, 281.0), T.F.Pt(U + 8.0, V + 8.0, 285.0));
     FLaneRoomLight Light;
     Light.Position = T.F.Pt(U, V, LightW);

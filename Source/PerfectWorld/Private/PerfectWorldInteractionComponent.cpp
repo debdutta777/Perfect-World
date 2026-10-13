@@ -11,7 +11,11 @@
 #include "PerfectWorldConversationPresenter.h"
 #include "PerfectWorldFrontEndHUD.h"
 #include "PerfectWorldInteractable.h"
+#include "UI/PWStyle.h"
+#include "UI/PWWidgets.h"
 #include "UI/SPWInteractionPrompt.h"
+#include "Widgets/Layout/SBorder.h"
+#include "Widgets/Layout/SBox.h"
 #include "Widgets/SWeakWidget.h"
 
 #define LOCTEXT_NAMESPACE "PerfectWorldInteractionComponent"
@@ -20,6 +24,8 @@ namespace
 {
 /** Below the front end (100) and the conversation panel (110): the prompt is hidden whenever either is up. */
 constexpr int32 PromptZOrder = 40;
+constexpr int32 NoticeZOrder = 41;
+constexpr float NoticeBottomMargin = 215.0f; // just above the prompt (its margin is 150)
 constexpr double LooseNearZoneBonusCm = 20.0;
 
 /** What the player's body gives the targeting rules, computed once per evaluation. */
@@ -153,6 +159,7 @@ void UPWInteractionComponent::TickComponent(const float DeltaTime, const ELevelT
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
     EnsurePrompt();
+    EnsureNotice();
 
     SecondsToActorRefresh -= DeltaTime;
     if (SecondsToActorRefresh <= 0.0f)
@@ -369,12 +376,73 @@ void UPWInteractionComponent::EnsurePrompt()
 
 void UPWInteractionComponent::RemovePrompt()
 {
-    if (PromptHolder.IsValid() && GEngine != nullptr && GEngine->GameViewport != nullptr)
+    if (GEngine != nullptr && GEngine->GameViewport != nullptr)
     {
-        GEngine->GameViewport->RemoveViewportWidgetContent(PromptHolder.ToSharedRef());
+        if (PromptHolder.IsValid())
+        {
+            GEngine->GameViewport->RemoveViewportWidgetContent(PromptHolder.ToSharedRef());
+        }
+        if (NoticeHolder.IsValid())
+        {
+            GEngine->GameViewport->RemoveViewportWidgetContent(NoticeHolder.ToSharedRef());
+        }
     }
     PromptHolder.Reset();
     Prompt.Reset();
+    NoticeHolder.Reset();
+    NoticeContent.Reset();
+}
+
+void UPWInteractionComponent::ShowNotice(const FText& Message, const float Seconds)
+{
+    const UWorld* World = GetWorld();
+    if (World == nullptr || Message.IsEmpty())
+    {
+        return;
+    }
+    Notice = Message;
+    NoticeUntilSeconds = World->GetTimeSeconds() + static_cast<double>(FMath::Max(0.5f, Seconds));
+}
+
+bool UPWInteractionComponent::IsNoticeVisible() const
+{
+    const UWorld* World = GetWorld();
+    return World != nullptr && !Notice.IsEmpty() && World->GetTimeSeconds() < NoticeUntilSeconds && !IsWorldInputBlocked(GetOwner<APawn>());
+}
+
+void UPWInteractionComponent::EnsureNotice()
+{
+    if (NoticeHolder.IsValid() || GEngine == nullptr || GEngine->GameViewport == nullptr)
+    {
+        return;
+    }
+    const APawn* Pawn = GetOwner<APawn>();
+    if (Pawn == nullptr || !Pawn->IsLocallyControlled())
+    {
+        return;
+    }
+    const PWUI::FStyle& Style = PWUI::FStyle::Get();
+    // Read through a weak pointer only, like the prompt: the widget never keeps the component (or any widget) alive.
+    const TWeakObjectPtr<UPWInteractionComponent> Weak(this);
+    const TSharedRef<SWidget> Content =
+        SNew(SBox)
+        .HAlign(HAlign_Center)
+        .VAlign(VAlign_Bottom)
+        .Padding(FMargin(0.0f, 0.0f, 0.0f, NoticeBottomMargin))
+        .Visibility_Lambda([Weak]() { return Weak.IsValid() && Weak->IsNoticeVisible() ? EVisibility::HitTestInvisible : EVisibility::Collapsed; })
+        [
+            SNew(SBorder)
+            .BorderImage(&Style.BrushToast)
+            .Padding(FMargin(20.0f, 8.0f))
+            [
+                PWUI::MakeText(TAttribute<FText>::CreateLambda([Weak]() { return Weak.IsValid() ? Weak->GetNotice() : FText::GetEmpty(); }),
+                               18, Style.TextPrimary)
+            ]
+        ];
+    NoticeContent = Content;
+    NoticeHolder = SNew(SWeakWidget).PossiblyNullContent(Content);
+    NoticeHolder->SetVisibility(EVisibility::HitTestInvisible);
+    GEngine->GameViewport->AddViewportWidgetContent(NoticeHolder.ToSharedRef(), NoticeZOrder);
 }
 
 #undef LOCTEXT_NAMESPACE

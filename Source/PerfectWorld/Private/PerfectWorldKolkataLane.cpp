@@ -7,8 +7,10 @@
 #include "PerfectWorldLaneBarriers.h"
 #include "PerfectWorldLaneBlocks.h"
 #include "PerfectWorldLaneBuildings.h"
+#include "PerfectWorldLaneLifeSubsystem.h"
 #include "PerfectWorldLaneProps.h"
 #include "PerfectWorldLaneRoutes.h"
+#include "PerfectWorldNpcCharacter.h"
 
 namespace PWLane
 {
@@ -93,7 +95,10 @@ void SpawnRoomLights(UWorld& World, const TArray<FLaneRoomLight>& Lights)
     }
 }
 
-/** The hinged doors of the enterable interiors, closed. */
+/**
+ * The hinged doors of the enterable interiors. A door starts closed; at BeginPlay it registers with UPWLaneLifeSubsystem,
+ * which sets it to the portable core's state for its id (some household doors start open).
+ */
 void SpawnDoors(UWorld& World, const TArray<FLaneDoorSpec>& Doors)
 {
     FActorSpawnParameters Params;
@@ -104,8 +109,39 @@ void SpawnDoors(UWorld& World, const TArray<FLaneDoorSpec>& Doors)
         if (Door != nullptr)
         {
             Door->Configure(Spec.Id, static_cast<float>(Spec.PreferredSwing), Spec.bTwoWay);
-            Door->SetOpenImmediate(false);
         }
+    }
+}
+
+/**
+ * The household adult of the default (Parent) creation origin, standing in the living and eating room just inside the
+ * living door, so the player who walks in from the entry meets them. TODO(care-origin): a care-origin start has the
+ * institutional staff counterpart in this place instead.
+ *
+ * Building coordinates of the opening home (frame origin (-300, -400), U = +X, V = -Y): the living room is U 25-614,
+ * V 25-431; the living door's passage is at U 620, V 190, its swing zone U 530-614, V 145-235; the furniture is the divan
+ * (U 27-97, V 110-260), the table and chairs (U 300-420, V 50-166) and the almirah (U 27-87, V 300-400). The spot
+ * (U 480, V 310) is 90 cm from the door's swing zone and over 140 cm from every piece of furniture (capsule radius 34, so
+ * at least 55 cm of clear floor all round), and 184 cm from the passage: inside the 2 m reach as the player steps through.
+ */
+void SpawnHouseholdAdult(UWorld& World)
+{
+    constexpr double OriginX = -300.0;
+    constexpr double OriginY = -400.0;
+    constexpr double SpotU = 480.0;
+    constexpr double SpotV = 310.0;
+    constexpr double DoorU = 620.0; // the living door's passage, the point they face
+    constexpr double DoorV = 190.0;
+    const auto ToWorld = [](const double U, const double V) { return FVector2D(OriginX + U, OriginY - V); };
+    const FVector2D Spot = ToWorld(SpotU, SpotV);
+    const FVector2D Door = ToWorld(DoorU, DoorV);
+    const double Yaw = FMath::RadiansToDegrees(FMath::Atan2(Door.Y - Spot.Y, Door.X - Spot.X));
+    const FTransform At(FRotator(0.0, Yaw, 0.0), FVector(Spot.X, Spot.Y, GroundZ + FootpathHeight));
+    APWNpcCharacter* Parent = APWNpcCharacter::SpawnAt(World, At, PWLaneLife::ToName(PerfectWorld::HouseholdAdultId),
+                                                       PWLaneLife::ToText(PerfectWorld::HouseholdAdultLabel), EPWNpcOutfit::ParentHousehold);
+    if (Parent == nullptr)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Kolkata lane: the household adult could not be placed in the opening home."));
     }
 }
 } // namespace
@@ -128,6 +164,10 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     SpawnWarmLights(World, Scene.LightSpots);
     SpawnRoomLights(World, Scene.RoomLights);
     SpawnDoors(World, Scene.Doors);
+    if (Scene.bOpeningHomeBuilt)
+    {
+        SpawnHouseholdAdult(World);
+    }
 
     UE_LOG(LogTemp, Display, TEXT("Kolkata lane: %d block instances in %d components, %d stall lights placed."), Instances, Components,
            FMath::Min(WarmLightCount, Scene.LightSpots.Num()));

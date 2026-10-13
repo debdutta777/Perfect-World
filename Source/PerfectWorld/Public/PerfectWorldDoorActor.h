@@ -10,9 +10,6 @@ class UMaterialInstanceDynamic;
 class USceneComponent;
 class UStaticMeshComponent;
 
-/** Raised when the player asks to open (true) or close (false) a door. The integrator routes this through the portable core. */
-DECLARE_MULTICAST_DELEGATE_TwoParams(FPWDoorToggleRequested, FName /*DoorId*/, bool /*bWantOpen*/);
-
 /** Fixed numbers for a hinged door leaf, centimetres and seconds (ASSET_PIPELINE.md: doors 90 x 210). */
 namespace PWDoor
 {
@@ -33,8 +30,10 @@ constexpr float OpenSeconds = 0.45f;
  * channel (people, furniture, walls). If something is in the way it stays where it is. A two-way door opens away from
  * the person using it; a one-way door (a front door) only swings to its preferred side.
  *
- * Gameplay authority belongs to the portable core. Interact() raises OnDoorToggleRequested first, then (for now)
- * toggles locally; the animation is presentation only.
+ * Gameplay authority belongs to the portable core. Interact() asks UPWLaneLifeSubsystem, which runs the core's door rule
+ * (Doors.h); only when the core allows it does the subsystem call TryMoveTo, and it records the new state only if the leaf
+ * could really move. The animation is presentation only. At BeginPlay the door registers with the subsystem, which sets its
+ * start state from the core.
  */
 UCLASS()
 class PERFECTWORLD_API APWDoorActor : public AActor, public IPWInteractable
@@ -55,8 +54,15 @@ public:
     /** Sets the state at once with no animation and no obstruction test (loading a save, placing at start). */
     void SetOpenImmediate(bool bNewOpen);
 
-    /** Raised before any local change when the player asks to open or close. */
-    FPWDoorToggleRequested OnDoorToggleRequested;
+    /** True while the leaf is swinging. */
+    bool IsMoving() const { return bMoving; }
+
+    /**
+     * Presentation only: swings the leaf to open (true) or closed (false), if the volume it sweeps is clear of anything
+     * that blocks the Pawn channel. Returns false, and changes nothing, when something is in the way. It does not ask the
+     * core; callers (UPWLaneLifeSubsystem) have already been allowed.
+     */
+    bool TryMoveTo(bool bWantOpen, const APawn* By);
 
     // IPWInteractable
     virtual FText GetInteractionVerb(const APawn* By) const override;
@@ -65,6 +71,7 @@ public:
     virtual void Interact(APawn* By) override;
 
     virtual void PostInitializeComponents() override;
+    virtual void BeginPlay() override;
     virtual void Tick(float DeltaSeconds) override;
 
 private:

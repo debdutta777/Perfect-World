@@ -7,6 +7,7 @@
 #include "GameFramework/Pawn.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
+#include "PerfectWorldLaneLifeSubsystem.h"
 #include "UObject/ConstructorHelpers.h"
 
 namespace
@@ -159,13 +160,29 @@ void APWDoorActor::Tick(float DeltaSeconds)
     }
 }
 
+void APWDoorActor::BeginPlay()
+{
+    Super::BeginPlay();
+    // The core owns whether this door is open; take its start state (and have an unknown id reported).
+    if (UPWLaneLifeSubsystem* Life = UPWLaneLifeSubsystem::Get(this))
+    {
+        Life->RegisterDoor(*this);
+    }
+}
+
 FText APWDoorActor::GetInteractionVerb(const APawn* By) const
 {
     if (bMoving)
     {
         return FText::GetEmpty();
     }
-    return bOpen ? NSLOCTEXT("PerfectWorldDoor", "Close", "Close") : NSLOCTEXT("PerfectWorldDoor", "Open", "Open");
+    // The verb follows the core's state; the actor's own flag is only the fallback when no subsystem exists.
+    bool bCoreOpen = bOpen;
+    if (const UPWLaneLifeSubsystem* Life = UPWLaneLifeSubsystem::Get(this))
+    {
+        bCoreOpen = Life->IsDoorOpen(DoorId, bOpen);
+    }
+    return bCoreOpen ? NSLOCTEXT("PerfectWorldDoor", "Close", "Close") : NSLOCTEXT("PerfectWorldDoor", "Open", "Open");
 }
 
 FVector APWDoorActor::GetInteractionPoint() const
@@ -242,20 +259,32 @@ bool APWDoorActor::TryClose()
     return true;
 }
 
+bool APWDoorActor::TryMoveTo(const bool bWantOpen, const APawn* By)
+{
+    if (bMoving || bWantOpen == bOpen)
+    {
+        return false;
+    }
+    const bool bDone = bWantOpen ? TryOpen(By) : TryClose();
+    if (!bDone)
+    {
+        UE_LOG(LogTemp, Display, TEXT("Door %s: something is in the way; it stays %s."), *DoorId.ToString(), bOpen ? TEXT("open") : TEXT("closed"));
+    }
+    return bDone;
+}
+
 void APWDoorActor::Interact(APawn* By)
 {
     if (bMoving)
     {
         return;
     }
-    const bool bWantOpen = !bOpen;
-    OnDoorToggleRequested.Broadcast(DoorId, bWantOpen);
-
-    // TODO(core-door-state): the portable core must decide whether this door may open or close; until it is wired in,
-    // the door toggles locally (and only if its sweep is clear).
-    const bool bDone = bWantOpen ? TryOpen(By) : TryClose();
-    if (!bDone)
+    // The portable core decides; this actor only swings when it is told the move is allowed.
+    UPWLaneLifeSubsystem* Life = UPWLaneLifeSubsystem::Get(this);
+    if (Life == nullptr)
     {
-        UE_LOG(LogTemp, Display, TEXT("Door %s: something is in the way; it stays %s."), *DoorId.ToString(), bOpen ? TEXT("open") : TEXT("closed"));
+        UE_LOG(LogTemp, Warning, TEXT("Door %s: no lane-life subsystem in this world; the door does nothing."), *DoorId.ToString());
+        return;
     }
+    Life->RequestDoorToggle(*this, By);
 }

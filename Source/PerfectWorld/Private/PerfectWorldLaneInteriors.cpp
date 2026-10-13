@@ -6,14 +6,12 @@ namespace PWLane
 {
 namespace
 {
-constexpr double Fl = FootpathHeight;      // finished floor, W 15 (level with the footpath)
-constexpr double CeilingW = 289.0;         // ceiling underside: 274 cm clear above the floor
 constexpr double CeilingTopW = 290.0;      // the 1 cm plaster ceiling ends here; the solid upper storeys start
 constexpr double Proud = 1.5;              // door and window frames stand this far proud of each wall face
 constexpr double DoorHalfClear = 47.0;     // 94 cm clear between the jamb strips (the leaf is 90)
 constexpr double DoorClearTop = 227.0;     // 212 cm clear above the floor (the leaf is 210)
 constexpr double WindowHalfClear = 60.0;   // 120 x 135 clear, sill 75 above the floor
-constexpr double WindowSill = Fl + 75.0;
+constexpr double WindowSill = HomeFloorW + 75.0;
 constexpr double WindowHead = WindowSill + 135.0;
 
 struct FColourSpan
@@ -71,7 +69,7 @@ ELaneColour ColourAt(const TArray<FColourSpan>& Spans, double A)
 
 FOpening Door(double Centre)
 {
-    return FOpening{false, Centre, DoorHalfClear, Fl, DoorClearTop};
+    return FOpening{false, Centre, DoorHalfClear, HomeFloorW, DoorClearTop};
 }
 
 FOpening Window(double Centre, double Half = WindowHalfClear, double W0 = WindowSill, double W1 = WindowHead)
@@ -145,8 +143,8 @@ void FShell::Emit(const FRun& R, double A0, double A1, double W0, double W1) con
     }
     Marks.Sort();
 
-    const double VeneerW0 = FMath::Max(W0, Fl);
-    const double VeneerW1 = FMath::Min(W1, CeilingW);
+    const double VeneerW0 = FMath::Max(W0, HomeFloorW);
+    const double VeneerW1 = FMath::Min(W1, HomeCeilingW);
     const double Mid = 0.5 * (R.P0 + R.P1);
     for (int32 I = 0; I + 1 < Marks.Num(); ++I)
     {
@@ -273,8 +271,8 @@ FRun Partition(bool bAlongU, double Line, double A0, double A1)
     R.P1 = Line + 6.0;
     R.A0 = A0;
     R.A1 = A1;
-    R.W0 = Fl;
-    R.W1 = CeilingW;
+    R.W0 = HomeFloorW;
+    R.W1 = HomeCeilingW;
     return R;
 }
 
@@ -283,7 +281,7 @@ void AddDoorSpec(FLaneScene& S, const FLaneFrame& F, const TCHAR* Id, double Hin
 {
     FLaneDoorSpec Spec;
     Spec.Id = FName(Id);
-    Spec.Hinge = F.Pt(HingeU, HingeV, Fl);
+    Spec.Hinge = F.Pt(HingeU, HingeV, HomeFloorW);
     const FVector Dir = (F.U * CloseU + F.V * CloseV).GetSafeNormal();
     Spec.ClosedYaw = FMath::RadiansToDegrees(FMath::Atan2(Dir.Y, Dir.X));
     // The actor's local +Y is its closed direction turned by +90 degrees of yaw.
@@ -313,7 +311,7 @@ void BuildWalls(FLaneBlocks& K, const FLaneFrame& F, const FLaneBuilding& B)
     // Back wall: a window each for the sleeping room and the kitchen, a high ventilator for the washroom.
     FRun Back = PerimeterRun(true, 1, D - 25.0, D, 0.0, W);
     Back.Low = {{0.0, 380.0, Warm}, {380.0, 740.0, Kit}, {740.0, W, Wash}};
-    Back.Openings = {Window(300.0), Window(560.0), Window(860.0, 30.0, Fl + 150.0, Fl + 210.0)};
+    Back.Openings = {Window(300.0), Window(560.0), Window(860.0, 30.0, HomeFloorW + 150.0, HomeFloorW + 210.0)};
     Shell.BuildRun(Back);
 
     // Side walls (shared with the neighbours): no openings.
@@ -348,15 +346,15 @@ void BuildWalls(FLaneBlocks& K, const FLaneFrame& F, const FLaneBuilding& B)
     Shell.BuildRun(KitchenWash);
 
     // Floors: red oxide in the living, entry and sleeping rooms, pale tile in the kitchen and washroom (the slabs meet under the partitions).
-    F.Add(K, ELaneColour::FloorOxide, 25.0, 620.0, 25.0, 437.0, 0.0, Fl);
-    F.Add(K, ELaneColour::FloorOxide, 620.0, W - 25.0, 25.0, 437.0, 0.0, Fl);
-    F.Add(K, ELaneColour::FloorOxide, 25.0, 380.0, 437.0, D - 25.0, 0.0, Fl);
-    F.Add(K, ELaneColour::FloorTile, 380.0, 740.0, 437.0, D - 25.0, 0.0, Fl);
-    F.Add(K, ELaneColour::FloorTile, 740.0, W - 25.0, 437.0, D - 25.0, 0.0, Fl);
-    K.PropCollision(F.Pt(25.0, 25.0, 0.0), F.Pt(W - 25.0, D - 25.0, Fl)); // one slab under every room
+    F.Add(K, ELaneColour::FloorOxide, 25.0, 620.0, 25.0, 437.0, 0.0, HomeFloorW);
+    F.Add(K, ELaneColour::FloorOxide, 620.0, W - 25.0, 25.0, 437.0, 0.0, HomeFloorW);
+    F.Add(K, ELaneColour::FloorOxide, 25.0, 380.0, 437.0, D - 25.0, 0.0, HomeFloorW);
+    F.Add(K, ELaneColour::FloorTile, 380.0, 740.0, 437.0, D - 25.0, 0.0, HomeFloorW);
+    F.Add(K, ELaneColour::FloorTile, 740.0, W - 25.0, 437.0, D - 25.0, 0.0, HomeFloorW);
+    K.PropCollision(F.Pt(25.0, 25.0, 0.0), F.Pt(W - 25.0, D - 25.0, HomeFloorW)); // one slab under every room
 
     // Ceiling: 1 cm of plaster under the solid upper storeys, which also close the top of every wall.
-    F.Add(K, ELaneColour::CeilingWhite, 25.0, W - 25.0, 25.0, D - 25.0, CeilingW, CeilingTopW);
+    F.Add(K, ELaneColour::CeilingWhite, 25.0, W - 25.0, 25.0, D - 25.0, HomeCeilingW, CeilingTopW);
     F.Add(K, B.Wall, 0.0, W, 0.0, D, CeilingTopW, B.RoofZ());
 }
 
@@ -364,8 +362,8 @@ void BuildWalls(FLaneBlocks& K, const FLaneFrame& F, const FLaneBuilding& B)
 void BuildStreetDressing(FLaneBlocks& K, const FLaneFrame& F, const FLaneBuilding& B)
 {
     const double DoorCut = DoorHalfClear + 5.0;
-    F.Add(K, ELaneColour::Plinth, 0.0, HomeFrontDoorU - DoorCut, -2.0, 0.0, Fl, 75.0);
-    F.Add(K, ELaneColour::Plinth, HomeFrontDoorU + DoorCut, B.Width, -2.0, 0.0, Fl, 75.0);
+    F.Add(K, ELaneColour::Plinth, 0.0, HomeFrontDoorU - DoorCut, -2.0, 0.0, HomeFloorW, 75.0);
+    F.Add(K, ELaneColour::Plinth, HomeFrontDoorU + DoorCut, B.Width, -2.0, 0.0, HomeFloorW, 75.0);
     for (const double Centre : {170.0, 450.0, 880.0})
     {
         // A sill slab under the trim (80 to 85), and a 45 cm chhajja over it, as on the upper windows.
@@ -394,7 +392,7 @@ void BuildOpeningHome(FLaneScene& S, const FLaneBuilding& B)
     // Doors: hinge (U, V), the closed leaf's direction, and the side it swings to by default (all in building coordinates).
     AddDoorSpec(S, F, TEXT("door.nabapara.home_front"), 745.0, 12.5, -1.0, 0.0, 0.0, 1.0, false);   // swings inward only
     AddDoorSpec(S, F, TEXT("door.nabapara.home_living"), 620.0, 235.0, 0.0, -1.0, -1.0, 0.0, true);
-    AddDoorSpec(S, F, TEXT("door.nabapara.home_sleeping"), 155.0, 437.0, 1.0, 0.0, 0.0, 1.0, true);
+    AddDoorSpec(S, F, TEXT("door.nabapara.home_bedroom"), 155.0, 437.0, 1.0, 0.0, 0.0, 1.0, true);
     AddDoorSpec(S, F, TEXT("door.nabapara.home_kitchen"), 455.0, 437.0, 1.0, 0.0, 0.0, 1.0, true);
     AddDoorSpec(S, F, TEXT("door.nabapara.home_washroom"), 905.0, 437.0, -1.0, 0.0, 0.0, 1.0, true);
     S.bOpeningHomeBuilt = true;
