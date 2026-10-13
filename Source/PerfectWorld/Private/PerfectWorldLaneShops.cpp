@@ -1,6 +1,7 @@
 #include "PerfectWorldLaneShops.h"
 
 #include "Math/RotationMatrix.h"
+#include "PerfectWorldLaneInteriors.h"
 
 namespace PWLane
 {
@@ -194,6 +195,14 @@ void AddResidence(FLaneScene& S, const FLaneBuilding& B, TArray<FLaneSpan>& Rese
     const double W = B.Width;
     const bool bDoorLeft = (B.Seed & 1u) != 0u;
     const double DoorU = W * (bDoorLeft ? 0.30 : 0.70);
+
+    if (IsOpeningHome(B))
+    {
+        // The opening home draws its own real door, windows and lamp (PerfectWorldLaneInteriors.cpp); the flat decorative
+        // door and window here would sit in front of the openings and close them. Keep the approach clear of pots.
+        Reserved.Add(MakeSpan(HomeFrontDoorU - 90.0, HomeFrontDoorU + 90.0));
+        return;
+    }
 
     // The entrance floor is the footpath top (+15), so a 90 x 210 leaf (the clear opening) in a 7 cm frame stands on it
     // with its full 210 cm above the threshold. The threshold plate is flat with the footpath (0 to 15.5, a 5 mm lip).

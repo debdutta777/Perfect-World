@@ -93,6 +93,13 @@ enum class ELaneColour : uint8
     TaxiGlass,
     Chrome,
     AcUnit,
+    PlasterWarm,   // interior finishes (no collision; see PerfectWorldLaneInteriors.h)
+    PlasterPale,
+    TileKitchen,
+    TileWash,
+    FloorOxide,
+    FloorTile,
+    CeilingWhite,
     PropBlock, // invisible collision that follows a visible solid prop; blocks Pawn, Camera and Visibility
     Barrier,   // invisible lane boundary; blocks the walking player only (never the camera). Must stay last before Count.
     Count
@@ -217,12 +224,33 @@ struct FLaneFront
     double AbsY = FootpathOuter;
 };
 
+/** A hinged door to be spawned as an APWDoorActor once the lane is committed. All values are world space, centimetres. */
+struct FLaneDoorSpec
+{
+    FName Id;
+    FVector Hinge = FVector::ZeroVector; // hinge axis at floor level
+    double ClosedYaw = 0.0;              // degrees: direction from the hinge along the closed leaf
+    double PreferredSwing = 1.0;         // +1 swings toward the actor's local +Y when opening, -1 toward -Y
+    bool bTwoWay = true;                 // false: only ever swings to the preferred side
+};
+
+/** A small unshadowed warm interior light. */
+struct FLaneRoomLight
+{
+    FVector Position = FVector::ZeroVector;
+    float Radius = 250.0f;
+    float Lumens = 700.0f;
+};
+
 /** Everything the generators share while the lane is being laid out. */
 struct FLaneScene
 {
     FLaneBlocks Blocks;
     TArray<FLaneFront> Fronts[2]; // index 0 is the -Y side, 1 the +Y side
     TArray<FVector> LightSpots;   // warm bulb positions at open stalls, for the few real point lights
+    TArray<FLaneDoorSpec> Doors;       // enterable interiors' doors
+    TArray<FLaneRoomLight> RoomLights; // enterable interiors' ceiling lights
+    bool bOpeningHomeBuilt = false;
 
     /** |Y| of the building front at this X on the given side (-1 or +1); the default footpath edge if none. */
     double FrontAbsY(int32 Side, double X) const;

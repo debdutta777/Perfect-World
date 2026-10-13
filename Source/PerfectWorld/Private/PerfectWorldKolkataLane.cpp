@@ -3,6 +3,7 @@
 #include "Components/PointLightComponent.h"
 #include "Engine/PointLight.h"
 #include "Engine/World.h"
+#include "PerfectWorldDoorActor.h"
 #include "PerfectWorldLaneBarriers.h"
 #include "PerfectWorldLaneBlocks.h"
 #include "PerfectWorldLaneBuildings.h"
@@ -72,6 +73,41 @@ void SpawnWarmLights(UWorld& World, const TArray<FVector>& Spots)
         Component->SetCastShadows(false);
     }
 }
+/** The ceiling lights of the enterable interiors: small, warm, unshadowed, with a short reach so they stay in their room. */
+void SpawnRoomLights(UWorld& World, const TArray<FLaneRoomLight>& Lights)
+{
+    for (const FLaneRoomLight& Light : Lights)
+    {
+        APointLight* Actor = World.SpawnActor<APointLight>(Light.Position, FRotator::ZeroRotator);
+        UPointLightComponent* Component = Actor != nullptr ? Cast<UPointLightComponent>(Actor->GetLightComponent()) : nullptr;
+        if (Component == nullptr)
+        {
+            continue;
+        }
+        Component->SetMobility(EComponentMobility::Movable);
+        Component->IntensityUnits = ELightUnits::Lumens;
+        Component->SetLightColor(FLinearColor(1.0f, 0.78f, 0.5f));
+        Component->SetIntensity(Light.Lumens);
+        Component->SetAttenuationRadius(Light.Radius);
+        Component->SetCastShadows(false);
+    }
+}
+
+/** The hinged doors of the enterable interiors, closed. */
+void SpawnDoors(UWorld& World, const TArray<FLaneDoorSpec>& Doors)
+{
+    FActorSpawnParameters Params;
+    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    for (const FLaneDoorSpec& Spec : Doors)
+    {
+        APWDoorActor* Door = World.SpawnActor<APWDoorActor>(Spec.Hinge, FRotator(0.0, Spec.ClosedYaw, 0.0), Params);
+        if (Door != nullptr)
+        {
+            Door->Configure(Spec.Id, static_cast<float>(Spec.PreferredSwing), Spec.bTwoWay);
+            Door->SetOpenImmediate(false);
+        }
+    }
+}
 } // namespace
 
 void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* BaseMaterial)
@@ -82,10 +118,16 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     BuildLaneProps(Scene);
     BuildLaneBarriers(Scene);
     ReportFootpathRoutes(Scene); // development builds only: logs the narrowest clear footpath width
+    if (!Scene.bOpeningHomeBuilt)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Kolkata lane: the opening home was not built (the -Y building at index 2 changed shape); it stays a solid block."));
+    }
 
     int32 Instances = 0;
     const int32 Components = Scene.Blocks.Commit(World, Cube, BaseMaterial, Instances);
     SpawnWarmLights(World, Scene.LightSpots);
+    SpawnRoomLights(World, Scene.RoomLights);
+    SpawnDoors(World, Scene.Doors);
 
     UE_LOG(LogTemp, Display, TEXT("Kolkata lane: %d block instances in %d components, %d stall lights placed."), Instances, Components,
            FMath::Min(WarmLightCount, Scene.LightSpots.Num()));
