@@ -1287,3 +1287,28 @@ Built by Claude Sonnet 5.5 in its own worktree (`7743105`) and merged as `fcb17d
 - **Rung 1:** `build_core.py --build-dir D:/pwm`, **149/149**, `PerfectWorld tower: 9628 checks passed` (before the integrator's alignment checks were added).
 - **Rung 2:** on `e5dfddf`, **Succeeded**.
 - **Rung 4:** packaging of the M1-13 walking build at `49d0550` to `D:\PWBuilds`, `BUILD SUCCESSFUL`. The build was not launched, because the owner's desktop was in use.
+
+## Checkpoint — world-entry deadlock fixed; walking verified in the packaged build, 2026-10-13
+
+**The hang:**
+- **Symptom:** the packaged walking build froze the moment Continue entered the world. CPU fell to 0% and the frame counter stopped.
+- **Diagnosis:** relaunching with `-ini:Engine:[Core.System]:HangDuration=10` made the hang detector log the game thread's stack. Destroying the title screen re-entered Slate's locked accessible-text registry. The cause was `PWUI::MakeContentButton`'s accessible-text lambda, which held a strong `TSharedRef` to the button content.
+- **Fix:** `02b0b6b` captures a `TWeakPtr` instead. The trap is recorded in `DEVELOPMENT_WORKFLOW.md` §4.
+- **Origin:** phase 2 code. It was not the walking-player code.
+
+**Exact checks:**
+- **Rung 4:** `package_windows.py` at `02b0b6b`, `BUILD SUCCESSFUL`.
+- **Launched at 1600×900 with the hang detector on:** Continue entered the world and the game stayed responsive.
+- **Driven by key events:**
+  - W walks;
+  - Shift+W runs;
+  - D strafes up the 15 cm kerb onto the footpath;
+  - V shows the third-person block body, and a second V returns to first person.
+- **Log:** confirms Enhanced Input is active.
+- **Screenshots:** `Docs/Images/walk-first-person.png`, `walk-third-person.png` and `walk-footpath-stall.png`.
+
+**Seen, and being fixed:** at a stall the footpath is too narrow to pass. The strafe ended pressed against the counter under the awning, as `LANE_LIFE_PLAN.md` §D found.
+
+**Not yet judged:** the movement feel, which needs the owner; the controller; and 20 camera toggles.
+
+**Capture helper:** an earlier capture helper copied screen pixels and photographed another full-screen app that was on top. It also once froze the game through `PrintWindow`. Captures are now taken only while the game window is in the foreground.
