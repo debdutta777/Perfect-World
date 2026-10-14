@@ -121,8 +121,31 @@ void UPWLaneLifeSubsystem::RegisterDoor(APWDoorActor& Door)
         }
         return;
     }
-    // TODO(world-save-v8): a loaded world's DoorState arrives here instead of the authored start.
+    Door.OnSettled.RemoveAll(this);
+    Door.OnSettled.AddUObject(this, &UPWLaneLifeSubsystem::HandleDoorSettled);
+    // TODO(world-save-v8): a loaded world's DoorState (and swing side) arrives here instead of the authored start.
     Door.SetOpenImmediate(PerfectWorld::QueryDoorOpen(Doors, Id).value_or(Def->bInitiallyOpen));
+}
+
+void UPWLaneLifeSubsystem::HandleDoorSettled(const FName DoorId, const bool bReachedTarget, const bool bIsOpenNow, const int8 SwingSide)
+{
+    if (bReachedTarget)
+    {
+        return; // the provisional commit in RequestDoorToggle already matches the leaf
+    }
+    // The swing was interrupted part-way: record where the leaf really is. This is a physical fact, not a permission
+    // question, so it bypasses TrySetDoorOpen's access rules. TODO(core-door-settlement): store SwingSide in the
+    // versioned door state once order D adds it.
+    const std::string Id = PWLaneLife::ToStd(DoorId);
+    for (PerfectWorld::DoorEntry& Entry : Doors.Doors)
+    {
+        if (Entry.Id == Id)
+        {
+            Entry.Open = bIsOpenNow;
+            break;
+        }
+    }
+    (void)SwingSide;
 }
 
 bool UPWLaneLifeSubsystem::IsDoorOpen(const FName DoorId, const bool bFallback) const
@@ -160,7 +183,7 @@ void UPWLaneLifeSubsystem::RequestDoorToggle(APWDoorActor& Door, APawn* By)
         }
         return;
     }
-    Doors = MoveTemp(Trial);
+    Doors = MoveTemp(Trial); // provisional: HandleDoorSettled corrects it if the swing is interrupted
 }
 
 void UPWLaneLifeSubsystem::ShowDoorRefusal(const APawn* By, const PerfectWorld::DoorResult Result, const PerfectWorld::DoorDef* Def) const

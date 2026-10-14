@@ -7,6 +7,7 @@
 #include "PerfectWorldLaneBarriers.h"
 #include "PerfectWorldLaneBlocks.h"
 #include "PerfectWorldLaneBuildings.h"
+#include "PerfectWorldLaneHomeFurniture.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
 #include "PerfectWorldLaneProps.h"
 #include "PerfectWorldLaneRoutes.h"
@@ -91,7 +92,10 @@ void SpawnRoomLights(UWorld& World, const TArray<FLaneRoomLight>& Lights)
         Component->SetLightColor(FLinearColor(1.0f, 0.78f, 0.5f));
         Component->SetIntensity(Light.Lumens);
         Component->SetAttenuationRadius(Light.Radius);
-        Component->SetCastShadows(false);
+        // Shadowed with a small soft source: an unshadowed sphere shone through the interior walls (LANE_LIFE_PLAN §C;
+        // HL's HomeLightSpecs require it). Attenuation stays within the room's shorter side.
+        Component->SetCastShadows(true);
+        Component->SetSourceRadius(6.0f);
     }
 }
 
@@ -118,25 +122,15 @@ void SpawnDoors(UWorld& World, const TArray<FLaneDoorSpec>& Doors)
  * living door, so the player who walks in from the entry meets them. TODO(care-origin): a care-origin start has the
  * institutional staff counterpart in this place instead.
  *
- * Building coordinates of the opening home (frame origin (-300, -400), U = +X, V = -Y): the living room is U 25-614,
- * V 25-431; the living door's passage is at U 620, V 190, its swing zone U 530-614, V 145-235; the furniture is the divan
- * (U 27-97, V 110-260), the table and chairs (U 300-420, V 50-166) and the almirah (U 27-87, V 300-400). The spot
- * (U 480, V 310) is 90 cm from the door's swing zone and over 140 cm from every piece of furniture (capsule radius 34, so
- * at least 55 cm of clear floor all round), and 184 cm from the passage: inside the 2 m reach as the player steps through.
+ * The first packaged walk-in found the old spot at the edge of reach and behind the living door's open leaf; the home
+ * layout now publishes the spot (PerfectWorldLaneHomeFurniture.h).
  */
 void SpawnHouseholdAdult(UWorld& World)
 {
-    constexpr double OriginX = -300.0;
-    constexpr double OriginY = -400.0;
-    constexpr double SpotU = 480.0;
-    constexpr double SpotV = 310.0;
-    constexpr double DoorU = 620.0; // the living door's passage, the point they face
-    constexpr double DoorV = 190.0;
-    const auto ToWorld = [](const double U, const double V) { return FVector2D(OriginX + U, OriginY - V); };
-    const FVector2D Spot = ToWorld(SpotU, SpotV);
-    const FVector2D Door = ToWorld(DoorU, DoorV);
-    const double Yaw = FMath::RadiansToDegrees(FMath::Atan2(Door.Y - Spot.Y, Door.X - Spot.X));
-    const FTransform At(FRotator(0.0, Yaw, 0.0), FVector(Spot.X, Spot.Y, GroundZ + FootpathHeight));
+    // The spot and facing come from the home's own layout (HomeAdultSpot, order HL): within reach of the living doorway,
+    // clear of furniture and of every door swing. The opening home's frame: origin (-300, -400), U = +X, V = -Y.
+    const FLaneFrame HomeFrame = MakeLaneFrame(-300.0, -400.0, FVector(1.0, 0.0, 0.0), FVector(0.0, -1.0, 0.0));
+    const FTransform At(FRotator(0.0, HomeAdultSpotYaw(HomeFrame), 0.0), HomeAdultSpotWorld(HomeFrame));
     APWNpcCharacter* Parent = APWNpcCharacter::SpawnAt(World, At, PWLaneLife::ToName(PerfectWorld::HouseholdAdultId),
                                                        PWLaneLife::ToText(PerfectWorld::HouseholdAdultLabel), EPWNpcOutfit::ParentHousehold);
     if (Parent == nullptr)

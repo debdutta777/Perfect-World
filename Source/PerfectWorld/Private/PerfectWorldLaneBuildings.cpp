@@ -2,6 +2,7 @@
 
 #include "PerfectWorldLaneInteriors.h"
 #include "PerfectWorldLaneShops.h"
+#include "PerfectWorldLaneTeaShop.h"
 
 namespace PWLane
 {
@@ -205,15 +206,22 @@ void BuildFull(FLaneScene& S, const FLaneBuilding& B)
     // The ground floor goes first: it reports the niches cut into the wall for open stalls, so that their counters
     // stand inside the building and leave the footpath clear.
     TArray<FLaneSpan> Recesses;
-    BuildLaneGroundFloor(S, B, Recesses);
-    if (IsOpeningHome(B))
+    if (IsTeaShopBuilding(B))
     {
+        // Shanti Chai Corner (first row, +Y side, Index 3, X 600 to 1300) builds its own frontage, interior and the solid
+        // storeys above, in place of both the generic ground floor and the wall volume. See PerfectWorldLaneTeaShop.h.
+        BuildTeaShop(S, B);
+    }
+    else if (IsOpeningHome(B))
+    {
+        BuildLaneGroundFloor(S, B, Recesses);
         // The opening home (first row, -Y side, Index 2, X -300 to 700) is hollow: walls with openings, rooms, a ceiling,
         // and the solid upper storeys above it. See PerfectWorldLaneInteriors.h.
         BuildOpeningHome(S, B);
     }
     else
     {
+        BuildLaneGroundFloor(S, B, Recesses);
         AddWallVolume(K, F, B, H, Recesses);
     }
 

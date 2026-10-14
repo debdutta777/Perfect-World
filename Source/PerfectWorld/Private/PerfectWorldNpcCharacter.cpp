@@ -87,6 +87,17 @@ void AppendParts(const EPWNpcOutfit Outfit, const double H, TArray<FPartSpec>& O
         Put(Out, FVector(0.0, 0.0, H - 4.5), FVector(22.0, 22.0, 9.0), Hair);          // fuller, dark hair
         Put(Out, FVector(-8.0, 0.0, H - 0.1 * H), FVector(6.0, 21.0, 0.1 * H), Hair);
     }
+
+    // A minimal face on the +X side (the actor's forward), so a player can read which way a person faces: the first
+    // packaged walk-in (2026-10-14) could not tell a symmetric block head's front from its back.
+    const FColor Eye(30, 26, 26), Brow(52, 40, 36), Nose(150, 104, 78);
+    const double EyeZ = H - 0.075 * H;
+    for (const double Side : {-1.0, 1.0})
+    {
+        Put(Out, FVector(10.6, Side * 4.5, EyeZ), FVector(1.2, 3.0, 2.4), Eye);
+        Put(Out, FVector(10.6, Side * 4.5, EyeZ + 3.2), FVector(1.2, 4.2, 1.0), Brow);
+    }
+    Put(Out, FVector(11.2, 0.0, EyeZ - 4.0), FVector(2.4, 2.4, 3.6), Nose);
 }
 } // namespace
 
