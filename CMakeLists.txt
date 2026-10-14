@@ -508,3 +508,8 @@ add_executable(PerfectWorldCountdownTests Tests/CountdownTests.cpp Tests/Countdo
                Tests/CountdownReloadTests.cpp Tests/CountdownStrategyTests.cpp)
 target_link_libraries(PerfectWorldCountdownTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldCountdownTests COMMAND PerfectWorldCountdownTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# Lane origin binding (order O); integrator may move the source into the core library list.
+add_executable(PerfectWorldLaneOriginTests Tests/LaneOriginTests.cpp Source/PerfectWorldCore/Private/LaneOrigin.cpp)
+target_link_libraries(PerfectWorldLaneOriginTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneOriginTests COMMAND PerfectWorldLaneOriginTests)
