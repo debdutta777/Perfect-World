@@ -507,6 +507,9 @@ add_test(NAME PerfectWorldConversationTests COMMAND PerfectWorldConversationTest
 add_executable(PerfectWorldNpcBehaviourTests Tests/NpcBehaviourTests.cpp)
 target_link_libraries(PerfectWorldNpcBehaviourTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldNpcBehaviourTests COMMAND PerfectWorldNpcBehaviourTests)
+add_executable(PerfectWorldConversationHouseholdTests Tests/ConversationHouseholdTests.cpp)
+target_link_libraries(PerfectWorldConversationHouseholdTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldConversationHouseholdTests COMMAND PerfectWorldConversationHouseholdTests)
 
 # The ten days (ROADMAP M4-03).
 add_executable(PerfectWorldCountdownTests Tests/CountdownTests.cpp Tests/CountdownRulesTests.cpp Tests/CountdownObligationTests.cpp
