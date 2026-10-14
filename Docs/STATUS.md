@@ -1378,3 +1378,36 @@ Built by Claude Sonnet 5.5 from `LANE_LIFE_PLAN.md` §D and `LANE_LIFE_IMPLEMENT
 - **C, Unreal:** `UPWInteractionComponent`, which handles reach, the view cone, priority, stickiness and an E/X action, plus an interaction prompt, a conversation panel and presenter, and `APWNpcCharacter`.
 
 The integrator then wires the doors and the conversation through the core.
+
+## Checkpoint — one home and one adult (lane life stage 3), walked in the packaged build, 2026-10-14
+
+**Built by:** three Claude Sonnet 5.5 work orders and an integration order. Codex was rate-limited. The batch was chosen from astra's `LANE_LIFE_PLAN.md`.
+
+**Merged:**
+- **Core `Doors` and `Conversation`:** 303 and 9,018 checks, 151/151.
+- **Unreal:** the opening home shell and furniture, `APWDoorActor`, `UPWInteractionComponent`, the prompt, the conversation panel and presenter, and `APWNpcCharacter`.
+- **Integration:** `UPWLaneLifeSubsystem` owns the live `DoorState` and `ConversationState`. Doors and the conversation run through the core, refusals appear as on-screen notices, and the household adult stands in the living room.
+- **Integrator fixes:**
+  - a missing `class APawn;` in `PerfectWorldInteractable.h`;
+  - a unity-build clash: two .cpp files each defined `Fl` and `CeilingW`, now shared as `HomeFloorW` and `HomeCeilingW`;
+  - an empty stray file at the repo root, deleted.
+
+**Exact checks:**
+- **Rung 1:** 151/151.
+- **Rung 2:** at `50b28bb`, **Succeeded**, with no warnings.
+- **Rung 4:** `BUILD SUCCESSFUL`.
+
+**In the packaged build at 1600×900, driven by key and mouse events** (the cheat `EnableCheats` + `BugItGo` from the console placed the camera inside the small home):
+- **Front door:** "E / X · Open" at the front door. E swings it inward through the core and the prompt changes to "Close".
+- **Inside:** walked into the entry; the washroom door opens onto a toilet, ventilator and shower rail.
+- **Living room:** a real, furnished room with a table and chairs by the front windows (the street is visible outside), divan, family photo, almirah, rug, ceiling fan and warm lights.
+- **Conversation:** "E / X · Talk to Your parent" opens the panel. "Your parent: Breakfast is ready. Tell me what time you expect to be back." The morning line matches the fixed 07:30. Choosing "Around seven." gives "All right. Let me know if it changes." Esc leaves and returns control.
+- **Screenshots:** `Docs/Images/home-front-door-opened.png`, `home-living-room.png`, `home-washroom.png`, `home-parent-in-living-room.png` and `home-talk-to-parent.png`.
+
+**Defects found, to fix next:**
+1. The living door, open by default in the core, swings its leaf across the household adult's spot and line of sight. Move the adult or the hinge side.
+2. The adult appeared to face away from the entering player, although they are meant to face the living door. Check the block body's forward direction against the actor yaw.
+3. From the doorway, the adult sits at almost exactly the 2 m reach, so they do not qualify and the door wins the prompt. Place them nearer the threshold.
+4. Navigating the small home by scripted keys is hard. Future walk tests should start from `BugItGo` positions.
+
+**Not yet done:** charging conversation time (no clock yet); saving doors and conversation; naming the adult (the owner decides); the care-origin staff counterpart.
