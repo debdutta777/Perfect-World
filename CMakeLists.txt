@@ -125,6 +125,7 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/Conversation.cpp
     Source/PerfectWorldCore/Private/ConversationContent.cpp
     Source/PerfectWorldCore/Private/ConversationText.cpp
+    Source/PerfectWorldCore/Private/NpcBehaviour.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -502,6 +503,10 @@ add_test(NAME PerfectWorldDoorsTests COMMAND PerfectWorldDoorsTests)
 add_executable(PerfectWorldConversationTests Tests/ConversationTests.cpp)
 target_link_libraries(PerfectWorldConversationTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldConversationTests COMMAND PerfectWorldConversationTests)
+
+add_executable(PerfectWorldNpcBehaviourTests Tests/NpcBehaviourTests.cpp)
+target_link_libraries(PerfectWorldNpcBehaviourTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldNpcBehaviourTests COMMAND PerfectWorldNpcBehaviourTests)
 
 # The ten days (ROADMAP M4-03).
 add_executable(PerfectWorldCountdownTests Tests/CountdownTests.cpp Tests/CountdownRulesTests.cpp Tests/CountdownObligationTests.cpp
