@@ -19,6 +19,26 @@ namespace PWLane
  */
 constexpr double HomeFrontDoorU = 700.0; // centre of the front door along the frontage (the old house-door position, 0.70 W)
 
+/**
+ * Door layout, shared by the shell, the furniture rules and PerfectWorldHomeLayoutTests.cpp (the rooms' furniture and the
+ * adult's spot are placed against these numbers). Every door is 94 cm clear between its jamb strips (the leaf is 90) and
+ * 212 cm clear above the floor.
+ *
+ * The living door (door.nabapara.home_living) is in the partition at U 620 between the entry and the living room. It sits
+ * at the BACK of that partition (V 318-412), hinged on its back jamb, and swings into the ENTRY only (one-way): open
+ * (its default state), the leaf stands against the back partition at V 410-422 instead of across the room. It used to be
+ * mid-wall and swing into the living room, which put the open leaf across the household adult's spot and line of sight
+ * (Docs/STATUS.md, lane life stage 3, defect 1).
+ */
+constexpr double HomeDoorHalfClear = 47.0;
+constexpr double HomeDoorClearHeight = 212.0;
+constexpr double HomeLivingPartitionU = 620.0; // the partition between the entry and the living room
+constexpr double HomeLivingDoorV = 365.0;      // centre of the living doorway along that partition
+constexpr double HomeAcrossPartitionV = 437.0; // the partition between the front rooms and the back rooms
+constexpr double HomeBedroomDoorU = 200.0;
+constexpr double HomeKitchenDoorU = 500.0;
+constexpr double HomeWashroomDoorU = 860.0;
+
 /** True for the one building that gets the walkable interior. */
 bool IsOpeningHome(const FLaneBuilding& Building);
 
