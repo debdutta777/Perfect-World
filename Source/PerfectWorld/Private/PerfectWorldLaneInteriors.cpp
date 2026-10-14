@@ -8,7 +8,6 @@ namespace
 {
 constexpr double CeilingTopW = 290.0;      // the 1 cm plaster ceiling ends here; the solid upper storeys start
 constexpr double Proud = 1.5;              // door and window frames stand this far proud of each wall face
-constexpr double DoorHalfClear = HomeDoorHalfClear;                      // 94 cm clear between the jamb strips (the leaf is 90)
 constexpr double DoorClearTop = HomeFloorW + HomeDoorClearHeight;        // 212 cm clear above the floor (the leaf is 210)
 constexpr double WindowHalfClear = 60.0;   // 120 x 135 clear, sill 75 above the floor
 constexpr double WindowSill = HomeFloorW + 75.0;
@@ -69,7 +68,7 @@ ELaneColour ColourAt(const TArray<FColourSpan>& Spans, double A)
 
 FOpening Door(double Centre)
 {
-    return FOpening{false, Centre, DoorHalfClear, HomeFloorW, DoorClearTop};
+    return FOpening{false, Centre, HomeDoorHalfClear, HomeFloorW, DoorClearTop};
 }
 
 FOpening Window(double Centre, double Half = WindowHalfClear, double W0 = WindowSill, double W1 = WindowHead)
@@ -362,7 +361,7 @@ void BuildWalls(FLaneBlocks& K, const FLaneFrame& F, const FLaneBuilding& B)
 /** The street face: plinth, window sills and sunshades, and the lamp over the door. */
 void BuildStreetDressing(FLaneBlocks& K, const FLaneFrame& F, const FLaneBuilding& B)
 {
-    const double DoorCut = DoorHalfClear + 5.0;
+    const double DoorCut = HomeDoorHalfClear + 5.0;
     F.Add(K, ELaneColour::Plinth, 0.0, HomeFrontDoorU - DoorCut, -2.0, 0.0, HomeFloorW, 75.0);
     F.Add(K, ELaneColour::Plinth, HomeFrontDoorU + DoorCut, B.Width, -2.0, 0.0, HomeFloorW, 75.0);
     for (const double Centre : {170.0, 450.0, 880.0})
