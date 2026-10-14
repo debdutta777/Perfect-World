@@ -126,6 +126,7 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/ConversationContent.cpp
     Source/PerfectWorldCore/Private/ConversationText.cpp
     Source/PerfectWorldCore/Private/NpcBehaviour.cpp
+    Source/PerfectWorldCore/Private/LaneOrigin.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -518,6 +519,6 @@ target_link_libraries(PerfectWorldCountdownTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldCountdownTests COMMAND PerfectWorldCountdownTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
 # Lane origin binding (order O); integrator may move the source into the core library list.
-add_executable(PerfectWorldLaneOriginTests Tests/LaneOriginTests.cpp Source/PerfectWorldCore/Private/LaneOrigin.cpp)
+add_executable(PerfectWorldLaneOriginTests Tests/LaneOriginTests.cpp)
 target_link_libraries(PerfectWorldLaneOriginTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldLaneOriginTests COMMAND PerfectWorldLaneOriginTests)
