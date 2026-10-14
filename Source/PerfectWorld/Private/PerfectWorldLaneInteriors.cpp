@@ -8,8 +8,8 @@ namespace
 {
 constexpr double CeilingTopW = 290.0;      // the 1 cm plaster ceiling ends here; the solid upper storeys start
 constexpr double Proud = 1.5;              // door and window frames stand this far proud of each wall face
-constexpr double DoorHalfClear = 47.0;     // 94 cm clear between the jamb strips (the leaf is 90)
-constexpr double DoorClearTop = 227.0;     // 212 cm clear above the floor (the leaf is 210)
+constexpr double DoorHalfClear = HomeDoorHalfClear;                      // 94 cm clear between the jamb strips (the leaf is 90)
+constexpr double DoorClearTop = HomeFloorW + HomeDoorClearHeight;        // 212 cm clear above the floor (the leaf is 210)
 constexpr double WindowHalfClear = 60.0;   // 120 x 135 clear, sill 75 above the floor
 constexpr double WindowSill = HomeFloorW + 75.0;
 constexpr double WindowHead = WindowSill + 135.0;
@@ -323,16 +323,17 @@ void BuildWalls(FLaneBlocks& K, const FLaneFrame& F, const FLaneBuilding& B)
     Shell.BuildRun(Right);
 
     // Partitions, 12 cm thick, each face painted for its room.
-    FRun Across = Partition(true, 437.0, 25.0, W - 25.0); // front rooms | back rooms
+    FRun Across = Partition(true, HomeAcrossPartitionV, 25.0, W - 25.0); // front rooms | back rooms
     Across.Low = {{25.0, 620.0, Warm}, {620.0, W, Pale}};
     Across.High = {{25.0, 380.0, Warm}, {380.0, 740.0, Kit}, {740.0, W, Wash}};
-    Across.Openings = {Door(200.0), Door(500.0), Door(860.0)};
+    Across.Openings = {Door(HomeBedroomDoorU), Door(HomeKitchenDoorU), Door(HomeWashroomDoorU)};
     Shell.BuildRun(Across);
 
-    FRun LivingEntry = Partition(false, 620.0, 25.0, 431.0);
+    // Entry | living room. The doorway is at the back of the partition (V 318-412), 16 cm from the back partition's face.
+    FRun LivingEntry = Partition(false, HomeLivingPartitionU, 25.0, 431.0);
     LivingEntry.Low.Add(FColourSpan{25.0, 431.0, Warm});
     LivingEntry.High.Add(FColourSpan{25.0, 431.0, Pale});
-    LivingEntry.Openings.Add(Door(190.0));
+    LivingEntry.Openings.Add(Door(HomeLivingDoorV));
     Shell.BuildRun(LivingEntry);
 
     FRun SleepKitchen = Partition(false, 380.0, 443.0, D - 25.0);
@@ -391,7 +392,9 @@ void BuildOpeningHome(FLaneScene& S, const FLaneBuilding& B)
 
     // Doors: hinge (U, V), the closed leaf's direction, and the side it swings to by default (all in building coordinates).
     AddDoorSpec(S, F, TEXT("door.nabapara.home_front"), 745.0, 12.5, -1.0, 0.0, 0.0, 1.0, false);   // swings inward only
-    AddDoorSpec(S, F, TEXT("door.nabapara.home_living"), 620.0, 235.0, 0.0, -1.0, -1.0, 0.0, true);
+    // The living door: hinged on its back jamb (V 412), closed leaf toward the front (-V), swinging into the entry (+U) only.
+    // Open, the leaf lies against the back partition; the living room never has a leaf in it.
+    AddDoorSpec(S, F, TEXT("door.nabapara.home_living"), HomeLivingPartitionU, HomeLivingDoorV + HomeDoorHalfClear, 0.0, -1.0, 1.0, 0.0, false);
     AddDoorSpec(S, F, TEXT("door.nabapara.home_bedroom"), 155.0, 437.0, 1.0, 0.0, 0.0, 1.0, true);
     AddDoorSpec(S, F, TEXT("door.nabapara.home_kitchen"), 455.0, 437.0, 1.0, 0.0, 0.0, 1.0, true);
     AddDoorSpec(S, F, TEXT("door.nabapara.home_washroom"), 905.0, 437.0, -1.0, 0.0, 0.0, 1.0, true);
