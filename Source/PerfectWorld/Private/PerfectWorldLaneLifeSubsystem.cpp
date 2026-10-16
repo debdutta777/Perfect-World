@@ -124,28 +124,31 @@ void UPWLaneLifeSubsystem::RegisterDoor(APWDoorActor& Door)
     Door.OnSettled.RemoveAll(this);
     Door.OnSettled.AddUObject(this, &UPWLaneLifeSubsystem::HandleDoorSettled);
     // TODO(world-save-v8): a loaded world's DoorState (and swing side) arrives here instead of the authored start.
-    Door.SetOpenImmediate(PerfectWorld::QueryDoorOpen(Doors, Id).value_or(Def->bInitiallyOpen));
+    int8 Side = 0;
+    for (const PerfectWorld::DoorEntry& Entry : Doors.Doors)
+    {
+        if (Entry.Id == Id)
+        {
+            Side = static_cast<int8>(Entry.SwingSide);
+            break;
+        }
+    }
+    Door.SetOpenImmediate(PerfectWorld::QueryDoorOpen(Doors, Id).value_or(Def->bInitiallyOpen), Side);
 }
 
 void UPWLaneLifeSubsystem::HandleDoorSettled(const FName DoorId, const bool bReachedTarget, const bool bIsOpenNow, const int8 SwingSide)
 {
-    if (bReachedTarget)
+    // Record where the leaf really is, including which way a two-way door swung. This is a physical fact, not a
+    // permission question, so the core applies it without access rules (an interrupted swing overrides the provisional
+    // commit made in RequestDoorToggle; a completed one records its side).
+    const PerfectWorld::DoorResult Result =
+        PerfectWorld::ApplyDoorSettlement(Doors, PWLaneLife::ToStd(DoorId), bIsOpenNow, static_cast<std::int8_t>(SwingSide));
+    if (Result != PerfectWorld::DoorResult::Ok && Result != PerfectWorld::DoorResult::NoChange)
     {
-        return; // the provisional commit in RequestDoorToggle already matches the leaf
+        UE_LOG(LogPWLaneLife, Warning, TEXT("Door %s settled (open %d, side %d, reached %d) but the core refused it: %hs"),
+               *DoorId.ToString(), bIsOpenNow ? 1 : 0, static_cast<int32>(SwingSide), bReachedTarget ? 1 : 0,
+               PerfectWorld::DoorResultCode(Result).data());
     }
-    // The swing was interrupted part-way: record where the leaf really is. This is a physical fact, not a permission
-    // question, so it bypasses TrySetDoorOpen's access rules. TODO(core-door-settlement): store SwingSide in the
-    // versioned door state once order D adds it.
-    const std::string Id = PWLaneLife::ToStd(DoorId);
-    for (PerfectWorld::DoorEntry& Entry : Doors.Doors)
-    {
-        if (Entry.Id == Id)
-        {
-            Entry.Open = bIsOpenNow;
-            break;
-        }
-    }
-    (void)SwingSide;
 }
 
 bool UPWLaneLifeSubsystem::IsDoorOpen(const FName DoorId, const bool bFallback) const
