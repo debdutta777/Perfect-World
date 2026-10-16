@@ -1506,3 +1506,42 @@ The integrator then wires the doors and the conversation through the core.
 **Not yet done:**
 - Farida is not yet placed or driven by her schedule;
 - the clock does not run yet (CK+TX is in progress).
+
+## Checkpoint — Farida at work, the children's home, and the core clock, 2026-10-17
+
+**What merged:**
+- **gpt-6.1-sol, FA:**
+  - `UPWContentSubsystem` loads the staged `Data/Content`, via `+DirectoriesToAlwaysStageAsNonUFS=(Path="../Data/Content")`, verified against UE 5.8's staging code. All 149 JSON files are staged in the package.
+  - Farida's schedule drives her intent through `NpcBehaviour` into `UPWNpcMovementComponent`, along the tea shop's anchors and routes.
+  - The `ShopProprietor` outfit.
+  - A conversation catalogue and availability per person.
+- **Claude Opus deep-work, CK+TX:**
+  - due-now events drain without advancing the clock;
+  - a capped advance stops at the last fired event;
+  - `conversation.open/choose/leave` charge `CostMinutes` exactly once per `(ChoiceId, Session)` receipt, all-or-nothing;
+  - `door.set` and `door.settle` commands;
+  - per-person `Conversations` and `Doors` in `WorldState` (not yet in the save or hash; v8 is next).
+  
+  Checks: 4,684 lane-transaction checks and 17,073 clock checks.
+- **Claude Sonnet 5.5, CI:**
+  - The children's home: first row, -Y side, Index 1, X -1400 to -300.
+  - Rooms: an entry with a staff desk, noticeboard and stair reservation; a common room with study and dining tables; a dormitory with five beds and the resident's own bed, padlocked trunk, tin box and photograph; a washroom.
+  - Four doors, a staff spot, seat, readable and storage anchors, and shadowed lights.
+- **Integrator:**
+  - hooked the children's home into `BuildFull`, and placed its on-duty care worker and seats;
+  - resolved a CMake conflict;
+  - deleted a stray scratch file an agent's shell had written into the Git install folder.
+
+**Exact checks:**
+- **Rung 1:** **158/158**.
+- **Rung 4:** at `c776b07` (Farida) and at `962aad2` (CK and the children's home), `BUILD SUCCESSFUL` both times, with no compile errors.
+
+**In the packaged build** (positioned with `BugItGo`):
+- **Farida:** she stands behind her counter in her apron, making the serving gesture, at 07:30. "E / X · Talk to Farida" opens: "Good morning. The first pot is ready, if you'd like a cup." The choices are "Sit down for a cup of tea · 10 minutes", "Not today, thank you." and "May I move the bench a little?". Screenshots: `Docs/Images/farida-at-counter.png`, `farida-talk.png`.
+- **Care worker:** in the common room. "Good morning. Breakfast is being set out. Tell me what time you expect to be back, and I will put it in my note for the evening staff." The shared-jobs talk costs 3 minutes. Screenshot: `Docs/Images/care-worker-talk.png`.
+- **Dormitory:** the resident's bed with its personal objects, and the "Sit on your bed" prompt. Screenshot: `Docs/Images/care-dormitory-own-bed.png`.
+
+**Still open:**
+- **Clock bridge:** the clock does not run in Unreal yet. The bridge (BR) must hold a `WorldSim`, drive `time.advance` from free roam, and route conversations and doors through the new commands.
+- **Not yet built:** world save v8 for conversations and doors; the care-origin start placing the player in the children's home; the care worker's duty schedule; authored text for the care-home readables.
+- **Not yet verified:** sitting from a normal walk.
