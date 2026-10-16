@@ -1411,3 +1411,40 @@ The integrator then wires the doors and the conversation through the core.
 4. Navigating the small home by scripted keys is hard. Future walk tests should start from `BugItGo` positions.
 
 **Not yet done:** charging conversation time (no clock yet); saving doors and conversation; naming the adult (the owner decides); the care-origin staff counterpart.
+
+## Checkpoint — wave 1 of the lane life batch merged and seen in the packaged build, 2026-10-16
+
+**What merged:**
+- **gpt-6.1-sol:**
+  - **D:** door passage by direction and residency, offers, Knock, invitations and split windows; 151/151 in its own build.
+  - **O:** `ResolveLaneOrigin`, which binds the five households and care to residency and a counterpart.
+- **Claude Sonnet 5.5:**
+  - **DA:** the door swing checks the leaf every 5 cm or less of tip travel, stops at the last safe angle, and settles through `OnSettled`.
+  - **TS:** Shanti Chai Corner.
+  - **NB:** pure NPC intent (Work, Travel, Idle, Chat, Sleep, Yield).
+  - **HL:** the living door moved and made one-way, `HomeAdultSpot`, seat and newspaper anchors, the stair reservation and shadowed light specs.
+  - **CR+CH:** catalogue-driven conversation with per-session charge receipts, `pw.conversation/2` with /1 migration, and household lines that remember the concrete arrangement and claim no result.
+
+**Integrator work:**
+- door settlement corrects the core;
+- the tea shop is hooked into `BuildFull`;
+- the adult stands at `HomeAdultSpot`;
+- room lights are shadowed with a 6 cm source;
+- NPC block heads get a face on +X (eyes, brows, nose), because a symmetric head did not show which way it faced;
+- two unity-build name clashes fixed;
+- a CMake merge conflict resolved;
+- `LaneOrigin.cpp` moved into the core library.
+
+**Exact checks:**
+- **Rung 1:** **154/154**.
+- **Rung 2:** **Succeeded**.
+- **Rung 4:** at `a4267de`, `BUILD SUCCESSFUL`.
+
+**In the packaged build** (positioned with `BugItGo`):
+- **Living doorway:** the adult stands in front of the player, facing them, with a readable face. The prompt reads "E / X · Talk to Your parent" with "Tab / RB for the next". The open living-door leaf lies against the wall. E opens the morning conversation. Screenshot: `Docs/Images/home-parent-at-doorway.png`.
+- **Shanti Chai Corner:** frontage, sign band, awning, a 90 × 210 door between barred hatch windows, and outdoor benches. Inside are the 90 cm service counter and the prep area (stove platform and kettle, worktable, shelf, back-room doorway), with a fan and warm lights. Screenshots: `Docs/Images/teashop-front.png` and `teashop-counter-and-prep.png`.
+
+**Open items:**
+- the shop's shutter door is not yet in the core: D2 is in progress;
+- Farida is not yet placed;
+- conversation time is not yet charged: CK+TX is pending.
