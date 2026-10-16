@@ -149,51 +149,7 @@ GameInstant GameClock::StartOfDay(GameInstant instant) noexcept
 
 AdvanceResult GameClock::Advance(std::int64_t minutes)
 {
-    AdvanceResult result;
-    result.From = Now_;
-    result.To = Now_;
-
     if (minutes < 0)
-    {
-        result.Rejected = true;
-        result.RejectionReason = "Time cannot run backwards.";
-        return result;
-    }
-    if (minutes > MaxSingleAdvanceMinutes)
-    {
-        result.Rejected = true;
-        result.RejectionReason = "That advance is longer than ten years, which is a caller mistake.";
-        return result;
-    }
-    if (minutes == 0)
-    {
-        return result;
-    }
-
-    const GameInstant target = Now_ + minutes;
-    const std::int64_t dayBefore = DayNumber(Now_);
-    const std::int64_t dayAfter = DayNumber(target);
-
-    // Pending_ is kept sorted, so everything due is at the front and comes out
-    // in chronological order. Events exactly on the new instant fire now; the
-    // interval is half-open at the start so nothing fires twice.
-    auto firstUnfired = Pending_.begin();
-    while (firstUnfired != Pending_.end() && firstUnfired->When <= target)
-    {
-        result.Fired.push_back(*firstUnfired);
-        ++firstUnfired;
-    }
-    Pending_.erase(Pending_.begin(), firstUnfired);
-
-    Now_ = target;
-    result.To = target;
-    result.DaysCrossed = static_cast<std::int32_t>(dayAfter - dayBefore);
-    return result;
-}
-
-AdvanceResult GameClock::AdvanceTo(GameInstant instant)
-{
-    if (instant < Now_)
     {
         AdvanceResult result;
         result.From = Now_;
@@ -202,7 +158,75 @@ AdvanceResult GameClock::AdvanceTo(GameInstant instant)
         result.RejectionReason = "Time cannot run backwards.";
         return result;
     }
-    return Advance(instant - Now_);
+    if (minutes > MaxSingleAdvanceMinutes)
+    {
+        AdvanceResult result;
+        result.From = Now_;
+        result.To = Now_;
+        result.Rejected = true;
+        result.RejectionReason = "That advance is longer than ten years, which is a caller mistake.";
+        return result;
+    }
+    return AdvanceToCapped(Now_ + minutes, Pending_.size());
+}
+
+AdvanceResult GameClock::AdvanceTo(GameInstant instant)
+{
+    return AdvanceToCapped(instant, Pending_.size());
+}
+
+AdvanceResult GameClock::AdvanceToCapped(GameInstant instant, std::size_t maxEvents)
+{
+    AdvanceResult result;
+    result.From = Now_;
+    result.To = Now_;
+    if (instant < Now_)
+    {
+        result.Rejected = true;
+        result.RejectionReason = "Time cannot run backwards.";
+        return result;
+    }
+    if (instant - Now_ > MaxSingleAdvanceMinutes)
+    {
+        result.Rejected = true;
+        result.RejectionReason = "That advance is longer than ten years, which is a caller mistake.";
+        return result;
+    }
+
+    // Pending_ is kept sorted, so everything due is at the front and comes out
+    // in chronological order: first anything due at the current instant (a
+    // Schedule for "now"), then events up to and including the new instant.
+    // Each fires once because it leaves Pending_ as it fires.
+    auto firstUnfired = Pending_.begin();
+    while (firstUnfired != Pending_.end() && firstUnfired->When <= instant && result.Fired.size() < maxEvents)
+    {
+        result.Fired.push_back(*firstUnfired);
+        ++firstUnfired;
+    }
+    Pending_.erase(Pending_.begin(), firstUnfired);
+
+    GameInstant reached = instant;
+    if (!Pending_.empty() && Pending_.front().When <= instant)
+    {
+        // The cap stopped us short. Stop where the last fired event happened so
+        // nothing unfired is skipped over; the rest stays pending.
+        result.Capped = true;
+        reached = result.Fired.empty() ? Now_ : std::max(Now_, result.Fired.back().When);
+    }
+    result.DaysCrossed = static_cast<std::int32_t>(DayNumber(reached) - DayNumber(Now_));
+    Now_ = reached;
+    result.To = reached;
+    return result;
+}
+
+AdvanceResult GameClock::DrainDue(std::size_t maxEvents)
+{
+    return AdvanceToCapped(Now_, maxEvents);
+}
+
+bool GameClock::HasDueEvents() const noexcept
+{
+    return !Pending_.empty() && Pending_.front().When <= Now_;
 }
 
 std::int64_t GameClock::Schedule(GameInstant when, std::string id)

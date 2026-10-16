@@ -533,3 +533,9 @@ add_test(NAME PerfectWorldConversationCareTests COMMAND PerfectWorldConversation
 add_executable(PerfectWorldConversationFaridaTests Tests/ConversationFaridaTests.cpp)
 target_link_libraries(PerfectWorldConversationFaridaTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldConversationFaridaTests COMMAND PerfectWorldConversationFaridaTests)
+
+# World lane transactions (orders CK+TX): conversation and door commands in the reducer, due-now draining, atomic charging.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldConversation.cpp)
+add_executable(PerfectWorldLaneTransactionsTests Tests/WorldLaneTransactionsTests.cpp)
+target_link_libraries(PerfectWorldLaneTransactionsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneTransactionsTests COMMAND PerfectWorldLaneTransactionsTests)
