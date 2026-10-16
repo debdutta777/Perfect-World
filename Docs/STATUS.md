@@ -1474,3 +1474,8 @@ The integrator then wires the doors and the conversation through the core.
 - **Rung 2:** at `97015f8`, **Succeeded**: RD, FI, CC and CF compiled first time.
 
 **Not yet verified:** sitting and reading have not been tried in play; the packaged walk is next.
+
+**Packaged walk at `49d560a` (2026-10-16):**
+- **Reading:** E on the table's newspaper ("E / X · Read…") opens the paper-like reading panel. It shows "The Kolkata Morning Courier, Monday, 2 June 2042", Page 1 of 3, A-/A+, Previous/Next and Close. Right turns the page and Esc closes it. Screenshot: `Docs/Images/home-reading-newspaper.png`.
+- **Seat prompt:** "E / X · Sit at the table" shows at the table chair. Screenshot: `Docs/Images/home-sit-prompt.png`.
+- **Sitting itself is NOT verified.** The cheat teleport `BugItGo` leaves the pawn in ghost (flying) mode, so `TrySit` correctly refused ("You can't sit down right now", not on the ground). A second positioning attempt missed the chair. The next walk-through should test sitting from a normal walking start.
