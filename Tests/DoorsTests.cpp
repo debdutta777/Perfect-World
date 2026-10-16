@@ -27,11 +27,13 @@ constexpr std::string_view Living = "door.nabapara.home_living";
 constexpr std::string_view Bedroom = "door.nabapara.home_bedroom";
 constexpr std::string_view Kitchen = "door.nabapara.home_kitchen";
 constexpr std::string_view Washroom = "door.nabapara.home_washroom";
+constexpr std::string_view Shutter = "door.nabapara.shanti_chai_shutter";
+constexpr std::string_view CareFront = "door.nabapara.care_front";
 
 void TestTable()
 {
     Expect(ValidateDoorTable(), "the authored door table is well formed");
-    Expect(AuthoredDoors().size() == 5, "the opening home has a front door and four room doors");
+    Expect(AuthoredDoors().size() == 10, "home, shutter and care doors are authored");
     for (const std::string_view id : {Front, Living, Bedroom, Kitchen, Washroom})
     {
         const DoorDef* door = FindDoor(id);
@@ -77,6 +79,7 @@ void TestInitialState()
     {
         Expect(state.Doors[i].Id == AuthoredDoors()[i].Id, "entries follow table order");
         Expect(state.Doors[i].Open == AuthoredDoors()[i].bInitiallyOpen, "entries start as authored");
+        Expect(state.Doors[i].SwingSide == (state.Doors[i].Open ? AuthoredDoors()[i].PreferredSwingSide : 0), "initial sides follow authoring");
     }
     Expect(QueryDoorOpen(state, Living) == std::optional<bool>(true), "the living door reads open");
     Expect(QueryDoorOpen(state, Front) == std::optional<bool>(false), "the front door reads closed");
@@ -182,8 +185,7 @@ void TestOffersAndPassage()
 
 void TestSplitWindows()
 {
-    const DoorOpeningWindow windows[]{{360, 690}, {930, 1140}};
-    const DoorDef shop{"door.test.split", "location.test", false, DoorAccess::BusinessHours, 0, 0, windows};
+    const DoorDef& shop = *FindDoor(Shutter);
     const DoorUseContext visitor{};
     const DoorUseContext exiting{DoorDirection::Exit};
     Expect(IsDoorDefinitionValid(shop), "split windows are valid");
@@ -248,12 +250,12 @@ void TestInvalidDefinitionsAndContexts()
 
 void TestDailyPermissionMatrix()
 {
-    const DoorOpeningWindow windows[]{{360, 690}, {930, 1140}};
-    const DoorDef shop{"door.test.split", "location.test", false, DoorAccess::BusinessHours, 0, 0, windows};
+    const DoorDef& shop = *FindDoor(Shutter);
     for (int minute = 0; minute < DoorMinutesPerDay; ++minute)
     {
         const bool serving = (minute >= 360 && minute < 690) || (minute >= 930 && minute < 1140);
         const DoorResult expected = serving ? DoorResult::Ok : DoorResult::Closed;
+        Expect(EvaluateDoorPassage(shop, minute, {DoorDirection::Entry, true}) == DoorResult::Ok, "staff enter at every minute");
         for (const bool leafOpen : {false, true})
         {
             Expect(EvaluateDoorPassage(shop, minute, {}) == expected, "daily passage follows the two authored windows");
@@ -298,6 +300,10 @@ void Play(DoorState& state)
     (void)TrySetDoorOpen(state, Washroom, true, 403, false);
     (void)TrySetDoorOpen(state, Kitchen, true, 404, true);
     (void)TrySetDoorOpen(state, Bedroom, true, 405, true);
+    (void)ApplyDoorSettlement(state, Shutter, true, -1);
+    (void)ApplyDoorSettlement(state, CareFront, true, 1);
+    (void)ApplyDoorSettlement(state, CareFront, true, -1);
+    (void)ApplyDoorSettlement(state, Front, true, -1);
 }
 
 void TestDeterminism()
@@ -323,14 +329,13 @@ void TestRoundTrip()
         "door=door.nabapara.home_kitchen,1\n"
         "door=door.nabapara.home_washroom,0\nend\n";
     const DoorStateParse historical = DeserialiseDoorState(legacy);
-    Expect(historical.Ok() && historical.State == MakeInitialDoorState(), "the historical five-door fixture loads");
-    Expect(SerialiseDoorState(historical.State) == legacy, "the historical fixture round trips exactly");
+    Expect(historical.Ok() && historical.bMigrated && historical.State == MakeInitialDoorState(), "the five-door fixture migrates with new defaults");
     DoorState state = MakeInitialDoorState();
     Play(state);
     const std::string text = SerialiseDoorState(state);
-    Expect(!text.empty() && text.substr(0, 11) == "pw.doors/1\n", "the text opens with its header");
+    Expect(text.starts_with("pw.doors/2\ncount=10\n"), "the text opens with its version and count");
     const DoorStateParse parsed = DeserialiseDoorState(text);
-    Expect(parsed.Ok() && parsed.State == state, "the state round trips");
+    Expect(parsed.Ok() && !parsed.bMigrated && parsed.State == state, "the state and swing sides round trip without migration");
     Expect(SerialiseDoorState(parsed.State) == text, "and re-serialises identically");
     const DoorStateParse initial = DeserialiseDoorState(SerialiseDoorState(MakeInitialDoorState()));
     Expect(initial.Ok() && initial.State == MakeInitialDoorState(), "the initial state round trips");
@@ -355,9 +360,9 @@ void TestRefusedText()
         Expect(!DeserialiseDoorState(std::string_view(text).substr(0, length)).Ok(), "every truncation is refused");
     Expect(!DeserialiseDoorState(text + "x").Ok(), "trailing data is refused");
     Expect(!DeserialiseDoorState(text + "\n").Ok(), "a trailing blank line is refused");
-    Expect(!DeserialiseDoorState(Replace(text, "pw.doors/1", "pw.doors/2")).Ok(), "a wrong header is refused");
-    Expect(!DeserialiseDoorState(Replace(text, "count=5", "count=4")).Ok(), "a wrong count is refused");
-    Expect(!DeserialiseDoorState(Replace(text, "count=5", "count=05")).Ok(), "a non-canonical count is refused");
+    Expect(!DeserialiseDoorState(Replace(text, "pw.doors/2", "pw.doors/3")).Ok(), "a wrong header is refused");
+    Expect(!DeserialiseDoorState(Replace(text, "count=10", "count=9")).Ok(), "a wrong count is refused");
+    Expect(!DeserialiseDoorState(Replace(text, "count=10", "count=010")).Ok(), "a non-canonical count is refused");
     Expect(!DeserialiseDoorState(Replace(text, "home_front,0", "home_front,2")).Ok(), "a bad flag is refused");
     Expect(!DeserialiseDoorState(Replace(text, "home_front,0", "home_front")).Ok(), "a missing flag is refused");
     Expect(!DeserialiseDoorState(Replace(text, "home_front,0", "home_nowhere,0")).Ok(), "an unknown door is refused");
@@ -366,6 +371,77 @@ void TestRefusedText()
     Expect(!DeserialiseDoorState(swapped).Ok(), "doors out of table order are refused");
     const DoorStateParse bad = DeserialiseDoorState("garbage\n");
     Expect(!bad.Ok() && bad.State == DoorState{}, "a refusal returns a default state");
+}
+void TestSettlement()
+{
+    DoorState state = MakeInitialDoorState();
+    Expect(ApplyDoorSettlement(state, Front, true, -1) == DoorResult::Ok, "physical private opening needs no permission");
+    Expect(ApplyDoorSettlement(state, Front, true, -1) == DoorResult::NoChange, "identical settlement is a no-op");
+    Expect(ApplyDoorSettlement(state, Front, true, 1) == DoorResult::Ok, "a two-way open leaf may change sides");
+    Expect(ApplyDoorSettlement(state, Shutter, true, -1) == DoorResult::Ok, "a stopped shutter records an open leaf");
+    Expect(EvaluateDoorPassage(*FindDoor(Shutter), 1140, {}) == DoorResult::Closed, "settlement cannot grant entry after closing");
+    Expect(TrySetDoorOpen(state, Shutter, true, 1140, DoorUseContext{DoorDirection::Exit}) == DoorResult::NoChange, "egress remains permitted after closing");
+    Expect(ApplyDoorSettlement(state, CareFront, true, 1) == DoorResult::Ok, "one-way front accepts inward settlement");
+    const DoorState before = state;
+    Expect(ApplyDoorSettlement(state, "door.unknown", true, 1) == DoorResult::UnknownDoor, "unknown settlement refused");
+    for (const std::int8_t side : {std::int8_t{-2}, std::int8_t{0}, std::int8_t{2}})
+        Expect(ApplyDoorSettlement(state, Front, true, side) == DoorResult::InvalidState, "open requires a unit side");
+    for (const std::int8_t side : {std::int8_t{-1}, std::int8_t{1}})
+        Expect(ApplyDoorSettlement(state, Front, false, side) == DoorResult::InvalidState, "closed requires side zero");
+    Expect(ApplyDoorSettlement(state, CareFront, true, -1) == DoorResult::InvalidState && state == before, "all refused facts preserve state");
+    Expect(DeserialiseDoorState(SerialiseDoorState(state)).State == state, "both swing signs round trip");
+    Expect(ApplyDoorSettlement(state, Front, false, 0) == DoorResult::Ok && state.Doors[0].SwingSide == 0, "closed settlement clears side");
+    Expect(TrySetDoorOpen(state, Front, true, 600, true) == DoorResult::Ok && state.Doors[0].SwingSide == 1, "permission opening chooses preferred side");
+    Expect(TrySetDoorOpen(state, Front, false, 600, true) == DoorResult::Ok && state.Doors[0].SwingSide == 0, "permission closing clears side");
+    state.Doors[0].SwingSide = 1;
+    const DoorState invalid = state;
+    Expect(!IsDoorStateValid(state) && SerialiseDoorState(state).empty(), "invalid physical state cannot be saved");
+    Expect(ApplyDoorSettlement(state, Shutter, false, 0) == DoorResult::InvalidState && state == invalid, "malformed state refuses settlement atomically");
+    const std::string text = SerialiseDoorState(before);
+    for (const std::string side : {"0", "2", "+1", "01", "-01", "1,1"})
+        Expect(!DeserialiseDoorState(Replace(text, "home_front,1,1", "home_front,1," + side)).Ok(), "invalid saved open side refused");
+    Expect(!DeserialiseDoorState(Replace(text, "care_front,1,1", "care_front,1,-1")).Ok(), "saved one-way outward side refused");
+    Expect(!DeserialiseDoorState(Replace(text, "home_bedroom,0,0", "home_bedroom,0,1")).Ok(), "saved closed side refused");
+}
+
+void TestCareAndMigration()
+{
+    const DoorDef& front = *FindDoor(CareFront);
+    Expect(!front.bTwoWay && front.PreferredSwingSide == 1, "care front is inward only");
+    for (const auto& door : AuthoredDoors().subspan(5))
+    {
+        Expect(door.bTwoWay == (door.Id != CareFront), "new leaves have authored swing constraints");
+        Expect(door.bInitiallyOpen == (door.Id == "door.nabapara.care_common"), "only common starts open among new leaves");
+        Expect(door.LocationId == (door.Id == Shutter ? "location.nabapara.shanti_chai" : "location.nabapara.care_home"), "new locations are stable");
+    }
+    Expect(EvaluateDoorOffer(front, false, 600, {}).Action == DoorAction::Knock, "care visitor offered Knock");
+    Expect(EvaluateDoorKnock(front, 600, {}) == DoorKnockResult{DoorResult::Knocked, DoorEvent::Knock}, "care Knock emits its event");
+    Expect(EvaluateDoorPassage(front, 0, {DoorDirection::Entry, true}) == DoorResult::Ok, "care residents and on-duty staff enter");
+    Expect(FindDoor("door.nabapara.care_dormitory")->Access == DoorAccess::Private && FindDoor("door.nabapara.care_common")->Access == DoorAccess::Public && FindDoor("door.nabapara.care_washroom")->Access == DoorAccess::Public, "care room access is authored");
+    DoorState source = MakeInitialDoorState();
+    Play(source);
+    std::string legacy = "pw.doors/1\ncount=10\n";
+    for (const auto& entry : source.Doors)
+        legacy += "door=" + entry.Id + "," + (entry.Open ? "1" : "0") + "\n";
+    legacy += "end\n";
+    const auto migrated = DeserialiseDoorState(legacy);
+    Expect(migrated.Ok() && migrated.bMigrated, "full-table /1 migrates");
+    for (std::size_t i = 0; i < source.Doors.size(); ++i)
+        Expect(migrated.State.Doors[i].Open == source.Doors[i].Open && migrated.State.Doors[i].SwingSide == (source.Doors[i].Open ? AuthoredDoors()[i].PreferredSwingSide : 0), "migration retains flags and assigns preferred sides");
+    Expect(SerialiseDoorState(migrated.State) == SerialiseDoorState(DeserialiseDoorState(legacy).State), "migration is deterministic");
+    const auto restored = DeserialiseDoorState(SerialiseDoorState(migrated.State));
+    Expect(restored.Ok() && !restored.bMigrated && restored.State == migrated.State,
+           "migrated state persists as /2 without migrating again");
+    for (std::size_t length = 0; length < legacy.size(); ++length)
+    {
+        const auto truncated = DeserialiseDoorState(std::string_view(legacy).substr(0, length));
+        Expect(!truncated.Ok() && !truncated.bMigrated && truncated.State == DoorState{},
+               "every truncated migration fails without publishing partial state");
+    }
+    Expect(!DeserialiseDoorState(legacy + "x").bMigrated, "failed migration does not report success");
+    DoorDef malformed = front;
+    malformed.PreferredSwingSide = 0;
+    Expect(!IsDoorDefinitionValid(malformed), "preferred side must be a unit sign");
 }
 } // namespace
 
@@ -385,6 +461,8 @@ int main()
     TestDeterminism();
     TestRoundTrip();
     TestRefusedText();
+    TestSettlement();
+    TestCareAndMigration();
     std::cout << "PerfectWorld doors: " << Assertions << " assertions passed\n";
     return 0;
 }

@@ -20,7 +20,7 @@ namespace PerfectWorld
  *
  * The portable core decides whether a door may open and records open or closed; Unreal only presents the leaf, the
  * sweep and the prompt. A door is authored once (id, the location it belongs to, whether it starts open, an access
- * rule); the live part is one open/closed flag per door in a DoorState.
+ * rule); the live part records the physical open/closed flag and swing side per door.
  *
  * Entry rules, independent of leaf position (valid egress and closing are always allowed):
  *   Public         anyone, at any time.
@@ -28,14 +28,14 @@ namespace PerfectWorld
  *   Locked         nobody, resident or not (no keys exist in this slice); DoorResult::Locked. A locked door starts closed.
  *   BusinessHours  anyone in the daily half-open window(s); outside those hours a visitor is refused with DoorResult::Closed.
  *                  A resident (staff) may always enter. An invitation does not override business hours.
- * "Resident" is the caller's fact: the player living in, or working at, the place the door belongs to.
+ * "Resident" is the caller's fact: someone living here, business staff, or on-duty care-home staff.
  *
  * Adjacency of rooms is the interior layout's business: the opening-home ids are named for the room each door enters,
  * not for a fixed floor plan, so the layout may place them as it needs.
  *
- * DoorState keeps one entry for every authored door, in table order, and its text form requires exactly that set. Adding a
- * door to the table is therefore a save-format change for whoever embeds the state in a world save (a migration or a new
- * version, the integrator's decision). This module is standalone: it is not in WorldState, the reducer or the hash yet.
+ * DoorState keeps one entry for every authored door, in table order. Version /2 requires exactly that set; historical /1
+ * saves migrate their sides and any newly authored entries. Future table additions require an explicit migration.
+ * This module is standalone: it is not in WorldState, the reducer or the hash yet.
  *
  * Integer arithmetic only. Nothing here throws.
  */
@@ -65,6 +65,9 @@ struct DoorDef
     std::int32_t CloseMinute = 0;
     /** When nonempty, replaces the legacy single window above (which must then be zero). */
     std::span<const DoorOpeningWindow> OpeningWindows{};
+    bool bTwoWay = true;
+    /** +1 is inward, -1 outward; also the only accepted open side for a one-way leaf. */
+    std::int8_t PreferredSwingSide = 1;
 };
 
 enum class DoorResult : std::uint8_t
@@ -104,6 +107,7 @@ struct DoorEntry
 {
     std::string Id;
     bool Open = false;
+    std::int8_t SwingSide = 0;
     friend bool operator==(const DoorEntry&, const DoorEntry&) = default;
 };
 
@@ -119,6 +123,7 @@ struct DoorStateParse
     DoorState State;
     /** Empty on success; otherwise a short sentence and State is left default. */
     std::string Error;
+    bool bMigrated = false;
     [[nodiscard]] bool Ok() const noexcept { return Error.empty(); }
 };
 
@@ -163,13 +168,14 @@ struct DoorStateParse
                                                               std::int32_t minuteOfDay, const DoorUseContext& context) noexcept;
 
 [[nodiscard]] PERFECTWORLDCORE_API DoorState MakeInitialDoorState();
-/** True when the state holds exactly the authored doors, in table order. */
+/** True when the state holds exactly the authored doors, in table order, with consistent physical pairs. */
 [[nodiscard]] PERFECTWORLDCORE_API bool IsDoorStateValid(const DoorState& state) noexcept;
 /** The door's current flag; empty for an id the state does not hold. */
 [[nodiscard]] PERFECTWORLDCORE_API std::optional<bool> QueryDoorOpen(const DoorState& state, std::string_view doorId) noexcept;
 
 /**
- * Opens or closes a door. The state changes only when the result is Ok; every refusal and NoChange leave it untouched.
+ * Opens or closes a door through access rules, using the preferred side when opening and zero when closing.
+ * The state changes only when the result is Ok; every refusal and NoChange leave it untouched.
  * `minuteOfDay` is 0..1439 (see DoorMinuteOfDay); anything else is InvalidTime.
  */
 [[nodiscard]] PERFECTWORLDCORE_API DoorResult TrySetDoorOpen(DoorState& state, std::string_view doorId, bool open,
@@ -177,8 +183,16 @@ struct DoorStateParse
 [[nodiscard]] PERFECTWORLDCORE_API DoorResult TrySetDoorOpen(DoorState& state, std::string_view doorId, bool open,
                                                             std::int32_t minuteOfDay, const DoorUseContext& context);
 
-/** Strict text form ("pw.doors/1"). An invalid state serialises to the empty string. */
+/** Physical fact only, including a partly stopped open leaf. Invalid pairs return InvalidState without mutation.
+ * No access rules apply. Identical facts return NoChange; changed facts return Ok.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API DoorResult ApplyDoorSettlement(DoorState& state, std::string_view doorId,
+                                                                 bool bIsOpenNow, std::int8_t swingSide);
+
+/** Strict text form ("pw.doors/2"): door=id,open,side. An invalid state serialises to the empty string. */
 [[nodiscard]] PERFECTWORLDCORE_API std::string SerialiseDoorState(const DoorState& state);
-/** Refuses a missing or wrong header, a truncated text, an unknown, repeated or out-of-order door, a bad flag, and trailing data. */
+/** Also reads /1 (five historical home doors or the full table), adding authored defaults and preferred open sides.
+ * Successful /1 reads set bMigrated. Refuses malformed, inconsistent, out-of-order or trailing data.
+ */
 [[nodiscard]] PERFECTWORLDCORE_API DoorStateParse DeserialiseDoorState(std::string_view text);
 } // namespace PerfectWorld

@@ -8,7 +8,7 @@ namespace PerfectWorld
 {
 namespace
 {
-constexpr std::string_view DoorsHeader = "pw.doors/1";
+constexpr std::string_view DoorsHeader = "pw.doors/2";
 constexpr std::string_view DoorsEnd = "end";
 
 constexpr std::string_view OpeningHome = "location.nabapara.opening_home";
@@ -16,17 +16,29 @@ constexpr std::string_view OpeningHome = "location.nabapara.opening_home";
 /**
  * The opening home (LANE_LIFE_PLAN section C: entry/utility space, living/eating room, sleeping/study room, kitchen,
  * washroom). The front door and the bedroom door are private; the others are ordinary household doors. Each id is
- * named for the room it enters. TODO(owner): the real second and later homes, shops and their hours are not authored yet.
+ * named for the room it enters. Keep these five entries first for historical /1 saves.
  */
-constexpr std::array<DoorDef, 5> DoorTable{{
+constexpr DoorOpeningWindow ChaiHours[]{{360, 690}, {930, 1140}};
+constexpr std::string_view CareHome = "location.nabapara.care_home";
+constexpr std::array<DoorDef, 10> DoorTable{{
     {"door.nabapara.home_front", OpeningHome, false, DoorAccess::Private, 0, 0},
     {"door.nabapara.home_living", OpeningHome, true, DoorAccess::Public, 0, 0},
     {"door.nabapara.home_bedroom", OpeningHome, false, DoorAccess::Private, 0, 0},
     {"door.nabapara.home_kitchen", OpeningHome, true, DoorAccess::Public, 0, 0},
     {"door.nabapara.home_washroom", OpeningHome, false, DoorAccess::Public, 0, 0},
+    {"door.nabapara.shanti_chai_shutter", "location.nabapara.shanti_chai", false, DoorAccess::BusinessHours, 0, 0, ChaiHours},
+    {"door.nabapara.care_front", CareHome, false, DoorAccess::Private, 0, 0, {}, false, 1},
+    {"door.nabapara.care_dormitory", CareHome, false, DoorAccess::Private},
+    {"door.nabapara.care_common", CareHome, true, DoorAccess::Public},
+    {"door.nabapara.care_washroom", CareHome, false, DoorAccess::Public},
 }};
 
 constexpr std::array<std::string_view, DoorAccessCount> AccessIds{"public", "private", "locked", "business_hours"};
+
+bool IsPhysicalPairValid(const DoorDef& door, bool open, std::int8_t side) noexcept
+{
+    return open ? ((side == -1 || side == 1) && (door.bTwoWay || side == door.PreferredSwingSide)) : side == 0;
+}
 
 bool NextLine(std::string_view text, std::size_t& position, std::string_view& line)
 {
@@ -101,7 +113,8 @@ bool IsDoorDefinitionValid(const DoorDef& door) noexcept
     if (!door.Id.starts_with("door.") || door.Id.size() == 5 || door.LocationId.empty() ||
         door.Id.find_first_of(",\r\n=") != std::string_view::npos ||
         static_cast<std::size_t>(door.Access) >= DoorAccessCount ||
-        (door.Access == DoorAccess::Locked && door.bInitiallyOpen))
+        (door.Access == DoorAccess::Locked && door.bInitiallyOpen) ||
+        (door.PreferredSwingSide != -1 && door.PreferredSwingSide != 1))
         return false;
     if (door.Access != DoorAccess::BusinessHours)
         return door.OpenMinute == 0 && door.CloseMinute == 0 && door.OpeningWindows.empty();
@@ -260,7 +273,8 @@ DoorState MakeInitialDoorState()
     DoorState state;
     state.Doors.reserve(DoorTable.size());
     for (const DoorDef& door : DoorTable)
-        state.Doors.push_back(DoorEntry{std::string(door.Id), door.bInitiallyOpen});
+        state.Doors.push_back(DoorEntry{std::string(door.Id), door.bInitiallyOpen,
+                                       door.bInitiallyOpen ? door.PreferredSwingSide : std::int8_t{0}});
     return state;
 }
 
@@ -270,7 +284,8 @@ bool IsDoorStateValid(const DoorState& state) noexcept
         return false;
     for (std::size_t i = 0; i < DoorTable.size(); ++i)
     {
-        if (state.Doors[i].Id != DoorTable[i].Id)
+        if (state.Doors[i].Id != DoorTable[i].Id ||
+            !IsPhysicalPairValid(DoorTable[i], state.Doors[i].Open, state.Doors[i].SwingSide))
             return false;
     }
     return true;
@@ -305,10 +320,33 @@ DoorResult TrySetDoorOpen(DoorState& state, std::string_view doorId, bool open, 
             continue;
         const DoorResult result = EvaluateDoorOpen(*door, entry.Open, open, minuteOfDay, context);
         if (result == DoorResult::Ok)
+        {
             entry.Open = open;
+            entry.SwingSide = open ? door->PreferredSwingSide : std::int8_t{0};
+        }
         return result;
     }
     return DoorResult::UnknownDoor; // authored, but this state does not hold it
+}
+
+DoorResult ApplyDoorSettlement(DoorState& state, std::string_view doorId, bool bIsOpenNow, std::int8_t swingSide)
+{
+    const DoorDef* door = FindDoor(doorId);
+    if (door == nullptr)
+        return DoorResult::UnknownDoor;
+    if (!IsDoorStateValid(state) || !IsPhysicalPairValid(*door, bIsOpenNow, swingSide))
+        return DoorResult::InvalidState;
+    for (DoorEntry& entry : state.Doors)
+    {
+        if (entry.Id != doorId)
+            continue;
+        if (entry.Open == bIsOpenNow && entry.SwingSide == swingSide)
+            return DoorResult::NoChange;
+        entry.Open = bIsOpenNow;
+        entry.SwingSide = swingSide;
+        return DoorResult::Ok;
+    }
+    return DoorResult::UnknownDoor;
 }
 
 std::string SerialiseDoorState(const DoorState& state)
@@ -318,7 +356,7 @@ std::string SerialiseDoorState(const DoorState& state)
     std::string text(DoorsHeader);
     text += "\ncount=" + std::to_string(state.Doors.size());
     for (const DoorEntry& entry : state.Doors)
-        text += "\ndoor=" + entry.Id + "," + (entry.Open ? "1" : "0");
+        text += "\ndoor=" + entry.Id + "," + (entry.Open ? "1" : "0") + "," + std::to_string(entry.SwingSide);
     text += "\n";
     text += DoorsEnd;
     text += "\n";
@@ -336,36 +374,57 @@ DoorStateParse DeserialiseDoorState(std::string_view text)
     std::size_t position = 0;
     std::string_view line;
     std::string_view value;
-    if (!NextLine(text, position, line) || line != DoorsHeader)
+    if (!NextLine(text, position, line) || (line != DoorsHeader && line != "pw.doors/1"))
         return refuse("The door text has no recognised header.");
+    const bool legacy = line == "pw.doors/1";
     std::size_t count = 0;
     if (!NextLine(text, position, line) || !KeyValue(line, "count", value) || !ParseCount(value, count))
         return refuse("The door text has no valid count line.");
-    if (count != DoorTable.size())
+    if (count != DoorTable.size() && !(legacy && count == 5))
         return refuse("The door text does not hold exactly the authored doors.");
-    DoorState state;
+    DoorState state = MakeInitialDoorState();
     for (std::size_t i = 0; i < count; ++i)
     {
         if (!NextLine(text, position, line) || !KeyValue(line, "door", value))
             return refuse("The door text is truncated or has a bad door line.");
-        const std::size_t comma = value.rfind(',');
+        const std::size_t comma = value.find(',');
         if (comma == std::string_view::npos)
             return refuse("The door text has a door line without a flag.");
         const std::string_view id = value.substr(0, comma);
-        const std::string_view flag = value.substr(comma + 1);
+        const std::size_t sideComma = value.find(',', comma + 1);
+        const std::string_view flag = value.substr(comma + 1, sideComma == std::string_view::npos ? sideComma : sideComma - comma - 1);
         if (FindDoor(id) == nullptr)
             return refuse("The door text names a door that does not exist.");
         if (id != DoorTable[i].Id)
             return refuse("The door text repeats a door or lists the doors out of order.");
         if (flag != "0" && flag != "1")
             return refuse("The door text has a flag that is not 0 or 1.");
-        state.Doors.push_back(DoorEntry{std::string(id), flag == "1"});
+        const bool open = flag == "1";
+        std::int8_t side = open ? DoorTable[i].PreferredSwingSide : std::int8_t{0};
+        if (legacy)
+        {
+            if (sideComma != std::string_view::npos)
+                return refuse("A legacy door line has an extra field.");
+        }
+        else
+        {
+            if (sideComma == std::string_view::npos)
+                return refuse("The door text has no swing side.");
+            const auto sideText = value.substr(sideComma + 1);
+            if (sideText != "-1" && sideText != "0" && sideText != "1")
+                return refuse("The door text has a non-canonical swing side.");
+            side = sideText == "-1" ? -1 : sideText == "1" ? 1 : 0;
+        }
+        if (!IsPhysicalPairValid(DoorTable[i], open, side))
+            return refuse("The door text has an inconsistent physical pair.");
+        state.Doors[i] = DoorEntry{std::string(id), open, side};
     }
     if (!NextLine(text, position, line) || line != DoorsEnd)
         return refuse("The door text is truncated or has no end line.");
     if (position != text.size())
         return refuse("The door text has data after the end line.");
     result.State = std::move(state);
+    result.bMigrated = legacy;
     return result;
 }
 } // namespace PerfectWorld
