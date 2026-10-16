@@ -128,6 +128,7 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/NpcBehaviour.cpp
     Source/PerfectWorldCore/Private/LaneOrigin.cpp
     Source/PerfectWorldCore/Private/ConversationCareContent.cpp
+    Source/PerfectWorldCore/Private/ConversationFarida.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -528,3 +529,7 @@ add_test(NAME PerfectWorldLaneOriginTests COMMAND PerfectWorldLaneOriginTests)
 add_executable(PerfectWorldConversationCareTests Tests/ConversationCareTests.cpp)
 target_link_libraries(PerfectWorldConversationCareTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldConversationCareTests COMMAND PerfectWorldConversationCareTests)
+# Farida Qadri's conversation (order CF).
+add_executable(PerfectWorldConversationFaridaTests Tests/ConversationFaridaTests.cpp)
+target_link_libraries(PerfectWorldConversationFaridaTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldConversationFaridaTests COMMAND PerfectWorldConversationFaridaTests)
