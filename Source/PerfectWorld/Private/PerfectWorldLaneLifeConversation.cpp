@@ -1,32 +1,30 @@
 #include "PerfectWorldLaneLifeConversation.h"
 
 #include "PerfectWorldLaneLifeSubsystem.h"
+#include "WorldReducer.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPWLaneLifeTalk, Log, All);
 
 PerfectWorld::ConversationCatalogue FaCatalogueForPerson(const FName PersonId)
 {
-    if (PersonId == PWLaneLife::ToName(PerfectWorld::HouseholdAdultId))
-    {
-        return PerfectWorld::HouseholdConversationCatalogue();
-    }
-    if (PersonId == FName(TEXT("person.care_worker")))
-    {
-        return PerfectWorld::CareConversationCatalogue();
-    }
-    if (PersonId == FName(TEXT("person.farida_qadri")))
-    {
-        return PerfectWorld::FaridaConversationCatalogue();
-    }
-    return {};
+    // One routing rule, owned by the core: the world's conversation commands use the same one.
+    return PerfectWorld::ConversationCatalogueForPerson(PWLaneLife::ToStd(PersonId)).value_or(PerfectWorld::ConversationCatalogue{});
 }
 
 FPWCoreConversationSession::FPWCoreConversationSession(const TWeakObjectPtr<UPWLaneLifeSubsystem>& InOwner,
-                                                     const FName InPersonId, const FText& InSpeaker)
+                                                     const FName InPersonId, const FText& InSpeaker, const uint32 InSessionNumber)
     : Owner(InOwner)
     , PersonId(InPersonId)
     , Speaker(InSpeaker)
+    , SessionNumber(InSessionNumber)
 {
+}
+
+const PerfectWorld::ConversationState* FPWCoreConversationSession::FindOpenState() const
+{
+    const UPWLaneLifeSubsystem* Life = Owner.Get();
+    const PerfectWorld::ConversationState* State = Life != nullptr ? Life->FindConversation(PersonId) : nullptr;
+    return State != nullptr && State->Open && State->SessionCount == SessionNumber ? State : nullptr;
 }
 
 FPWConversationView FPWCoreConversationSession::GetView() const
@@ -34,18 +32,21 @@ FPWConversationView FPWCoreConversationSession::GetView() const
     FPWConversationView View;
     View.Speaker = Speaker;
     View.bCanLeave = true;
-    const UPWLaneLifeSubsystem* Life = Owner.Get();
-    if (Life == nullptr || !Life->GetConversation(PersonId).Open)
+    const PerfectWorld::ConversationState* State = FindOpenState();
+    if (State == nullptr)
     {
         return View;
     }
-    const PerfectWorld::ConversationState& State = Life->GetConversation(PersonId);
     const PerfectWorld::ConversationCatalogue Catalogue = FaCatalogueForPerson(PersonId);
-    if (const PerfectWorld::ConversationNodeDef* Node = PerfectWorld::FindConversationNode(Catalogue, State.NodeId))
+    if (const PerfectWorld::ConversationNodeDef* Node = PerfectWorld::FindConversationNode(Catalogue, State->NodeId))
     {
         View.Line = PWLaneLife::ToText(Node->Line);
     }
-    for (const PerfectWorld::ConversationChoiceView& Choice : PerfectWorld::VisibleConversationChoices(Catalogue, State))
+    if (!RefusalNote.IsEmpty())
+    {
+        View.Line = FText::Format(NSLOCTEXT("PerfectWorldLaneLifeTalk", "LineWithNote", "{0}\n\n({1})"), View.Line, RefusalNote);
+    }
+    for (const PerfectWorld::ConversationChoiceView& Choice : PerfectWorld::VisibleConversationChoices(Catalogue, *State))
     {
         if (Choice.bIsLeave)
         {
@@ -63,34 +64,38 @@ FPWConversationView FPWCoreConversationSession::GetView() const
 void FPWCoreConversationSession::Choose(const FName ChoiceId)
 {
     UPWLaneLifeSubsystem* Life = Owner.Get();
-    if (Life == nullptr || !Life->GetConversation(PersonId).Open)
+    if (Life == nullptr || FindOpenState() == nullptr)
     {
         return;
     }
-    const PerfectWorld::ConversationChooseResult Result =
-        PerfectWorld::ChooseConversationChoice(FaCatalogueForPerson(PersonId), Life->MutableConversation(PersonId), PWLaneLife::ToStd(ChoiceId));
-    if (!Result.Ok())
+    // conversation.choose validates the choice, applies its facts and, for a paid one, moves the world clock by its cost in
+    // the same command. Nothing is charged here; the clock readout simply reads the new time.
+    const FPWLaneCommandOutcome Outcome = Life->ChooseConversation(PersonId, ChoiceId, SessionNumber);
+    if (Outcome.bAccepted)
     {
-        // A stale or already-taken choice: the core left the state untouched, so there is nothing to undo.
-        UE_LOG(LogPWLaneLifeTalk, Display, TEXT("Choice %s refused by the core: %s."), *ChoiceId.ToString(),
-               *PWLaneLife::ToFString(PerfectWorld::ConversationErrorCode(Result.Error)));
+        RefusalNote = FText::GetEmpty();
         return;
     }
-    // TODO(time-contract): charge the cost through the time contract. There is no clock yet, so it only accumulates.
-    Life->AddPendingMinutes(Result.CostMinutes);
+    // A refusal changed nothing in the world. A stale or already-taken choice has no words (the panel's refreshed list drops it);
+    // anything else is shown under the line, or as a notice when the refusal also ended the session.
+    UE_LOG(LogPWLaneLifeTalk, Display, TEXT("Choice %s refused by the core: %s."), *ChoiceId.ToString(), *Outcome.Code);
+    RefusalNote = Outcome.Reason;
+    if (IsFinished())
+    {
+        Life->ShowPlayerNotice(Outcome.Reason);
+    }
 }
 
 bool FPWCoreConversationSession::IsFinished() const
 {
-    const UPWLaneLifeSubsystem* Life = Owner.Get();
-    return Life == nullptr || !Life->GetConversation(PersonId).Open;
+    return FindOpenState() == nullptr;
 }
 
 void FPWCoreConversationSession::Leave()
 {
     UPWLaneLifeSubsystem* Life = Owner.Get();
-    if (Life != nullptr && Life->GetConversation(PersonId).Open)
+    if (Life != nullptr && FindOpenState() != nullptr)
     {
-        (void)PerfectWorld::LeaveConversation(Life->MutableConversation(PersonId));
+        Life->LeaveConversation(PersonId);
     }
 }

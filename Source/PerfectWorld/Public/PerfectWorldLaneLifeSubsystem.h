@@ -7,7 +7,10 @@
 #include "Doors.h"
 #include "FaridaSchedule.h"
 #include "NpcBehaviour.h"
+#include "TimeContract.h"
+#include "WorldReducer.h"
 
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -17,7 +20,11 @@ class APawn;
 class APWDoorActor;
 class APWNpcCharacter;
 class IPWConversationSession;
+class SPWClockReadout;
+class SWeakWidget;
 namespace PWLane { struct FLaneBuilding; }
+
+DECLARE_LOG_CATEGORY_EXTERN(LogPWLaneLife, Log, All);
 
 /** Small conversions between the portable core's UTF-8 string views and Unreal's strings. */
 namespace PWLaneLife
@@ -27,26 +34,54 @@ PERFECTWORLD_API FText ToText(std::string_view Text);
 PERFECTWORLD_API FName ToName(std::string_view Text);
 PERFECTWORLD_API std::string ToStd(const FName& Name);
 
-/** Minutes since midnight when play opens: 07:30, until the in-world clock exists (TODO(clock-M1-16)). */
-constexpr int32 FixedStartMinuteOfDay = 7 * 60 + 30;
+/** Minutes since midnight at the start of play: 07:30 on 2 June 2042, the creation start. */
+constexpr int32 CampaignStartMinuteOfDay = 7 * 60 + 30;
 } // namespace PWLaneLife
 
+/** Fired after the world clock moved (free roam, a paid conversation choice, a reset). Carries the new GameInstant. */
+DECLARE_MULTICAST_DELEGATE_OneParam(FPWLaneClockChanged, int64 /*Instant*/);
+
+/** What the core said to a command the subsystem submitted for the player. */
+struct FPWLaneCommandOutcome
+{
+    bool bAccepted = false;
+    /** The core's stable rejection code ("door.locked", "time.asleep"), or empty when accepted. */
+    FString Code;
+    /** Player-facing wording of the refusal; empty when accepted or when the refusal needs no words (a stale click). */
+    FText Reason;
+};
+
+/** Why the free-roam clock is standing still right now. */
+enum class EPWClockHold : uint8
+{
+    None,
+    /** Title, creation or pause menu. */
+    Menu,
+    Conversation,
+    Reading,
+    /** The window is in the background. */
+    Unfocused
+};
+
 /**
- * The Unreal owner of the live lane-life bridge: DoorState, per-person ConversationState and Farida's resolved intent.
- * The portable core decides (may this door open, which line does the person say, what does the choice
- * cost); this subsystem keeps the state those functions work on, and Unreal actors and the conversation panel only present
- * the answers. The authoritative world/clock order will take over persistent state and time charging.
+ * The Unreal owner of the live lane-life bridge. It holds the ONE portable world (PerfectWorld::WorldSim): the clock, every
+ * door and every person's conversation state live there and nowhere else. The portable core decides (may this door open, which
+ * line does the person say, what does the choice cost, what time is it); this subsystem submits commands and presents the answers.
  *
- *  Doors   Each APWDoorActor registers at BeginPlay and is set to the core's state for its id. Interact goes through
- *          RequestDoorToggle: the core is asked first (on a copy of the state); only if it allows the move and the leaf can
- *          physically swing is the real state updated. A refusal is shown to the player as a short notice.
- *  Talk    The subsystem installs a session factory on UPWConversationPresenter whose sessions run over the core
- *          conversation functions (PerfectWorldLaneLifeConversation.h).
+ *  Clock   Free roam is tick-driven: real time becomes whole game minutes (TimeContract AdvanceRealTime: 60 real seconds = 60
+ *          game minutes) and goes in as time.advance. The clock holds while any front-end menu, the conversation panel or the
+ *          reading panel is open, and while the window is unfocused. A Partial advance is resubmitted for the remainder and the
+ *          world is settled (time.settle) until it is quiescent.
+ *  Doors   door.set through the core's access rules (residency from the lane origin), then the leaf swings; the leaf's real
+ *          outcome is reported back with door.settle (Presentation source). A refusal is shown as a short notice.
+ *  Talk    The subsystem installs a session factory on UPWConversationPresenter whose sessions run over conversation.open,
+ *          conversation.choose and conversation.leave (PerfectWorldLaneLifeConversation.h). A paid choice moves the clock inside
+ *          its own command.
  *
  * The player is a resident of the opening home. TODO(care-origin): residency should come from the chosen creation origin.
  */
 UCLASS()
-class PERFECTWORLD_API UPWLaneLifeSubsystem : public UWorldSubsystem
+class PERFECTWORLD_API UPWLaneLifeSubsystem : public UTickableWorldSubsystem
 {
     GENERATED_BODY()
 
@@ -58,17 +93,41 @@ public:
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
     virtual void Deinitialize() override;
 
-    /**
-     * Minutes since midnight (0..1439). There is no in-world clock yet (roadmap M1-16), so this is a fixed morning start,
-     * PWLaneLife::FixedStartMinuteOfDay. TODO(clock-M1-16): read the world clock when it exists.
-     */
+    // FTickableGameObject (through UTickableWorldSubsystem). Not ticked while the engine is paused.
+    virtual void Tick(float DeltaTime) override;
+    virtual TStatId GetStatId() const override { RETURN_QUICK_DECLARE_CYCLE_STAT(UPWLaneLifeSubsystem, STATGROUP_Tickables); }
+
+    // ---- The world and its clock ----
+
+    /** The authoritative world. Read only; every change is a command. */
+    const PerfectWorld::WorldState& GetWorldState() const { return Sim->State(); }
+
+    /** The world clock's instant, in game minutes since the campaign epoch (Monday 2 June 2042, 06:00). */
+    PerfectWorld::GameInstant GetNow() const { return Sim->State().Clock.Now(); }
+
+    /** Minutes since midnight (0..1439), read from the world clock. */
     int32 GetMinuteOfDay() const;
+
+    /** The clock for the top-right readout, for example "Mon 2 Jun · 07:42". */
+    FText GetClockText() const;
+
+    /** None while free roam is running; otherwise why it is standing still. */
+    EPWClockHold GetClockHold() const { return ClockHold; }
+
+    FPWLaneClockChanged OnClockChanged;
+
+    /**
+     * Starts a fresh world: a new clock at 07:30 on 2 June 2042, every door at its authored state, no conversation memory.
+     * Registered doors and Farida are brought into step. TODO(world-save-v8): a loaded life restores a saved WorldState instead.
+     */
+    void ResetWorld();
+
+    // ---- People ----
 
     /** Load the schedule and bind the built shop's world geometry. False means no truthful spawn is available. */
     bool PrepareFarida(const PWLane::FLaneBuilding& Building, FTransform& OutFeet);
     void RegisterFarida(APWNpcCharacter& Person);
-    /** TODO(clock-M1-16): call after the authoritative clock changes minute (including jumps/load).
-     * Reads GetMinuteOfDay(); repeated calls in the same minute do nothing. */
+    /** Re-resolves Farida's intent at the world clock's instant. Repeated calls at the same instant do nothing. */
     void RefreshFaridaForClock();
     const PerfectWorld::NpcIntent* GetFaridaIntent() const { return FaridaIntent ? &*FaridaIntent : nullptr; }
 
@@ -80,45 +139,79 @@ public:
     /** The core's open flag for this door, or Fallback if the core does not know the id. */
     bool IsDoorOpen(FName DoorId, bool bFallback) const;
 
-    /** The player used a door: ask the core, swing the leaf if allowed, show the reason if refused. */
+    /** The player used a door: door.set through the core, swing the leaf if allowed, show the reason if refused. */
     void RequestDoorToggle(APWDoorActor& Door, APawn* By);
 
     // ---- Conversation ----
 
-    /** Time the player's choices have committed but nothing has charged yet. TODO(time-contract): charge this through the time contract. */
-    int32 GetPendingMinutes() const { return PendingMinutes; }
-    void AddPendingMinutes(int32 Minutes) { PendingMinutes += Minutes; }
-
-    /** State is isolated by stable person id. TODO(world-save-v8): persist every person's state with the world. */
-    PerfectWorld::ConversationState& MutableConversation(FName PersonId);
-    const PerfectWorld::ConversationState& GetConversation(FName PersonId) const;
-
-    /** The live door state. TODO(world-save-v8): persist it with the world. */
-    const PerfectWorld::DoorState& GetDoors() const { return Doors; }
-
-    /** Builds a session over the core for a person, or null when the core refuses (unknown person, bad time). */
+    /** Builds a session over the core for a person (conversation.open), or null when the core refuses. */
     TSharedPtr<IPWConversationSession> MakeConversationSession(FName PersonId, const FText& DisplayName);
 
+    /** The person's conversation state in the world, or null when they have never been spoken to. */
+    const PerfectWorld::ConversationState* FindConversation(FName PersonId) const;
+
+    /** conversation.choose for the open session numbered Session. A paid choice moves the clock inside this command. */
+    FPWLaneCommandOutcome ChooseConversation(FName PersonId, FName ChoiceId, uint32 Session);
+
+    /** conversation.leave; harmless when nothing is open. */
+    void LeaveConversation(FName PersonId);
+
+    /** Shows a short notice through the local player's interaction component. */
+    void ShowPlayerNotice(const FText& Message, const APawn* By = nullptr) const;
+
 private:
+    // ---- Clock (PerfectWorldLaneLifeClock.cpp) ----
+    void BuildWorld();
+    /** Submits one command, presents its events and, when the clock moved, tells the people. */
+    PerfectWorld::CommandResult SubmitCommand(const PerfectWorld::Command& Command);
+    /** time.settle until nothing is due at this instant. */
+    void SettleUntilQuiescent();
+    /** time.advance by whole minutes, resubmitting the remainder of a Partial advance. */
+    void AdvanceClock(int64 Minutes);
+    /** Refreshes ClockHold from the menus, panels and window focus; true when the clock must stand still. */
+    bool UpdateClockHold();
+    /** Leaves a core conversation whose panel is not on screen, so time can move again. */
+    void CloseOrphanedConversation();
+    void HandleClockMoved();
+    void EnsureClockReadout();
+    void RemoveClockReadout();
+    void PresentEvents(const std::vector<PerfectWorld::DomainEvent>& Events) const;
+
+    // ---- Doors and conversation (PerfectWorldLaneLifeSubsystem.cpp) ----
+    void ResolveOriginResidency();
+    bool IsResidentOf(const PerfectWorld::DoorDef& Door) const;
     void ShowDoorRefusal(const APawn* By, PerfectWorld::DoorResult Result, const PerfectWorld::DoorDef* Def) const;
-    /** APWDoorActor::OnSettled: the leaf's real outcome. An interrupted swing overrides the provisional core state. */
+    /** APWDoorActor::OnSettled: the leaf's real outcome, reported to the core with door.settle. */
     void HandleDoorSettled(FName DoorId, bool bReachedTarget, bool bIsOpenNow, int8 SwingSide);
     /** APWReadableActor::GlobalReadRequested: open the text in this world's reading presenter. */
     void HandleReadRequested(FName ReadableId, FName ContentId, FText Title);
+
+    // ---- Farida (PerfectWorldLaneLifeFarida.cpp) ----
     void ResolveFaridaIntent();
     void HandleFaridaBlock(bool bBlocked, FName RouteId);
 
-    PerfectWorld::DoorState Doors;
-    TMap<FName, PerfectWorld::ConversationState> Conversations;
+    TUniquePtr<PerfectWorld::WorldSim> Sim;
+    PerfectWorld::TimeModeState ClockMode;
+    EPWClockHold ClockHold = EPWClockHold::Menu;
+    /** Real milliseconds below one whole millisecond, carried between ticks. */
+    double RealMsFraction = 0.0;
+    /** The last time.advance refusal that was logged, so a standing refusal (asleep) is reported once. */
+    FString LastClockRefusal;
+    PerfectWorld::GameInstant LastBroadcastInstant = -1;
+
+    TSet<FName> ResidentLocations;
+    TArray<TWeakObjectPtr<APWDoorActor>> RegisteredDoors;
+    /** Door ids already reported as missing from the core, so each is logged once. */
+    TSet<FName> ReportedUnknownDoors;
+
     std::optional<PerfectWorld::FaridaSchedule> FaridaSchedule;
     std::optional<PerfectWorld::NpcIntent> FaridaIntent;
     TWeakObjectPtr<APWNpcCharacter> Farida;
     TMap<FName, FTransform> FaridaAnchors;
     TMap<FName, TArray<FVector>> FaridaRoutes;
-    int32 FaridaResolvedMinute = INDEX_NONE;
+    PerfectWorld::GameInstant FaridaResolvedInstant = -1;
     bool bFaridaBlocked = false;
-    int32 PendingMinutes = 0;
 
-    /** Door ids already reported as missing from the core, so each is logged once. */
-    TSet<FName> ReportedUnknownDoors;
+    TSharedPtr<SPWClockReadout> ClockReadout;
+    TSharedPtr<SWeakWidget> ClockHolder;
 };

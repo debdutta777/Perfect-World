@@ -1,30 +1,74 @@
 #include "PerfectWorldLaneLifeSubsystem.h"
 
 #include "Engine/World.h"
-#include "Engine/GameInstance.h"
 #include "GameFramework/Pawn.h"
+#include "Kismet/GameplayStatics.h"
+#include "LaneOrigin.h"
 #include "PerfectWorldConversationPresenter.h"
-#include "PerfectWorldContentSubsystem.h"
 #include "PerfectWorldDoorActor.h"
 #include "PerfectWorldFurnitureActor.h"
 #include "PerfectWorldInteractionComponent.h"
 #include "PerfectWorldLaneLifeConversation.h"
-#include "PerfectWorldLaneTeaShop.h"
 #include "PerfectWorldNpcCharacter.h"
 #include "PerfectWorldReadingPresenter.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogPWLaneLife, Log, All);
+DEFINE_LOG_CATEGORY(LogPWLaneLife);
 
 #define LOCTEXT_NAMESPACE "PerfectWorldLaneLife"
 
 namespace
 {
-/** The place the player lives. TODO(care-origin): the resident places come from the chosen creation origin. */
-constexpr std::string_view FaOpeningHomeLocationId = "location.nabapara.opening_home";
-
-bool FaIsResidentOf(const PerfectWorld::DoorDef& Door)
+const PerfectWorld::DoorEntry* BrFindDoorEntry(const PerfectWorld::DoorState& Doors, const std::string_view Id)
 {
-    return Door.LocationId == FaOpeningHomeLocationId;
+    for (const PerfectWorld::DoorEntry& Entry : Doors.Doors)
+    {
+        if (Entry.Id == Id)
+        {
+            return &Entry;
+        }
+    }
+    return nullptr;
+}
+
+/** "door.locked" back to DoorResult::Locked. The reducer names a refusal "door.<DoorResultCode>". */
+PerfectWorld::DoorResult BrDoorResultFromCode(const FString& Code)
+{
+    for (int32 Value = 0; Value <= static_cast<int32>(PerfectWorld::DoorResult::Knocked); ++Value)
+    {
+        const PerfectWorld::DoorResult Candidate = static_cast<PerfectWorld::DoorResult>(Value);
+        if (Code == PWLaneLife::ToFString("door." + std::string(PerfectWorld::DoorResultCode(Candidate))))
+        {
+            return Candidate;
+        }
+    }
+    return PerfectWorld::DoorResult::NotAvailable;
+}
+
+/** Player-facing wording for a command the core refused. Empty means the refusal needs no words (a stale click). */
+FText BrRefusalText(const FString& Code)
+{
+    if (Code == TEXT("time.asleep") || Code == TEXT("conversation.player_asleep"))
+    {
+        return LOCTEXT("RefuseAsleep", "Not while you are asleep.");
+    }
+    if (Code == TEXT("time.activity_running") || Code == TEXT("conversation.activity_running"))
+    {
+        return LOCTEXT("RefuseBusy", "Finish what you are doing first.");
+    }
+    if (Code == TEXT("world.unsettled") || Code == TEXT("conversation.charge_interrupted"))
+    {
+        return LOCTEXT("RefuseUnsettled", "Too much is happening at once. Try again in a moment.");
+    }
+    if (Code == TEXT("conversation.already_open"))
+    {
+        return LOCTEXT("RefuseAlreadyOpen", "You are already in a conversation.");
+    }
+    if (Code == TEXT("conversation.stale_choice") || Code == TEXT("conversation.already_charged") || Code == TEXT("conversation.already_taken") ||
+        Code == TEXT("conversation.stale_session") || Code == TEXT("conversation.not_open"))
+    {
+        return FText::GetEmpty();
+    }
+    return LOCTEXT("RefuseOther", "That did not work.");
 }
 } // namespace
 
@@ -68,14 +112,10 @@ void UPWLaneLifeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
 
-    Doors = PerfectWorld::MakeInitialDoorState();
-    Conversations.Reset();
-    PendingMinutes = 0;
     ReportedUnknownDoors.Reset();
-    if (!PerfectWorld::IsDoorStateValid(Doors))
-    {
-        UE_LOG(LogPWLaneLife, Error, TEXT("The core's initial door state is not valid; the doors cannot be driven."));
-    }
+    RegisteredDoors.Reset();
+    ResolveOriginResidency();
+    BuildWorld();
 
     // The conversation panel talks to people through whatever session factory it holds: install ours, over the core.
     if (UPWConversationPresenter* Presenter = Collection.InitializeDependency<UPWConversationPresenter>())
@@ -96,8 +136,8 @@ void UPWLaneLifeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
         UE_LOG(LogPWLaneLife, Error, TEXT("No conversation presenter in this world; people cannot be talked to."));
     }
 
-    // Readable objects raise one process-wide event; this world's reading presenter shows the text. Reading is free:
-    // it costs no world time (LANE_LIFE_PLAN §B). TODO(clock-M1-16): hold the free-roam clock while a reading is open.
+    // Readable objects raise one process-wide event; this world's reading presenter shows the text. Reading is free: it costs
+    // no world time (LANE_LIFE_PLAN section B), and the clock holds while the reading panel is open (UpdateClockHold).
     Collection.InitializeDependency<UPWReadingPresenter>();
     APWReadableActor::GlobalReadRequested().RemoveAll(this);
     APWReadableActor::GlobalReadRequested().AddUObject(this, &UPWLaneLifeSubsystem::HandleReadRequested);
@@ -105,6 +145,7 @@ void UPWLaneLifeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UPWLaneLifeSubsystem::Deinitialize()
 {
+    RemoveClockReadout();
     if (APWNpcCharacter* Person = Farida.Get())
     {
         Person->GetNpcMovement()->OnBlockChanged.RemoveAll(this);
@@ -112,6 +153,7 @@ void UPWLaneLifeSubsystem::Deinitialize()
         Person->GetNpcMovement()->SetRouteResolver({});
     }
     Farida.Reset();
+    OnClockChanged.Clear();
     APWReadableActor::GlobalReadRequested().RemoveAll(this);
     if (UPWConversationPresenter* Presenter = UPWConversationPresenter::Get(this))
     {
@@ -131,11 +173,43 @@ void UPWLaneLifeSubsystem::HandleReadRequested(const FName ReadableId, const FNa
     }
 }
 
-int32 UPWLaneLifeSubsystem::GetMinuteOfDay() const
+void UPWLaneLifeSubsystem::ResolveOriginResidency()
 {
-    // The creator subsystem keeps no world clock and no save carries one yet, so the day always opens at 07:30.
-    // TODO(clock-M1-16): read the in-world clock (PerfectWorld::DoorMinuteOfDay of its instant) when it exists.
-    return PWLaneLife::FixedStartMinuteOfDay;
+    // TODO(care-origin): the resolved plan comes from the character creator once the world is built for the chosen origin. Until
+    // then the lane always builds the Parent household's opening home, so that is the origin the player lives in.
+    ResidentLocations.Reset();
+    const PerfectWorld::HouseholdDefinition* Household = PerfectWorld::CharacterCreator::FindHousehold(PerfectWorld::DefaultHouseholdTemplateId);
+    if (Household == nullptr)
+    {
+        UE_LOG(LogPWLaneLife, Error, TEXT("The default household is not in the core; no door grants residency."));
+        return;
+    }
+    PerfectWorld::OpeningHomePlan Plan;
+    Plan.HouseholdTemplateId = Household->Id;
+    Plan.HouseholdName = Household->DisplayName;
+    Plan.HomeKitId = Household->HomeKitId;
+    Plan.HomeKitName = Household->HomeKitName;
+    Plan.ResourceRank = 1;
+    Plan.GrewUpInCare = false;
+    const PerfectWorld::LaneOriginResult Origin = PerfectWorld::ResolveLaneOrigin(Plan);
+    if (!Origin.Ok())
+    {
+        UE_LOG(LogPWLaneLife, Error, TEXT("The default lane origin does not resolve (error %d); no door grants residency."),
+               static_cast<int32>(Origin.Error));
+        return;
+    }
+    for (const std::string& LocationId : Origin.Binding.ResidentLocationIds)
+    {
+        if (PerfectWorld::HasLaneOriginResidency(Origin.Binding, LocationId))
+        {
+            ResidentLocations.Add(PWLaneLife::ToName(LocationId));
+        }
+    }
+}
+
+bool UPWLaneLifeSubsystem::IsResidentOf(const PerfectWorld::DoorDef& Door) const
+{
+    return ResidentLocations.Contains(PWLaneLife::ToName(Door.LocationId));
 }
 
 void UPWLaneLifeSubsystem::RegisterDoor(APWDoorActor& Door)
@@ -154,79 +228,105 @@ void UPWLaneLifeSubsystem::RegisterDoor(APWDoorActor& Door)
     }
     Door.OnSettled.RemoveAll(this);
     Door.OnSettled.AddUObject(this, &UPWLaneLifeSubsystem::HandleDoorSettled);
+    RegisteredDoors.AddUnique(TWeakObjectPtr<APWDoorActor>(&Door));
     // TODO(world-save-v8): a loaded world's DoorState (and swing side) arrives here instead of the authored start.
-    int8 Side = 0;
-    for (const PerfectWorld::DoorEntry& Entry : Doors.Doors)
-    {
-        if (Entry.Id == Id)
-        {
-            Side = static_cast<int8>(Entry.SwingSide);
-            break;
-        }
-    }
-    Door.SetOpenImmediate(PerfectWorld::QueryDoorOpen(Doors, Id).value_or(Def->bInitiallyOpen), Side);
+    const PerfectWorld::DoorEntry* Entry = BrFindDoorEntry(Sim->State().Doors, Id);
+    Door.SetOpenImmediate(Entry != nullptr ? Entry->Open : Def->bInitiallyOpen, Entry != nullptr ? static_cast<int8>(Entry->SwingSide) : int8(0));
 }
 
 void UPWLaneLifeSubsystem::HandleDoorSettled(const FName DoorId, const bool bReachedTarget, const bool bIsOpenNow, const int8 SwingSide)
 {
     // Record where the leaf really is, including which way a two-way door swung. This is a physical fact, not a
-    // permission question, so the core applies it without access rules (an interrupted swing overrides the provisional
-    // commit made in RequestDoorToggle; a completed one records its side).
-    const PerfectWorld::DoorResult Result =
-        PerfectWorld::ApplyDoorSettlement(Doors, PWLaneLife::ToStd(DoorId), bIsOpenNow, static_cast<std::int8_t>(SwingSide));
-    if (Result != PerfectWorld::DoorResult::Ok && Result != PerfectWorld::DoorResult::NoChange)
+    // permission question, so it goes in as a Presentation-source door.settle (an interrupted swing overrides the provisional
+    // state door.set made; a completed one records its side). "No change" is the normal case when the leaf got where it was told.
+    PerfectWorld::DoorSettle Settle;
+    Settle.DoorId = PWLaneLife::ToStd(DoorId);
+    Settle.IsOpenNow = bIsOpenNow;
+    Settle.SwingSide = static_cast<std::int8_t>(SwingSide);
+    PerfectWorld::Command Command;
+    Command.Source = PerfectWorld::CommandSource::Presentation;
+    Command.Payload = Settle;
+    const PerfectWorld::CommandResult Result = SubmitCommand(Command);
+    if (!Result.Accepted && Result.Why.Code != "door.no_change")
     {
         UE_LOG(LogPWLaneLife, Warning, TEXT("Door %s settled (open %d, side %d, reached %d) but the core refused it: %hs"),
-               *DoorId.ToString(), bIsOpenNow ? 1 : 0, static_cast<int32>(SwingSide), bReachedTarget ? 1 : 0,
-               PerfectWorld::DoorResultCode(Result).data());
+               *DoorId.ToString(), bIsOpenNow ? 1 : 0, static_cast<int32>(SwingSide), bReachedTarget ? 1 : 0, Result.Why.Code.c_str());
     }
 }
 
 bool UPWLaneLifeSubsystem::IsDoorOpen(const FName DoorId, const bool bFallback) const
 {
-    return PerfectWorld::QueryDoorOpen(Doors, PWLaneLife::ToStd(DoorId)).value_or(bFallback);
+    return PerfectWorld::QueryDoorOpen(Sim->State().Doors, PWLaneLife::ToStd(DoorId)).value_or(bFallback);
 }
 
 void UPWLaneLifeSubsystem::RequestDoorToggle(APWDoorActor& Door, APawn* By)
 {
     const std::string Id = PWLaneLife::ToStd(Door.GetDoorId());
     const PerfectWorld::DoorDef* Def = PerfectWorld::FindDoor(Id);
-    const std::optional<bool> Current = Def != nullptr ? PerfectWorld::QueryDoorOpen(Doors, Id) : std::nullopt;
-    if (!Current.has_value())
+    const PerfectWorld::DoorEntry* Entry = Def != nullptr ? BrFindDoorEntry(Sim->State().Doors, Id) : nullptr;
+    if (Entry == nullptr)
     {
         RegisterDoor(Door); // reports the unknown id once
         ShowDoorRefusal(By, PerfectWorld::DoorResult::UnknownDoor, nullptr);
         return;
     }
+    const bool bWasOpen = Entry->Open;
+    const std::int8_t WasSide = Entry->SwingSide;
 
-    // Ask the core on a copy: the real state changes only once the leaf has really started to swing.
-    const bool bWantOpen = !*Current;
-    PerfectWorld::DoorState Trial = Doors;
-    const PerfectWorld::DoorResult Result = PerfectWorld::TrySetDoorOpen(Trial, Id, bWantOpen, GetMinuteOfDay(), FaIsResidentOf(*Def));
-    if (Result != PerfectWorld::DoorResult::Ok)
+    // The core decides first. The context is the player's: entering, a resident of the origin's places, uninvited.
+    // TODO(door-direction): Exit once the door knows which side the player stands on; closing never needs permission anyway.
+    PerfectWorld::DoorSet Set;
+    Set.DoorId = Id;
+    Set.Open = !bWasOpen;
+    Set.Context.Direction = PerfectWorld::DoorDirection::Entry;
+    Set.Context.IsResident = IsResidentOf(*Def);
+    Set.Context.IsInvited = false;
+    PerfectWorld::Command Command;
+    Command.Source = PerfectWorld::CommandSource::Player;
+    Command.Payload = Set;
+    const PerfectWorld::CommandResult Result = SubmitCommand(Command);
+    if (!Result.Accepted)
     {
-        ShowDoorRefusal(By, Result, Def);
+        UE_LOG(LogPWLaneLife, Display, TEXT("Door %s refused by the core: %hs"), *Door.GetDoorId().ToString(), Result.Why.Code.c_str());
+        ShowDoorRefusal(By, BrDoorResultFromCode(PWLaneLife::ToFString(Result.Why.Code)), Def);
         return;
     }
-    if (!Door.TryMoveTo(bWantOpen, By))
+    if (!Door.TryMoveTo(Set.Open, By))
     {
-        // Allowed by the core, but a person or a piece of furniture is in the leaf's way: nothing changed anywhere.
-        if (UPWInteractionComponent* Interaction = By != nullptr ? By->FindComponentByClass<UPWInteractionComponent>() : nullptr)
+        // Allowed by the core, but a person or a piece of furniture is in the leaf's way: put the world back as it was.
+        PerfectWorld::DoorSettle Revert;
+        Revert.DoorId = Id;
+        Revert.IsOpenNow = bWasOpen;
+        Revert.SwingSide = WasSide;
+        PerfectWorld::Command Undo;
+        Undo.Source = PerfectWorld::CommandSource::Presentation;
+        Undo.Payload = Revert;
+        const PerfectWorld::CommandResult Undone = SubmitCommand(Undo);
+        if (!Undone.Accepted)
         {
-            Interaction->ShowNotice(LOCTEXT("InTheWay", "Something is in the way."));
+            UE_LOG(LogPWLaneLife, Warning, TEXT("Door %s could not swing and the core would not take it back: %hs"),
+                   *Door.GetDoorId().ToString(), Undone.Why.Code.c_str());
         }
+        ShowPlayerNotice(LOCTEXT("InTheWay", "Something is in the way."), By);
+    }
+    // Otherwise the state is provisional: HandleDoorSettled corrects it if the swing is interrupted.
+}
+
+void UPWLaneLifeSubsystem::ShowPlayerNotice(const FText& Message, const APawn* By) const
+{
+    if (Message.IsEmpty())
+    {
         return;
     }
-    Doors = MoveTemp(Trial); // provisional: HandleDoorSettled corrects it if the swing is interrupted
+    const APawn* Target = By != nullptr ? By : UGameplayStatics::GetPlayerPawn(this, 0);
+    if (UPWInteractionComponent* Interaction = Target != nullptr ? Target->FindComponentByClass<UPWInteractionComponent>() : nullptr)
+    {
+        Interaction->ShowNotice(Message);
+    }
 }
 
 void UPWLaneLifeSubsystem::ShowDoorRefusal(const APawn* By, const PerfectWorld::DoorResult Result, const PerfectWorld::DoorDef* Def) const
 {
-    UPWInteractionComponent* Interaction = By != nullptr ? By->FindComponentByClass<UPWInteractionComponent>() : nullptr;
-    if (Interaction == nullptr)
-    {
-        return;
-    }
     // The core gives the reason as a key (DoorResultReasonKey); the wording lives here.
     const std::string_view Key = PerfectWorld::DoorResultReasonKey(Result);
     FText Message;
@@ -249,7 +349,7 @@ void UPWLaneLifeSubsystem::ShowDoorRefusal(const APawn* By, const PerfectWorld::
     {
         Message = LOCTEXT("ReasonOther", "It won't open.");
     }
-    Interaction->ShowNotice(Message);
+    ShowPlayerNotice(Message, By);
 }
 
 TSharedPtr<IPWConversationSession> UPWLaneLifeSubsystem::MakeConversationSession(const FName PersonId, const FText& DisplayName)
@@ -264,195 +364,90 @@ TSharedPtr<IPWConversationSession> UPWLaneLifeSubsystem::MakeConversationSession
         }
         Availability = FaridaIntent->Availability;
     }
-    PerfectWorld::ConversationState& Conversation = MutableConversation(PersonId);
-    if (Conversation.Open)
+    // A session abandoned without a Leave (a panel that failed to open after the core opened it, a world torn down mid-talk)
+    // would refuse this one and keep the clock still: close it so a new one can start.
+    const std::string_view StillOpen = PerfectWorld::OpenConversationPersonId(Sim->State());
+    if (!StillOpen.empty())
     {
-        // A session abandoned without a Leave (the world was torn down mid-talk): close it so a new one can start.
-        (void)PerfectWorld::LeaveConversation(Conversation);
+        UE_LOG(LogPWLaneLife, Warning, TEXT("Closing the abandoned conversation with %s."), *PWLaneLife::ToFString(StillOpen));
+        LeaveConversation(PWLaneLife::ToName(StillOpen));
     }
-    const PerfectWorld::ConversationError Error =
-        PerfectWorld::OpenConversation(FaCatalogueForPerson(PersonId), Conversation, PWLaneLife::ToStd(PersonId), GetMinuteOfDay(), Availability);
-    if (Error != PerfectWorld::ConversationError::None)
+    SettleUntilQuiescent();
+
+    PerfectWorld::ConversationOpen Open;
+    Open.PersonId = PWLaneLife::ToStd(PersonId);
+    Open.Availability = Availability;
+    PerfectWorld::Command Command;
+    Command.Source = PerfectWorld::CommandSource::Player;
+    Command.Payload = Open;
+    const PerfectWorld::CommandResult Result = SubmitCommand(Command);
+    if (!Result.Accepted)
     {
-        UE_LOG(LogPWLaneLife, Warning, TEXT("Cannot talk to %s: the core refused (%s)."), *PersonId.ToString(),
-               *PWLaneLife::ToFString(PerfectWorld::ConversationErrorCode(Error)));
+        UE_LOG(LogPWLaneLife, Warning, TEXT("Cannot talk to %s: the core refused (%hs)."), *PersonId.ToString(), Result.Why.Code.c_str());
+        ShowPlayerNotice(BrRefusalText(PWLaneLife::ToFString(Result.Why.Code)));
         return nullptr;
     }
+    const PerfectWorld::ConversationState* State = FindConversation(PersonId);
+    const uint32 Session = State != nullptr ? State->SessionCount : 0;
+
     // The household adult is known to the core by a role label; any other person keeps the name the actor carries.
     const bool bHouseholdAdult = PersonId == PWLaneLife::ToName(PerfectWorld::HouseholdAdultId);
     const FText Speaker = bHouseholdAdult ? PWLaneLife::ToText(PerfectWorld::HouseholdAdultLabel) : DisplayName;
-    return MakeShared<FPWCoreConversationSession>(TWeakObjectPtr<UPWLaneLifeSubsystem>(this), PersonId, Speaker);
+    return MakeShared<FPWCoreConversationSession>(TWeakObjectPtr<UPWLaneLifeSubsystem>(this), PersonId, Speaker, Session);
 }
 
-PerfectWorld::ConversationState& UPWLaneLifeSubsystem::MutableConversation(const FName PersonId)
+const PerfectWorld::ConversationState* UPWLaneLifeSubsystem::FindConversation(const FName PersonId) const
 {
-    return Conversations.FindOrAdd(PersonId);
+    const auto Found = Sim->State().Conversations.find(PWLaneLife::ToStd(PersonId));
+    return Found != Sim->State().Conversations.end() ? &Found->second : nullptr;
 }
 
-const PerfectWorld::ConversationState& UPWLaneLifeSubsystem::GetConversation(const FName PersonId) const
+FPWLaneCommandOutcome UPWLaneLifeSubsystem::ChooseConversation(const FName PersonId, const FName ChoiceId, const uint32 Session)
 {
-    const PerfectWorld::ConversationState* State = Conversations.Find(PersonId);
-    static const PerfectWorld::ConversationState FaEmptyConversation;
-    return State != nullptr ? *State : FaEmptyConversation;
-}
+    PerfectWorld::ConversationChoose Choose;
+    Choose.PersonId = PWLaneLife::ToStd(PersonId);
+    Choose.ChoiceId = PWLaneLife::ToStd(ChoiceId);
+    Choose.Session = Session;
+    PerfectWorld::Command Command;
+    Command.Source = PerfectWorld::CommandSource::Player;
+    Command.Payload = Choose;
 
-bool UPWLaneLifeSubsystem::PrepareFarida(const PWLane::FLaneBuilding& Building, FTransform& OutFeet)
-{
-    if (!FaridaSchedule)
+    SettleUntilQuiescent();
+    PerfectWorld::CommandResult Result = SubmitCommand(Command);
+    if (!Result.Accepted && Result.Why.Code == "conversation.charge_interrupted")
     {
-        UGameInstance* Instance = GetWorld()->GetGameInstance();
-        const UPWContentSubsystem* Content = Instance != nullptr ? Instance->GetSubsystem<UPWContentSubsystem>() : nullptr;
-        if (Content == nullptr || Content->GetDb() == nullptr) { return false; }
-        PerfectWorld::FaridaScheduleResult Loaded = PerfectWorld::LoadFaridaSchedule(*Content->GetDb());
-        if (!Loaded.Ok())
-        {
-            UE_LOG(LogPWLaneLife, Error, TEXT("Farida schedule: %s"), UTF8_TO_TCHAR(Loaded.Error.c_str()));
-            return false;
-        }
-        FaridaSchedule = MoveTemp(Loaded.Value);
+        // The event cap stopped the paid choice's charge short and the core rolled it back: settle and choose again, once.
+        SettleUntilQuiescent();
+        Result = SubmitCommand(Command);
     }
-    FaridaAnchors.Reset();
-    FaridaRoutes.Reset();
-    TArray<PWLane::FTeaShopAnchor> Anchors;
-    PWLane::GetTeaShopAnchors(Building, Anchors);
-    for (const PWLane::FTeaShopAnchor& Anchor : Anchors)
+
+    FPWLaneCommandOutcome Outcome;
+    Outcome.bAccepted = Result.Accepted;
+    if (!Result.Accepted)
     {
-        FaridaAnchors.Add(Anchor.Id, FTransform(FRotator(0.0, Anchor.WorldYawDegrees, 0.0), Anchor.World));
+        Outcome.Code = PWLaneLife::ToFString(Result.Why.Code);
+        Outcome.Reason = BrRefusalText(Outcome.Code);
+        UE_LOG(LogPWLaneLife, Display, TEXT("Choice %s with %s refused by the core: %s."), *ChoiceId.ToString(), *PersonId.ToString(), *Outcome.Code);
     }
-    TArray<PWLane::FTeaShopRoute> Segments;
-    PWLane::GetTeaShopRoutes(Building, Segments);
-    TMap<FName, TArray<FVector>> Lines;
-    for (const PWLane::FTeaShopRoute& Segment : Segments) { Lines.Add(Segment.Id, Segment.World); }
-    const TArray<FVector>* Footpath = Lines.Find(FName(TEXT("route.shanti_chai.door_to_footpath")));
-    if (Footpath != nullptr && !Footpath->IsEmpty())
-    {
-        FaridaAnchors.Add(FName(TEXT("location.nabapara.shanti_chai_footpath")), FTransform(Footpath->Last()));
-    }
-    // Compose the core's endpoint journeys, orienting each authored segment by its declared From/To.
-    // Add the door connector missing from counter_to_door; trim door_to_footpath's indoor approach at the door anchor.
-    for (const PerfectWorld::FaridaTravelPath& Path : FaridaSchedule->Paths)
-    {
-        std::string Current = Path.From;
-        TArray<FVector> Points;
-        bool bBound = true;
-        for (const std::string& RouteId : Path.Routes)
-        {
-            const PerfectWorld::FaridaRoute* Def = nullptr;
-            for (const PerfectWorld::FaridaRoute& Candidate : FaridaSchedule->Routes)
-            {
-                if (Candidate.Id == RouteId) { Def = &Candidate; break; }
-            }
-            const TArray<FVector>* Line = Lines.Find(PWLaneLife::ToName(RouteId));
-            if (Def == nullptr || Line == nullptr || Line->Num() < 2) { bBound = false; break; }
-            TArray<FVector> Oriented = *Line;
-            const FTransform* Start = FaridaAnchors.Find(PWLaneLife::ToName(Def->From));
-            const FTransform* End = FaridaAnchors.Find(PWLaneLife::ToName(Def->To));
-            if (Start == nullptr || End == nullptr) { bBound = false; break; }
-            int32 StartIndex = INDEX_NONE;
-            for (int32 Index = 0; Index < Oriented.Num(); ++Index)
-            {
-                if (Oriented[Index].Equals(Start->GetLocation(), 1.0)) { StartIndex = Index; break; }
-            }
-            if (StartIndex > 0) { Oriented.RemoveAt(0, StartIndex); }
-            else if (StartIndex == INDEX_NONE) { Oriented.Insert(Start->GetLocation(), 0); }
-            if (!Oriented.Last().Equals(End->GetLocation(), 1.0)) { Oriented.Add(End->GetLocation()); }
-            const bool bReverse = Current == Def->To;
-            if (!bReverse && Current != Def->From) { bBound = false; break; }
-            for (int32 Index = 0; Index < Oriented.Num(); ++Index)
-            {
-                const FVector Point = Oriented[bReverse ? Oriented.Num() - 1 - Index : Index];
-                if (Points.IsEmpty() || !Points.Last().Equals(Point, 1.0)) { Points.Add(Point); }
-            }
-            Current = bReverse ? Def->From : Def->To;
-        }
-        if (!bBound || Current != Path.To || Points.Num() < 2) { continue; }
-        FaridaRoutes.Add(PWLaneLife::ToName("route:" + Path.From + "->" + Path.To), Points);
-        TArray<FVector> Reverse;
-        for (int32 Index = Points.Num() - 1; Index >= 0; --Index) { Reverse.Add(Points[Index]); }
-        FaridaRoutes.Add(PWLaneLife::ToName("route:" + Path.To + "->" + Path.From), MoveTemp(Reverse));
-    }
-    UE_LOG(LogPWLaneLife, Display, TEXT("Farida: %d anchors, %d directed journeys bound; off-lane home geometry is pending."),
-           FaridaAnchors.Num(), FaridaRoutes.Num());
-    FaridaResolvedMinute = INDEX_NONE;
-    RefreshFaridaForClock();
-    if (!FaridaIntent) { return false; }
-    if (FaridaIntent->State == PerfectWorld::NpcState::Travel)
-    {
-        const TArray<FVector>* Points = FaridaRoutes.Find(PWLaneLife::ToName(FaridaIntent->RouteId));
-        if (Points == nullptr) { return false; }
-        FPWNpcPolyline Line;
-        Line.Set(*Points);
-        const double Distance = Line.Length() * FaridaIntent->ProgressPermille / 1000.0;
-        OutFeet = FTransform(Line.DirectionAt(Distance).Rotation(), Line.PointAt(Distance));
-        return true;
-    }
-    const FTransform* Anchor = FaridaAnchors.Find(PWLaneLife::ToName(FaridaIntent->AnchorId));
-    if (Anchor == nullptr) { return false; }
-    OutFeet = *Anchor;
-    return true;
+    return Outcome;
 }
 
-void UPWLaneLifeSubsystem::RegisterFarida(APWNpcCharacter& Person)
+void UPWLaneLifeSubsystem::LeaveConversation(const FName PersonId)
 {
-    if (Person.GetPersonId() != PWLaneLife::ToName(PerfectWorld::FaridaPersonId) || !FaridaIntent) { return; }
-    Farida = &Person;
-    UPWNpcMovementComponent* Movement = Person.GetNpcMovement();
-    const TWeakObjectPtr<UPWLaneLifeSubsystem> Weak(this);
-    Movement->SetAnchorResolver([Weak](const FName Id, FTransform& Out)
+    const PerfectWorld::ConversationState* State = FindConversation(PersonId);
+    if (State == nullptr || !State->Open)
     {
-        const UPWLaneLifeSubsystem* Life = Weak.Get();
-        const FTransform* Anchor = Life != nullptr ? Life->FaridaAnchors.Find(Id) : nullptr;
-        if (Anchor == nullptr) { return false; }
-        Out = *Anchor;
-        return true;
-    });
-    Movement->SetRouteResolver([Weak](const FName Id, TArray<FVector>& Out)
-    {
-        const UPWLaneLifeSubsystem* Life = Weak.Get();
-        const TArray<FVector>* Points = Life != nullptr ? Life->FaridaRoutes.Find(Id) : nullptr;
-        if (Points == nullptr) { return false; }
-        Out = *Points;
-        return true;
-    });
-    Movement->OnBlockChanged.RemoveAll(this);
-    Movement->OnBlockChanged.AddUObject(this, &UPWLaneLifeSubsystem::HandleFaridaBlock);
-    ResolveFaridaIntent();
-}
-
-void UPWLaneLifeSubsystem::RefreshFaridaForClock()
-{
-    if (!FaridaSchedule || FaridaResolvedMinute == GetMinuteOfDay()) { return; }
-    FaridaResolvedMinute = GetMinuteOfDay();
-    ResolveFaridaIntent();
-}
-
-void UPWLaneLifeSubsystem::HandleFaridaBlock(const bool bBlocked, const FName RouteId)
-{
-    // TODO(clock-M1-16): persist a bounded delayed/replanned journey command; this flag only presents the wait.
-    bFaridaBlocked = bBlocked;
-    ResolveFaridaIntent();
-}
-
-void UPWLaneLifeSubsystem::ResolveFaridaIntent()
-{
-    if (!FaridaSchedule) { return; }
-    // TODO(clock-M1-16): use the full authoritative GameInstant (epoch Monday 06:00), preserving weekday/load.
-    const PerfectWorld::GameInstant At = GetMinuteOfDay() - PerfectWorld::CampaignStartHour * 60;
-    const PerfectWorld::NpcIntentResult Result = PerfectWorld::ResolveNpcIntentAt(
-        FaridaSchedule->Person, FaridaSchedule->Travel, At, false, bFaridaBlocked);
-    if (!Result.Ok())
-    {
-        FaridaIntent.reset();
-        UE_LOG(LogPWLaneLife, Error, TEXT("Farida intent refused: %s"),
-               *PWLaneLife::ToFString(PerfectWorld::NpcIntentErrorCode(Result.Error)));
         return;
     }
-    FaridaIntent = Result.Intent;
-    if (APWNpcCharacter* Person = Farida.Get())
+    PerfectWorld::ConversationLeave Leave;
+    Leave.PersonId = PWLaneLife::ToStd(PersonId);
+    PerfectWorld::Command Command;
+    Command.Source = PerfectWorld::CommandSource::Player;
+    Command.Payload = Leave;
+    const PerfectWorld::CommandResult Result = SubmitCommand(Command);
+    if (!Result.Accepted)
     {
-        // The component owns the local Chat hold and clears it when the presenter closes, resuming this intent.
-        Person->GetNpcMovement()->SetIntent(MakeNpcIntentView(*FaridaIntent,
-            FaridaIntent->AnchorId == "anchor.shanti_chai.rest"));
+        UE_LOG(LogPWLaneLife, Warning, TEXT("Could not leave the conversation with %s: %hs"), *PersonId.ToString(), Result.Why.Code.c_str());
     }
 }
 
