@@ -10,6 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
+#include "PerfectWorldLaneLifeSubsystem.h"
 #include "PerfectWorldPresentationSettings.h"
 #include "UI/PWDelegates.h"
 #include "UI/SPWFrontEndRoot.h"
@@ -188,6 +189,12 @@ FText APerfectWorldFrontEndHUD::StartNewLife(int32 SlotIndex)
     if (!Creator->StartLife())
     {
         return HudMessageOrFallback(Creator->GetLastErrorMessage());
+    }
+    // A new life starts a fresh lane world (07:30 on 2 June 2042, authored doors, no conversations), even when an
+    // earlier life was played in this session. TODO(world-save-v8): Continue/Load restore the saved world instead.
+    if (UPWLaneLifeSubsystem* Life = UPWLaneLifeSubsystem::Get(this))
+    {
+        Life->ResetWorld();
     }
 
     // Life has begun and cannot be undone, so enter the world either way and say if the save failed.
