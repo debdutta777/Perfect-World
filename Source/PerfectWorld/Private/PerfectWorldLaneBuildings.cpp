@@ -2,6 +2,7 @@
 
 #include "PerfectWorldLaneInteriors.h"
 #include "PerfectWorldLaneShops.h"
+#include "PerfectWorldLaneCareInterior.h"
 #include "PerfectWorldLaneTeaShop.h"
 
 namespace PWLane
@@ -211,6 +212,12 @@ void BuildFull(FLaneScene& S, const FLaneBuilding& B)
         // Shanti Chai Corner (first row, +Y side, Index 3, X 600 to 1300) builds its own frontage, interior and the solid
         // storeys above, in place of both the generic ground floor and the wall volume. See PerfectWorldLaneTeaShop.h.
         BuildTeaShop(S, B);
+    }
+    else if (IsCareHomeBuilding(B))
+    {
+        // The children's home (first row, -Y side, Index 1, X -1400 to -300) builds its own frontage, rooms and the
+        // solid storeys above. Every origin's home is built; who lives where comes from the core (LaneOrigin).
+        BuildCareHome(S, B);
     }
     else if (IsOpeningHome(B))
     {

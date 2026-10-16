@@ -8,6 +8,7 @@
 #include "PerfectWorldLaneBarriers.h"
 #include "PerfectWorldLaneBlocks.h"
 #include "PerfectWorldLaneBuildings.h"
+#include "PerfectWorldLaneCareInterior.h"
 #include "PerfectWorldLaneHomeFurniture.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
 #include "PerfectWorldLaneProps.h"
@@ -141,6 +142,32 @@ void SpawnHouseholdAdult(UWorld& World)
     }
 }
 
+/**
+ * The children's home: its on-duty staff member stands in the common room near the entry doorway, and its seats are
+ * usable. The staff member works in the lane whatever the player's origin. TODO(care-origin): a care-origin start
+ * places the player here; TODO(care-schedule): duty hours from npc_schedule.care_worker (CareConversation already
+ * declines politely off duty). The noticeboard and exercise book readables wait for authored text.
+ */
+void SpawnCareHome(UWorld& World)
+{
+    const FLaneFrame CareFrame = MakeLaneFrame(-1400.0, -400.0, FVector(1.0, 0.0, 0.0), FVector(0.0, -1.0, 0.0));
+    const FTransform At(FRotator(0.0, CareStaffSpotYaw(CareFrame), 0.0), CareStaffSpot(CareFrame));
+    if (APWNpcCharacter::SpawnAt(World, At, FName(TEXT("person.care_worker")), NSLOCTEXT("PerfectWorldLane", "CareWorker", "Care worker"),
+                                 EPWNpcOutfit::HouseholdAdult) == nullptr)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Kolkata lane: the care worker could not be placed in the children's home."));
+    }
+    FActorSpawnParameters Params;
+    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    for (const FHomeSeatSpec& Spec : CareSeatSpecs())
+    {
+        if (APWSeatActor* Seat = World.SpawnActor<APWSeatActor>(FVector::ZeroVector, FRotator::ZeroRotator, Params))
+        {
+            Seat->ConfigureFromSpec(Spec, CareFrame);
+        }
+    }
+}
+
 /** The opening home's usable furniture: the seats and the newspaper, from the layout's own anchor specs (order HL/FI). */
 void SpawnHomeFurniture(UWorld& World)
 {
@@ -215,6 +242,14 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     {
         SpawnHouseholdAdult(World);
         SpawnHomeFurniture(World);
+    }
+    if (HasCareHome(Scene))
+    {
+        SpawnCareHome(World);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Kolkata lane: the children's home was not built (the -Y building at index 1 changed shape)."));
     }
 
     UE_LOG(LogTemp, Display, TEXT("Kolkata lane: %d block instances in %d components, %d stall lights placed."), Instances, Components,
