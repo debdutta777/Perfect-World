@@ -4,8 +4,10 @@
 #include "GameFramework/Pawn.h"
 #include "PerfectWorldConversationPresenter.h"
 #include "PerfectWorldDoorActor.h"
+#include "PerfectWorldFurnitureActor.h"
 #include "PerfectWorldInteractionComponent.h"
 #include "PerfectWorldLaneLifeConversation.h"
+#include "PerfectWorldReadingPresenter.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPWLaneLife, Log, All);
 
@@ -89,15 +91,33 @@ void UPWLaneLifeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     {
         UE_LOG(LogPWLaneLife, Error, TEXT("No conversation presenter in this world; people cannot be talked to."));
     }
+
+    // Readable objects raise one process-wide event; this world's reading presenter shows the text. Reading is free:
+    // it costs no world time (LANE_LIFE_PLAN §B). TODO(clock-M1-16): hold the free-roam clock while a reading is open.
+    Collection.InitializeDependency<UPWReadingPresenter>();
+    APWReadableActor::GlobalReadRequested().RemoveAll(this);
+    APWReadableActor::GlobalReadRequested().AddUObject(this, &UPWLaneLifeSubsystem::HandleReadRequested);
 }
 
 void UPWLaneLifeSubsystem::Deinitialize()
 {
+    APWReadableActor::GlobalReadRequested().RemoveAll(this);
     if (UPWConversationPresenter* Presenter = UPWConversationPresenter::Get(this))
     {
         Presenter->SetSessionFactory(FPWConversationSessionFactory());
     }
     Super::Deinitialize();
+}
+
+void UPWLaneLifeSubsystem::HandleReadRequested(const FName ReadableId, const FName ContentId, const FText Title)
+{
+    // The event is process-wide: only the presenter of the world that owns the readable answers.
+    UPWReadingPresenter* Reading = UPWReadingPresenter::Get(this);
+    if (Reading == nullptr || !Reading->OpenBuiltIn(ContentId))
+    {
+        UE_LOG(LogPWLaneLife, Warning, TEXT("Readable %s could not open %s (\"%s\")."), *ReadableId.ToString(), *ContentId.ToString(),
+               *Title.ToString());
+    }
 }
 
 int32 UPWLaneLifeSubsystem::GetMinuteOfDay() const

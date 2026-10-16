@@ -91,6 +91,8 @@ private:
     void ShowDoorRefusal(const APawn* By, PerfectWorld::DoorResult Result, const PerfectWorld::DoorDef* Def) const;
     /** APWDoorActor::OnSettled: the leaf's real outcome. An interrupted swing overrides the provisional core state. */
     void HandleDoorSettled(FName DoorId, bool bReachedTarget, bool bIsOpenNow, int8 SwingSide);
+    /** APWReadableActor::GlobalReadRequested: open the text in this world's reading presenter. */
+    void HandleReadRequested(FName ReadableId, FName ContentId, FText Title);
 
     PerfectWorld::DoorState Doors;
     PerfectWorld::ConversationState Conversation;

@@ -4,6 +4,7 @@
 #include "Engine/PointLight.h"
 #include "Engine/World.h"
 #include "PerfectWorldDoorActor.h"
+#include "PerfectWorldFurnitureActor.h"
 #include "PerfectWorldLaneBarriers.h"
 #include "PerfectWorldLaneBlocks.h"
 #include "PerfectWorldLaneBuildings.h"
@@ -138,6 +139,25 @@ void SpawnHouseholdAdult(UWorld& World)
         UE_LOG(LogTemp, Warning, TEXT("Kolkata lane: the household adult could not be placed in the opening home."));
     }
 }
+
+/** The opening home's usable furniture: the seats and the newspaper, from the layout's own anchor specs (order HL/FI). */
+void SpawnHomeFurniture(UWorld& World)
+{
+    const FLaneFrame HomeFrame = MakeLaneFrame(-300.0, -400.0, FVector(1.0, 0.0, 0.0), FVector(0.0, -1.0, 0.0));
+    FActorSpawnParameters Params;
+    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    for (const FHomeSeatSpec& Spec : HomeSeatSpecs())
+    {
+        if (APWSeatActor* Seat = World.SpawnActor<APWSeatActor>(FVector::ZeroVector, FRotator::ZeroRotator, Params))
+        {
+            Seat->ConfigureFromSpec(Spec, HomeFrame);
+        }
+    }
+    if (APWReadableActor* Paper = World.SpawnActor<APWReadableActor>(FVector::ZeroVector, FRotator::ZeroRotator, Params))
+    {
+        Paper->ConfigureFromSpec(HomeReadableSpec(), HomeFrame, NSLOCTEXT("PerfectWorldLane", "HomeNewspaper", "Today's newspaper"));
+    }
+}
 } // namespace
 
 void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* BaseMaterial)
@@ -161,6 +181,7 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     if (Scene.bOpeningHomeBuilt)
     {
         SpawnHouseholdAdult(World);
+        SpawnHomeFurniture(World);
     }
 
     UE_LOG(LogTemp, Display, TEXT("Kolkata lane: %d block instances in %d components, %d stall lights placed."), Instances, Components,
