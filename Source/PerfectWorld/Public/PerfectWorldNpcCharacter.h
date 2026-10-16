@@ -17,7 +17,9 @@ enum class EPWNpcOutfit : uint8
     /** The staff-caregiver prototype from LANE_LIFE_PLAN section B: 162 cm, silver-streaked hair, sage overshirt, key pouch. */
     HouseholdAdult,
     /** A plain, distinct outfit for the parent household: 168 cm, off-white shirt, charcoal trousers, dark hair. */
-    ParentHousehold
+    ParentHousehold,
+    /** Farida: 158 cm, sturdy frame, tied-back hair, cream shirt and terracotta apron. */
+    ShopProprietor
 };
 
 /** Which part of the pose moves a block: the body (torso, head, face) leans and sways; limbs swing about a pivot. */

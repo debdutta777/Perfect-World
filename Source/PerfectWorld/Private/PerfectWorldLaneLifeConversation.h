@@ -2,13 +2,17 @@
 
 #include "CoreMinimal.h"
 #include "PerfectWorldConversationPresenter.h"
+#include "Conversation.h"
 
 class UPWLaneLifeSubsystem;
+
+/** Unknown people have an empty catalogue and are refused by the core. Authored spans have static lifetime. */
+PerfectWorld::ConversationCatalogue FaCatalogueForPerson(FName PersonId);
 
 /**
  * The conversation panel's session over the portable Conversation module (Conversation.h).
  *
- * The core's ConversationState lives in UPWLaneLifeSubsystem and was opened by MakeConversationSession (OpenConversation).
+ * Each person's ConversationState lives in UPWLaneLifeSubsystem and is opened by MakeConversationSession (OpenConversation).
  * This class only translates: GetView shows the current node's line and the core's visible choices (Leave is the panel's own
  * action, so it is not listed as a choice); Choose calls ChooseConversationChoice and hands the returned cost to the
  * subsystem's pending-minutes counter (charged once by the core, never re-applied here); Leave calls LeaveConversation.
@@ -17,7 +21,7 @@ class UPWLaneLifeSubsystem;
 class FPWCoreConversationSession final : public IPWConversationSession
 {
 public:
-    FPWCoreConversationSession(const TWeakObjectPtr<UPWLaneLifeSubsystem>& InOwner, const FText& InSpeaker);
+    FPWCoreConversationSession(const TWeakObjectPtr<UPWLaneLifeSubsystem>& InOwner, FName InPersonId, const FText& InSpeaker);
 
     virtual FPWConversationView GetView() const override;
     virtual void Choose(FName ChoiceId) override;
@@ -27,5 +31,6 @@ public:
 
 private:
     TWeakObjectPtr<UPWLaneLifeSubsystem> Owner;
+    FName PersonId;
     FText Speaker;
 };

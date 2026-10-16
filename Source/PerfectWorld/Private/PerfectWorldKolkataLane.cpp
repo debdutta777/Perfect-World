@@ -12,6 +12,7 @@
 #include "PerfectWorldLaneLifeSubsystem.h"
 #include "PerfectWorldLaneProps.h"
 #include "PerfectWorldLaneRoutes.h"
+#include "PerfectWorldLaneTeaShop.h"
 #include "PerfectWorldNpcCharacter.h"
 
 namespace PWLane
@@ -158,6 +159,37 @@ void SpawnHomeFurniture(UWorld& World)
         Paper->ConfigureFromSpec(HomeReadableSpec(), HomeFrame, NSLOCTEXT("PerfectWorldLane", "HomeNewspaper", "Today's newspaper"));
     }
 }
+void FaSpawnFarida(UWorld& World, const FLaneScene& Scene)
+{
+    if (!HasTeaShop(Scene)) { return; }
+    // HasTeaShop means TS accepted the complete footprint. Recover its built frame from the recorded frontage;
+    // the remaining dimensions are TS's published binding, not a second shop generator.
+    for (const FLaneFront& Front : Scene.Fronts[1])
+    {
+        FLaneBuilding Building;
+        Building.Frame = MakeLaneFrame(Front.X0, Front.AbsY, FVector::ForwardVector, FVector::RightVector);
+        Building.Width = Front.X1 - Front.X0;
+        Building.Depth = 900.0;
+        Building.Setback = 120.0;
+        Building.Storeys = 3;
+        Building.Side = 1;
+        Building.Index = 3;
+        if (!IsTeaShopBuilding(Building)) { continue; }
+        UPWLaneLifeSubsystem* Life = UPWLaneLifeSubsystem::Get(&World);
+        FTransform Feet;
+        if (Life == nullptr || !Life->PrepareFarida(Building, Feet))
+        {
+            UE_LOG(LogTemp, Error, TEXT("Farida could not resolve her content/schedule/world anchor; no fallback spawn."));
+            return;
+        }
+        APWNpcCharacter* Person = APWNpcCharacter::SpawnAt(World, Feet, PWLaneLife::ToName(PerfectWorld::FaridaPersonId),
+            NSLOCTEXT("PerfectWorldLane", "FaridaName", "Farida"), EPWNpcOutfit::ShopProprietor);
+        if (Person != nullptr) { Life->RegisterFarida(*Person); }
+        else { UE_LOG(LogTemp, Error, TEXT("Farida could not be spawned at her resolved anchor.")); }
+        return;
+    }
+    UE_LOG(LogTemp, Error, TEXT("Shanti Chai was built but its recorded frontage did not resolve."));
+}
 } // namespace
 
 void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* BaseMaterial)
@@ -178,6 +210,7 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     SpawnWarmLights(World, Scene.LightSpots);
     SpawnRoomLights(World, Scene.RoomLights);
     SpawnDoors(World, Scene.Doors);
+    FaSpawnFarida(World, Scene);
     if (Scene.bOpeningHomeBuilt)
     {
         SpawnHouseholdAdult(World);

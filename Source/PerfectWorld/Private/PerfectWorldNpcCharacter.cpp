@@ -41,6 +41,7 @@ EPWNpcPartGroup ArmOf(const double Side) { return Side < 0.0 ? EPWNpcPartGroup::
 
 double HeightFor(const EPWNpcOutfit Outfit)
 {
+    if (Outfit == EPWNpcOutfit::ShopProprietor) { return 158.0; }
     return Outfit == EPWNpcOutfit::HouseholdAdult ? 162.0 : 168.0;
 }
 
@@ -77,6 +78,28 @@ void AppendParts(const EPWNpcOutfit Outfit, const double H, TArray<FPartSpec>& O
         Put(Out, FVector(0.0, 0.0, H - HeadHeight * 0.5), FVector(20.0, 20.0, HeadHeight), Skin);
         Put(Out, FVector(0.0, 0.0, H - 3.5), FVector(22.0, 22.0, 7.0), Silver);      // silver-streaked hair
         Put(Out, FVector(3.0, 25.0, 0.47 * H), FVector(8.0, 11.0, 12.0), Leather);    // the key pouch
+    }
+    else if (Outfit == EPWNpcOutfit::ShopProprietor)
+    {
+        const FColor FaSkin(174, 119, 84), FaTrousers(64, 59, 56), FaCream(230, 220, 196);
+        const FColor FaApron(176, 86, 59), FaHair(42, 32, 29);
+        for (const double Side : {-1.0, 1.0})
+        {
+            const EPWNpcPartGroup FaLeg = Side < 0.0 ? EPWNpcPartGroup::LegLeft : EPWNpcPartGroup::LegRight;
+            Put(Out, FVector(0.0, Side * 10.0, LegHeight * 0.5), FVector(17.0, 17.0, LegHeight), FaTrousers,
+                FaLeg, FVector(0.0, Side * 10.0, LegHeight));
+            const FVector FaShoulder(0.0, Side * 29.0, 0.84 * H);
+            Put(Out, FVector(0.0, Side * 29.0, 0.84 * H - SleeveHeight * 0.5), FVector(14.0, 14.0, SleeveHeight),
+                FaCream, ArmOf(Side), FaShoulder);
+            Put(Out, FVector(0.0, Side * 29.0, 0.84 * H - SleeveHeight - ForearmHeight * 0.5), FVector(11.0, 11.0, ForearmHeight),
+                FaSkin, ArmOf(Side), FaShoulder);
+        }
+        Put(Out, FVector(0.0, 0.0, TorsoCentre), FVector(26.0, 46.0, TorsoHeight), FaCream);
+        Put(Out, FVector(14.0, 0.0, 0.62 * H), FVector(3.0, 35.0, 0.42 * H), FaApron);
+        Put(Out, FVector(0.0, 0.0, 0.52 * H), FVector(28.0, 48.0, 4.0), FaApron);
+        Put(Out, FVector(0.0, 0.0, H - HeadHeight * 0.5), FVector(20.0, 22.0, HeadHeight), FaSkin);
+        Put(Out, FVector(0.0, 0.0, H - 3.5), FVector(22.0, 24.0, 7.0), FaHair);
+        Put(Out, FVector(-11.0, 0.0, H - 9.0), FVector(9.0, 14.0, 12.0), FaHair); // tied-back bun
     }
     else
     {
