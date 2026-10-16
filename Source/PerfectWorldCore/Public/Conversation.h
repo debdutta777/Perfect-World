@@ -145,6 +145,7 @@ struct ConversationCatalogue
 [[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue DefaultConversationCatalogue() noexcept;
 /** The household adult's catalogue, whatever the default is. */
 [[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue HouseholdConversationCatalogue() noexcept;
+[[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue CareConversationCatalogue() noexcept;
 /** The default catalogue's nodes. */
 [[nodiscard]] PERFECTWORLDCORE_API std::span<const ConversationNodeDef> ConversationNodes() noexcept;
 
