@@ -3,8 +3,11 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "CollisionQueryParams.h"
+#include "Components/PrimitiveComponent.h"
 #include "Engine/CollisionProfile.h"
 #include "Engine/StaticMesh.h"
+#include "Engine/World.h"
 #include "EnhancedInputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
@@ -39,7 +42,31 @@ const FBodyPartSpec BodySpecs[] = {
     {TEXT("BodyArmLeft"), FVector(0.0, -25.0, 108.0), FVector(10.0, 10.0, 56.0), TintSkin},
     {TEXT("BodyArmRight"), FVector(0.0, 25.0, 108.0), FVector(10.0, 10.0, 56.0), TintSkin},
     {TEXT("BodyHead"), FVector(0.0, 0.0, 152.5), FVector(20.0, 20.0, 25.0), TintSkin},
+    // Thighs: folded into the hips and hidden while standing; they carry the sitting pose.
+    {TEXT("BodyThighLeft"), FVector(0.0, -9.0, 80.0), FVector(14.0, 14.0, 14.0), TintTrousers},
+    {TEXT("BodyThighRight"), FVector(0.0, 9.0, 80.0), FVector(14.0, 14.0, 14.0), TintTrousers},
 };
+constexpr int32 FirstThighPart = 6;
+
+/**
+ * The sitting pose of one block part, relative to the seated capsule's centre (its bottom is the seat top, 41 cm down):
+ * calves hang from the knee (36 cm forward) to the floor, thighs lie on the seat, the torso rises from the seat.
+ */
+void SeatedBlockPart(const int32 Index, const float SeatHeightCm, FVector& OutCentre, FVector& OutSize)
+{
+    const float Top = -PWSeat::CapsuleHalfHeight;
+    const float Side = (Index % 2 == 0) ? -9.0f : 9.0f; // even parts are the left ones (legs 0-1, thighs 6-7)
+    switch (Index)
+    {
+    case 0:
+    case 1: OutCentre = FVector(36.0, Side, Top - SeatHeightCm * 0.5f); OutSize = FVector(14.0, 14.0, SeatHeightCm); break;
+    case 2: OutCentre = FVector(-2.0, 0.0, Top + 30.0f); OutSize = FVector(20.0, 40.0, 60.0); break;
+    case 3:
+    case 4: OutCentre = FVector(0.0, Index == 3 ? -25.0 : 25.0, Top + 28.0f); OutSize = FVector(10.0, 10.0, 56.0); break;
+    case 5: OutCentre = FVector(0.0, 0.0, Top + 72.5f); OutSize = FVector(20.0, 20.0, 25.0); break;
+    default: OutCentre = FVector(18.0, Side, Top + 7.0f); OutSize = FVector(40.0, 14.0, 14.0); break;
+    }
+}
 
 /** If the character ever ends up this far under its starting height it has fallen out of the world: put it back. */
 constexpr double FallRecoveryDepth = 3000.0;
@@ -124,6 +151,7 @@ void APerfectWorldPlayerCharacter::BuildBody()
         Part->SetCollisionEnabled(ECollisionEnabled::NoCollision); // the capsule is the body for collision
         Part->SetCanEverAffectNavigation(false);
         Part->SetOwnerNoSee(true); // first person is the default
+        Part->SetHiddenInGame(BodyParts.Num() >= FirstThighPart); // the thighs only show while sitting
         BodyParts.Add(Part);
     }
 }
@@ -163,13 +191,14 @@ void APerfectWorldPlayerCharacter::BeginPlay()
 void APerfectWorldPlayerCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
+    TickSeat(DeltaSeconds);
 
     // Run is "held this frame": the input handlers set the flag, and a missed release can never leave the player running.
     const bool bRun = (bRunHeldThisFrame || bLegacyRunKeyDown) && !IsInputBlocked();
     bRunHeldThisFrame = false;
     GetCharacterMovement()->MaxWalkSpeed = bRun ? PWPlayer::RunSpeed : PWPlayer::WalkSpeed;
 
-    if (GetActorLocation().Z < HomeLocation.Z - FallRecoveryDepth)
+    if (SeatState == EPWSeatState::Standing && GetActorLocation().Z < HomeLocation.Z - FallRecoveryDepth)
     {
         TeleportTo(HomeLocation, HomeRotation);
         GetCharacterMovement()->Velocity = FVector::ZeroVector;
@@ -224,6 +253,20 @@ void APerfectWorldPlayerCharacter::ApplyMove(float Right, float Forward)
     {
         return;
     }
+    if (SeatState != EPWSeatState::Standing)
+    {
+        // Seated: walking is blocked; a deliberate movement input stands the player up, but only after the movement keys have
+        // been let go once since sitting, so a key still held from walking up to the seat does not undo the sit.
+        if (FMath::Max(FMath::Abs(Right), FMath::Abs(Forward)) >= PWSeat::MoveInputThreshold)
+        {
+            bMoveInputThisFrame = true;
+            if (SeatState == EPWSeatState::Seated && bMoveReleasedSinceSeated)
+            {
+                StandUp();
+            }
+        }
+        return;
+    }
     // Move relative to where the camera looks (yaw only), so looking up or down never slows walking.
     const FRotator YawOnly(0.0, Controller->GetControlRotation().Yaw, 0.0);
     const FRotationMatrix Basis(YawOnly);
@@ -237,8 +280,13 @@ void APerfectWorldPlayerCharacter::ApplyLookDegrees(float YawDegrees, float UpDe
     {
         return;
     }
+    if (SeatState == EPWSeatState::Entering)
+    {
+        return; // the glide turns the view to the seat's facing
+    }
     AddControllerYawInput(YawDegrees);
     AddControllerPitchInput(-UpDegrees); // the engine's positive pitch input looks down; the default is not inverted
+    ClampSeatedLook();
 }
 
 void APerfectWorldPlayerCharacter::ApplyZoomCentimetres(float Centimetres)
@@ -247,4 +295,38 @@ void APerfectWorldPlayerCharacter::ApplyZoomCentimetres(float Centimetres)
     {
         SetThirdPersonDistance(GetThirdPersonDistance() + Centimetres);
     }
+}
+
+// ---- Seating. The portable core does not know about sitting: it is presentation and safe movement only. ----
+
+void APerfectWorldPlayerCharacter::ApplySeatPose(float Blend)
+{
+    const float SeatHeight = SeatPlacement.SeatHeightCm;
+    for (int32 Index = 0; Index < BodyParts.Num() && Index < static_cast<int32>(UE_ARRAY_COUNT(BodySpecs)); ++Index)
+    {
+        UStaticMeshComponent* Part = BodyParts[Index];
+        if (Part == nullptr)
+        {
+            continue;
+        }
+        FVector SeatedCentre;
+        FVector SeatedSize;
+        SeatedBlockPart(Index, SeatHeight, SeatedCentre, SeatedSize);
+        const FBodyPartSpec& Spec = BodySpecs[Index];
+        const FVector StandingCentre(Spec.Centre.X, Spec.Centre.Y, Spec.Centre.Z - PWPlayer::CapsuleHalfHeight);
+        Part->SetRelativeLocation(FMath::Lerp(StandingCentre, SeatedCentre, Blend));
+        Part->SetRelativeScale3D(FMath::Lerp(Spec.Size, SeatedSize, Blend) / 100.0);
+        if (Index >= FirstThighPart)
+        {
+            Part->SetHiddenInGame(Blend <= 0.0f);
+        }
+    }
+}
+
+void APerfectWorldPlayerCharacter::SetEyeWorldHeight(float EyeZ)
+{
+    // Both cameras hang off the capsule; only their height above its centre changes (the first person one stays 8 cm forward).
+    const double Relative = static_cast<double>(EyeZ) - GetActorLocation().Z;
+    FirstPersonCamera->SetRelativeLocation(FVector(8.0, 0.0, Relative));
+    BoomArm->SetRelativeLocation(FVector(0.0, 0.0, Relative));
 }
