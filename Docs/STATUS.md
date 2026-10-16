@@ -1479,3 +1479,30 @@ The integrator then wires the doors and the conversation through the core.
 - **Reading:** E on the table's newspaper ("E / X · Read…") opens the paper-like reading panel. It shows "The Kolkata Morning Courier, Monday, 2 June 2042", Page 1 of 3, A-/A+, Previous/Next and Close. Right turns the page and Esc closes it. Screenshot: `Docs/Images/home-reading-newspaper.png`.
 - **Seat prompt:** "E / X · Sit at the table" shows at the table chair. Screenshot: `Docs/Images/home-sit-prompt.png`.
 - **Sitting itself is NOT verified.** The cheat teleport `BugItGo` leaves the pawn in ghost (flying) mode, so `TrySit` correctly refused ("You can't sit down right now", not on the ground). A second positioning attempt missed the chair. The next walk-through should test sitting from a normal walking start.
+
+## Checkpoint — NPC movement and Farida's schedule merged, 2026-10-16
+
+**Claude Sonnet 5.5, NM:** `UPWNpcMovementComponent`, built in two parts, each under 500 lines.
+- **Route following:** follows the core's travel progress at 140 cm/s, catching up at up to 200 cm/s.
+- **Far snap:** happens only when more than 5 m away and unseen; the NPC never teleports through a wall.
+- **Local yield:** a raised-hand pose when blocked. A persistent block reports through `OnBlockChanged`.
+- **Gestures and chat:** procedural work gestures, presentation only. Chat holds the NPC and resumes afterwards.
+- **Polite declines are reachable:** the verb stays "Talk to <name>", and E shows the decline.
+
+**gpt-6.1-sol, S:** Farida's `npc_schedule` content.
+- **Data:** schema, typed loading and the JSON at `Data/Content/npc_schedule/npc_schedule.farida_qadri.json`.
+- **Validation:** weekly coverage, both serving windows, and route-length travel budgets at 140 cm per game minute.
+- **Tests:** 23,530 assertions.
+
+**Integrator:**
+- registered the schema and its semantic validation in the shared registry (CAT);
+- fixed the schedule test's registry path, which must be `<type>/<id>.json`, and made the test print registry issues on failure;
+- resolved two CMake merge conflicts.
+
+**Exact checks:**
+- **Rung 1:** **157/157**.
+- **Rung 2:** at `031fde3`, **Succeeded**: NM and S compiled first time.
+
+**Not yet done:**
+- Farida is not yet placed or driven by her schedule;
+- the clock does not run yet (CK+TX is in progress).
