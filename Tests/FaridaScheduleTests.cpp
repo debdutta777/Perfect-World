@@ -196,7 +196,10 @@ int main(int argc, char** argv)
     const auto known = KnownContentTypes();
     if (std::find(known.begin(), known.end(), "npc_schedule") != known.end())
     {
-        const auto registered = LoadContent({{"farida.json", text}});
+        // The registry requires the content path layout <type>/<id>.json.
+        const auto registered = LoadContent({{"Data/Content/npc_schedule/npc_schedule.farida_qadri.json", text}});
+        for (const auto& issue : registered.Issues)
+            std::cerr << issue.File << ' ' << issue.Id << ": " << issue.Message << '\n';
         Require(registered.Ok(), "Farida loads through registered schema");
         Require(LoadFaridaSchedule(registered.Db).Ok(), "registered content supplies typed schedule");
     }
