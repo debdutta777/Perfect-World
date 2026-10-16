@@ -542,3 +542,9 @@ target_include_directories(PerfectWorldFaridaScheduleTests PRIVATE Source/Perfec
 target_link_libraries(PerfectWorldFaridaScheduleTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldFaridaScheduleTests COMMAND PerfectWorldFaridaScheduleTests
     ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.farida_qadri.json)
+
+# World lane transactions (orders CK+TX): conversation and door commands in the reducer, due-now draining, atomic charging.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldConversation.cpp)
+add_executable(PerfectWorldLaneTransactionsTests Tests/WorldLaneTransactionsTests.cpp)
+target_link_libraries(PerfectWorldLaneTransactionsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneTransactionsTests COMMAND PerfectWorldLaneTransactionsTests)

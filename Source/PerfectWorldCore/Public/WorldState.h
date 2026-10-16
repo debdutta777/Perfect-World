@@ -1,12 +1,16 @@
 #pragma once
 
+#include "Conversation.h"
 #include "DayLoop.h"
+#include "Doors.h"
 #include "GameClock.h"
 #include "RandomStreams.h"
 
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <variant>
 
 #ifndef PERFECTWORLDCORE_API
@@ -75,6 +79,25 @@ struct WorldState
      * them must move Clock to match. A fresh world is a fresh life at the clock's instant.
      */
     DayLoopState DayLoop = NewDayLoopState(0);
+    /**
+     * The lane's conversation memory, one ConversationState (Conversation.h) per person spoken to, keyed by person id:
+     * that person's open session, remembered facts, bOnceEver choices and the current session's paid-choice receipts
+     * (ChoiceId, Session). Each state is valid under its person's own catalogue (ConversationCatalogueForPerson), so the
+     * household, care and Farida content never share facts or session numbers. At most one state is Open in the world
+     * (OpenConversationPersonId). An entry exists once its person has been spoken to. Changed only by the conversation.*
+     * commands (WorldConversation.cpp), which charge a paid choice's minutes through the world clock in the same command.
+     * PENDING SAVE ORDER (world v8): persist each entry, in key order, as the person id plus its "pw.conversation/2"
+     * text (SerialiseConversationState with the person's catalogue), and hash it; refuse an unknown person id or a state
+     * IsConversationStateValid rejects. An older save starts with no entries. Until then a world save does not carry it
+     * and WorldHash does not cover it.
+     */
+    std::map<std::string, ConversationState, std::less<>> Conversations;
+    /**
+     * The lane's doors (Doors.h): one physical entry (open, swing side) per authored door, in table order. Changed
+     * only by the door.set and door.settle commands. PENDING SAVE ORDER (world v8): persist as "pw.doors/2"
+     * (SerialiseDoorState; /1 migrates) and hash it; an older save starts from the authored defaults, as here.
+     */
+    DoorState Doors = MakeInitialDoorState();
 };
 
 /** A fresh world: the clock at the campaign epoch (2 Jun 2042 06:00), no flags or Gates, RNG streams seeded from the world seed, a fresh day. */
@@ -92,6 +115,23 @@ inline WorldState MakeWorldState(std::uint64_t worldSeed)
  * reader requires it, and the reducer keeps it true: a time advance moves both clocks.
  */
 [[nodiscard]] PERFECTWORLDCORE_API bool IsWorldDayInStep(const WorldState& state);
+
+/**
+ * True when nothing is due at the current instant (LANE_LIFE_IMPLEMENTATION §A item 5). An event-capped advance can
+ * stop with events still due now; submit time.settle (SettleDueEvents) until this holds before saving or before the
+ * next player command. The conversation.* and door.* commands are refused ("world.unsettled") until it does.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API bool IsWorldQuiescent(const WorldState& state);
+
+/**
+ * The conversation catalogue that speaks for a person (WorldConversation.cpp): the first of the household, care and
+ * Farida catalogues with a node for that person id, or empty for a person none of them knows. Until the composed lane
+ * catalogue (CAT order) exists, this is the one person-to-content routing rule; the save order uses it too.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API std::optional<ConversationCatalogue> ConversationCatalogueForPerson(std::string_view personId) noexcept;
+
+/** The person whose conversation session is open, or empty when none is. */
+[[nodiscard]] PERFECTWORLDCORE_API std::string_view OpenConversationPersonId(const WorldState& state) noexcept;
 
 /** Things that happened, in the order they happened. Presentation rebuilds from these. */
 struct TimeAdvanced
@@ -151,8 +191,50 @@ struct GateSealed
     std::string GateId;
 };
 
+/** A conversation session opened at the world clock's minute of day. */
+struct ConversationOpened
+{
+    std::string PersonId;
+    std::string NodeId;
+    std::uint32_t Session = 0;
+};
+
+/**
+ * One authored conversation choice was accepted: its facts are applied and, when CostMinutes > 0, exactly that many
+ * minutes follow in the same command's TimeAdvanced (the charge for the receipt (ChoiceId, Session)). Leave emits only
+ * ConversationEnded.
+ */
+struct ConversationChoiceAccepted
+{
+    std::string PersonId;
+    std::string ChoiceId;
+    std::uint32_t Session = 0;
+    std::int32_t CostMinutes = 0;
+    std::string FactSet;
+    std::string FactCleared;
+    /** Empty when the session ended. */
+    std::string NextNodeId;
+};
+
+/** The open session ended (Leave, or a choice with no next node). */
+struct ConversationEnded
+{
+    std::string PersonId;
+    std::uint32_t Session = 0;
+};
+
+/** A door's physical state changed: through access rules (door.set) or a reported settlement (door.settle). */
+struct DoorChanged
+{
+    std::string DoorId;
+    bool Open = false;
+    std::int8_t SwingSide = 0;
+    bool Settlement = false;
+};
+
 using EventPayload = std::variant<TimeAdvanced, DayStarted, ScheduledEventFired, WorldFlagChanged, GateRegistered, GateOnset,
-                                  GateOnsetHeld, GateContained, GateSealed>;
+                                  GateOnsetHeld, GateContained, GateSealed, ConversationOpened, ConversationChoiceAccepted,
+                                  ConversationEnded, DoorChanged>;
 
 struct DomainEvent
 {
