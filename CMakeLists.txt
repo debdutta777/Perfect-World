@@ -127,6 +127,7 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/ConversationText.cpp
     Source/PerfectWorldCore/Private/NpcBehaviour.cpp
     Source/PerfectWorldCore/Private/LaneOrigin.cpp
+    Source/PerfectWorldCore/Private/ConversationCareContent.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -522,3 +523,8 @@ add_test(NAME PerfectWorldCountdownTests COMMAND PerfectWorldCountdownTests ${CM
 add_executable(PerfectWorldLaneOriginTests Tests/LaneOriginTests.cpp)
 target_link_libraries(PerfectWorldLaneOriginTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldLaneOriginTests COMMAND PerfectWorldLaneOriginTests)
+
+# Care worker conversation catalogue (order CC).
+add_executable(PerfectWorldConversationCareTests Tests/ConversationCareTests.cpp)
+target_link_libraries(PerfectWorldConversationCareTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldConversationCareTests COMMAND PerfectWorldConversationCareTests)
