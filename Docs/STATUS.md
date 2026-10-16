@@ -1448,3 +1448,29 @@ The integrator then wires the doors and the conversation through the core.
 - the shop's shutter door is not yet in the core: D2 is in progress;
 - Farida is not yet placed;
 - conversation time is not yet charged: CK+TX is pending.
+
+## Checkpoint — wave 2, first part: door settlement, dialogue catalogues, reading and seats, 2026-10-16
+
+**What merged:**
+- **gpt-6.1-sol, D2:**
+  - `ApplyDoorSettlement` with the swing side;
+  - `pw.doors/2` with /1 migration;
+  - `door.nabapara.shanti_chai_shutter` with two opening windows (06:00–11:30 and 15:30–19:00);
+  - four care-home doors.
+  
+  15,460 door assertions passed.
+- **Claude Sonnet 5.5:**
+  - **CC:** the care worker's catalogue. On duty 07:00–15:00, the evening staff and a handover note afterwards, no second person named, shared-jobs agreements that claim no result, and a word-level tone guard.
+  - **CF:** Farida's catalogue. Her day runs preparing, serving, midday close, serving, closing. Tea is a social 10-minute sit charged once per session, not a purchase. The bench line plays only after the player asked.
+  - **RD:** the reading presenter and panel, paper-like and paged, with text size and keyboard/controller support. Built-in "The Kolkata Morning Courier" for 2 June 2042, with no real people, politics or religion.
+  - **FI:** seat and readable actors. Seated state: a sweep-checked 0.4 s glide, eye at 112–115 cm, look limits, safe stand-up spots, and a third-person sitting pose.
+- **Integrator:**
+  - settlement goes through the core, and doors restore their saved swing side;
+  - the home's divan and table chair seats and the newspaper are spawned from the layout specs;
+  - `APWReadableActor::GlobalReadRequested` opens the reading presenter.
+
+**Exact checks:**
+- **Rung 1:** **156/156**.
+- **Rung 2:** at `97015f8`, **Succeeded**: RD, FI, CC and CF compiled first time.
+
+**Not yet verified:** sitting and reading have not been tried in play; the packaged walk is next.
