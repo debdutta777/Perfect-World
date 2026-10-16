@@ -2,6 +2,7 @@
 
 #include "CharacterCreation.h"
 #include "ContentSchemaBuilders.h"
+#include "FaridaSchedule.h"
 
 #include <algorithm>
 #include <array>
@@ -176,7 +177,7 @@ const std::vector<const TypeSchema*>& TopLevelSchemas()
                                                        &ExplainCaseSchema(), &InvestigateFamilySchema(), &InvestigateCaseSchema(),
                                                        &CoordinateFamilySchema(), &CoordinateCaseSchema(), &CalendarSchema(),
                                                        &AssessmentPaperSchema(), &AbilityRecipeSchema(),
-                                                       &ThreadTemplateSchema()};
+                                                       &ThreadTemplateSchema(), &NpcScheduleSchema()};
     return all;
 }
 
@@ -242,6 +243,7 @@ void CheckSemantics(const ContentDb& db, std::vector<ContentIssue>& issues)
     CheckAssessmentSemantics(db, issues);
     CheckAbilitySemantics(db, issues);
     CheckThreadSemantics(db, issues);
+    ValidateNpcScheduleSemantics(db, issues);
     for (const ContentRecord* skill : db.OfType("skill"))
         SeedCheck(issues, *skill, "xpByRank");
     const std::vector<const ContentRecord*> attributes = db.OfType("attribute");

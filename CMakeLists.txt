@@ -533,3 +533,12 @@ add_test(NAME PerfectWorldConversationCareTests COMMAND PerfectWorldConversation
 add_executable(PerfectWorldConversationFaridaTests Tests/ConversationFaridaTests.cpp)
 target_link_libraries(PerfectWorldConversationFaridaTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldConversationFaridaTests COMMAND PerfectWorldConversationFaridaTests)
+# Order S: shared content-schema dispatch remains owned by CAT.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/FaridaSchedule.cpp
+    Source/PerfectWorldCore/Private/ContentNpcScheduleSchemas.cpp)
+add_executable(PerfectWorldFaridaScheduleTests Tests/FaridaScheduleTests.cpp)
+target_include_directories(PerfectWorldFaridaScheduleTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldFaridaScheduleTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldFaridaScheduleTests COMMAND PerfectWorldFaridaScheduleTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.farida_qadri.json)
