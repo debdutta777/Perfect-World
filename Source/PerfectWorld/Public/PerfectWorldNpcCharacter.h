@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "PerfectWorldInteractable.h"
+#include "PerfectWorldNpcMovementComponent.h"
 #include "PerfectWorldNpcCharacter.generated.h"
 
 class UMaterialInstanceDynamic;
@@ -19,6 +20,24 @@ enum class EPWNpcOutfit : uint8
     ParentHousehold
 };
 
+/** Which part of the pose moves a block: the body (torso, head, face) leans and sways; limbs swing about a pivot. */
+enum class EPWNpcPartGroup : uint8
+{
+    Body,
+    LegLeft,
+    LegRight,
+    ArmLeft,
+    ArmRight
+};
+
+/** Where a block rests (X forward, Y right, Z above the floor, in cm) and the joint its group rotates about. */
+struct FPWNpcPartRest
+{
+    EPWNpcPartGroup Group = EPWNpcPartGroup::Body;
+    FVector Rest = FVector::ZeroVector;
+    FVector Pivot = FVector::ZeroVector;
+};
+
 /** Fixed numbers for a standing person, in centimetres and degrees per second. */
 namespace PWNpc
 {
@@ -29,10 +48,12 @@ constexpr int32 InteractionPriority = 20;     // people outrank doors (10)
 } // namespace PWNpc
 
 /**
- * A standing, talkable person for the lane (LANE_LIFE_PLAN section B): a block body on a capsule like the player's, which
- * idles in place, slowly turns toward the player within 3 m (presentation only), and opens the conversation panel when
- * the player interacts. It decides nothing: who they are and what they say belong to the portable core, which the
- * integrator connects through UPWConversationPresenter::SetSessionFactory.
+ * A talkable person for the lane (LANE_LIFE_PLAN section B): a block body on a capsule like the player's. Left alone, it
+ * stands, slowly turns toward the player within 3 m and opens the conversation panel when the player interacts. Fed an
+ * intent from the portable core (GetNpcMovement()->SetIntent), it walks its route, works at its anchor, sleeps, waits and
+ * stops to talk, all presentation: UPWNpcMovementComponent does the moving, this class turns its pose into block rotations.
+ * It decides nothing: who they are, what they say and what they are doing belong to the core, which the integrator
+ * connects through UPWConversationPresenter::SetSessionFactory and SetIntent.
  *
  * It is not placed in any level. SpawnAt creates one; the integrator calls it from the lane or home setup.
  */
@@ -52,7 +73,6 @@ public:
                                     EPWNpcOutfit Outfit = EPWNpcOutfit::HouseholdAdult);
 
     virtual void BeginPlay() override;
-    virtual void Tick(float DeltaSeconds) override;
 
     // IPWInteractable
     virtual FText GetInteractionVerb(const APawn* By) const override;
@@ -60,17 +80,34 @@ public:
     virtual int32 GetInteractionPriority() const override;
     virtual void Interact(APawn* By) override;
 
+    UPWNpcMovementComponent* GetNpcMovement() const { return NpcMovement; }
+
+    /**
+     * Why they cannot be talked to right now, as a short sentence for the interaction notice ("Farida is asleep."), or
+     * empty when nothing declines. The verb stays "Talk to <name>" when the intent is not talkable, so the person can
+     * still be targeted; Interact then shows this through UPWInteractionComponent::ShowNotice on the interacting pawn and
+     * opens no conversation.
+     */
+    FText GetDeclineText() const;
+
+    /** Poses the blocks. Bound to the movement component's OnPose; also callable directly (tests, the integrator). */
+    void ApplyPose(const FPWNpcPose& Pose);
+
     FName GetPersonId() const { return PersonId; }
     const FText& GetDisplayName() const { return DisplayName; }
 
 private:
     void BuildBody();
-    void FacePlayerNow(const APawn& Player);
 
     FName PersonId;
     FText DisplayName;
     EPWNpcOutfit Outfit = EPWNpcOutfit::HouseholdAdult;
-    double HomeYaw = 0.0;
+
+    UPROPERTY()
+    TObjectPtr<UPWNpcMovementComponent> NpcMovement;
+
+    /** One entry per BodyParts element: where the block rests and which joint it swings about. */
+    TArray<FPWNpcPartRest> PartRests;
 
     /** The engine's basic cube and shape material, painted per body part like the player's body. */
     UPROPERTY()
