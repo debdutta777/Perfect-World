@@ -3,6 +3,7 @@
 #include "PerfectWorldLaneInteriors.h"
 #include "PerfectWorldLaneShops.h"
 #include "PerfectWorldLaneCareInterior.h"
+#include "PerfectWorldLaneKitFrontages.h"
 #include "PerfectWorldLaneStationeryShop.h"
 #include "PerfectWorldLaneTeaShop.h"
 
@@ -232,6 +233,12 @@ void BuildFull(FLaneScene& S, const FLaneBuilding& B)
         // The opening home (first row, -Y side, Index 2, X -300 to 700) is hollow: walls with openings, rooms, a ceiling,
         // and the solid upper storeys above it. See PerfectWorldLaneInteriors.h.
         BuildOpeningHome(S, B);
+    }
+    else if (FLaneKitFrontage KitFrontage; IsKitFrontage(B, KitFrontage))
+    {
+        // A frontage pinned in the portable frontage catalogue (LaneFrontageCatalogue.h) gets an enterable ground floor
+        // from the interior kit, with the solid storeys above. See Docs/LANE_BUILDING_INVENTORY.md.
+        BuildKitFrontage(S, B, KitFrontage);
     }
     else
     {
