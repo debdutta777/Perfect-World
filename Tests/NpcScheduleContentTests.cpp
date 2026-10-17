@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
+#include <filesystem>
 #include <iostream>
 #include <iterator>
 #include <string>
@@ -215,6 +216,41 @@ void Advance(const NpcSchedule& schedule)
     }
     Require(whole == split && full.Events == events, "split and whole advances produce identical state and events");
 }
+
+void NpcContentFaridaParity(const std::filesystem::path& careFile)
+{
+    std::ifstream input(careFile.parent_path() / "npc_schedule.farida_qadri.json");
+    Require(input.good(), "Farida authored content exists");
+    const std::string text{std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+    const auto registered = LoadContent({{"Data/Content/npc_schedule/npc_schedule.farida_qadri.json", text}});
+    Require(registered.Ok(), "Farida registered content loads");
+    const auto generic = LoadNpcSchedule(registered.Db, FaridaScheduleId);
+    const auto specific = LoadFaridaSchedule(registered.Db);
+    Require(generic.Ok() && specific.Ok(), "both Farida entry points accept her authored schedule");
+    Require(generic.Value->Person == specific.Value->Person && generic.Value->Travel == specific.Value->Travel,
+            "generic loader retains Farida routine and travel table");
+    Require(ValidateNpcScheduleContent(*generic.Value).empty(), "generic Farida content revalidates");
+    for (int day = 1; day <= 8; ++day)
+        for (int minute = 0; minute < 1440; ++minute)
+            for (const bool blocked : {false, true})
+            {
+                const auto a = ResolveNpcIntentAt(generic.Value->Person, generic.Value->Travel, At(day, minute), false, blocked);
+                const auto b = ResolveNpcIntentAt(specific.Value->Person, specific.Value->Travel, At(day, minute), false, blocked);
+                Require(a.Ok() && b.Ok() && a.Intent == b.Intent, "Farida intent parity at every minute including weekly rollover");
+            }
+    auto bad = *generic.Value;
+    bad.Person.HomeZone = "location.other";
+    Require(!ValidateNpcScheduleContent(bad).empty(), "generic Farida rejects wrong home");
+    bad = *generic.Value;
+    bad.Routes.front().LengthCm = 1;
+    Require(!ValidateNpcScheduleContent(bad).empty(), "generic Farida rejects undersized geometry");
+    bad = *generic.Value;
+    bad.Paths.front().Minutes = bad.Travel.Legs.front().Minutes = 1;
+    Require(!ValidateNpcScheduleContent(bad).empty(), "generic Farida rejects short travel budget");
+    bad = *generic.Value;
+    bad.Person.Routine.erase(bad.Person.Routine.begin());
+    Require(!ValidateNpcScheduleContent(bad).empty(), "generic Farida rejects incomplete weekly coverage");
+}
 } // namespace
 
 int main(int argc, char** argv)
@@ -248,5 +284,6 @@ int main(int argc, char** argv)
     Week(*loaded.Value);
     Variation(*loaded.Value);
     Advance(*loaded.Value);
+    NpcContentFaridaParity(argv[1]);
     std::cout << "PASS: " << Assertions << " assertions\n";
 }

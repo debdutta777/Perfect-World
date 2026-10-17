@@ -189,6 +189,95 @@ void LaneRefusals()
     data.World.Doors.Doors.front().SwingSide = 9;
     Check(SerializeWorldSave(data).empty(), "writer refuses invalid door pair");
 }
+
+void LaneStationeryEgress()
+{
+    WorldSim live(85);
+    const std::string door = "door.nabapara.stationery_front";
+    Check(live.Submit({CommandSource::Player, AdvanceTime{810}}).Accepted, "reach stationery closing time at 19:30");
+    const auto before = HashWorldState(live.State());
+    const auto refused = live.Submit({CommandSource::Player, DoorSet{door, true, {DoorDirection::Entry}}});
+    Check(!refused.Accepted && refused.Why.Code == "door.closed_hours" && HashWorldState(live.State()) == before,
+          "closed-hours entry is refused atomically through the reducer");
+    Check(live.Submit({CommandSource::Player, DoorSet{door, true, {DoorDirection::Exit}}}).Accepted,
+          "a person inside opens the stationery door after closing");
+    const auto data = SaveOf(live, MakeCreation("parent_household"));
+    WorldSaveData loaded;
+    Check(DeserializeWorldSave(SerializeWorldSave(data), loaded).HashVerified, "stationery open state survives certified v8 save");
+    CheckSame(data, loaded, "stationery state and remaining world survive save and load");
+    Check(QueryDoorOpen(loaded.World.Doors, door) == true, "saved stationery door is open");
+    WorldSim resumed(loaded.World);
+    Check(!resumed.Submit({CommandSource::Player, DoorSet{door, true, {DoorDirection::Entry}}}).Accepted,
+          "an open leaf after reload does not grant entry after closing");
+    Check(resumed.Submit({CommandSource::Player, DoorSet{door, false, {DoorDirection::Exit}}}).Accepted,
+          "a person leaving may close the door after reload");
+    Check(ReplayCommandLog(85, live.Log()).Hash == HashWorldState(live.State()), "exit command replays deterministically");
+}
+
+// Historical v5 byte layout, independent of the door writer's current authored table.
+std::uint64_t LaneHistoricalHash(const WorldState& world, std::string_view doors)
+{
+    const auto number = [](std::uint64_t value) {
+        std::string bytes;
+        for (int shift = 0; shift < 64; shift += 8)
+            bytes += static_cast<char>(value >> shift);
+        return bytes;
+    };
+    const auto text = [&](std::string_view value) {
+        return "s" + number(value.size()) + std::string(value);
+    };
+    const auto fnv = [](std::string_view bytes) {
+        std::uint64_t hash = 0xcbf29ce484222325ULL;
+        for (const unsigned char byte : bytes)
+            hash = (hash ^ byte) * 0x100000001b3ULL;
+        return hash;
+    };
+    std::string bytes = "u" + number(5);
+    for (const auto& section : HashWorldSections(world))
+        bytes += text(section.Name) + "u" + number(section.Name == "doors" ? fnv(text(doors)) : section.Hash);
+    return fnv(bytes);
+}
+
+void LaneTenDoorV8Migration()
+{
+    constexpr std::string_view oldDoors =
+        "pw.doors/2\ncount=10\n"
+        "door=door.nabapara.home_front,1,-1\n"
+        "door=door.nabapara.home_living,1,1\n"
+        "door=door.nabapara.home_bedroom,0,0\n"
+        "door=door.nabapara.home_kitchen,1,1\n"
+        "door=door.nabapara.home_washroom,0,0\n"
+        "door=door.nabapara.shanti_chai_shutter,0,0\n"
+        "door=door.nabapara.care_front,0,0\n"
+        "door=door.nabapara.care_dormitory,0,0\n"
+        "door=door.nabapara.care_common,1,1\n"
+        "door=door.nabapara.care_washroom,0,0\nend\n";
+    auto data = RichSave(86, 0);
+    Check(ApplyDoorSettlement(data.World.Doors, "door.nabapara.home_front", true, -1) == DoorResult::Ok,
+          "historical fixture has a nondefault negative swing");
+    std::string old = ReplaceOnce(SerializeWorldSave(data), LaneQuoted(SerialiseDoorState(data.World.Doors)), LaneQuoted(oldDoors));
+    const auto hashAt = old.find("\"stateHash\": ") + 13;
+    const auto hex = [](std::uint64_t hash) {
+        std::string value = "\"0x0000000000000000\"";
+        for (int digit = 0; digit < 16; ++digit)
+            value[18 - digit] = "0123456789abcdef"[(hash >> (digit * 4)) & 15];
+        return value;
+    };
+    old.replace(hashAt, 20, hex(LaneHistoricalHash(data.World, oldDoors)));
+    WorldSaveData loaded;
+    const auto result = DeserializeWorldSave(old, loaded);
+    Check(result.Succeeded() && result.SourceVersion == 8 && !result.HashVerified,
+          "historical ten-door v8 authenticates its original hash and reports changed state honestly");
+    CheckSame(data, loaded, "historical door facts survive and stationery receives its closed authored default");
+    Check(QueryDoorOpen(loaded.World.Doors, "door.nabapara.stationery_front") == false, "new business starts closed");
+    WorldSaveData again;
+    Check(DeserializeWorldSave(SerializeWorldSave(loaded), again).HashVerified, "migrated world resaves as certified current v8");
+    CheckSame(loaded, again, "migration is idempotent after resave");
+    Check(ErrorOf(ReplaceOnce(old, "home_front,1,-1", "home_front,1,1")) == WorldSaveError::HashMismatch,
+          "migration refuses tampered historical door facts");
+    Check(ErrorOf(ReplaceOnce(old, "\"seed\": \"0x0000000000000056\"", "\"seed\": \"0x0000000000000057\"")) == WorldSaveError::HashMismatch,
+          "migration authenticates the rest of the historical world too");
+}
 } // namespace
 
 void TestWorldSaveLane()
@@ -197,4 +286,6 @@ void TestWorldSaveLane()
     LaneMigration();
     LaneReceiptsAndCatalogues();
     LaneRefusals();
+    LaneStationeryEgress();
+    LaneTenDoorV8Migration();
 }

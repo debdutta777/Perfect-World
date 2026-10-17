@@ -198,6 +198,21 @@ std::uint64_t HashWorldState(const WorldState& state)
     return out.Result();
 }
 
+std::uint64_t HashWorldStateWithDoorsText(const WorldState& state, std::string_view doorsText)
+{
+    WorldHashWriter doors;
+    doors.Text(std::string(doorsText));
+    const std::uint64_t doorsHash = doors.Result();
+    WorldHashWriter out;
+    out.Unsigned(WorldHashVersion);
+    for (const WorldSectionHash& section : HashWorldSections(state))
+    {
+        out.Text(section.Name);
+        out.Unsigned(section.Name == "doors" ? doorsHash : section.Hash);
+    }
+    return out.Result();
+}
+
 ReplayResult ReplayCommandLog(std::uint64_t worldSeed, const std::vector<Command>& log, const ReplayOptions& options)
 {
     ReplayResult replay;

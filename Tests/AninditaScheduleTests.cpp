@@ -215,6 +215,37 @@ void AnAdvance(const NpcSchedule& schedule)
     }
     AnRequire(whole == split && full.Events == events, "split and whole advances produce identical state and events");
 }
+
+void AnBuiltRoutes(const NpcSchedule& schedule)
+{
+    const std::vector<int> lengths{635, 727, 1100, 2000};
+    AnRequire(schedule.Routes.size() == lengths.size(), "built shop has four routes including off-lane home");
+    for (std::size_t i = 0; i < lengths.size(); ++i)
+        AnRequire(schedule.Routes[i].LengthCm == lengths[i], "authored geometry matches the built polyline");
+    const std::vector<int> minutes{8, 6, 5, 23, 14, 13, 15, 10, 28, 27};
+    AnRequire(schedule.Paths.size() == minutes.size(), "all ten undirected legs are explicit");
+    for (std::size_t i = 0; i < schedule.Paths.size(); ++i)
+    {
+        int length = 0;
+        for (const auto& id : schedule.Paths[i].Routes)
+        {
+            const auto route = std::find_if(schedule.Routes.begin(), schedule.Routes.end(),
+                                          [&](const auto& item) { return item.Id == id; });
+            AnRequire(route != schedule.Routes.end(), "path uses authored geometry");
+            length += route->LengthCm;
+        }
+        AnRequire(schedule.Paths[i].Minutes == minutes[i] && minutes[i] == (length + 139) / 140,
+                  "every leg is the integer ceiling of its total length at 140 cm per minute");
+    }
+    for (const auto [minute, zone] : {std::pair{423, AnStockZone}, {780, AnHomeZone},
+                                     {877, AnCounterZone}, {1170, AnPackingZone}, {1232, AnHomeZone}})
+    {
+        const auto walking = AnAtMinute(schedule, 1, minute);
+        AnRequire(walking.Status == ScheduleStatus::Travel && walking.Zone == zone, "revised departure boundary begins travel");
+    }
+    AnRequire(AnAtMinute(schedule, 1, 803).Zone == AnHomeZone &&
+                  AnAtMinute(schedule, 1, 803).Status == ScheduleStatus::Stay, "23 minute lunch journey ends at 13:23");
+}
 } // namespace
 
 int main(int argc, char** argv)
@@ -249,5 +280,6 @@ int main(int argc, char** argv)
     AnMalformed(*parsed.Value);
     AnDay(*loaded.Value);
     AnAdvance(*loaded.Value);
+    AnBuiltRoutes(*loaded.Value);
     std::cout << "PASS: " << AnChecks << " assertions\n";
 }
