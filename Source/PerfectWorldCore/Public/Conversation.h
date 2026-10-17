@@ -148,6 +148,8 @@ struct ConversationCatalogue
 [[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue CareConversationCatalogue() noexcept;
 /** Farida Qadri's catalogue (person.farida_qadri, ConversationFarida.cpp). */
 [[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue FaridaConversationCatalogue() noexcept;
+/** Anindita Sen's catalogue (person.anindita_sen, ConversationAnindita.cpp). */
+[[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue AninditaConversationCatalogue() noexcept;
 /** The default catalogue's nodes. */
 [[nodiscard]] PERFECTWORLDCORE_API std::span<const ConversationNodeDef> ConversationNodes() noexcept;
 
