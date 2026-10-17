@@ -9,10 +9,17 @@
 #include "Engine/SkyLight.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
+#include "Engine/GameInstance.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PawnMovementComponent.h"
+#include "GameFramework/PlayerController.h"
 #include "Materials/MaterialInterface.h"
+#include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "PerfectWorldFrontEndHUD.h"
 #include "PerfectWorldKolkataLane.h"
 #include "PerfectWorldLaneBlocks.h"
+#include "PerfectWorldLaneCareInterior.h"
+#include "PerfectWorldLaneInteriors.h"
 #include "PerfectWorldPlayerCharacter.h"
 #include "PerfectWorldPlayerController.h"
 #include "UObject/ConstructorHelpers.h"
@@ -21,12 +28,12 @@ namespace
 {
 // Early morning: the sun sits low and rakes along the lane (+X) from behind the start camera, a little toward +Y,
 // so the right-hand facades catch it warmly while the left-hand row and the ground floors stay in shade.
-constexpr float MorningSunPitch = -15.0f;
-constexpr float MorningSunYaw = 30.0f;
+constexpr float EnMorningSunPitch = -15.0f;
+constexpr float EnMorningSunYaw = 30.0f;
 
 // Light haze for depth, not murk. Tune these two first if the distance looks too clear or too milky.
-constexpr float MorningFogDensity = 0.012f;
-constexpr float MorningFogHeightFalloff = 0.25f;
+constexpr float EnMorningFogDensity = 0.012f;
+constexpr float EnMorningFogHeightFalloff = 0.25f;
 } // namespace
 
 APerfectWorldBlockTestGameMode::APerfectWorldBlockTestGameMode()
@@ -65,6 +72,65 @@ void APerfectWorldBlockTestGameMode::StartPlay()
     Super::StartPlay();
 }
 
+bool APerfectWorldBlockTestGameMode::PlacePlayerAtOpeningHome(APlayerController& Player)
+{
+    UGameInstance* EnInstance = GetGameInstance();
+    const UPerfectWorldCharacterCreatorSubsystem* EnCreator = EnInstance != nullptr
+        ? EnInstance->GetSubsystem<UPerfectWorldCharacterCreatorSubsystem>() : nullptr;
+    APawn* EnPawn = Player.GetPawn();
+    if (EnCreator == nullptr || !EnCreator->HasLifeStarted() || EnPawn == nullptr)
+    {
+        return false;
+    }
+    const FPWLaneOriginView EnOrigin = EnCreator->GetLaneOrigin();
+    if (!EnOrigin.bResolved)
+    {
+        return false;
+    }
+
+    // LA integration: these are the two built interior frames today. All family origins use the opening shell;
+    // replace its frame lookup with the authored building binding when the other family shells are assembled.
+    const PWLane::FLaneFrame EnFrame = PWLane::MakeLaneFrame(EnOrigin.bGrewUpInCare ? -1400.0 : -300.0,
+        -400.0, FVector::ForwardVector, -FVector::RightVector);
+    FVector EnLocation;
+    FVector EnLookAt;
+    if (EnOrigin.bGrewUpInCare)
+    {
+        bool EnFoundBed = false;
+        for (const PWLane::FHomeSeatSpec& EnSeat : PWLane::CareSeatSpecs())
+        {
+            if (EnSeat.Id == FName(TEXT("seat.nabapara.care_bed")))
+            {
+                EnLocation = PWLane::CareWorldPoint(EnFrame, EnSeat.StandU, EnSeat.StandV, PWPlayer::CapsuleHalfHeight);
+                // Face into the dormitory aisle towards its doorway, away from the back wall.
+                EnLookAt = PWLane::CareWorldPoint(EnFrame, PWLane::CareLayout::DormDoorU, PWLane::CareLayout::AcrossV,
+                                                PWPlayer::CapsuleHalfHeight);
+                EnFoundBed = true;
+                break;
+            }
+        }
+        if (!EnFoundBed) return false;
+    }
+    else
+    {
+        // U 735, V 180: 73 cm from the shoe rack, beyond the front door's V 105 swing (+ capsule radius).
+        EnLocation = PWLane::HomeWorldPoint(EnFrame, PWLane::HomeFrontDoorU + 35.0, 180.0, PWPlayer::CapsuleHalfHeight);
+        EnLookAt = PWLane::HomeWorldPoint(EnFrame, PWLane::HomeLivingPartitionU, PWLane::HomeLivingDoorV,
+                                        PWPlayer::CapsuleHalfHeight);
+    }
+    const FRotator EnFacing(0.0, (EnLookAt - EnLocation).Rotation().Yaw, 0.0);
+    if (!EnPawn->SetActorLocationAndRotation(EnLocation, EnFacing, false, nullptr, ETeleportType::TeleportPhysics))
+    {
+        return false;
+    }
+    if (UPawnMovementComponent* EnMovement = EnPawn->GetMovementComponent())
+    {
+        EnMovement->StopMovementImmediately();
+    }
+    Player.SetControlRotation(EnFacing);
+    return true;
+}
+
 void APerfectWorldBlockTestGameMode::BuildLane()
 {
     UWorld* World = GetWorld();
@@ -92,7 +158,7 @@ void APerfectWorldBlockTestGameMode::BuildSkyAndSun()
     // drives it, and a sky light that captures it in real time.
     World->SpawnActor<ASkyAtmosphere>();
 
-    ADirectionalLight* Sun = World->SpawnActor<ADirectionalLight>(FVector::ZeroVector, FRotator(MorningSunPitch, MorningSunYaw, 0.0f));
+    ADirectionalLight* Sun = World->SpawnActor<ADirectionalLight>(FVector::ZeroVector, FRotator(EnMorningSunPitch, EnMorningSunYaw, 0.0f));
     if (Sun != nullptr)
     {
         if (UDirectionalLightComponent* SunLight = Cast<UDirectionalLightComponent>(Sun->GetLightComponent()))
@@ -120,8 +186,8 @@ void APerfectWorldBlockTestGameMode::BuildSkyAndSun()
     {
         if (UExponentialHeightFogComponent* FogComponent = Fog->GetComponent())
         {
-            FogComponent->SetFogDensity(MorningFogDensity);
-            FogComponent->SetFogHeightFalloff(MorningFogHeightFalloff);
+            FogComponent->SetFogDensity(EnMorningFogDensity);
+            FogComponent->SetFogHeightFalloff(EnMorningFogHeightFalloff);
             FogComponent->SetStartDistance(1000.0f);
             FogComponent->SetFogMaxOpacity(0.75f);
         }

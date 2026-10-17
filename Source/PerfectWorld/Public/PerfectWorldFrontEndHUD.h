@@ -43,7 +43,7 @@ public:
     /** Loads a slot, then enters the world (started life) or reopens the creator (draft). Empty text on success. */
     FText LoadSlot(int32 SlotIndex);
 
-    /** Begins life, saves it to the slot, and enters the world. Empty text on success, otherwise the message. */
+    /** Starts and saves together before entry; a failed write preserves the draft. Returns the failure message. */
     FText StartNewLife(int32 SlotIndex);
 
     void ResumeGame();
@@ -71,7 +71,7 @@ private:
         Paused
     };
 
-    void EnterWorld(const FText& Notice);
+    FText EnterWorld(const FText& Notice);
     void ApplyMenuInput();
     void ApplyGameInput();
     void FaceTitleView();
