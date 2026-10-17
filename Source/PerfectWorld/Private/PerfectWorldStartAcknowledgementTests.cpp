@@ -182,9 +182,13 @@ bool FPWStartAckControlTest::RunTest(const FString& Parameters)
     const TSharedRef<SPWFrontEndRoot> Root = SNew(SPWFrontEndRoot);
     TestTrue(TEXT("root: a start into the world plays the cue"), Root->PlayStartAcknowledgement());
     TestTrue(TEXT("root: it is running"), Root->IsStartAcknowledgementRunning());
+    // The root's visibility is a bound Slate attribute: it is evaluated in the prepass, and GetVisibility() reads the cached
+    // value, so a widget that has never been laid out still reports its default until a prepass runs.
+    Root->SlatePrepass(1.0f);
     TestTrue(TEXT("root: the world still receives input through it (self hit-test invisible)"),
              Root->GetVisibility() == EVisibility::SelfHitTestInvisible);
     Root->Hide();
+    Root->SlatePrepass(1.0f);
     TestTrue(TEXT("root: hiding (as on any later entry) leaves it harmless"), Root->GetVisibility() == EVisibility::SelfHitTestInvisible);
     return true;
 }
