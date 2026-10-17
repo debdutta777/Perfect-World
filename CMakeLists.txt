@@ -596,3 +596,18 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/LaneFron
 add_executable(PerfectWorldLaneFrontageCatalogueTests Tests/LaneFrontageCatalogueTests.cpp)
 target_link_libraries(PerfectWorldLaneFrontageCatalogueTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldLaneFrontageCatalogueTests COMMAND PerfectWorldLaneFrontageCatalogueTests)
+
+# Review step 4: Mira Sen (Commerce classmate, Anindita's daughter): schedule, conversation, world save v8 round trip.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationMira.cpp)
+add_executable(PerfectWorldMiraScheduleTests Tests/MiraScheduleTests.cpp)
+target_include_directories(PerfectWorldMiraScheduleTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldMiraScheduleTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldMiraScheduleTests COMMAND PerfectWorldMiraScheduleTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.mira_sen.json
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.anindita_sen.json)
+add_executable(PerfectWorldConversationMiraTests Tests/ConversationMiraTests.cpp)
+target_link_libraries(PerfectWorldConversationMiraTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldConversationMiraTests COMMAND PerfectWorldConversationMiraTests)
+add_executable(PerfectWorldWorldSaveMiraTests Tests/WorldSaveMiraTests.cpp)
+target_link_libraries(PerfectWorldWorldSaveMiraTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldSaveMiraTests COMMAND PerfectWorldWorldSaveMiraTests)
