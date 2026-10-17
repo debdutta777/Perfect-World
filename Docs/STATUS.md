@@ -1762,3 +1762,26 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
   - the dawn title and the start acknowledgement.
 
 **Housekeeping:** the D: build clone's index had been loaded with an old tree that staged hundreds of deletions; the cause is unknown. Its working state is kept in a stash ("D-clone index/worktree anomaly…") and the clone is clean on `integrate`.
+
+## Checkpoint — packaged walk of the staffed lane: Anindita present but pinned behind her counter, 2026-10-17
+
+**Package:** Rung 4 at `34fb4d4`, `BUILD SUCCESSFUL`, built at 22:19.
+
+**Walk.** Positions were read with the console command `getall CapsuleComponent RelativeLocation`, which logs every capsule. It is more reliable than steering a camera by script.
+- **Entry:** the player enters at 07:38 in the family home's entry and the clock runs.
+- **Stationery shop:** it is built and enterable, with wall shelves of coloured exercise books, a window display of pens and a hinged front door ("Open").
+- **Four NPCs exist:**
+  - Farida at her counter, (900, 957);
+  - the household adult at home, (220, −690);
+  - the care worker in the common room, (−854, −752), moving slowly;
+  - Anindita inside the shop.
+- No missing-binding or registration diagnostics appear in the game log.
+
+**Finding: Anindita does not reach her counter.**
+- At 08:42 she was creeping −U at a few centimetres per real second, along local V ≈ 527 in the stock room.
+- From about 09:30 to 10:06 she sat at local (250, 481), pressed against the sales and stock partition (V 435–447 plus her 34 cm capsule radius), directly behind the counter anchor at (250, 325).
+- The partition's only opening is at U 568–662.
+- The route resolver reverses routes correctly. The likely fault is in following them: a lagging actor chases the moving target, or the next anchor, in a straight line.
+- The Claude deep-work agent is on it (`fix/npc-route-following`), with a reproducing two-room automation test.
+
+**Not yet seen:** her meal closure, leaving after closing, doorway yielding, the dawn title in the package, and the start acknowledgement.
