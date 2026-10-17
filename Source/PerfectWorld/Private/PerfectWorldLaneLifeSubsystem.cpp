@@ -1,7 +1,9 @@
 #include "PerfectWorldLaneLifeSubsystem.h"
 
+#include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
+#include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "LaneOrigin.h"
 #include "PerfectWorldConversationPresenter.h"
@@ -175,41 +177,20 @@ void UPWLaneLifeSubsystem::HandleReadRequested(const FName ReadableId, const FNa
 
 void UPWLaneLifeSubsystem::ResolveOriginResidency()
 {
-    // TODO(care-origin): the resolved plan comes from the character creator once the world is built for the chosen origin. Until
-    // then the lane always builds the Parent household's opening home, so that is the origin the player lives in.
+    // Residency is asked of the character creator at the moment a door is used (IsResidentOf), because this subsystem is
+    // initialised before the life is chosen, and Start, Load and ResetWorld all change whose home is whose. Nothing cached.
     ResidentLocations.Reset();
-    const PerfectWorld::HouseholdDefinition* Household = PerfectWorld::CharacterCreator::FindHousehold(PerfectWorld::DefaultHouseholdTemplateId);
-    if (Household == nullptr)
-    {
-        UE_LOG(LogPWLaneLife, Error, TEXT("The default household is not in the core; no door grants residency."));
-        return;
-    }
-    PerfectWorld::OpeningHomePlan Plan;
-    Plan.HouseholdTemplateId = Household->Id;
-    Plan.HouseholdName = Household->DisplayName;
-    Plan.HomeKitId = Household->HomeKitId;
-    Plan.HomeKitName = Household->HomeKitName;
-    Plan.ResourceRank = 1;
-    Plan.GrewUpInCare = false;
-    const PerfectWorld::LaneOriginResult Origin = PerfectWorld::ResolveLaneOrigin(Plan);
-    if (!Origin.Ok())
-    {
-        UE_LOG(LogPWLaneLife, Error, TEXT("The default lane origin does not resolve (error %d); no door grants residency."),
-               static_cast<int32>(Origin.Error));
-        return;
-    }
-    for (const std::string& LocationId : Origin.Binding.ResidentLocationIds)
-    {
-        if (PerfectWorld::HasLaneOriginResidency(Origin.Binding, LocationId))
-        {
-            ResidentLocations.Add(PWLaneLife::ToName(LocationId));
-        }
-    }
 }
 
 bool UPWLaneLifeSubsystem::IsResidentOf(const PerfectWorld::DoorDef& Door) const
 {
-    return ResidentLocations.Contains(PWLaneLife::ToName(Door.LocationId));
+    // The core's resolved origin of the current life decides (LaneOrigin via the creator). No life, or no creator: fail
+    // closed, so no private door opens as a resident's.
+    const UWorld* World = GetWorld();
+    const UGameInstance* GameInstance = World != nullptr ? World->GetGameInstance() : nullptr;
+    const UPerfectWorldCharacterCreatorSubsystem* Creator =
+        GameInstance != nullptr ? GameInstance->GetSubsystem<UPerfectWorldCharacterCreatorSubsystem>() : nullptr;
+    return Creator != nullptr && Creator->HasLaneOriginResidency(PWLaneLife::ToName(Door.LocationId));
 }
 
 void UPWLaneLifeSubsystem::RegisterDoor(APWDoorActor& Door)
