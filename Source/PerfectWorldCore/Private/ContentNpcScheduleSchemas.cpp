@@ -1,6 +1,7 @@
 #include "FaridaSchedule.h"
 
 #include "ContentSchemaBuilders.h"
+#include "NpcScheduleContent.h"
 
 #include <set>
 
@@ -100,7 +101,10 @@ void ValidateNpcScheduleSemantics(const ContentDb& db, std::vector<ContentIssue>
     {
         if (record->Id != FaridaScheduleId)
         {
-            issues.push_back({record->File, record->Id, "unsupported NPC schedule identity"});
+            // Other frozen schedules (the care worker) are decoded by the generic loader; any other identity is refused there.
+            const auto other = LoadNpcSchedule(db, record->Id);
+            if (!other.Ok())
+                issues.push_back({record->File, record->Id, other.Error});
             continue;
         }
         const auto result = LoadFaridaSchedule(db);

@@ -548,3 +548,11 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldCon
 add_executable(PerfectWorldLaneTransactionsTests Tests/WorldLaneTransactionsTests.cpp)
 target_link_libraries(PerfectWorldLaneTransactionsTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldLaneTransactionsTests COMMAND PerfectWorldLaneTransactionsTests)
+
+# Generic NPC schedule loader and the care worker's duty schedule (order CT).
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/NpcScheduleContent.cpp)
+add_executable(PerfectWorldNpcScheduleContentTests Tests/NpcScheduleContentTests.cpp)
+target_include_directories(PerfectWorldNpcScheduleContentTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldNpcScheduleContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldNpcScheduleContentTests COMMAND PerfectWorldNpcScheduleContentTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.care_worker.json)
