@@ -1735,3 +1735,30 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 **Running:**
 - **gpt-6.1-sol, LL-02 (2b):** Farida onto the presenter, Anindita's stationery bindings and spawn, and the door bridge's Exit direction.
 - **A debugging agent:** the nine automation failures.
+
+## Checkpoint — Farida and Anindita on the presenter, the stationery shop staffed, and every related automation test passing, 2026-10-17
+
+**What merged:**
+- **gpt-6.1-sol, LL-02 (2b):**
+  - Farida moves onto the NPC presenter. Her LaneLife bridge, seven fields and conversation special case are gone, and availability now comes from the generic intent.
+  - Anindita's stationery bindings: anchors, the three built routes, her off-lane home, and doorway zones with waiting points. She is registered as a scheduled person when the shop exists.
+  - Door commands use `DoorDirection::Exit` when the operating pawn stands on a door's authored inside, so anyone inside can leave a business after closing while entry stays refused.
+- **Claude deep-work agent, finished by the integrator:** fixes for all nine failing automation tests. In every case the test was wrong and production was right:
+  - **Test worlds never ticked:** `TimeSeconds` stayed 0 with `LastRenderTime` 0, so every actor counted as recently rendered. The fixtures now advance time.
+  - **Presence test order:** the lane now reconciles at start, so presence tests bind providers before registering a person.
+  - **Overlapping spawn:** the "upstairs" sit test spawned its player inside the first one and was pushed up, falling.
+  - **Tea shop count:** the blocking-box threshold was off by one; it is now an exact count.
+  - **Content pins:** `ContentLoadsInEngine` now pins 143 files and 179 records.
+
+**Exact checks, at `34fb4d4`:**
+- **Rung 2:** **Succeeded**, recompiling the core and all three game blobs after refreshing the changed files' timestamps.
+- **Headless automation:** **49/49 Success** across `NpcPresence`, `NpcYield`, `InteriorKit`, `TitleView`, `StartAcknowledgement`, `NpcMovement`, `CareHome`, `Doors`, `Furniture`, `TeaShop` and `Core`.
+- **Rung 1:** the core is unchanged since `core/presence-2a` (164/164).
+- **Not yet walked in a package:**
+  - Farida's afternoon return;
+  - Anindita opening at 08:00, her meal closure, and the stock-room route through the staff gap;
+  - doorway yielding;
+  - leaving the shop after 19:30;
+  - the dawn title and the start acknowledgement.
+
+**Housekeeping:** the D: build clone's index had been loaded with an old tree that staged hundreds of deletions; the cause is unknown. Its working state is kept in a stash ("D-clone index/worktree anomaly…") and the clone is clean on `integrate`.
