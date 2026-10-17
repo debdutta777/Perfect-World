@@ -118,7 +118,11 @@ constexpr double YieldAfterSeconds = 0.25;        // blocked this long: show the
 constexpr double PersistentBlockSeconds = 4.0;    // blocked this long: tell the integrator (a bounded core command, not us)
 constexpr double GestureFinishSeconds = 0.8;      // a worker finishes the stroke in hand before attending a conversation
 constexpr double DecisionIntervalSeconds = 0.1;   // 10 Hz decisions (sweeps, snap checks, visibility)
-constexpr double MoverTickIntervalSeconds = 1.0 / 30.0;
+// Every frame while walking. The character movement consumes its input vector each frame and brakes on a frame without one,
+// so input given at 30 Hz to a game running at 60 or 120 fps leaves people crawling at a fraction of the commanded pace.
+constexpr double MoverTickIntervalSeconds = 0.0;
+constexpr double RouteLookAheadCm = 50.0;         // steer at the route this far ahead: cuts a right-angle corner by under 18 cm
+constexpr double FinishRouteJoinCm = 60.0;        // a remembered route ends this close to the stand: the rest of the walk is it
 constexpr double PoseNearSeconds = 0.05;          // 20 Hz pose updates nearby
 constexpr double PoseFarSeconds = 0.2;
 constexpr double PoseNearRangeCm = 1500.0;        // beyond 15 m and unseen: no pose work at all
@@ -356,12 +360,14 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FPWNpcBlockSignature, bool, FName);
  *    through a bounded core command; the person keeps waiting visibly (no hidden teleport, no animation-awarded outcome).
  *  - Work, Idle, Sleep: walk the last few steps to the anchor, then stand there and play a block-arm gesture chosen by
  *    WorkActionId (serving, washing, sweeping, stocking, cooking, ...), a seat pose, or lie down. Presentation only.
+ *    A person still on the way when the intent stops being Travel (late, held up, or a skipped clock) finishes along the
+ *    route they were walking, which ends at the anchor; only the last steps from its end are a straight line.
  *  - Chat: stop, face the player, hold; a worker finishes the stroke in hand first (at most 0.8 s). The next SetIntent
  *    resumes. Interact on the character starts a local Chat at once, ended when the conversation panel closes.
  *  - Reduced motion: no sway, no gesture strokes (a still mid-stroke pose), no slow look-at turns (facing snaps to the player
  *    only while spoken to). Walking itself is the world's state, not ambience, and is unchanged.
  *
- * Budget: ticks at 30 Hz while moving, 20 Hz while a gesture plays, 10 Hz when still; decisions at 10 Hz; pose at 20 Hz
+ * Budget: ticks every frame while moving, 20 Hz while a gesture plays, 10 Hz when still; decisions at 10 Hz; pose at 20 Hz
  * within 15 m and 5 Hz beyond; nothing at all when beyond 15 m and unseen.
  */
 UCLASS(ClassGroup = (PerfectWorld))
@@ -420,6 +426,7 @@ private:
     void UpdateMotion(float Dt);
     void MoveAlongRoute(float Dt);
     void MoveToStand(float Dt);
+    bool AimAlongFinishRoute(const FVector& Stand, const FVector& Feet, FVector& OutDirection, double& OutSpeed);
     void ApplySteering(const FVector& Direction, double Speed, float Dt);
     void FaceYaw(double TargetYaw, double DegreesPerSecond, float Dt);
     void UpdatePose(float Dt);
@@ -442,6 +449,9 @@ private:
 
     FPWNpcPolyline Route;
     FName RouteKey; // the route id Route belongs to; None with a non-empty Route means "adopt for the next Travel intent"
+    /** The Travel route that was being walked when the intent stopped being Travel; cleared on arrival or a new Travel. */
+    FPWNpcPolyline FinishRoute;
+    double FinishDistanceCm = -1.0;
     bool bAnchorKnown = false;
     FVector StandFeet = FVector::ZeroVector;
     double StandYaw = 0.0;
