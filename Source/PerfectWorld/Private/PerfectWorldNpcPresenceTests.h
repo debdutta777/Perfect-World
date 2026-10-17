@@ -20,7 +20,7 @@ struct FNpWorld
     FNpWorld(const FNpWorld&) = delete;
     FNpWorld& operator=(const FNpWorld&) = delete;
     bool RegisterCare() const;
-    void BindCare() const;
+    bool BindCare() const;
 };
 }
 #endif

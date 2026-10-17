@@ -17,12 +17,26 @@
 
 namespace PWNpcMoveTest
 {
+/**
+ * World time the fixture starts at. AActor::WasRecentlyRendered compares the world clock with the actor's last render time,
+ * which starts at 0, and a world that never ticks keeps its clock at 0 too: every actor would count as seen this instant, with
+ * or without a renderer. Ten seconds in, a person nothing has drawn is unseen, as in the running game.
+ */
+constexpr double NpcMoveTestWorldSeconds = 10.0;
+
 /** A throw-away game world with a physics scene; actors spawn but play never begins. */
 struct FTestWorld
 {
     UWorld* World = nullptr;
 
-    FTestWorld() { World = UWorld::CreateWorld(EWorldType::Game, false); }
+    FTestWorld()
+    {
+        World = UWorld::CreateWorld(EWorldType::Game, false);
+        if (World != nullptr)
+        {
+            World->TimeSeconds = NpcMoveTestWorldSeconds;
+        }
+    }
     ~FTestWorld()
     {
         if (World != nullptr)
@@ -237,8 +251,13 @@ bool FPWNpcTeleportRuleTest::RunTest(const FString& Parameters)
     Run(NearMove, 60, 0.05f);
     TestTrue(TEXT("extrapolation is capped"), NearMove.GetTravelTarget().X <= 400.0 + 140.0 * 1.25 + 1.0);
 
-    // 10 m behind and unseen (nothing renders here): the one teleport.
+    // 10 m behind and unseen (nothing has drawn them in the fixture's ten seconds): the one teleport.
     APWNpcCharacter* Far = SpawnPerson(*Holder.World, FVector(0.0, 5000.0, 0.0));
+    if (!TestNotNull(TEXT("far person"), Far))
+    {
+        return false;
+    }
+    TestFalse(TEXT("nothing has drawn the far person"), Far->WasRecentlyRendered(0.5f));
     UPWNpcMovementComponent& FarMove = *Far->GetNpcMovement();
     FarMove.SetIntent(TravelIntent(500));
     TArray<FVector> Route = {FVector(0.0, 5000.0, 0.0), FVector(2000.0, 5000.0, 0.0)};

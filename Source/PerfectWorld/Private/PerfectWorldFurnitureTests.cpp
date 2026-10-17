@@ -229,9 +229,19 @@ bool FPWFurnitureRefusalsTest::RunTest(const FString& Parameters)
     RunGlide(*Player);
     TestTrue(TEXT("standing"), Player->GetSeatState() == EPWSeatState::Standing);
 
-    // A different floor level.
+    // A different floor level: a player standing 120 cm above the stand point. The first player still stands on that point,
+    // so they leave first; a capsule spawned into theirs is pushed out upwards, falls, and is refused as NotReady before the
+    // level is ever compared.
+    Player->Destroy();
     APerfectWorldPlayerCharacter* Upstairs = SpawnPlayer(World, FVector(100.0, 0.0, 120.0), 0.0);
-    TestTrue(TEXT("another level refused"), Upstairs->TrySit(Seat, Placement) == EPWSitResult::WrongLevel);
+    if (!TestNotNull(TEXT("upstairs player"), Upstairs))
+    {
+        return false;
+    }
+    TestTrue(TEXT("the upstairs player stands where spawned"), Upstairs->GetCharacterMovement()->IsMovingOnGround() &&
+                 FMath::IsNearlyEqual(Upstairs->GetActorLocation().Z, 120.0 + PWPlayer::CapsuleHalfHeight + 0.5, 0.5));
+    TestEqual(TEXT("another level refused (EPWSitResult)"), static_cast<int32>(Upstairs->TrySit(Seat, Placement)),
+              static_cast<int32>(EPWSitResult::WrongLevel));
     return true;
 }
 
