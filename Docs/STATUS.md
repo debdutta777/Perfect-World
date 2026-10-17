@@ -1804,3 +1804,26 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 - **Packaged walk: not run yet.** The owner's browser window was open, and the game is not driven while the owner's windows are on screen.
 
 **Known limit:** a person sent to a far anchor with no Travel route still walks straight. That happens on a fresh spawn away from the anchor, or a paid skip from one stay into another; only the unseen teleport beyond 5 m covers it. It needs path data from the presence bindings.
+
+## Checkpoint — LL-03 (2): the frontage inventory and three more enterable ground floors, 2026-10-18
+
+**What merged (`b1ba237`):**
+- **Claude Sonnet, LL-03 (2):**
+  - `Docs/LANE_BUILDING_INVENTORY.md` covers the lane's 19 near side frontages (10 on −Y, 9 on +Y) plus 2 end masses. 4 were hand-built before this.
+  - A pinned portable frontage catalogue (`LaneFrontageCatalogue.h`).
+  - The first kit-built batch, all with open doorways until their doors are migrated in the core:
+    - `building.nabapara.caretaker_flat` (−Y, X 2600–3300, compact residence);
+    - `building.nabapara.tall_flats` (+Y, X −1300 to −200, shared entry with a stair passage);
+    - `building.nabapara.tea_row_house` (+Y, X 1400–2100, mirrored compact residence).
+- **Integrator hook:** catalogue-pinned frontages build their ground floor with the interior kit (`BuildFull`).
+- **Still sealed:** 12 side frontages and the 2 end masses.
+- **Still to do for these three:** doors (each needs a core door-set migration), shop furniture sets, and walks in both cameras.
+
+**Exact checks:**
+- **Rung 1:** 165/165 on the branch (fresh directory). This adds `PerfectWorldLaneFrontageCatalogueTests`, which ports the row generator and proves every pin, overlap and clearance.
+- **Rung 2:** at `b1ba237`, **Succeeded**. The first compile of the frontage code recompiled `LaneFrontageCatalogue.cpp` and all three game blobs.
+- **Headless automation:**
+  - The full run passed 53 tests with no failures, including `KitFrontages` 4/4. Its log ends mid-line after the second `TitleView` test.
+  - A separate `TitleView` run passed 4/4.
+  - So all 55 tests pass across the two runs; the first run's log did not record its last two.
+- **Packaged walk:** still pending. That covers the route fix and these frontages.
