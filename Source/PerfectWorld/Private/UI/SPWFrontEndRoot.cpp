@@ -7,6 +7,7 @@
 #include "UI/PWDelegates.h"
 #include "UI/PWStyle.h"
 #include "UI/PWWidgets.h"
+#include "UI/SPWAwakeningSigil.h"
 #include "UI/SPWCreationFlow.h"
 #include "UI/SPWLoadPanel.h"
 #include "UI/SPWPauseMenu.h"
@@ -59,6 +60,19 @@ void SPWFrontEndRoot::Construct(const FArguments& InArgs)
                 SAssignNew(ChooserHolder, SBox)
             ]
         ]
+        // The start cue: a decorative ring about the centre of the view, collapsed until a successful start plays it.
+        + SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Center)
+        [
+            SAssignNew(StartCue, SPWAwakeningSigil)
+            .Acknowledgement(true)
+            .FitRing(true)
+            .Diameter_Lambda([this]()
+            {
+                const FVector2D Size = GetCachedGeometry().GetLocalSize();
+                const float Short = static_cast<float>(FMath::Min(Size.X, Size.Y));
+                return Short < 1.0f ? 340.0f : FMath::Min(FMath::Clamp(Short * .42f, 340.0f, 460.0f), Short * .6f);
+            })
+        ]
         + SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Bottom).Padding(0.0f, 0.0f, 0.0f, 70.0f)
         [
             SNew(SBorder)
@@ -91,6 +105,8 @@ void SPWFrontEndRoot::SetScreen(EScreen NewScreen, const TSharedRef<SWidget>& Co
 {
     PWUI::CancelPendingFocus();
     PageTransition.JumpToEnd();
+    // Any screen coming up (pause, title) ends the start cue at once, so it never rings over a menu.
+    if (NewScreen != EScreen::None && StartCue.IsValid()) StartCue->CancelAcknowledgement();
     Screen = NewScreen;
     ScreenHolder->SetContent(Content);
     if (NewScreen != EScreen::None && NewScreen != EScreen::Creation) PWUI::PlayMotion(PageTransition, AsShared());
@@ -205,6 +221,17 @@ void SPWFrontEndRoot::ShowToast(const FText& Message)
         }
         return EActiveTimerReturnType::Stop;
     }));
+}
+
+bool SPWFrontEndRoot::PlayStartAcknowledgement()
+{
+    // Only with the world showing through: a screen or chooser up means this was not a start into the world.
+    return Screen == EScreen::None && !bChooserOpen && StartCue.IsValid() && StartCue->PlayAcknowledgement();
+}
+
+bool SPWFrontEndRoot::IsStartAcknowledgementRunning() const
+{
+    return StartCue.IsValid() && StartCue->IsAcknowledging();
 }
 
 void SPWFrontEndRoot::HandleNewGame()

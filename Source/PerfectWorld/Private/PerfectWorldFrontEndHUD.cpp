@@ -15,6 +15,7 @@
 #include "PerfectWorldPresentationSettings.h"
 #include "PerfectWorldTitleView.h"
 #include "UI/PWDelegates.h"
+#include "UI/PWStartAcknowledgement.h"
 #include "UI/SPWFrontEndRoot.h"
 #include "Widgets/SWeakWidget.h"
 
@@ -89,11 +90,6 @@ void APerfectWorldFrontEndHUD::Tick(float DeltaSeconds)
         if (View == nullptr || !View->IsViewedBy(*PlayerOwner))
         {
             FaceTitleView();
-        }
-        else
-        {
-            TitleDriftSeconds = View->GetDriftSeconds();
-            TitleYaw = View->GetActorRotation().Yaw;
         }
     }
 }
@@ -206,7 +202,9 @@ FText APerfectWorldFrontEndHUD::StartNewLife(int32 SlotIndex)
     ActiveSlot = SlotIndex;
     const FText Notice = FText::Format(LOCTEXT("StartedAndSaved", "Your life has begun. Saved to slot {0}."),
                                      FText::AsNumber(SlotIndex + 1));
-    return EnterWorld(Notice);
+    // The save above succeeded (a failure returned its message already), so a placement that also succeeds earns the cue.
+    // Family and care starts both come through here and are treated alike.
+    return EnterWorld(Notice, /*bFreshLifeSaved=*/true);
 }
 
 void APerfectWorldFrontEndHUD::ResumeGame()
@@ -270,7 +268,7 @@ void APerfectWorldFrontEndHUD::QuitGame()
     UKismetSystemLibrary::QuitGame(this, PlayerOwner, EQuitPreference::Quit, false);
 }
 
-FText APerfectWorldFrontEndHUD::EnterWorld(const FText& Notice)
+FText APerfectWorldFrontEndHUD::EnterWorld(const FText& Notice, const bool bFreshLifeSaved)
 {
     if (!Root.IsValid())
     {
@@ -279,7 +277,8 @@ FText APerfectWorldFrontEndHUD::EnterWorld(const FText& Notice)
     UWorld* EnWorld = GetWorld();
     APerfectWorldBlockTestGameMode* EnGameMode = EnWorld != nullptr
         ? Cast<APerfectWorldBlockTestGameMode>(EnWorld->GetAuthGameMode()) : nullptr;
-    if (PlayerOwner == nullptr || EnGameMode == nullptr || !EnGameMode->PlacePlayerAtOpeningHome(*PlayerOwner))
+    const bool bEnPlaced = PlayerOwner != nullptr && EnGameMode != nullptr && EnGameMode->PlacePlayerAtOpeningHome(*PlayerOwner);
+    if (!bEnPlaced)
     {
         return LOCTEXT("HomeEntryFailed", "Your saved life could not be placed at home. Please load the slot to try again.");
     }
@@ -292,6 +291,12 @@ FText APerfectWorldFrontEndHUD::EnterWorld(const FText& Notice)
     if (!Notice.IsEmpty())
     {
         Root->ShowToast(Notice);
+    }
+    // Last, and only now: input already belongs to the game, so the cue (an overlay that fades by itself) delays nothing.
+    // A load or Continue is not a start and never plays it.
+    if (PWUI::FStartAcknowledgement::ShouldPlay(bFreshLifeSaved, bEnPlaced))
+    {
+        Root->PlayStartAcknowledgement();
     }
     return FText::GetEmpty();
 }

@@ -23,7 +23,9 @@ void SPWAwakeningSigil::Construct(const FArguments& Args)
     bReveal = Args._Reveal;
     bRotation = Args._Rotation;
     FitRing = Args._FitRing;
-    SetVisibility(EVisibility::HitTestInvisible);
+    bAcknowledgement = Args._Acknowledgement;
+    // An acknowledgement cue is collapsed until it plays; either way it never takes a hit.
+    SetVisibility(bAcknowledgement ? EVisibility::Collapsed : EVisibility::HitTestInvisible);
     // Everything an aperture draws lies inside its box, except the soft lens behind a fitted ring, which is a little wider
     // than the ring's own box; clipping that would show a flat edge. Seals keep the clip.
     SetClipping(SizeClass == EPWSigilSizeClass::Aperture ? EWidgetClipping::Inherit : EWidgetClipping::ClipToBounds);
@@ -34,7 +36,55 @@ void SPWAwakeningSigil::Construct(const FArguments& Args)
     if (bReveal || bRotation)
         VisibilitySubscription = FSlateApplication::Get().OnPostTick().AddSP(this, &SPWAwakeningSigil::SlatePostTick);
     if (PWUI::IsReducedMotion()) RevealSeconds = .8f;
-    // TODO_StartLifeTransactionalFlourish: enable the 450ms expansion only after start-and-save is transactional.
+}
+
+bool SPWAwakeningSigil::PlayAcknowledgement()
+{
+    if (!bAcknowledgement) return false;
+    StopAcknowledgementTimer();
+    if (!Ack.Begin(PWUI::IsReducedMotion()))
+    {
+        SetVisibility(EVisibility::Collapsed);
+        return false;
+    }
+    SetVisibility(EVisibility::HitTestInvisible);
+    Invalidate(EInvalidateWidgetReason::Paint);
+    if (FSlateApplication::IsInitialized())
+    {
+        LastAcknowledgementTime = FSlateApplication::Get().GetCurrentTime();
+        AckTimer = RegisterActiveTimer(0, FWidgetActiveTimerDelegate::CreateSP(this, &SPWAwakeningSigil::AnimateAcknowledgement));
+    }
+    return true;
+}
+
+void SPWAwakeningSigil::CancelAcknowledgement()
+{
+    StopAcknowledgementTimer();
+    Ack.Cancel();
+    if (bAcknowledgement) SetVisibility(EVisibility::Collapsed);
+}
+
+void SPWAwakeningSigil::AdvanceAcknowledgement(const float DeltaSeconds)
+{
+    if (!Ack.IsActive()) return;
+    if (Ack.Advance(DeltaSeconds)) Invalidate(EInvalidateWidgetReason::Paint);
+    else CancelAcknowledgement();
+}
+
+void SPWAwakeningSigil::StopAcknowledgementTimer()
+{
+    if (const auto Timer = AckTimer.Pin()) UnRegisterActiveTimer(Timer.ToSharedRef());
+    AckTimer.Reset();
+}
+
+EActiveTimerReturnType SPWAwakeningSigil::AnimateAcknowledgement(const double Time, float)
+{
+    const float Seconds = static_cast<float>(FMath::Max(0.0, Time - LastAcknowledgementTime));
+    LastAcknowledgementTime = Time;
+    AdvanceAcknowledgement(Seconds);
+    if (Ack.IsActive()) return EActiveTimerReturnType::Continue;
+    AckTimer.Reset();
+    return EActiveTimerReturnType::Stop;
 }
 
 SPWAwakeningSigil::~SPWAwakeningSigil()
@@ -54,7 +104,7 @@ FVector2D SPWAwakeningSigil::ComputeDesiredSize(float) const
 
 bool SPWAwakeningSigil::IsFitted() const
 {
-    return SizeClass == EPWSigilSizeClass::Aperture && FitRing.Get(false);
+    return SizeClass == EPWSigilSizeClass::Aperture && (bAcknowledgement || FitRing.Get(false));
 }
 
 bool SPWAwakeningSigil::IsPresented() const
@@ -77,6 +127,9 @@ void SPWAwakeningSigil::MotionChanged()
     {
         RevealSeconds = .8f;
         StopMotionTimer();
+        // A toggle made while the start cue runs ends it on the spot; it is decoration and never outlives the preference.
+        Ack.OnMotionPreference(true);
+        if (bAcknowledgement && !Ack.IsActive()) CancelAcknowledgement();
     }
     Invalidate(EInvalidateWidgetReason::Paint);
 }
@@ -120,6 +173,19 @@ int32 SPWAwakeningSigil::OnPaint(const FPaintArgs&, const FGeometry& Geometry, c
                                 FSlateWindowElementList& Elements, int32 Layer, const FWidgetStyle& Style, bool bEnabled) const
 {
     if (!FSlateRect::DoRectanglesIntersect(Geometry.GetRenderBoundingRect(), CullingRect)) return Layer;
+    if (bAcknowledgement)
+    {
+        if (!Ack.IsActive() || PWUI::IsReducedMotion()) return Layer;
+        // Every sector grows together: one factor on the fitted virtual square, about the widget's centre. The ring starts
+        // exactly at its normal fitted size and grows 12%; nothing rotates and no motes are drawn.
+        const FVector2f Local(Geometry.GetLocalSize());
+        const float Virtual = FMath::Max(1.0f, FMath::Min(Local.X, Local.Y)) * SgPainterEnvelope / SgFitEnvelope * Ack.GetScale();
+        const FVector2f VirtualSize(Virtual, Virtual);
+        Paths.Rebuild(VirtualSize, SizeClass);
+        const FGeometry Frame = Geometry.MakeChild(VirtualSize, FSlateLayoutTransform((Local - VirtualSize) * .5f));
+        return FPWSigilPainter::Paint(Paths, SizeClass, Pictogram, Frame, Elements, Layer, Style, Ack.GetOpacity(), 0.0f, false,
+                                      bEnabled && IsEnabled());
+    }
     bPaintedSincePostTick = true;
     const bool bReduced = PWUI::IsReducedMotion();
     const float T = FMath::Clamp(RevealSeconds / .8f, 0.0f, 1.0f);
