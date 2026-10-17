@@ -1827,3 +1827,22 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
   - A separate `TitleView` run passed 4/4.
   - So all 55 tests pass across the two runs; the first run's log did not record its last two.
 - **Packaged walk:** still pending. That covers the route fix and these frontages.
+
+## Checkpoint — persistence (A): Unreal slots read and write world save v8, 2026-10-18
+
+**What merged (`ffe6129`), from gpt-6.1-sol:** `PerfectWorldLaneLifePersistence.h/.cpp`.
+- `CaptureWorldSave` builds a v8 save from the creation record, the lane `WorldSim` and the player's placement, and refuses an invalid snapshot rather than writing an empty file.
+- `WriteWorldSlot` uses the existing temp-and-backup protocol, so a failed write keeps the previous usable slot.
+- `ReadWorldSlot` validates fully before anything live changes. It reports the source version, whether the hash verified, and whether the save migrated.
+- A save made mid-conversation closes the conversation on load and keeps its memory and payment receipts, so nothing is charged twice.
+- The restore checklist for wiring this into the game is in `Docs/PERSISTENCE_HANDOFF.md`. Wiring is submission B, and it alone makes a restart actually keep the world.
+
+**Exact checks:**
+- **Rung 2:** at `ffe6129`, **Succeeded**.
+- **Headless automation:** **60/60 Success** in one run, including `PerfectWorld.Persistence` 5/5:
+  - `RoundTrip`;
+  - `InterruptedWrite`;
+  - `RefusesDamageWithoutMutation`;
+  - `LegacyCreatorAndWorldVersions`;
+  - `BackupRecoveryAndRepeatedSave`.
+- **Rung 1:** sol ran 164/164 on its branch before the frontage catalogue merged; the core is unchanged by this order.
