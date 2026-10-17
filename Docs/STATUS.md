@@ -1582,3 +1582,28 @@ The integrator then wires the doors and the conversation through the core.
 - **Rung 4:** `BUILD SUCCESSFUL`, with the cook exiting 0.
 
 **Not walked in play yet:** the owner's Eastern Era Resource Editor was open, so the game was not launched (it would take focus and send keys). Pending checks: the clock readout, a 10-minute tea with Farida moving the clock, sitting, the care-origin start, and door residency.
+
+## Checkpoint — world save v8 merged (conversations and doors persist), 2026-10-17
+
+**What merged:**
+- **gpt-6.1-sol, SV:** world save schema v8 and world hash v5.
+  - The world record gains `conversations` (each person's canonical `pw.conversation/2` text) and `doors` (`pw.doors/2`).
+  - It refuses an unknown person, invalid module state, a mismatched open-session person, or a second open session.
+  - v7 and v6 files still load, unverified, with no conversations and the authored door defaults; v6 also gets a fresh day.
+  - `SerializeWorldSave` returns an empty string for an invalid lane authority. Unreal does not write world saves yet, so no caller is affected today.
+- **Integrator:**
+  - Found the `PerfectWorldDayLoopTests` crash (0xC0000409, no output): the v6-downgrade block in `DayLoopWorldTests.cpp` still searched for `"schemaVersion": 7`. `find` returned npos, `std::string::replace` threw `out_of_range`, and nothing caught it.
+  - The test now builds the strings from `WorldSaveSchemaVersion` and `WorldHashVersion` and checks for them first, so the next version bump fails a check instead of aborting. The day-loop test passes with 820,923 checks.
+
+**Exact checks:**
+- **Rung 1:** at `c3cefe1`, **159/159**.
+- **Rung 2:** **Succeeded**.
+- No package or walk was made for this step: it changes only the portable save, which the game does not call yet.
+
+**Next:** two Claude Sonnet agents are running.
+- **AN:** Anindita Sen's schedule data and conversation in the core.
+- **SS:** the stationery shop building in Unreal, with Anindita at her counter.
+
+Later rounds (gpt-6.1-sol after the ChatGPT reset):
+- schedule-driven presence for any `npc_schedule` person (the care worker, Anindita);
+- Mira Sen.
