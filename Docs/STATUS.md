@@ -1785,3 +1785,22 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 - The Claude deep-work agent is on it (`fix/npc-route-following`), with a reproducing two-room automation test.
 
 **Not yet seen:** her meal closure, leaving after closing, doorway yielding, the dawn title in the package, and the start acknowledgement.
+
+## Checkpoint — NPCs keep their pace and finish along their routes, 2026-10-18
+
+**What merged (`530e743`), from the Claude deep-work agent:**
+- **People crawled at real frame rates.** `UPWNpcMovementComponent` ticked at a fixed 1/30 s and applied movement input only on its own ticks, while the character movement braked on every frame without input.
+  - At 120 fps, Anindita walked 15 of 635 cm in her five-minute travel window. The care worker was slow for the same reason.
+  - The mover now ticks every frame while walking. Decisions stay at 10 Hz.
+- **A Travel route was dropped when the intent became Work.** A lagging person then walked straight at the anchor, into the stationery partition: 156.2 cm off, 0.1 cm from the wall, exactly the packaged sample at local (250, 481).
+  - The route is now kept as a finish route and followed to the anchor.
+  - The look-ahead is fixed at 50 cm, so corners are cut by at most about 18 cm.
+- **New tests:** `PerfectWorld.NpcRoute` (two tests, on a fixture with the shop's partition and off-axis doorway). Both fail on the old code.
+
+**Exact checks:**
+- **Rung 2:** succeeded.
+- **Headless automation:** **51/51 Success** (`NpcRoute` 2, `NpcPresence` 5, `NpcYield` 2, `InteriorKit` 3, `TitleView` 4, `StartAcknowledgement` 4, `NpcMovement` 8, `CareHome` 6, `Doors` 3, `Furniture` 5, `TeaShop` 5, `Core` 4).
+- **Rung 4:** at `530e743`, `BUILD SUCCESSFUL`, and the game target recompiled all three blobs.
+- **Packaged walk: not run yet.** The owner's browser window was open, and the game is not driven while the owner's windows are on screen.
+
+**Known limit:** a person sent to a far anchor with no Travel route still walks straight. That happens on a fresh spawn away from the anchor, or a paid skip from one stay into another; only the unseen teleport beyond 5 m covers it. It needs path data from the presence bindings.
