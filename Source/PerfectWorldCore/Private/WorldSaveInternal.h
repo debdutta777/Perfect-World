@@ -32,9 +32,13 @@ std::string_view WorldSaveCreationSpan(std::string_view text);
 
 /**
  * Reads the "world" and "player" objects. Success leaves the result default; a failure carries the refusal.
- * `withDayLoop` is true for the v7 record (a "dayloop" key is required) and false for v6 (the key is refused
- * and the world gets a fresh day).
+ * v6 gets a fresh day; v7 requires dayloop; v8 also requires conversations and doors.
+ * Every version refuses keys from later versions.
  */
-WorldSaveResult WorldSaveReadWorld(const JsonValue& value, WorldState& world, bool withDayLoop);
+WorldSaveResult WorldSaveReadWorld(const JsonValue& value, WorldState& world, std::int32_t version);
+/** Canonical lane sections, including their module text envelopes. Empty for invalid lane authority. */
+std::string WorldSaveWriteLane(const WorldState& world);
+WorldSaveResult WorldSaveReadLane(const JsonValue& value, WorldState& world);
+std::string WorldSaveQuoted(std::string_view value);
 WorldSaveResult WorldSaveReadPlayer(const JsonValue& value, PlayerPlacement& player);
 } // namespace PerfectWorld

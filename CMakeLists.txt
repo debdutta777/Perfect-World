@@ -556,3 +556,7 @@ target_include_directories(PerfectWorldNpcScheduleContentTests PRIVATE Source/Pe
 target_link_libraries(PerfectWorldNpcScheduleContentTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldNpcScheduleContentTests COMMAND PerfectWorldNpcScheduleContentTests
     ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.care_worker.json)
+
+# Order SV/HS/ST: world save v8 lane authority.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldLaneSave.cpp)
+target_sources(PerfectWorldWorldSaveTests PRIVATE Tests/WorldSaveLaneTests.cpp)

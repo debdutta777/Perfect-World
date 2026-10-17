@@ -142,6 +142,26 @@ void WorldHashAddSection(std::vector<WorldSectionHash>& sections, const char* na
 {
     sections.push_back(WorldSectionHash{name, hash});
 }
+
+std::uint64_t WorldHashConversationsSection(const WorldState& state)
+{
+    WorldHashWriter out;
+    out.Count(state.Conversations.size());
+    for (const auto& [person, conversation] : state.Conversations)
+    {
+        out.Text(person);
+        const auto catalogue = ConversationCatalogueForPerson(person);
+        out.Text(catalogue ? SerialiseConversationState(*catalogue, conversation) : std::string{});
+    }
+    return out.Result();
+}
+
+std::uint64_t WorldHashDoorsSection(const WorldState& state)
+{
+    WorldHashWriter out;
+    out.Text(SerialiseDoorState(state.Doors));
+    return out.Result();
+}
 } // namespace
 
 std::vector<WorldSectionHash> HashWorldSections(const WorldState& state)
@@ -161,6 +181,8 @@ std::vector<WorldSectionHash> HashWorldSections(const WorldState& state)
     WorldHashAddSection(sections, "gates", WorldHashGatesSection(state));
     WorldHashAddSection(sections, "rng", WorldHashRngSection(state));
     WorldHashAddSection(sections, "dayloop", WorldHashDayLoopSection(state));
+    WorldHashAddSection(sections, "conversations", WorldHashConversationsSection(state));
+    WorldHashAddSection(sections, "doors", WorldHashDoorsSection(state));
     return sections;
 }
 

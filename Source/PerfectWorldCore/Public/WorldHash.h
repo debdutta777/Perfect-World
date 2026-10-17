@@ -30,8 +30,9 @@ namespace PerfectWorld
  * 1: meta, clock, flags. 2 (2026-10-05): adds the gates section (ROADMAP M1-35).
  * 3 (2026-10-05): adds the rng section, the four stream states (ROADMAP M1-05).
  * 4 (2026-10-11): adds the dayloop section, HashDayLoop of the player's day (ROADMAP M2-12).
+ * 5 (2026-10-17): adds conversations (person ID and canonical module text) and doors (canonical module text).
  */
-constexpr std::uint32_t WorldHashVersion = 4;
+constexpr std::uint32_t WorldHashVersion = 5;
 
 struct WorldSectionHash
 {
@@ -39,7 +40,7 @@ struct WorldSectionHash
     std::uint64_t Hash = 0;
 };
 
-/** One entry per save section, always in the same order: meta, clock, flags, gates, rng, dayloop (then any later sections). */
+/** Fixed order: meta, clock, flags, gates, rng, dayloop, conversations, doors. */
 [[nodiscard]] PERFECTWORLDCORE_API std::vector<WorldSectionHash> HashWorldSections(const WorldState& state);
 
 /** The fingerprint of the whole world. */
