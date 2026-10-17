@@ -69,7 +69,30 @@ constexpr std::array<ApprovedRoute, 4> AninditaRoutes{{
 constexpr Spec AninditaSpec{"npc_schedule.anindita_sen", "person.anindita_sen", AnHome, "location.nabapara.stationery",
                             "door.nabapara.stationery_front", AninditaRoutes, "anchor.stationery.", 7 * 60 + 30, 21 * 60};
 
-constexpr std::array<const Spec*, 2> AllSpecs{&CareSpec, &AninditaSpec};
+// Mira Sen, Anindita's daughter and a Class XI Commerce student. Her stationery hours are Tuesday and Thursday 16:30-18:00 at the
+// packing desk (the counter is Anindita's anchor). The shop legs reuse Anindita's built polylines (counter to desk 727 cm, counter
+// to door 1100 cm, door to home 2000 cm) so the presenter's route bindings are shared; the school and own-plans legs are authored
+// off-lane lengths. Home is the same off-lane zone as Anindita's.
+constexpr std::string_view MrCounter = "anchor.stationery.counter";
+constexpr std::string_view MrPackingDesk = "anchor.stationery.packing_desk";
+constexpr std::string_view MrFrontDoor = "anchor.stationery.front_door";
+constexpr std::string_view MrHome = "location.nabapara.sen_home";
+constexpr std::string_view MrSchool = "location.nabapara.school";
+constexpr std::string_view MrOut = "location.nabapara.mira_out";
+constexpr std::array<ApprovedRoute, 7> MiraRoutes{{
+    {"route.stationery.counter_to_packing_desk", MrCounter, MrPackingDesk, 727},
+    {"route.stationery.counter_to_door", MrCounter, MrFrontDoor, 1100},
+    {"route.sen_home.footpath_to_home", MrFrontDoor, MrHome, 2000},
+    {"route.mira_school.home_to_school", MrHome, MrSchool, 2800},
+    {"route.mira_school.door_to_school", MrFrontDoor, MrSchool, 3700},
+    {"route.mira_out.home_to_out", MrHome, MrOut, 1500},
+    {"route.mira_out.school_to_out", MrSchool, MrOut, 2400},
+}};
+// At the shop only for the Tuesday/Thursday help hours, 16:30-18:00 (minutes of the day, end exclusive).
+constexpr Spec MiraSpec{"npc_schedule.mira_sen", "person.mira_sen", MrHome, "location.nabapara.stationery",
+                        "door.nabapara.stationery_front", MiraRoutes, "anchor.stationery.", 16 * 60 + 30, 18 * 60};
+
+constexpr std::array<const Spec*, 3> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec};
 
 const Spec* FindSpec(std::string_view personId)
 {
