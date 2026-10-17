@@ -9,6 +9,7 @@
 #include "InputCoreTypes.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "PerfectWorldBlockTestGameMode.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
 #include "PerfectWorldPresentationSettings.h"
@@ -21,13 +22,13 @@
 namespace
 {
 /** Slate draws viewport content in Z order; the front end sits above everything the game adds. */
-constexpr int32 FrontEndZOrder = 100;
+constexpr int32 EnFrontEndZOrder = 100;
 /** The title view is a slow turn of the camera, so the block scene reads as a place and not a backdrop. */
-constexpr float TitleDriftPeriod = 40.0f;
-constexpr float TitleViewPitchDegrees = -6.0f;
+constexpr float EnTitleDriftPeriod = 40.0f;
+constexpr float EnTitleViewPitchDegrees = -6.0f;
 
 /** The core usually explains a refusal; this stands in only if a message ever comes back empty. */
-FText HudMessageOrFallback(const FText& Message)
+FText EnHudMessageOrFallback(const FText& Message)
 {
     return Message.IsEmpty() ? LOCTEXT("Unexplained", "That did not work, and no reason was given.") : Message;
 }
@@ -49,7 +50,7 @@ void APerfectWorldFrontEndHUD::BeginPlay()
 
     Root = SNew(SPWFrontEndRoot).Hud(this);
     ViewportHolder = SNew(SWeakWidget).PossiblyNullContent(Root);
-    GEngine->GameViewport->AddViewportWidgetContent(ViewportHolder.ToSharedRef(), FrontEndZOrder);
+    GEngine->GameViewport->AddViewportWidgetContent(ViewportHolder.ToSharedRef(), EnFrontEndZOrder);
 
     // In the world (game-only input) Escape or the controller's menu button opens the pause menu. While a menu is up
     // the keyboard belongs to Slate, and SPWFrontEndRoot routes Escape back here to resume.
@@ -85,8 +86,8 @@ void APerfectWorldFrontEndHUD::Tick(float DeltaSeconds)
     Super::Tick(DeltaSeconds);
     if (Mode == EFrontEndMode::Title && PlayerOwner != nullptr && !UPerfectWorldPresentationSettings::Get().IsReducedMotion())
     {
-        TitleDriftSeconds = FMath::Fmod(TitleDriftSeconds + DeltaSeconds, TitleDriftPeriod);
-        TitleYaw = 6.0f * FMath::Sin(TitleDriftSeconds * 2.0f * PI / TitleDriftPeriod);
+        TitleDriftSeconds = FMath::Fmod(TitleDriftSeconds + DeltaSeconds, EnTitleDriftPeriod);
+        TitleYaw = 6.0f * FMath::Sin(TitleDriftSeconds * 2.0f * PI / EnTitleDriftPeriod);
         FaceTitleView();
     }
 }
@@ -148,7 +149,7 @@ FText APerfectWorldFrontEndHUD::LoadSlot(int32 SlotIndex)
     }
     if (!Creator->LoadFromSlot(SlotIndex))
     {
-        return HudMessageOrFallback(Creator->GetLastErrorMessage());
+        return EnHudMessageOrFallback(Creator->GetLastErrorMessage());
     }
     ActiveSlot = SlotIndex;
 
@@ -156,8 +157,7 @@ FText APerfectWorldFrontEndHUD::LoadSlot(int32 SlotIndex)
     const FText Notice = Creator->GetLastErrorMessage();
     if (Creator->HasLifeStarted())
     {
-        EnterWorld(Notice);
-        return FText::GetEmpty();
+        return EnterWorld(Notice);
     }
 
     // A draft: send the player back to the page they had reached.
@@ -182,13 +182,13 @@ FText APerfectWorldFrontEndHUD::LoadSlot(int32 SlotIndex)
 FText APerfectWorldFrontEndHUD::StartNewLife(int32 SlotIndex)
 {
     UPerfectWorldCharacterCreatorSubsystem* Creator = GetCreator();
-    if (Creator == nullptr)
+    if (Creator == nullptr || !Root.IsValid())
     {
         return LOCTEXT("NoCreatorToStart", "The game is not ready to begin a life yet.");
     }
-    if (!Creator->StartLife())
+    if (!Creator->StartLifeAndSaveToSlot(SlotIndex))
     {
-        return HudMessageOrFallback(Creator->GetLastErrorMessage());
+        return EnHudMessageOrFallback(Creator->GetLastErrorMessage());
     }
     // A new life starts a fresh lane world (07:30 on 2 June 2042, authored doors, no conversations), even when an
     // earlier life was played in this session. TODO(world-save-v8): Continue/Load restore the saved world instead.
@@ -197,22 +197,10 @@ FText APerfectWorldFrontEndHUD::StartNewLife(int32 SlotIndex)
         Life->ResetWorld();
     }
 
-    // Life has begun and cannot be undone, so enter the world either way and say if the save failed.
-    FText Notice;
-    if (Creator->SaveToSlot(SlotIndex))
-    {
-        ActiveSlot = SlotIndex;
-        Notice = FText::Format(LOCTEXT("StartedAndSaved", "Your life has begun. Saved to slot {0}."),
-                               FText::AsNumber(SlotIndex + 1));
-    }
-    else
-    {
-        ActiveSlot = -1;
-        Notice = FText::Format(LOCTEXT("StartedNotSaved", "Your life has begun, but it could not be saved: {0} Use Pause, then Save, to try again."),
-                               Creator->GetLastErrorMessage());
-    }
-    EnterWorld(Notice);
-    return FText::GetEmpty();
+    ActiveSlot = SlotIndex;
+    const FText Notice = FText::Format(LOCTEXT("StartedAndSaved", "Your life has begun. Saved to slot {0}."),
+                                     FText::AsNumber(SlotIndex + 1));
+    return EnterWorld(Notice);
 }
 
 void APerfectWorldFrontEndHUD::ResumeGame()
@@ -254,7 +242,7 @@ FText APerfectWorldFrontEndHUD::SaveGameToSlot(int32 SlotIndex, bool& bOutSuccee
     {
         ActiveSlot = SlotIndex;
     }
-    return HudMessageOrFallback(Creator->GetLastErrorMessage());
+    return EnHudMessageOrFallback(Creator->GetLastErrorMessage());
 }
 
 void APerfectWorldFrontEndHUD::ReturnToTitle()
@@ -276,25 +264,28 @@ void APerfectWorldFrontEndHUD::QuitGame()
     UKismetSystemLibrary::QuitGame(this, PlayerOwner, EQuitPreference::Quit, false);
 }
 
-void APerfectWorldFrontEndHUD::EnterWorld(const FText& Notice)
+FText APerfectWorldFrontEndHUD::EnterWorld(const FText& Notice)
 {
     if (!Root.IsValid())
     {
-        return;
+        return LOCTEXT("NoWorldEntryUI", "The game is not ready to enter the world yet.");
+    }
+    UWorld* EnWorld = GetWorld();
+    APerfectWorldBlockTestGameMode* EnGameMode = EnWorld != nullptr
+        ? Cast<APerfectWorldBlockTestGameMode>(EnWorld->GetAuthGameMode()) : nullptr;
+    if (PlayerOwner == nullptr || EnGameMode == nullptr || !EnGameMode->PlacePlayerAtOpeningHome(*PlayerOwner))
+    {
+        return LOCTEXT("HomeEntryFailed", "Your saved life could not be placed at home. Please load the slot to try again.");
     }
     Mode = EFrontEndMode::Playing;
     UGameplayStatics::SetGamePaused(this, false);
     Root->Hide();
     ApplyGameInput();
-    if (PlayerOwner != nullptr)
-    {
-        // Keep facing the way the title view was turned, but level the camera for play.
-        PlayerOwner->SetControlRotation(FRotator(0.0f, TitleYaw, 0.0f));
-    }
     if (!Notice.IsEmpty())
     {
         Root->ShowToast(Notice);
     }
+    return FText::GetEmpty();
 }
 
 void APerfectWorldFrontEndHUD::ApplyMenuInput()
@@ -325,7 +316,7 @@ void APerfectWorldFrontEndHUD::FaceTitleView()
 {
     if (PlayerOwner != nullptr)
     {
-        const float Pitch = TitleViewPitchDegrees + 0.4f * FMath::Sin(TitleDriftSeconds * 2.0f * PI / TitleDriftPeriod);
+        const float Pitch = EnTitleViewPitchDegrees + 0.4f * FMath::Sin(TitleDriftSeconds * 2.0f * PI / EnTitleDriftPeriod);
         PlayerOwner->SetControlRotation(FRotator(Pitch, TitleYaw, 0.0f));
     }
 }

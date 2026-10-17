@@ -437,6 +437,22 @@ public:
     UFUNCTION(BlueprintPure, Category = "Perfect World|Save")
     bool HasLifeStarted() const;
 
+    // EN integration: in lane-life ResolveOriginResidency, clear ResidentLocations and populate only door locations
+    // accepted by this creator's HasLaneOriginResidency(LocationId). Remove the synthetic Parent plan; fail closed
+    // when the creator/origin is unavailable. Refresh after successful Start AND Load, including ResetWorld;
+    // Initialize runs before the life is chosen. Use GetLaneOrigin for the counterpart id and relationship label.
+    /** On-demand core resolution; bResolved=false leaves both IDs empty and grants no residency. */
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Creation")
+    FPWLaneOriginView GetLaneOrigin() const;
+
+    /** Core-authoritative, location-scoped residency; an unresolved origin grants nothing. */
+    UFUNCTION(BlueprintPure, Category = "Perfect World|Creation")
+    bool HasLaneOriginResidency(FName LocationId) const;
+
+    /** Commits a started record only if its slot write succeeds; preserves the whole draft on failure. */
+    UFUNCTION(BlueprintCallable, Category = "Perfect World|Save")
+    bool StartLifeAndSaveToSlot(int32 SlotIndex);
+
 private:
     bool RecordResult(const PerfectWorld::OperationResult& Result);
     bool RecordFileError(FText Message);

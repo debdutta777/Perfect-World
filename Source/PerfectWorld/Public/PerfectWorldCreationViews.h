@@ -9,6 +9,18 @@
  * and the UI only displays what these hold.
  */
 
+/** Resolved from the portable origin catalogue, for drafts and loaded lives alike. */
+USTRUCT(BlueprintType)
+struct FPWLaneOriginView
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") bool bResolved = false;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FName HomeLocationId;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FName CounterpartPersonId;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText CounterpartLabel;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") bool bGrewUpInCare = false;
+};
+
 USTRUCT(BlueprintType)
 struct FPWTraitRankView
 {
