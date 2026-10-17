@@ -1710,3 +1710,28 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 - Each boot then starts 5 h 30 min off (local time read as UTC) until NTP corrects it. That is the clock jump behind the stale incremental builds.
 - Both are for the owner: the provider's auto-shutdown setting, and the VM's real-time-clock time zone.
 - Long jobs now run detached (`D:\PWWork\run_codex.ps1`, `D:\PWWork\run_automation.ps1`), so a restart does not kill them.
+
+## Checkpoint — LL-02 (2a) merged: Farida on the generic loader, the stationery door, leaving after closing; the VM's 12-minute power-offs, 2026-10-17
+
+**What merged:**
+- **gpt-6.1-sol, LL-02 (2a):**
+  - `LoadNpcSchedule` now loads Farida's authored schedule. Tests show it agrees with `FaridaSchedule` at every minute across eight days.
+  - Anindita's routes and travel minutes now come from the built shop. The ten travel totals are 8, 6, 5, 23, 14, 13, 15, 10, 28 and 27 minutes.
+  - `door.nabapara.stationery_front` joins the authored door set, closed by default and open in her hours. Historical ten-door `pw.doors/2` text migrates, keeping its doors' states, and the new door is added closed.
+  - `DoorDirection::Exit`: a person inside may leave a business after closing, while entry stays refused.
+- **Integrator:**
+  - A v8 world save written before the new door migrates on load, so it no longer hashes as stored. `HashWorldStateWithDoorsText` now authenticates the stored checksum over the door text as stored: tampering is still refused, and the changed world loads unverified.
+  - The world-hash goldens were re-pinned from the independent reference encoder (`PW_PRINT_GOLDEN=1`). They change only because the default door text gained an eleventh entry; `WorldHashVersion` stays 5.
+
+**Exact checks:**
+- **Rung 1:** on `core/presence-2a` at `8e4f0a6`, **164/164**. The run was incremental in `D:/pwc2a_j`, with every changed file's timestamp refreshed first.
+- **Rung 2:** for the merge (`24308c1`), **pending**. The automation debugging agent holds the Unreal build slot on the D: clone.
+
+**Power-offs:** the host's guest agent (`qemu-ga`) powered the VM off at 17:57, 18:08 and 18:21, about every 12 minutes, so any longer job died. None has happened since 18:21, while the session keeps the computer awake.
+- Long jobs run detached and write `.done` files.
+- Builds stay incremental with refreshed timestamps instead of fresh directories.
+- The owner should check the provider's auto-stop or idle settings.
+
+**Running:**
+- **gpt-6.1-sol, LL-02 (2b):** Farida onto the presenter, Anindita's stationery bindings and spawn, and the door bridge's Exit direction.
+- **A debugging agent:** the nine automation failures.
