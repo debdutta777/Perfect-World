@@ -574,3 +574,14 @@ add_test(NAME PerfectWorldConversationAninditaTests COMMAND PerfectWorldConversa
 add_executable(PerfectWorldWorldSaveAninditaTests Tests/WorldSaveAninditaTests.cpp)
 target_link_libraries(PerfectWorldWorldSaveAninditaTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldWorldSaveAninditaTests COMMAND PerfectWorldWorldSaveAninditaTests)
+
+# LL-03: parametric interior kit (portable layout: walls, rooms, anchors, clearances, lights, routes).
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/LaneInteriorLayout.cpp
+    Source/PerfectWorldCore/Private/LaneInteriorBuilder.cpp
+    Source/PerfectWorldCore/Private/LaneInteriorFurnish.cpp
+    Source/PerfectWorldCore/Private/LaneInteriorTwoRoom.cpp
+    Source/PerfectWorldCore/Private/LaneInteriorShared.cpp)
+add_executable(PerfectWorldLaneInteriorLayoutTests Tests/LaneInteriorLayoutTests.cpp)
+target_link_libraries(PerfectWorldLaneInteriorLayoutTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneInteriorLayoutTests COMMAND PerfectWorldLaneInteriorLayoutTests)

@@ -8,6 +8,7 @@
 #include "PerfectWorldConversationPresenter.h"
 #include "PerfectWorldDoorActor.h"
 #include "PerfectWorldFrontEndHUD.h"
+#include "PerfectWorldNpcPresenceSubsystem.h"
 #include "PerfectWorldReadingPresenter.h"
 #include "UI/SPWClockReadout.h"
 #include "Widgets/SWeakWidget.h"
@@ -143,6 +144,11 @@ void UPWLaneLifeSubsystem::ResetWorld()
         }
     }
     RefreshFaridaForClock();
+    // Scheduled people on the generic presenter (LL-02) drop their actors and detours and are re-presented at the new instant.
+    if (UPWNpcPresenceSubsystem* NpPresence = GetWorld()->GetSubsystem<UPWNpcPresenceSubsystem>())
+    {
+        NpPresence->ResetPresentation(GetNow());
+    }
     OnClockChanged.Broadcast(GetNow());
 }
 
@@ -152,6 +158,12 @@ PerfectWorld::CommandResult UPWLaneLifeSubsystem::SubmitCommand(const PerfectWor
     if (Result.Accepted)
     {
         PresentEvents(Result.Events);
+        // Every accepted command, even one that leaves the time unchanged (leaving a conversation can release a person to walk
+        // on), reconciles the scheduled people on the presenter before the clock is broadcast.
+        if (UPWNpcPresenceSubsystem* NpPresence = GetWorld()->GetSubsystem<UPWNpcPresenceSubsystem>())
+        {
+            NpPresence->Reconcile(GetNow());
+        }
         HandleClockMoved();
     }
     return Result;
@@ -173,8 +185,8 @@ void UPWLaneLifeSubsystem::HandleClockMoved()
         return;
     }
     LastBroadcastInstant = Now;
-    // Every scheduled person is re-resolved at the new instant. Farida is the only one with a schedule wired in; the others
-    // bind OnClockChanged when theirs arrives.
+    // Farida still has her own path (LL-02 submission 2 moves her onto the presenter); everyone registered with the presenter
+    // was reconciled by SubmitCommand already.
     RefreshFaridaForClock();
     OnClockChanged.Broadcast(Now);
 }

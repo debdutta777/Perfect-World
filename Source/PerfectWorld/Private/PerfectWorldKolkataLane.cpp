@@ -11,10 +11,12 @@
 #include "PerfectWorldLaneCareInterior.h"
 #include "PerfectWorldLaneHomeFurniture.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
+#include "PerfectWorldLaneNpcBindings.h"
 #include "PerfectWorldLaneProps.h"
 #include "PerfectWorldLaneRoutes.h"
 #include "PerfectWorldLaneTeaShop.h"
 #include "PerfectWorldNpcCharacter.h"
+#include "PerfectWorldNpcPresenceSubsystem.h"
 
 namespace PWLane
 {
@@ -143,20 +145,13 @@ void SpawnHouseholdAdult(UWorld& World)
 }
 
 /**
- * The children's home: its on-duty staff member stands in the common room near the entry doorway, and its seats are
- * usable. The staff member works in the lane whatever the player's origin. TODO(care-origin): a care-origin start
- * places the player here; TODO(care-schedule): duty hours from npc_schedule.care_worker (CareConversation already
- * declines politely off duty). The noticeboard and exercise book readables wait for authored text.
+ * The children's home: its seats are usable, and its day-shift care worker works to npc_schedule.care_worker through the
+ * NPC presenter (LL-02): at the staff desk and in the common room on duty, handing over and walking home after it, and
+ * stepping out of a doorway the player approaches. She works in the lane whatever the player's origin.
  */
 void SpawnCareHome(UWorld& World)
 {
     const FLaneFrame CareFrame = MakeLaneFrame(-1400.0, -400.0, FVector(1.0, 0.0, 0.0), FVector(0.0, -1.0, 0.0));
-    const FTransform At(FRotator(0.0, CareStaffSpotYaw(CareFrame), 0.0), CareStaffSpot(CareFrame));
-    if (APWNpcCharacter::SpawnAt(World, At, FName(TEXT("person.care_worker")), NSLOCTEXT("PerfectWorldLane", "CareWorker", "Care worker"),
-                                 EPWNpcOutfit::HouseholdAdult) == nullptr)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Kolkata lane: the care worker could not be placed in the children's home."));
-    }
     FActorSpawnParameters Params;
     Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
     for (const FHomeSeatSpec& Spec : CareSeatSpecs())
@@ -165,6 +160,26 @@ void SpawnCareHome(UWorld& World)
         {
             Seat->ConfigureFromSpec(Spec, CareFrame);
         }
+    }
+
+    // The building's anchors, routes and doorways go to the presenter first; then the person, who is placed (or not, when
+    // off duty) by her schedule at the world clock's instant. A missing binding is a diagnostic, never a default spawn.
+    UPWNpcPresenceSubsystem* NpPresence = World.GetSubsystem<UPWNpcPresenceSubsystem>();
+    if (NpPresence == nullptr)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Kolkata lane: no NPC presenter; the care worker is not placed."));
+        return;
+    }
+    if (!NpPresence->Bindings().RegisterProvider(FName(TEXT("building.nabapara.care_home")), NpCareHomeBindings(CareFrame)))
+    {
+        UE_LOG(LogTemp, Error, TEXT("Kolkata lane: the children's home NPC bindings conflict with another building's."));
+        return;
+    }
+    NpPresence->RegisterScheduledPerson(FName(TEXT("person.care_worker")), NSLOCTEXT("PerfectWorldLane", "CareWorker", "Care worker"),
+                                        EPWNpcOutfit::HouseholdAdult);
+    if (const UPWLaneLifeSubsystem* NpLife = UPWLaneLifeSubsystem::Get(&World))
+    {
+        NpPresence->Reconcile(NpLife->GetNow());
     }
 }
 

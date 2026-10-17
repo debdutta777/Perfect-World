@@ -3,6 +3,7 @@
 #include "PerfectWorldLaneInteriors.h"
 #include "PerfectWorldLaneShops.h"
 #include "PerfectWorldLaneCareInterior.h"
+#include "PerfectWorldLaneStationeryShop.h"
 #include "PerfectWorldLaneTeaShop.h"
 
 namespace PWLane
@@ -218,6 +219,12 @@ void BuildFull(FLaneScene& S, const FLaneBuilding& B)
         // The children's home (first row, -Y side, Index 1, X -1400 to -300) builds its own frontage, rooms and the
         // solid storeys above. Every origin's home is built; who lives where comes from the core (LaneOrigin).
         BuildCareHome(S, B);
+    }
+    else if (IsStationeryBuilding(B))
+    {
+        // The stationery shop (first row, +Y side, Index 2, X -100 to 600) is the interior kit's public variant: sales
+        // room, counter, stock room and packing desk, with the solid storeys above. See PerfectWorldLaneStationeryShop.h.
+        BuildStationeryShop(S, B);
     }
     else if (IsOpeningHome(B))
     {

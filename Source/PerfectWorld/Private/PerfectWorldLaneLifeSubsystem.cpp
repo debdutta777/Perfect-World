@@ -12,6 +12,7 @@
 #include "PerfectWorldInteractionComponent.h"
 #include "PerfectWorldLaneLifeConversation.h"
 #include "PerfectWorldNpcCharacter.h"
+#include "PerfectWorldNpcPresenceSubsystem.h"
 #include "PerfectWorldReadingPresenter.h"
 
 DEFINE_LOG_CATEGORY(LogPWLaneLife);
@@ -117,7 +118,13 @@ void UPWLaneLifeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     ReportedUnknownDoors.Reset();
     RegisteredDoors.Reset();
     ResolveOriginResidency();
+    // Scheduled people (LL-02) are presented by their own subsystem, which must exist before the clock first moves.
+    UPWNpcPresenceSubsystem* NpPresence = Collection.InitializeDependency<UPWNpcPresenceSubsystem>();
     BuildWorld();
+    if (NpPresence != nullptr)
+    {
+        NpPresence->Reconcile(GetNow());
+    }
 
     // The conversation panel talks to people through whatever session factory it holds: install ours, over the core.
     if (UPWConversationPresenter* Presenter = Collection.InitializeDependency<UPWConversationPresenter>())
@@ -344,6 +351,21 @@ TSharedPtr<IPWConversationSession> UPWLaneLifeSubsystem::MakeConversationSession
             return nullptr;
         }
         Availability = FaridaIntent->Availability;
+    }
+    else if (UPWNpcPresenceSubsystem* NpPresence = GetWorld()->GetSubsystem<UPWNpcPresenceSubsystem>())
+    {
+        // A person on the presenter talks as their schedule says now; one with no valid intent refuses the session. Static
+        // people (the household adult) keep the Awake default.
+        NpPresence->Reconcile(GetNow());
+        if (NpPresence->IsRegistered(PersonId))
+        {
+            const PerfectWorld::NpcIntent* NpIntent = NpPresence->FindIntent(PersonId);
+            if (NpIntent == nullptr)
+            {
+                return nullptr;
+            }
+            Availability = NpIntent->Availability;
+        }
     }
     // A session abandoned without a Leave (a panel that failed to open after the core opened it, a world torn down mid-talk)
     // would refuse this one and keep the clock still: close it so a new one can start.
