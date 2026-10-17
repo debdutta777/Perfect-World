@@ -26,6 +26,71 @@ UPWReadingPresenter* UPWReadingPresenter::Get(const UObject* WorldContext)
 
 bool UPWReadingPresenter::FindBuiltInReading(const FName ContentId, FText& OutTitle, TArray<FText>& OutPages)
 {
+    // The children's home's own readables (Nabapara Shishu Griha): the entry noticeboard and the resident's exercise book.
+    // Plain, practical and dignified: no real people, no religion, no pity; residents are capable young people.
+    if (ContentId == FName(TEXT("text.nabapara.care_noticeboard")))
+    {
+        OutTitle = LOCTEXT("CareNoticeboardTitle", "Noticeboard - Nabapara Shishu Griha");
+        OutPages.Reset();
+        OutPages.Add(LOCTEXT("CareNoticeboardPage1",
+            "WELCOME TO THE NEW TERM\n"
+            "Week beginning Monday, 2 June 2042\n\n"
+            "Welcome back, everyone. A new term starts today, and a few of us are starting in a new class. Please put your "
+            "timetable and your identity card in your school bag tonight, and tell the staff on duty if anything is missing.\n\n"
+            "STUDY ROOM HOURS\n"
+            "Monday to Friday, 4.30 pm to 6.00 pm: homework hour, in the common room. Staff are there to help with any "
+            "subject. Quiet reading or revision is also fine at the front tables.\n"
+            "Saturday, 10.00 am to 12.00 noon: open study, for anyone who wants it. Sunday is free."));
+        OutPages.Add(LOCTEXT("CareNoticeboardPage2",
+            "SHARED JOBS ROTA\n"
+            "The rota for breakfast set-out, tidying the study room after homework hour and the water stand is on the "
+            "bookshelf side of this board. If you would like to swap a day, or take on a job for good, talk to the "
+            "day-shift care worker and agree it together. Please write any change on the rota yourself, so everyone can see "
+            "who has what.\n\n"
+            "WEEKEND OUTING\n"
+            "On Saturday we are walking to the riverside park, leaving at 2.00 pm and back by 5.30 pm. Bring water and a "
+            "hat. Tell the staff on duty by Friday evening if you would like to come, and if you have plans of your own "
+            "that day, let them know where you will be and when you will be back."));
+        OutPages.Add(LOCTEXT("CareNoticeboardPage3",
+            "STAFF ON DUTY\n"
+            "Day shift: 7.00 am to 3.00 pm.\n"
+            "Handover at the staff desk: 3.00 pm. The day shift hands the register and the notes to the evening staff.\n"
+            "Evening shift: 3.00 pm to 10.00 pm.\n"
+            "Handover at the staff desk: 10.00 pm, to the night staff, who are on duty until 7.00 am.\n\n"
+            "If you will be back late, or your plans change, tell the staff before the handover so the note is right. "
+            "Someone is always on duty, and you can always ask for help.\n\n"
+            "Doors are locked at night. Front door: please close it gently behind you."));
+        return true;
+    }
+    if (ContentId == FName(TEXT("text.nabapara.care_exercise_book")))
+    {
+        OutTitle = LOCTEXT("CareExerciseBookTitle", "Exercise book - Class XI");
+        OutPages.Reset();
+        OutPages.Add(LOCTEXT("CareExerciseBookPage1",
+            "MATHS - Quadratic equations\n"
+            "Mon 2 June\n\n"
+            "Standard form: a x^2 + b x + c = 0, with a not equal to 0.\n\n"
+            "Q1. x^2 - 5x + 6 = 0\n"
+            "Two numbers that multiply to 6 and add to -5: -2 and -3.\n"
+            "(x - 2)(x - 3) = 0, so x = 2 or x = 3.\n"
+            "Check: 4 - 10 + 6 = 0, and 9 - 15 + 6 = 0. Good.\n\n"
+            "Q2. 2x^2 + 3x - 2 = 0\n"
+            "Discriminant: b^2 - 4ac = 9 + 16 = 25, which is a perfect square, so the roots are rational.\n"
+            "x = (-3 + 5) / 4 = 1/2, or x = (-3 - 5) / 4 = -2.\n"
+            "Check x = -2: 8 - 6 - 2 = 0. Good.\n\n"
+            "To remember: if the discriminant is positive, two real roots; zero, one repeated root; negative, no real roots."));
+        OutPages.Add(LOCTEXT("CareExerciseBookPage2",
+            "ENGLISH - Reflection\n"
+            "Tue 3 June\n\n"
+            "Our teacher asked us to write one paragraph on the poem we began this week, about a small town waking before "
+            "sunrise. What I notice first is how little happens: a shutter goes up, a kettle is filled, someone sweeps a "
+            "step. But the poet gives each small act the same weight, and by the end I felt that the town was held together "
+            "by people doing ordinary jobs well, day after day, without anyone watching.\n\n"
+            "I think the poem is about care more than about morning. I want to read it again slowly, and to ask whether "
+            "the quiet in it is peace or only tiredness.\n\n"
+            "To do: finish the maths exercise 4.2 by Friday. Ask for the library card form at school."));
+        return true;
+    }
     // A fictional, neutral local paper of the alternate world, Monday 2 June 2042. No real people, no politics, no religion.
     if (ContentId != FName(TEXT("text.nabapara.home_newspaper")))
     {
