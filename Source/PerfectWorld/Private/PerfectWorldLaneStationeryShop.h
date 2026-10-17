@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "PerfectWorldLaneInteriorKit.h"
 
+struct FNpBindingProvider;
+
 namespace PWLane
 {
 /**
@@ -60,4 +62,7 @@ bool HasStationeryShop(const FLaneScene& Scene);
 
 /** The shop's five anchors (counter, stock_room, packing_desk, front_door, customer) transformed by the building's frame. */
 void GetStationeryAnchors(const FLaneBuilding& Building, TArray<FStationeryAnchor>& OutAnchors);
+
+/** Presenter bindings from the built layout, including Sen home off lane and both doorway exclusion zones. */
+FNpBindingProvider NpStationeryBindings(const FLaneBuilding& Building);
 } // namespace PWLane

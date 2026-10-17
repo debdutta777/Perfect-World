@@ -120,7 +120,6 @@ void UPWLaneLifeSubsystem::BuildWorld()
         UE_LOG(LogPWLaneLife, Error, TEXT("The world clock could not be set to the creation start: %hs"), Opened.Why.Code.c_str());
     }
     LastBroadcastInstant = GetNow();
-    FaridaResolvedInstant = -1;
 }
 
 void UPWLaneLifeSubsystem::ResetWorld()
@@ -143,7 +142,6 @@ void UPWLaneLifeSubsystem::ResetWorld()
             }
         }
     }
-    RefreshFaridaForClock();
     // Scheduled people on the generic presenter (LL-02) drop their actors and detours and are re-presented at the new instant.
     if (UPWNpcPresenceSubsystem* NpPresence = GetWorld()->GetSubsystem<UPWNpcPresenceSubsystem>())
     {
@@ -185,9 +183,7 @@ void UPWLaneLifeSubsystem::HandleClockMoved()
         return;
     }
     LastBroadcastInstant = Now;
-    // Farida still has her own path (LL-02 submission 2 moves her onto the presenter); everyone registered with the presenter
-    // was reconciled by SubmitCommand already.
-    RefreshFaridaForClock();
+    // Scheduled people were reconciled by SubmitCommand already.
     OnClockChanged.Broadcast(Now);
 }
 

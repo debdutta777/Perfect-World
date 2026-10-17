@@ -14,6 +14,7 @@
 #include "PerfectWorldLaneNpcBindings.h"
 #include "PerfectWorldLaneProps.h"
 #include "PerfectWorldLaneRoutes.h"
+#include "PerfectWorldLaneStationeryShop.h"
 #include "PerfectWorldLaneTeaShop.h"
 #include "PerfectWorldNpcCharacter.h"
 #include "PerfectWorldNpcPresenceSubsystem.h"
@@ -118,6 +119,10 @@ void SpawnDoors(UWorld& World, const TArray<FLaneDoorSpec>& Doors)
         if (Door != nullptr)
         {
             Door->Configure(Spec.Id, static_cast<float>(Spec.PreferredSwing), Spec.bTwoWay);
+            if (UPWLaneLifeSubsystem* PbLife = UPWLaneLifeSubsystem::Get(&World))
+            {
+                PbLife->RegisterDoorInsideSide(*Door, Spec.PreferredSwing);
+            }
         }
     }
 }
@@ -218,19 +223,45 @@ void FaSpawnFarida(UWorld& World, const FLaneScene& Scene)
         Building.Index = 3;
         if (!IsTeaShopBuilding(Building)) { continue; }
         UPWLaneLifeSubsystem* Life = UPWLaneLifeSubsystem::Get(&World);
-        FTransform Feet;
-        if (Life == nullptr || !Life->PrepareFarida(Building, Feet))
+        if (Life == nullptr || !Life->RegisterTeaShopPresence(Building))
         {
-            UE_LOG(LogTemp, Error, TEXT("Farida could not resolve her content/schedule/world anchor; no fallback spawn."));
-            return;
+            UE_LOG(LogTemp, Error, TEXT("Shanti Chai NPC provider/schedule registration failed; no fallback spawn."));
         }
-        APWNpcCharacter* Person = APWNpcCharacter::SpawnAt(World, Feet, PWLaneLife::ToName(PerfectWorld::FaridaPersonId),
-            NSLOCTEXT("PerfectWorldLane", "FaridaName", "Farida"), EPWNpcOutfit::ShopProprietor);
-        if (Person != nullptr) { Life->RegisterFarida(*Person); }
-        else { UE_LOG(LogTemp, Error, TEXT("Farida could not be spawned at her resolved anchor.")); }
         return;
     }
     UE_LOG(LogTemp, Error, TEXT("Shanti Chai was built but its recorded frontage did not resolve."));
+}
+
+void PbSpawnAnindita(UWorld& World, const FLaneScene& Scene)
+{
+    if (!HasStationeryShop(Scene)) { return; }
+    for (const FLaneFront& PbFront : Scene.Fronts[1])
+    {
+        FLaneBuilding PbBuilding;
+        PbBuilding.Frame = MakeLaneFrame(PbFront.X0, PbFront.AbsY, FVector::ForwardVector, FVector::RightVector);
+        PbBuilding.Width = PbFront.X1 - PbFront.X0;
+        PbBuilding.Depth = 700.0;
+        PbBuilding.Setback = 60.0;
+        PbBuilding.Storeys = 3;
+        PbBuilding.Side = 1;
+        PbBuilding.Index = 2;
+        if (!IsStationeryBuilding(PbBuilding)) { continue; }
+        auto* PbPresence = World.GetSubsystem<UPWNpcPresenceSubsystem>();
+        if (PbPresence == nullptr || !PbPresence->Bindings().RegisterProvider(
+                FName(TEXT("building.nabapara.stationery")), NpStationeryBindings(PbBuilding)))
+        {
+            UE_LOG(LogTemp, Error, TEXT("Stationery NPC provider registration failed; no fallback spawn."));
+            return;
+        }
+        if (!PbPresence->RegisterScheduledPerson(FName(TEXT("person.anindita_sen")),
+                NSLOCTEXT("PerfectWorldLane", "AninditaName", "Anindita"), EPWNpcOutfit::ShopProprietor))
+        {
+            UE_LOG(LogTemp, Error, TEXT("Anindita's schedule registration failed; no fallback spawn."));
+        }
+        if (const auto* PbLife = UPWLaneLifeSubsystem::Get(&World)) { PbPresence->Reconcile(PbLife->GetNow()); }
+        return;
+    }
+    UE_LOG(LogTemp, Error, TEXT("Stationery shop was built but its recorded frontage did not resolve."));
 }
 } // namespace
 
@@ -253,6 +284,7 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     SpawnRoomLights(World, Scene.RoomLights);
     SpawnDoors(World, Scene.Doors);
     FaSpawnFarida(World, Scene);
+    PbSpawnAnindita(World, Scene);
     if (Scene.bOpeningHomeBuilt)
     {
         SpawnHouseholdAdult(World);
