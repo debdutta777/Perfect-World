@@ -1,6 +1,7 @@
 #include "PerfectWorldLaneStationeryShop.h"
 
 #include "Math/RotationMatrix.h"
+#include "PerfectWorldLaneNpcBindings.h"
 
 namespace PWLane
 {
@@ -279,5 +280,77 @@ void GetStationeryAnchors(const FLaneBuilding& B, TArray<FStationeryAnchor>& Out
         Anchor.YawDegrees = KitYaw(B, A->FaceU, A->FaceV);
         Out.Add(Anchor);
     }
+}
+FNpBindingProvider NpStationeryBindings(const FLaneBuilding& Building)
+{
+    FNpBindingProvider PbProvider;
+    const LI::InteriorLayout& PbLayout = GetStationeryLayout();
+    if (!IsStationeryBuilding(Building) || !PbLayout.Ok()) { return PbProvider; }
+    TArray<FStationeryAnchor> PbAnchors;
+    GetStationeryAnchors(Building, PbAnchors);
+    for (const FStationeryAnchor& PbAnchor : PbAnchors)
+    {
+        FNpAnchorBinding PbBinding;
+        PbBinding.Feet = FTransform(FRotator(0.0, PbAnchor.YawDegrees, 0.0), PbAnchor.World);
+        PbBinding.bPreferSit = PbAnchor.Kind == LI::AnchorKind::Seat;
+        PbProvider.Anchors.Add(PbAnchor.Id, PbBinding);
+    }
+    const FName PbFootpath(TEXT("location.nabapara.stationery_footpath"));
+    const auto* PbFront = PbProvider.Anchors.Find(FName(StationeryAnchorFrontDoor));
+    if (PbFront == nullptr) { return {}; }
+    // The layout threshold is already on the footpath at U250/V-45. No extra travel segment is authored.
+    const FNpAnchorBinding PbFootAnchor = *PbFront;
+    PbProvider.Anchors.Add(PbFootpath, PbFootAnchor);
+    FNpAnchorBinding PbHome;
+    PbHome.Kind = ENpBindingKind::OffLane;
+    PbHome.ExitAnchor = PbFootpath;
+    PbProvider.Anchors.Add(FName(TEXT("location.nabapara.sen_home")), PbHome);
+
+    constexpr const char* PbRouteNames[] = {"counter_to_stock_room", "counter_to_packing_desk", "counter_to_door"};
+    for (const char* PbRouteName : PbRouteNames)
+    {
+        const LI::Route* PbRoute = LI::FindRoute(PbLayout, PbLayout.BuildingId + ".route." + PbRouteName);
+        if (PbRoute == nullptr) { return {}; }
+        FNpRouteBinding PbLine;
+        for (const LI::RoutePoint& PbPoint : PbRoute->Points)
+        {
+            PbLine.Points.Add(KitPoint(Building, PbLayout, PbPoint.U, PbPoint.V, 0.0));
+        }
+        const std::string PbPublicId = std::string("route.stationery.") + PbRouteName;
+        PbProvider.Routes.Add(FName(UTF8_TO_TCHAR(PbPublicId.c_str())), MoveTemp(PbLine));
+    }
+    PbProvider.Routes.Add(FName(TEXT("route.sen_home.footpath_to_home")), FNpRouteBinding{{}, true});
+
+    for (const LI::Opening& PbOpening : PbLayout.Openings)
+    {
+        if (PbOpening.Kind == LI::OpeningKind::Window) { continue; }
+        FNpDoorwayZone PbZone;
+        PbZone.Id = FName(UTF8_TO_TCHAR((PbOpening.DoorId.empty() ? PbOpening.Id : PbOpening.DoorId).c_str()));
+        // The front leaf swings both ways. Reserve its sweep on both sides, plus capsule/approach space.
+        const double PbApproach = PbOpening.DoorId.empty() ? 65.0 : LI::DoorClearWidthCm + 40.0;
+        const double PbV0 = PbOpening.Plan.V0 - PbApproach;
+        const double PbV1 = PbOpening.Plan.V1 + PbApproach;
+        PbZone.Bounds += KitPoint(Building, PbLayout, PbOpening.Plan.U0 - 34.0, PbV0, 0.0);
+        PbZone.Bounds += KitPoint(Building, PbLayout, PbOpening.Plan.U1 + 34.0, PbV1, 212.0);
+        if (PbOpening.RoomA == "outside")
+        {
+            const double PbCentre = (PbOpening.Plan.U0 + PbOpening.Plan.U1) * 0.5;
+            PbZone.WaitingFeet = {KitPoint(Building, PbLayout, PbCentre - 150.0, -85.0, 0.0),
+                                  KitPoint(Building, PbLayout, PbCentre + 150.0, -85.0, 0.0)};
+        }
+        else
+        {
+            // Authored staff work anchors keep waiting away from stockroom furniture and the counter's solid body.
+            for (const TCHAR* PbId : {StationeryAnchorCounter, StationeryAnchorStockRoom, StationeryAnchorPackingDesk})
+            {
+                if (const auto* PbWait = PbProvider.Anchors.Find(FName(PbId)))
+                {
+                    PbZone.WaitingFeet.Add(PbWait->Feet.GetLocation());
+                }
+            }
+        }
+        PbProvider.Doorways.Add(MoveTemp(PbZone));
+    }
+    return PbProvider;
 }
 } // namespace PWLane

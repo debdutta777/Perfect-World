@@ -11,7 +11,6 @@
 #include "PerfectWorldFurnitureActor.h"
 #include "PerfectWorldInteractionComponent.h"
 #include "PerfectWorldLaneLifeConversation.h"
-#include "PerfectWorldNpcCharacter.h"
 #include "PerfectWorldNpcPresenceSubsystem.h"
 #include "PerfectWorldReadingPresenter.h"
 
@@ -117,6 +116,7 @@ void UPWLaneLifeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
     ReportedUnknownDoors.Reset();
     RegisteredDoors.Reset();
+    DoorInsideSides.Reset();
     ResolveOriginResidency();
     // Scheduled people (LL-02) are presented by their own subsystem, which must exist before the clock first moves.
     UPWNpcPresenceSubsystem* NpPresence = Collection.InitializeDependency<UPWNpcPresenceSubsystem>();
@@ -155,13 +155,7 @@ void UPWLaneLifeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 void UPWLaneLifeSubsystem::Deinitialize()
 {
     RemoveClockReadout();
-    if (APWNpcCharacter* Person = Farida.Get())
-    {
-        Person->GetNpcMovement()->OnBlockChanged.RemoveAll(this);
-        Person->GetNpcMovement()->SetAnchorResolver({});
-        Person->GetNpcMovement()->SetRouteResolver({});
-    }
-    Farida.Reset();
+    DoorInsideSides.Reset();
     OnClockChanged.Clear();
     APWReadableActor::GlobalReadRequested().RemoveAll(this);
     if (UPWConversationPresenter* Presenter = UPWConversationPresenter::Get(this))
@@ -222,6 +216,11 @@ void UPWLaneLifeSubsystem::RegisterDoor(APWDoorActor& Door)
     Door.SetOpenImmediate(Entry != nullptr ? Entry->Open : Def->bInitiallyOpen, Entry != nullptr ? static_cast<int8>(Entry->SwingSide) : int8(0));
 }
 
+void UPWLaneLifeSubsystem::RegisterDoorInsideSide(const APWDoorActor& Door, const double InsideSide)
+{
+    DoorInsideSides.Add(Door.GetDoorId(), InsideSide >= 0.0 ? 1.0 : -1.0);
+}
+
 void UPWLaneLifeSubsystem::HandleDoorSettled(const FName DoorId, const bool bReachedTarget, const bool bIsOpenNow, const int8 SwingSide)
 {
     // Record where the leaf really is, including which way a two-way door swung. This is a physical fact, not a
@@ -261,12 +260,15 @@ void UPWLaneLifeSubsystem::RequestDoorToggle(APWDoorActor& Door, APawn* By)
     const bool bWasOpen = Entry->Open;
     const std::int8_t WasSide = Entry->SwingSide;
 
-    // The core decides first. The context is the player's: entering, a resident of the origin's places, uninvited.
-    // TODO(door-direction): Exit once the door knows which side the player stands on; closing never needs permission anyway.
+    // Use the authored inside half-plane of the CLOSED frame, never the swinging leaf's current side.
+    // Missing actor/geometry remains Entry. The core owns permission; Exit remains available after business hours.
+    const double* PbInsideSide = DoorInsideSides.Find(Door.GetDoorId());
+    const bool PbIsInside = By != nullptr && PbInsideSide != nullptr &&
+        FVector::DotProduct(By->GetActorLocation() - Door.GetActorLocation(), Door.GetActorRightVector()) * *PbInsideSide > 0.0;
     PerfectWorld::DoorSet Set;
     Set.DoorId = Id;
     Set.Open = !bWasOpen;
-    Set.Context.Direction = PerfectWorld::DoorDirection::Entry;
+    Set.Context.Direction = PbIsInside ? PerfectWorld::DoorDirection::Exit : PerfectWorld::DoorDirection::Entry;
     Set.Context.IsResident = IsResidentOf(*Def);
     Set.Context.IsInvited = false;
     PerfectWorld::Command Command;
@@ -343,16 +345,7 @@ void UPWLaneLifeSubsystem::ShowDoorRefusal(const APawn* By, const PerfectWorld::
 TSharedPtr<IPWConversationSession> UPWLaneLifeSubsystem::MakeConversationSession(const FName PersonId, const FText& DisplayName)
 {
     PerfectWorld::PersonAvailability Availability = PerfectWorld::PersonAvailability::Awake;
-    if (PersonId == PWLaneLife::ToName(PerfectWorld::FaridaPersonId))
-    {
-        RefreshFaridaForClock();
-        if (!FaridaIntent)
-        {
-            return nullptr;
-        }
-        Availability = FaridaIntent->Availability;
-    }
-    else if (UPWNpcPresenceSubsystem* NpPresence = GetWorld()->GetSubsystem<UPWNpcPresenceSubsystem>())
+    if (UPWNpcPresenceSubsystem* NpPresence = GetWorld()->GetSubsystem<UPWNpcPresenceSubsystem>())
     {
         // A person on the presenter talks as their schedule says now; one with no valid intent refuses the session. Static
         // people (the household adult) keep the Awake default.

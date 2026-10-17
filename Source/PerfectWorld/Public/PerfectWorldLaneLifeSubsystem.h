@@ -5,12 +5,9 @@
 
 #include "Conversation.h"
 #include "Doors.h"
-#include "FaridaSchedule.h"
-#include "NpcBehaviour.h"
 #include "TimeContract.h"
 #include "WorldReducer.h"
 
-#include <optional>
 #include <string>
 #include <string_view>
 
@@ -18,7 +15,6 @@
 
 class APawn;
 class APWDoorActor;
-class APWNpcCharacter;
 class IPWConversationSession;
 class SPWClockReadout;
 class SWeakWidget;
@@ -118,23 +114,22 @@ public:
 
     /**
      * Starts a fresh world: a new clock at 07:30 on 2 June 2042, every door at its authored state, no conversation memory.
-     * Registered doors and Farida are brought into step. TODO(world-save-v8): a loaded life restores a saved WorldState instead.
+     * Registered doors and scheduled people are brought into step. TODO(world-save-v8): a loaded life restores a saved WorldState instead.
      */
     void ResetWorld();
 
     // ---- People ----
 
-    /** Load the schedule and bind the built shop's world geometry. False means no truthful spawn is available. */
-    bool PrepareFarida(const PWLane::FLaneBuilding& Building, FTransform& OutFeet);
-    void RegisterFarida(APWNpcCharacter& Person);
-    /** Re-resolves Farida's intent at the world clock's instant. Repeated calls at the same instant do nothing. */
-    void RefreshFaridaForClock();
-    const PerfectWorld::NpcIntent* GetFaridaIntent() const { return FaridaIntent ? &*FaridaIntent : nullptr; }
+    /** Bind the built tea shop, register its scheduled proprietor and reconcile at the world clock's instant. */
+    bool RegisterTeaShopPresence(const PWLane::FLaneBuilding& Building);
 
     // ---- Doors ----
 
     /** Sets the door's start state from the core, or logs an error once if the core has no door with this id. */
     void RegisterDoor(APWDoorActor& Door);
+
+    /** Authored inside half-plane: +1 toward the closed door actor's local +Y, -1 toward -Y. */
+    void RegisterDoorInsideSide(const APWDoorActor& Door, double InsideSide);
 
     /** The core's open flag for this door, or Fallback if the core does not know the id. */
     bool IsDoorOpen(FName DoorId, bool bFallback) const;
@@ -186,10 +181,6 @@ private:
     /** APWReadableActor::GlobalReadRequested: open the text in this world's reading presenter. */
     void HandleReadRequested(FName ReadableId, FName ContentId, FText Title);
 
-    // ---- Farida (PerfectWorldLaneLifeFarida.cpp) ----
-    void ResolveFaridaIntent();
-    void HandleFaridaBlock(bool bBlocked, FName RouteId);
-
     TUniquePtr<PerfectWorld::WorldSim> Sim;
     PerfectWorld::TimeModeState ClockMode;
     EPWClockHold ClockHold = EPWClockHold::Menu;
@@ -204,13 +195,7 @@ private:
     /** Door ids already reported as missing from the core, so each is logged once. */
     TSet<FName> ReportedUnknownDoors;
 
-    std::optional<PerfectWorld::FaridaSchedule> FaridaSchedule;
-    std::optional<PerfectWorld::NpcIntent> FaridaIntent;
-    TWeakObjectPtr<APWNpcCharacter> Farida;
-    TMap<FName, FTransform> FaridaAnchors;
-    TMap<FName, TArray<FVector>> FaridaRoutes;
-    PerfectWorld::GameInstant FaridaResolvedInstant = -1;
-    bool bFaridaBlocked = false;
+    TMap<FName, double> DoorInsideSides;
 
     TSharedPtr<SPWClockReadout> ClockReadout;
     TSharedPtr<SWeakWidget> ClockHolder;
