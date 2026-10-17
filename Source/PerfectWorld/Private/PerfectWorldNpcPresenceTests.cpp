@@ -23,6 +23,12 @@ PerfectWorld::GameInstant NpAt(const int32 Day, const int32 Minute)
 FNpWorld::FNpWorld()
 {
     World = UWorld::CreateWorld(EWorldType::Game, false);
+    // An actor's last render time starts at 0 and this world never ticks, so at world time 0 every actor counts as just
+    // rendered (AActor::WasRecentlyRendered), renderer or not. Ten seconds in, an actor nothing has drawn is unseen.
+    if (World != nullptr) { World->TimeSeconds = 10.0; }
+    // Every game world also gets the lane life subsystem, which reconciles the presenter at the lane clock's start (instant
+    // 90, 07:30) as it initialises. A person registered after that is resolved at once, so the tests bind providers before
+    // registering people, in the order the Kolkata lane uses.
     Presence = World != nullptr ? World->GetSubsystem<UPWNpcPresenceSubsystem>() : nullptr;
     for (const TCHAR* Id : {TEXT("npc_schedule.care_worker"), TEXT("npc_schedule.farida_qadri")})
     {
@@ -46,11 +52,11 @@ bool FNpWorld::RegisterCare() const
         FText::FromString(TEXT("Care worker")), EPWNpcOutfit::HouseholdAdult);
 }
 
-void FNpWorld::BindCare() const
+bool FNpWorld::BindCare() const
 {
-    if (Presence == nullptr) { return; }
+    if (Presence == nullptr) { return false; }
     const auto Frame = PWLane::MakeLaneFrame(-1400.0, -400.0, FVector::ForwardVector, -FVector::RightVector);
-    Presence->Bindings().RegisterProvider(FName(TEXT("building.test.care")), NpCareHomeBindings(Frame));
+    return Presence->Bindings().RegisterProvider(FName(TEXT("building.test.care")), NpCareHomeBindings(Frame));
 }
 }
 
@@ -59,8 +65,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FNpPresenceDuplicateTest, "PerfectWorld.NpcPres
 bool FNpPresenceDuplicateTest::RunTest(const FString& Parameters)
 {
     NpPresenceTest::FNpWorld Fixture;
+    if (!TestTrue(TEXT("care bindings registered"), Fixture.BindCare())) { return false; }
     if (!TestTrue(TEXT("validated care schedule registers"), Fixture.RegisterCare())) { return false; }
-    Fixture.BindCare();
     Fixture.Presence->Reconcile(NpPresenceTest::NpAt(0, 450));
     APWNpcCharacter* First = Fixture.Presence->FindPerson(NpPresenceTest::NpCarePerson);
     if (!TestNotNull(TEXT("person spawned at bound common room"), First)) { return false; }
@@ -80,8 +86,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FNpPresenceWeekTest, "PerfectWorld.NpcPresence.
 bool FNpPresenceWeekTest::RunTest(const FString& Parameters)
 {
     NpPresenceTest::FNpWorld Fixture;
+    if (!TestTrue(TEXT("care bindings registered"), Fixture.BindCare())) { return false; }
     if (!TestTrue(TEXT("care schedule loaded"), Fixture.RegisterCare())) { return false; }
-    Fixture.BindCare();
     const auto NpAnchorAt = [&Fixture](const int32 Day, const int32 Minute)
     {
         Fixture.Presence->Reconcile(NpPresenceTest::NpAt(Day, Minute));
@@ -105,8 +111,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FNpPresenceArrivalTest, "PerfectWorld.NpcPresen
 bool FNpPresenceArrivalTest::RunTest(const FString& Parameters)
 {
     NpPresenceTest::FNpWorld Fixture;
+    if (!TestTrue(TEXT("care bindings registered"), Fixture.BindCare())) { return false; }
     if (!TestTrue(TEXT("care schedule loaded"), Fixture.RegisterCare())) { return false; }
-    Fixture.BindCare();
     Fixture.Presence->Reconcile(NpPresenceTest::NpAt(0, 360));
     TestNull(TEXT("off-lane at first"), Fixture.Presence->FindPerson(NpPresenceTest::NpCarePerson));
     Fixture.Presence->Reconcile(NpPresenceTest::NpAt(0, 400));
@@ -129,11 +135,13 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FNpPresenceMissingTest, "PerfectWorld.NpcPresen
 bool FNpPresenceMissingTest::RunTest(const FString& Parameters)
 {
     NpPresenceTest::FNpWorld Fixture;
-    if (!TestTrue(TEXT("schedule loaded"), Fixture.RegisterCare())) { return false; }
+    // The missing binding is reported once: at registration when the presenter already has the lane clock's instant (07:30,
+    // she is in the common room), otherwise at the reconcile; the same diagnostic at the same minute is never repeated.
     AddExpectedError(TEXT("missing binding 'anchor.care_home.common_room'"), EAutomationExpectedErrorFlags::Contains, 1);
+    if (!TestTrue(TEXT("schedule loaded"), Fixture.RegisterCare())) { return false; }
     Fixture.Presence->Reconcile(NpPresenceTest::NpAt(0, 450));
     TestNull(TEXT("never uses default origin"), Fixture.Presence->FindPerson(NpPresenceTest::NpCarePerson));
-    Fixture.BindCare();
+    TestTrue(TEXT("care bindings registered late"), Fixture.BindCare());
     Fixture.Presence->Tick(0.1f);
     TestNotNull(TEXT("late provider recovers on same minute"), Fixture.Presence->FindPerson(NpPresenceTest::NpCarePerson));
     return true;
@@ -146,8 +154,7 @@ bool FNpPresencePaidJumpTest::RunTest(const FString& Parameters)
     NpPresenceTest::FNpWorld Fixture;
     if (!TestNotNull(TEXT("presentation subsystem"), Fixture.Presence)) { return false; }
     const FName Person(TEXT("person.farida_qadri"));
-    if (!TestTrue(TEXT("Farida uses generic loader"), Fixture.Presence->RegisterScheduledPersonFromContent(Fixture.Db, Person,
-        FText::FromString(TEXT("Farida")), EPWNpcOutfit::ShopProprietor))) { return false; }
+    // Bindings first, then the person (the presenter may already have the lane clock's instant).
     FNpBindingProvider Provider;
     FNpAnchorBinding Counter;
     Counter.Feet = FTransform(FVector(0.0, 0.0, 0.0));
@@ -155,7 +162,10 @@ bool FNpPresencePaidJumpTest::RunTest(const FString& Parameters)
     FNpAnchorBinding Wash;
     Wash.Feet = FTransform(FVector(150.0, 0.0, 0.0));
     Provider.Anchors.Add(FName(TEXT("anchor.shanti_chai.wash")), Wash);
-    Fixture.Presence->Bindings().RegisterProvider(FName(TEXT("building.test.tea")), MoveTemp(Provider));
+    if (!TestTrue(TEXT("tea shop bindings registered"),
+        Fixture.Presence->Bindings().RegisterProvider(FName(TEXT("building.test.tea")), MoveTemp(Provider)))) { return false; }
+    if (!TestTrue(TEXT("Farida uses generic loader"), Fixture.Presence->RegisterScheduledPersonFromContent(Fixture.Db, Person,
+        FText::FromString(TEXT("Farida")), EPWNpcOutfit::ShopProprietor))) { return false; }
     PerfectWorld::WorldSim Sim(17);
     const auto Before = NpPresenceTest::NpAt(0, 685); // 11:25 -> paid tea -> 11:35, after morning service.
     TestTrue(TEXT("advance to service"), Sim.Submit({PerfectWorld::CommandSource::Player, PerfectWorld::AdvanceTime{Before}}).Accepted);

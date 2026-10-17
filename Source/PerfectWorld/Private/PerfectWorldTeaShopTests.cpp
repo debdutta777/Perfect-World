@@ -387,7 +387,17 @@ bool FPWTeaShopBuildTest::RunTest(const FString& Parameters)
     const double WalkHigh = GroundZ + FootpathHeight + PWTeaShopTest::WalkingHeight;
     const double KerbY = 250.0;
     const TArray<FBox>& Boxes = Scene.Blocks.BlockingBoxes();
-    TestTrue(TEXT("blocking boxes were recorded"), Boxes.Num() > 40);
+    // The perimeter walls block through their World-colour bodies, which are not recorded. What is recorded is every
+    // PropCollision box: one per solid furniture piece, the floor slab, the partition either side of and above its doorway
+    // (three), and the glass in the two front hatches and the storage window (three).
+    int32 SolidPieces = 0;
+    for (const FTeaShopPiece& Piece : GetTeaShopPieces())
+    {
+        SolidPieces += Piece.bSolid ? 1 : 0;
+    }
+    const int32 ExpectedBoxes = SolidPieces + 1 + 3 + 3;
+    TestEqual(TEXT("blocking boxes were recorded: every solid piece, the floor slab, the partition and the window glass"),
+              Boxes.Num(), ExpectedBoxes);
     double NearestToKerb = 1.0e9;
     for (const FBox& Box : Boxes)
     {
