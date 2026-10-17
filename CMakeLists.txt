@@ -590,3 +590,9 @@ add_test(NAME PerfectWorldLaneInteriorLayoutTests COMMAND PerfectWorldLaneInteri
 add_executable(PerfectWorldStationeryDoorTests Tests/StationeryDoorTests.cpp)
 target_link_libraries(PerfectWorldStationeryDoorTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldStationeryDoorTests COMMAND PerfectWorldStationeryDoorTests)
+
+# LL-03 submission 2: catalogue of kit-built frontages (pinned footprints, ids, variants) proved against the lane generator.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/LaneFrontageCatalogue.cpp)
+add_executable(PerfectWorldLaneFrontageCatalogueTests Tests/LaneFrontageCatalogueTests.cpp)
+target_link_libraries(PerfectWorldLaneFrontageCatalogueTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneFrontageCatalogueTests COMMAND PerfectWorldLaneFrontageCatalogueTests)
