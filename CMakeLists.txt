@@ -548,3 +548,7 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldCon
 add_executable(PerfectWorldLaneTransactionsTests Tests/WorldLaneTransactionsTests.cpp)
 target_link_libraries(PerfectWorldLaneTransactionsTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldLaneTransactionsTests COMMAND PerfectWorldLaneTransactionsTests)
+
+# Order SV/HS/ST: world save v8 lane authority.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldLaneSave.cpp)
+target_sources(PerfectWorldWorldSaveTests PRIVATE Tests/WorldSaveLaneTests.cpp)

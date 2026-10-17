@@ -31,7 +31,6 @@ void Check(bool condition, const char* message)
 
 namespace
 {
-
 // ---- Reducer output rendering, as in WorldReducerTests ----
 
 Command Advance(std::int64_t minutes) { return {CommandSource::Player, AdvanceTime{minutes}}; }
@@ -126,10 +125,11 @@ void TestGolden()
     Check(HashWorldState(hand) == GoldenHandBuilt, "the hand-built world hashes to its pinned value");
     Check(HashWorldState(edge) == GoldenEdge, "the edge-case world hashes to its pinned value");
     const std::vector<WorldSectionHash> sections = HashWorldSections(hand);
-    Check(sections.size() == 6 && sections[0].Name == "meta" && sections[1].Name == "clock" && sections[2].Name == "flags" &&
-              sections[3].Name == "gates" && sections[4].Name == "rng" && sections[5].Name == "dayloop",
-          "sections come in the order meta, clock, flags, gates, rng, dayloop");
-    Check(WorldHashVersion == 4, "the hash version is 4 with the dayloop section");
+    Check(sections.size() == 8 && sections[0].Name == "meta" && sections[1].Name == "clock" && sections[2].Name == "flags" &&
+              sections[3].Name == "gates" && sections[4].Name == "rng" && sections[5].Name == "dayloop" &&
+              sections[6].Name == "conversations" && sections[7].Name == "doors",
+          "sections append conversations and doors after the original six");
+    Check(WorldHashVersion == 5, "the hash version is 5 with lane authority");
     Check(HashWorldState(hand) == HashWorldState(HandBuiltWorld()), "hashing is repeatable");
     Check(HashWorldState(hand) != HashWorldState(WorldState{}), "different worlds differ");
 }
@@ -460,11 +460,33 @@ void TestReplayCommandLog()
 }
 } // namespace
 
+void TestLaneHashFields()
+{
+    WorldState world = MakeWorldState(91);
+    auto& state = world.Conversations[std::string(HouseholdAdultId)];
+    const auto beforeFact = HashWorldState(world);
+    state.Facts = {std::string(FactEveningRotaAgreed)};
+    Check(IsConversationStateValid(state) && HashWorldState(world) != beforeFact, "changing only a conversation fact changes the hash");
+    Check(OpenConversation(state, HouseholdAdultId, 1080, PersonAvailability::Awake) == ConversationError::None, "open session for field hashes");
+    const auto beforeSession = HashWorldState(world);
+    state.SessionCount += 1;
+    Check(IsConversationStateValid(state) && HashWorldState(world) != beforeSession, "session counter is hashed");
+    const auto beforeReceipt = HashWorldState(world);
+    state.Receipts = {{"choice.household_adult.revisit_rota", state.SessionCount}};
+    Check(IsConversationStateValid(state) && HashWorldState(world) != beforeReceipt, "transaction receipt is hashed");
+    Check(ApplyDoorSettlement(world.Doors, world.Doors.Doors.front().Id, true, -1) == DoorResult::Ok, "negative swing fixture");
+    const auto beforeSide = HashWorldState(world);
+    Check(ApplyDoorSettlement(world.Doors, world.Doors.Doors.front().Id, true, 1) == DoorResult::Ok, "positive swing fixture");
+    Check(HashWorldState(world) != beforeSide, "changing only swing side changes the hash");
+    CheckAgainstReference(world, "lane hash agrees with independent encoder");
+}
+
 int main()
 {
     TestReferenceEncoder();
     TestGolden();
     TestSingleFieldEdits();
+    TestLaneHashFields();
     TestDayLoopSection();
     TestFlagOrder();
     TestReplayCommandLog();

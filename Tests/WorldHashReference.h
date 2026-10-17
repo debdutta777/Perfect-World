@@ -94,8 +94,19 @@ std::vector<std::pair<std::string, std::uint64_t>> RefSections(const WorldState&
     // dayloop: one unsigned field, the hash the day loop's own envelope stores (the "hash" line before "end").
     RefBytes dayloop;
     dayloop.U(RefEnvelopeHash(w.DayLoop));
+    RefBytes conversations;
+    conversations.N(w.Conversations.size());
+    for (const auto& [person, state] : w.Conversations)
+    {
+        conversations.S(person);
+        const auto catalogue = ConversationCatalogueForPerson(person);
+        conversations.S(catalogue ? SerialiseConversationState(*catalogue, state) : std::string{});
+    }
+    RefBytes doors;
+    doors.S(SerialiseDoorState(w.Doors));
     return {{"meta", RefFnv1a(meta.Data)},   {"clock", RefFnv1a(clock.Data)}, {"flags", RefFnv1a(flags.Data)},
-            {"gates", RefFnv1a(gates.Data)}, {"rng", RefFnv1a(rng.Data)},     {"dayloop", RefFnv1a(dayloop.Data)}};
+            {"gates", RefFnv1a(gates.Data)}, {"rng", RefFnv1a(rng.Data)},     {"dayloop", RefFnv1a(dayloop.Data)},
+            {"conversations", RefFnv1a(conversations.Data)}, {"doors", RefFnv1a(doors.Data)}};
 }
 
 std::uint64_t RefWorld(const WorldState& w)
@@ -170,11 +181,12 @@ WorldState EdgeWorld()
     return w;
 }
 
-// Pinned on 2026-10-11 for WorldHashVersion 4 (dayloop section added; both worlds carry the fresh day,
-// whose hash is 0x061523ec1fb41931). Derived from the independent reference encoder above
-// (PW_PRINT_GOLDEN=1 prints RefWorld, after the library has been checked equal to it) and cross-checked
-// by a separate Python implementation of the byte layout, which also rederives the day loop's hash from
-// the sections of its printed envelope. A change here means the encoding changed.
-constexpr std::uint64_t GoldenHandBuilt = 0x6172068cb2eb0ae3ULL;
-constexpr std::uint64_t GoldenEdge = 0xa26bab6e23ab1fbfULL;
+// Re-pinned 2026-10-17 for WorldHashVersion 5 using RefWorld after section-by-section agreement.
+// HandBuilt: 0x6172068cb2eb0ae3 -> 0x154c24e70f8c58f2.
+// Edge:      0xa26bab6e23ab1fbf -> 0x8046b352035ccc96.
+// Both change solely because the world version becomes 5 and the conversations and doors sections
+// are appended (empty conversation map and authored door defaults). The original six section encodings
+// and both fixture worlds remain unchanged; the fresh day hash remains 0x061523ec1fb41931.
+constexpr std::uint64_t GoldenHandBuilt = 0x154c24e70f8c58f2ULL;
+constexpr std::uint64_t GoldenEdge = 0x8046b352035ccc96ULL;
 } // namespace

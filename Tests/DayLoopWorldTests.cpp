@@ -97,8 +97,9 @@ void TestScriptedDayInWorld()
     for (const WorldState& w : boundary)
         hashes.insert(HashWorldState(w));
     Check(hashes.size() == boundary.size(), "every command of the day changes the world hash");
-    Check(HashWorldSections(boundary[0]).back().Name == "dayloop" &&
-              HashWorldSections(boundary[0]).back().Hash != HashWorldSections(boundary[29]).back().Hash &&
+    // Hash v5 appends conversations and doors after dayloop, which remains at index 5.
+    Check(HashWorldSections(boundary[0])[5].Name == "dayloop" &&
+              HashWorldSections(boundary[0])[5].Hash != HashWorldSections(boundary[29])[5].Hash &&
               HashWorldSections(boundary[0])[0].Hash == HashWorldSections(boundary[29])[0].Hash,
           "the day moves the dayloop section, and nothing else of the meta section");
     const std::uint64_t finalHash = HashWorldState(world);
