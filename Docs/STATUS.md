@@ -1846,3 +1846,32 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
   - `LegacyCreatorAndWorldVersions`;
   - `BackupRecoveryAndRepeatedSave`.
 - **Rung 1:** sol ran 164/164 on its branch before the frontage catalogue merged; the core is unchanged by this order.
+
+## Checkpoint — Mira Sen in the core, 2026-10-18
+
+**What merged (`bf50f20`), from Claude Sonnet:**
+- **Mira Sen's seven-day `npc_schedule`:**
+  - morning study at home;
+  - school 09:50–15:50 (`location.nabapara.school`, off-lane);
+  - Tuesday and Thursday 16:30–18:00 serving at `anchor.stationery.packing_desk`, never on Anindita's anchor at the same minute;
+  - her own afternoons on Monday, Wednesday and Friday (`location.nabapara.mira_out`);
+  - lighter weekends;
+  - evening study, and sleep from 22:30.
+- **Her conversation:**
+  - the plan's lines, word for word;
+  - a remembered line only after the notes are returned;
+  - two 10-minute choices charged once per session;
+  - Busy and Asleep decline nodes.
+- **Tests:** three executables (schedule, conversation, world save v8 round trip).
+- **Engine:** the content pins move to 144 files and 180 records.
+- **Gap:** "Give back the notes" is always offered at the desk, because the core catalogue cannot see `thread.borrowed_notes`.
+
+**Exact checks:**
+- **Rung 1:** at `bf50f20`, **168/168**. The run was incremental in `D:/pwm3`, with the changed files' timestamps refreshed.
+- **Rung 2:** **Succeeded**.
+- **Headless automation:** **60/60** in one run.
+- **Not in Unreal yet:** Mira needs a packing-desk spot from the stationery provider, and her off-lane legs must enter and leave at the shop door.
+
+**Running:**
+- gpt-6.1-sol on persistence (B): Start, Save, Load and Continue on the v8 slots.
+- gpt-6-astra planning the next round, as the owner asked.
