@@ -71,7 +71,8 @@ private:
         Paused
     };
 
-    FText EnterWorld(const FText& Notice);
+    /** Places the player and hands over play. bFreshLifeSaved is true only for a new life already written to its slot. */
+    FText EnterWorld(const FText& Notice, bool bFreshLifeSaved = false);
     void ApplyMenuInput();
     void ApplyGameInput();
     void FaceTitleView();
@@ -82,6 +83,4 @@ private:
 
     /** The slot the running life saves to, or -1 when it has none yet. */
     int32 ActiveSlot = -1;
-    float TitleYaw = 0.0f;
-    float TitleDriftSeconds = 0.0f;
 };

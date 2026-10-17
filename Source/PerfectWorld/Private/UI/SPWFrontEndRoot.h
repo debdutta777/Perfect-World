@@ -7,6 +7,7 @@
 #include "Animation/CurveSequence.h"
 
 class SBox;
+class SPWAwakeningSigil;
 
 /**
  * The root of the whole front end: a darkened scrim over the 3D scene and one
@@ -36,6 +37,14 @@ public:
     /** A short message near the bottom of the screen that clears itself. */
     void ShowToast(const FText& Message);
 
+    /**
+     * The short successful-start cue (about 450 ms; LL-04). Call it only once the new life is saved AND the player is placed
+     * and the world already has input. It is an overlay that fades by itself: hit-test invisible, outside the accessibility
+     * reading order, and nothing waits for it. Returns false (nothing shown) under reduced motion.
+     */
+    bool PlayStartAcknowledgement();
+    bool IsStartAcknowledgementRunning() const;
+
 private:
     enum class EScreen : uint8
     {
@@ -59,6 +68,7 @@ private:
     TWeakObjectPtr<APerfectWorldFrontEndHUD> Hud;
     TSharedPtr<SBox> ScreenHolder;
     TSharedPtr<SBox> ChooserHolder;
+    TSharedPtr<SPWAwakeningSigil> StartCue;
     TWeakPtr<SWidget> ChooserInvokingControl;
     EScreen Screen = EScreen::None;
     bool bChooserOpen = false;
