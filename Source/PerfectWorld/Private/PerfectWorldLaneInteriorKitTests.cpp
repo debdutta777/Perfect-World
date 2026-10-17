@@ -112,7 +112,7 @@ void CheckKitCase(FAutomationTestBase& T, const TCHAR* Name, const FLaneBuilding
     // Walking space: stand points, seats' approach, circulation and door sweeps stay clear of every collision box above the floor.
     TArray<FKitAnchor> Anchors;
     GetKitAnchors(B, Layout, Anchors);
-    T.TestEqual(*FString::Printf(TEXT("%s: anchor count"), Name), Anchors.Num(), Layout.Anchors.Num());
+    T.TestEqual(*FString::Printf(TEXT("%s: anchor count"), Name), Anchors.Num(), static_cast<int32>(Layout.Anchors.size()));
     for (int32 I = 0; I < Anchors.Num(); ++I)
     {
         const LI::Anchor& A = Layout.Anchors[I];
@@ -209,8 +209,8 @@ void CheckKitCase(FAutomationTestBase& T, const TCHAR* Name, const FLaneBuilding
     }
 
     // Lights: one per spec, inside its room at the specified height, with an attenuation radius inside the room's shorter side.
-    T.TestEqual(*FString::Printf(TEXT("%s: room light count"), Name), Scene.RoomLights.Num(), Layout.Lights.Num());
-    for (int32 I = 0; I < Layout.Lights.Num() && I < Scene.RoomLights.Num(); ++I)
+    T.TestEqual(*FString::Printf(TEXT("%s: room light count"), Name), Scene.RoomLights.Num(), static_cast<int32>(Layout.Lights.size()));
+    for (int32 I = 0; I < static_cast<int32>(Layout.Lights.size()) && I < Scene.RoomLights.Num(); ++I)
     {
         const LI::LightSpec& Spec = Layout.Lights[I];
         T.TestTrue(*FString::Printf(TEXT("%s: light %hs position"), Name, Spec.Id.c_str()),
@@ -350,7 +350,7 @@ bool FPWStationeryShopTest::RunTest(const FString& Parameters)
     BuildStationeryShop(Scene, B);
     TestTrue(TEXT("the front door spec is in the scene under the lane door id"), HasStationeryShop(Scene));
     TestEqual(TEXT("exactly one door spec"), Scene.Doors.Num(), 1);
-    TestEqual(TEXT("one room light per layout light"), Scene.RoomLights.Num(), Layout.Lights.Num());
+    TestEqual(TEXT("one room light per layout light"), Scene.RoomLights.Num(), static_cast<int32>(Layout.Lights.size()));
     TestTrue(TEXT("a bulb under the awning"), Scene.LightSpots.Num() == 1);
 
     // Anchors: the four Anindita's schedule names, plus the customer's side of the counter.
