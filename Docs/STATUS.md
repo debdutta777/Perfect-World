@@ -1635,3 +1635,36 @@ Later rounds (gpt-6.1-sol after the ChatGPT reset):
 - **LL-05, measured scale and circulation:** integrator.
 
 Earlier today a gpt-6.1-sol run was refused for the account's usage limit and was not retried. The limit has since reset, and astra's planning run succeeded.
+
+## Checkpoint — Anindita's content and the dawn title merged; this machine's clock jumps, 2026-10-17
+
+**What merged:**
+- **Claude Sonnet, AN:**
+  - Anindita Sen's `npc_schedule`:
+    - stock check from 07:30;
+    - counter 08:00–13:00;
+    - meal closure at home;
+    - counter 15:00–19:30;
+    - reconciliation at the packing desk;
+    - home by 21:00, asleep from 22:30.
+  - The loader's frozen spec table gains her entry, and the care worker is unchanged.
+  - Her conversation catalogue, with two 10-minute help choices charged once per session, and a remembered line after helping with the labels.
+  - Three new test executables, including a world save v8 round trip mid-conversation.
+  - Route lengths are provisional until the stationery shop (LL-03) is built.
+- **Claude Sonnet, LL-04 (1):**
+  - A dedicated dawn title viewpoint over the lane (`APWTitleView`). It drifts slowly and stops entirely under reduced motion.
+  - While the title is up, the pawn is hidden, never moved or turned. The view is dismissed only after placement succeeds.
+  - The title composition is responsive: the menu sits on a dark surface on the left, and the aperture takes the right third (a ring of about 336 at 1280×720 and about 410 at 1920×1080). Ornament is suppressed before controls compress.
+  - Not yet walked: the framing and contrast are calculated, not measured.
+
+**Exact checks:**
+- **Rung 1:** at `66cd0ea`, in a fresh build directory, **162/162**.
+- **Rung 2:** **Succeeded**. It recompiled the whole core and all three game-module unity blobs.
+- **LL-04's automation** (`PerfectWorld.TitleView.*`) is compiled but not run.
+
+**Trap: the system clock jumps.**
+- In one afternoon this machine's clock read 13:50, then 22:05, 18:18 and 17:10. `w32tm` reports NTP sync, but something keeps moving it, probably the VM host's time sync.
+- After a backwards jump, MSBuild and UBT treat new sources as older than their outputs and skip the rebuild.
+  - The incremental `D:/pwm` run failed `PerfectWorldActivitiesTests` ("the real content validates") because the core library still held the old schedule loader, which refuses Anindita.
+  - A test binary rebuilt with a probe did not contain the probe's text.
+- Until the owner fixes the clock, run Rung 1 in a fresh build directory, and check that Rung 2 lists the changed modules among its compile actions.
