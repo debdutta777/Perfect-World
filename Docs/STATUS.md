@@ -1545,3 +1545,40 @@ The integrator then wires the doors and the conversation through the core.
 - **Clock bridge:** the clock does not run in Unreal yet. The bridge (BR) must hold a `WorldSim`, drive `time.advance` from free roam, and route conversations and doors through the new commands.
 - **Not yet built:** world save v8 for conversations and doors; the care-origin start placing the player in the children's home; the care worker's duty schedule; authored text for the care-home readables.
 - **Not yet verified:** sitting from a normal walk.
+
+## Checkpoint — clock bridge, care content, origin-aware start, and C: disk recovery, 2026-10-17
+
+**What merged:**
+- **Claude Sonnet 5.5, BR:** one `WorldSim` owns lane time.
+  - The free-roam clock runs at 60 real seconds to 60 game minutes. It holds for menus, conversation, reading and an unfocused window.
+  - Partial and settle handling.
+  - Conversations and doors go through the core commands, so a paid choice moves the clock by its cost.
+  - A clock readout.
+- **Claude Sonnet 5.5, content:**
+  - The care worker's duty schedule: 07:00–15:00 every day with a handover at the desk, plus a weekend variant. A generic `LoadNpcSchedule` loads it.
+  - The noticeboard and exercise-book texts.
+- **gpt-6.1-sol, EN:**
+  - Transactional Start Life: a failed save restores the draft.
+  - A `GetLaneOrigin` view.
+  - Placement by origin: inside the family home's entry, or beside the resident's own bed in the children's home dormitory.
+- **Integrator:**
+  - a new life resets the lane world;
+  - door residency asks the current life's resolved origin and fails closed, replacing the synthetic Parent plan.
+
+**C: drive incident:**
+- **Symptom:** C: reached 0.09–1.5 GB free. Packaging failed with C1060 out of heap, LNK1108 cannot write temp, then LNK1102 out of memory.
+- **Silent cook failures:** two failed links left the core editor DLL at 0 bytes and then 4 MB. UBT still treated it as up to date, so the cook quit after 14 seconds with no log.
+- **Moved off C:,** nothing deleted:
+  - 70 old worktrees removed or archived to `D:\PWArchive`;
+  - old scratch files;
+  - Unreal's Zen data and local DDC, now junctions to `D:\UnrealDDC`;
+  - Codex replay data, now junctions to `D:\CodexData`, with the owner's approval.
+- **Build settings:** build temp goes to `D:\PWTemp`, and `MaxParallelActions` is capped at 4.
+- **Owner asked to:** move the Windows page file (system-managed on C:, about 4.3 GB) to D: and restart.
+
+**Exact checks:**
+- **Rung 1:** at `0d4d90a`, **159/159**.
+- **Rung 2:** **Succeeded** after the forced relink.
+- **Rung 4:** `BUILD SUCCESSFUL`, with the cook exiting 0.
+
+**Not walked in play yet:** the owner's Eastern Era Resource Editor was open, so the game was not launched (it would take focus and send keys). Pending checks: the clock readout, a 10-minute tea with Farida moving the clock, sitting, the care-origin start, and door residency.
