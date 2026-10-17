@@ -9,10 +9,15 @@ class SPWAwakeningSigil final : public SLeafWidget
 public:
     SLATE_BEGIN_ARGS(SPWAwakeningSigil)
         : _SizeClass(EPWSigilSizeClass::Aperture), _Pictogram(EPWSigilPictogram::None), _Diameter(400.0f),
-          _Reveal(false), _Rotation(false), _Motes(false) {}
+          _FitRing(false), _Reveal(false), _Rotation(false), _Motes(false) {}
         SLATE_ARGUMENT(EPWSigilSizeClass, SizeClass)
         SLATE_ARGUMENT(EPWSigilPictogram, Pictogram)
         SLATE_ATTRIBUTE(float, Diameter)
+        /**
+         * Reserve only the ring and its calibration ticks (1.2 x the diameter) instead of the full 1.5 x envelope that
+         * the drifting motes need, so a narrow slot yields a larger aperture. Motes are not drawn in this mode.
+         */
+        SLATE_ATTRIBUTE(bool, FitRing)
         SLATE_ARGUMENT(bool, Reveal)
         SLATE_ARGUMENT(bool, Rotation)
         SLATE_ATTRIBUTE(bool, Motes)
@@ -31,11 +36,13 @@ private:
     void StopMotionTimer();
     EActiveTimerReturnType Animate(double Time, float Delta);
     bool IsPresented() const;
+    bool IsFitted() const;
 
     EPWSigilSizeClass SizeClass = EPWSigilSizeClass::Aperture;
     EPWSigilPictogram Pictogram = EPWSigilPictogram::None;
     TAttribute<float> Diameter;
     TAttribute<bool> Motes;
+    TAttribute<bool> FitRing;
     bool bReveal = false, bRotation = false;
     float RevealSeconds = 0, RotationRadians = 0;
     double LastAnimationTime = 0;

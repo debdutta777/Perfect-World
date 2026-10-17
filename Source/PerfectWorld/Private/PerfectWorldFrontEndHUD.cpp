@@ -13,6 +13,7 @@
 #include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
 #include "PerfectWorldPresentationSettings.h"
+#include "PerfectWorldTitleView.h"
 #include "UI/PWDelegates.h"
 #include "UI/SPWFrontEndRoot.h"
 #include "Widgets/SWeakWidget.h"
@@ -23,10 +24,6 @@ namespace
 {
 /** Slate draws viewport content in Z order; the front end sits above everything the game adds. */
 constexpr int32 EnFrontEndZOrder = 100;
-/** The title view is a slow turn of the camera, so the block scene reads as a place and not a backdrop. */
-constexpr float EnTitleDriftPeriod = 40.0f;
-constexpr float EnTitleViewPitchDegrees = -6.0f;
-
 /** The core usually explains a refusal; this stands in only if a message ever comes back empty. */
 FText EnHudMessageOrFallback(const FText& Message)
 {
@@ -84,11 +81,20 @@ void APerfectWorldFrontEndHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void APerfectWorldFrontEndHUD::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
-    if (Mode == EFrontEndMode::Title && PlayerOwner != nullptr && !UPerfectWorldPresentationSettings::Get().IsReducedMotion())
+    if (Mode == EFrontEndMode::Title && PlayerOwner != nullptr)
     {
-        TitleDriftSeconds = FMath::Fmod(TitleDriftSeconds + DeltaSeconds, EnTitleDriftPeriod);
-        TitleYaw = 6.0f * FMath::Sin(TitleDriftSeconds * 2.0f * PI / EnTitleDriftPeriod);
-        FaceTitleView();
+        // The title camera animates itself (and not at all under reduced motion). The HUD only keeps the controller looking
+        // through it: a possession or a restart can hand the view back to the pawn while the title is still up.
+        const APWTitleView* View = APWTitleView::Find(GetWorld());
+        if (View == nullptr || !View->IsViewedBy(*PlayerOwner))
+        {
+            FaceTitleView();
+        }
+        else
+        {
+            TitleDriftSeconds = View->GetDriftSeconds();
+            TitleYaw = View->GetActorRotation().Yaw;
+        }
     }
 }
 
@@ -277,8 +283,10 @@ FText APerfectWorldFrontEndHUD::EnterWorld(const FText& Notice)
     {
         return LOCTEXT("HomeEntryFailed", "Your saved life could not be placed at home. Please load the slot to try again.");
     }
+    // Placement succeeded: only now does the view go back to the pawn, which has not been moved or turned by the title.
     Mode = EFrontEndMode::Playing;
     UGameplayStatics::SetGamePaused(this, false);
+    APWTitleView::Dismiss(*PlayerOwner);
     Root->Hide();
     ApplyGameInput();
     if (!Notice.IsEmpty())
@@ -314,10 +322,12 @@ void APerfectWorldFrontEndHUD::ApplyGameInput()
 
 void APerfectWorldFrontEndHUD::FaceTitleView()
 {
+    // The title has its own viewpoint over the morning lane (PerfectWorldTitleView.h). Presenting it changes only what the
+    // controller looks through and hides the pawn; the pawn's position, rotation, control rotation, the lane clock (held by
+    // Title mode in UPWLaneLifeSubsystem::UpdateClockHold) and every save are untouched.
     if (PlayerOwner != nullptr)
     {
-        const float Pitch = EnTitleViewPitchDegrees + 0.4f * FMath::Sin(TitleDriftSeconds * 2.0f * PI / EnTitleDriftPeriod);
-        PlayerOwner->SetControlRotation(FRotator(Pitch, TitleYaw, 0.0f));
+        APWTitleView::Present(*PlayerOwner);
     }
 }
 

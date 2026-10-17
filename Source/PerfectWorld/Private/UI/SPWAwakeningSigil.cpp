@@ -6,6 +6,14 @@
 #include "UObject/UObjectBase.h"
 #include "UI/PWWidgets.h"
 
+namespace
+{
+/** A fitted ring reserves its ticks (1.10 R, so 1.10 of the diameter) plus a margin: 1.2 of the diameter, against 1.5 with motes. */
+constexpr float SgFitEnvelope = 1.2f;
+/** The painter derives the ring from a 3 R square; a fitted ring paints inside a larger virtual square of the same centre. */
+constexpr float SgPainterEnvelope = 1.5f;
+} // namespace
+
 void SPWAwakeningSigil::Construct(const FArguments& Args)
 {
     SizeClass = Args._SizeClass;
@@ -14,8 +22,11 @@ void SPWAwakeningSigil::Construct(const FArguments& Args)
     Motes = Args._Motes;
     bReveal = Args._Reveal;
     bRotation = Args._Rotation;
+    FitRing = Args._FitRing;
     SetVisibility(EVisibility::HitTestInvisible);
-    SetClipping(EWidgetClipping::ClipToBounds);
+    // Everything an aperture draws lies inside its box, except the soft lens behind a fitted ring, which is a little wider
+    // than the ring's own box; clipping that would show a flat edge. Seals keep the clip.
+    SetClipping(SizeClass == EPWSigilSizeClass::Aperture ? EWidgetClipping::Inherit : EWidgetClipping::ClipToBounds);
 #if WITH_ACCESSIBILITY
     SetAccessibleBehavior(EAccessibleBehavior::NotAccessible);
 #endif
@@ -36,8 +47,14 @@ SPWAwakeningSigil::~SPWAwakeningSigil()
 
 FVector2D SPWAwakeningSigil::ComputeDesiredSize(float) const
 {
-    const float Side = FMath::Max(1.0f, Diameter.Get(400.0f)) * (SizeClass == EPWSigilSizeClass::Seal ? 1.0f : 1.5f);
+    const float Side = FMath::Max(1.0f, Diameter.Get(400.0f))
+        * (SizeClass == EPWSigilSizeClass::Seal ? 1.0f : (IsFitted() ? SgFitEnvelope : SgPainterEnvelope));
     return FVector2D(Side, Side);
+}
+
+bool SPWAwakeningSigil::IsFitted() const
+{
+    return SizeClass == EPWSigilSizeClass::Aperture && FitRing.Get(false);
 }
 
 bool SPWAwakeningSigil::IsPresented() const
@@ -104,10 +121,22 @@ int32 SPWAwakeningSigil::OnPaint(const FPaintArgs&, const FGeometry& Geometry, c
 {
     if (!FSlateRect::DoRectanglesIntersect(Geometry.GetRenderBoundingRect(), CullingRect)) return Layer;
     bPaintedSincePostTick = true;
-    Paths.Rebuild(FVector2f(Geometry.GetLocalSize()), SizeClass);
     const bool bReduced = PWUI::IsReducedMotion();
     const float T = FMath::Clamp(RevealSeconds / .8f, 0.0f, 1.0f);
     const float Reveal = bReduced || !bReveal ? 1.0f : 1.0f - FMath::Pow(1.0f - T, 3.0f);
+    if (IsFitted())
+    {
+        // The painter sizes the ring from a square of 3 R. Give it the larger virtual square that makes the ring exactly
+        // fill the allotted box less the tick margin, centred on the widget, and never draw motes (they would be cut).
+        const FVector2f Local(Geometry.GetLocalSize());
+        const float Virtual = FMath::Max(1.0f, FMath::Min(Local.X, Local.Y)) * SgPainterEnvelope / SgFitEnvelope;
+        const FVector2f VirtualSize(Virtual, Virtual);
+        Paths.Rebuild(VirtualSize, SizeClass);
+        const FGeometry Frame = Geometry.MakeChild(VirtualSize, FSlateLayoutTransform((Local - VirtualSize) * .5f));
+        return FPWSigilPainter::Paint(Paths, SizeClass, Pictogram, Frame, Elements, Layer, Style, Reveal,
+                                      bRotation ? RotationRadians : 0.0f, false, bEnabled && IsEnabled());
+    }
+    Paths.Rebuild(FVector2f(Geometry.GetLocalSize()), SizeClass);
     return FPWSigilPainter::Paint(Paths, SizeClass, Pictogram, Geometry, Elements, Layer, Style, Reveal,
                                   bRotation ? RotationRadians : 0.0f, Motes.Get(false) && !bReduced, bEnabled && IsEnabled());
 }
