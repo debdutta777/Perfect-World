@@ -92,6 +92,17 @@ void UPWNpcMovementComponent::SetIntent(const FPWNpcIntentView& NewIntent)
     Intent = NewIntent;
     bHasIntent = true;
 
+    const bool bWasTravel = bHad && NpcMoveUnderlying(Old) == EPWNpcState::Travel;
+    const bool bIsTravel = NpcMoveUnderlying(NewIntent) == EPWNpcState::Travel;
+    if (bWasTravel && !bIsTravel && Route.IsValid())
+    {
+        FinishRoute = Route; // a person still on the way finishes along it, never straight through a wall
+        FinishDistanceCm = NpcDistanceCm;
+    }
+    else if (bIsTravel)
+    {
+        FinishRoute.Set({});
+    }
     const bool bRouteChanged = !bHad || Old.RouteId != NewIntent.RouteId;
     if (bRouteChanged)
     {

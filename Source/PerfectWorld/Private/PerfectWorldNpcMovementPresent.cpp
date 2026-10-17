@@ -350,7 +350,8 @@ void UPWNpcMovementComponent::MoveAlongRoute(const float Dt)
         return;
     }
     const double Speed = PWNpcMove::SpeedForLag(Lag, TargetSpeedNow());
-    const FVector Aim = Route.PointAt(FMath::Min(NpcDistanceCm + FMath::Clamp(Lag, 40.0, 120.0), Route.Length()));
+    // A short, fixed look-ahead: how far behind the core the person is sets the speed, never how wide a corner is cut.
+    const FVector Aim = Route.PointAt(FMath::Min(NpcDistanceCm + PWNpcMove::RouteLookAheadCm, Route.Length()));
     FVector Direction = (Aim - Feet).GetSafeNormal2D();
     if (Direction.IsNearlyZero())
     {
@@ -369,13 +370,41 @@ void UPWNpcMovementComponent::MoveToStand(const float Dt)
     bArrived = !bAnchorKnown || (bArrived ? Distance <= 40.0 : Distance <= PWNpcMove::ArrivalToleranceCm);
     if (bArrived)
     {
+        FinishRoute.Set({});
         Hold(Dt, NpcPresentUnderlying(Intent));
         return;
     }
-    const FVector Direction = (Stand - Feet).GetSafeNormal2D();
+    FVector Direction = (Stand - Feet).GetSafeNormal2D();
+    double Speed = Distance > PWNpcMove::SnapDistanceCm ? PWNpcMove::CatchUpSpeedCmPerSec : FMath::Clamp(Distance * 3.0, 40.0, PWNpcMove::WalkSpeedCmPerSec);
+    AimAlongFinishRoute(Stand, Feet, Direction, Speed); // still on the way: the rest of the route, not a straight line
     SteerDirection = Direction;
-    const double Speed = Distance > PWNpcMove::SnapDistanceCm ? PWNpcMove::CatchUpSpeedCmPerSec : FMath::Clamp(Distance * 3.0, 40.0, PWNpcMove::WalkSpeedCmPerSec);
     ApplySteering(Direction, Speed, Dt);
+}
+
+bool UPWNpcMovementComponent::AimAlongFinishRoute(const FVector& Stand, const FVector& Feet, FVector& OutDirection, double& OutSpeed)
+{
+    // Kept while a detour (a doorway wait) points elsewhere; used again once the stand is the route's end.
+    if (!FinishRoute.IsValid() || FVector::Dist2D(FinishRoute.Points.Last(), Stand) > PWNpcMove::FinishRouteJoinCm)
+    {
+        return false;
+    }
+    FinishDistanceCm = FinishRoute.Project(Feet, FinishDistanceCm, LateralCm);
+    const double Remaining = FinishRoute.Length() - FinishDistanceCm;
+    if (Remaining <= PWNpcMove::ArrivalToleranceCm)
+    {
+        FinishRoute.Set({}); // at the route's end: the last steps to the stand are the plain approach
+        LateralCm = 0.0;
+        return false;
+    }
+    const FVector Aim = FinishRoute.PointAt(FMath::Min(FinishDistanceCm + PWNpcMove::RouteLookAheadCm, FinishRoute.Length()));
+    OutDirection = (Aim - Feet).GetSafeNormal2D();
+    if (OutDirection.IsNearlyZero())
+    {
+        OutDirection = FinishRoute.DirectionAt(FinishDistanceCm).GetSafeNormal2D();
+    }
+    // Late already: a jog while there is ground to make up, never a run; the core's next intent does not wait for us.
+    OutSpeed = Remaining > PWNpcMove::CatchUpLagCm ? PWNpcMove::CatchUpSpeedCmPerSec : PWNpcMove::WalkSpeedCmPerSec;
+    return true;
 }
 
 FPWNpcPose UPWNpcMovementComponent::DesiredPose() const
