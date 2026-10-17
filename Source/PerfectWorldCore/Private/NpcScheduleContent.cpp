@@ -51,13 +51,41 @@ constexpr Spec CareSpec{CareWorkerScheduleId, CareWorkerPersonId, CareWorkerHome
                         "door.nabapara.care_front", CareRoutes, "anchor.care_home.", CareWorkerDutyStartMinute,
                         CareWorkerDutyEndMinute};
 
+// Anindita Sen, stationery proprietor. The identity constants stay in this file so the public header is unchanged.
+constexpr std::string_view AnCounter = "anchor.stationery.counter";
+constexpr std::string_view AnStockRoom = "anchor.stationery.stock_room";
+constexpr std::string_view AnPackingDesk = "anchor.stationery.packing_desk";
+constexpr std::string_view AnFrontDoor = "anchor.stationery.front_door";
+constexpr std::string_view AnFootpath = "location.nabapara.stationery_footpath";
+constexpr std::string_view AnHome = "location.nabapara.sen_home";
+// PROVISIONAL conservative integer lengths for the stationery shop (about 700 cm wide on the lane's +Y side); the interior is
+// built by a separate order and the integrator reconciles these with it. Home is an authored off-lane leg.
+constexpr std::array<ApprovedRoute, 5> AninditaRoutes{{
+    {"route.stationery.counter_to_stock_room", AnCounter, AnStockRoom, 700},
+    {"route.stationery.counter_to_packing_desk", AnCounter, AnPackingDesk, 600},
+    {"route.stationery.counter_to_door", AnCounter, AnFrontDoor, 600},
+    {"route.stationery.door_to_footpath", AnFrontDoor, AnFootpath, 300},
+    {"route.sen_home.footpath_to_home", AnFootpath, AnHome, 2000},
+}};
+// At the shop from the 07:30 stock check to the end of the reconciliation (minutes of the day, end exclusive).
+constexpr Spec AninditaSpec{"npc_schedule.anindita_sen", "person.anindita_sen", AnHome, "location.nabapara.stationery",
+                            "door.nabapara.stationery_front", AninditaRoutes, "anchor.stationery.", 7 * 60 + 30, 21 * 60};
+
+constexpr std::array<const Spec*, 2> AllSpecs{&CareSpec, &AninditaSpec};
+
 const Spec* FindSpec(std::string_view personId)
 {
-    return personId == CareSpec.PersonId ? &CareSpec : nullptr;
+    for (const Spec* spec : AllSpecs)
+        if (personId == spec->PersonId)
+            return spec;
+    return nullptr;
 }
 const Spec* FindSpecBySchedule(std::string_view scheduleId)
 {
-    return scheduleId == CareSpec.ScheduleId ? &CareSpec : nullptr;
+    for (const Spec* spec : AllSpecs)
+        if (scheduleId == spec->ScheduleId)
+            return spec;
+    return nullptr;
 }
 
 std::string String(const JsonValue& object, std::string_view field)

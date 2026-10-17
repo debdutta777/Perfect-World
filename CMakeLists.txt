@@ -560,3 +560,17 @@ add_test(NAME PerfectWorldNpcScheduleContentTests COMMAND PerfectWorldNpcSchedul
 # Order SV/HS/ST: world save v8 lane authority.
 target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldLaneSave.cpp)
 target_sources(PerfectWorldWorldSaveTests PRIVATE Tests/WorldSaveLaneTests.cpp)
+
+# Order AN: Anindita Sen (stationery proprietor): schedule, conversation, world save v8 round trip.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationAnindita.cpp)
+add_executable(PerfectWorldAninditaScheduleTests Tests/AninditaScheduleTests.cpp)
+target_include_directories(PerfectWorldAninditaScheduleTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldAninditaScheduleTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldAninditaScheduleTests COMMAND PerfectWorldAninditaScheduleTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.anindita_sen.json)
+add_executable(PerfectWorldConversationAninditaTests Tests/ConversationAninditaTests.cpp)
+target_link_libraries(PerfectWorldConversationAninditaTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldConversationAninditaTests COMMAND PerfectWorldConversationAninditaTests)
+add_executable(PerfectWorldWorldSaveAninditaTests Tests/WorldSaveAninditaTests.cpp)
+target_link_libraries(PerfectWorldWorldSaveAninditaTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldSaveAninditaTests COMMAND PerfectWorldWorldSaveAninditaTests)
