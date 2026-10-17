@@ -1607,3 +1607,31 @@ The integrator then wires the doors and the conversation through the core.
 Later rounds (gpt-6.1-sol after the ChatGPT reset):
 - schedule-driven presence for any `npc_schedule` person (the care worker, Anindita);
 - Mira Sen.
+
+## Checkpoint — packaged walk of the clock, Farida's tea and the care worker; astra's upgrade plan, 2026-10-17
+
+**Walked in the Rung 4 package built at `0d4d90a`.** It contains the clock bridge, the origin-aware start and residency.
+- **Clock readout (top right, "Mon 2 Jun · 07:37"):**
+  - It runs at one game minute per real second: 07:37 became 08:48 over about 71 s.
+  - It holds while a conversation is open: 10:11 held for 5 s.
+  - Choosing "Sit down for a cup of tea · 10 minutes" with Farida moved it to exactly 10:21, and it held again afterwards.
+  - Screenshot: `Docs/Images/farida-tea-clock.png`.
+- **Farida:** she is at her counter at 10:11 with the three choices; after tea, "Here you are. Mind the cup, it's hot. There's no hurry."
+- **Children's home:** the care worker is on duty at 10:27, talkable, and at another spot 12 minutes later. She first stood in the common-room doorway and the player had to go around her; LL-02 plans doorway yielding.
+- **Continue start:** a clean launch puts the player inside the family home's entry, by the coat and shoe racks, with the living-room doorway open to the right. Interacting gives no obstruction.
+  - The morning's "Something is in the way" at `door.nabapara.home_front` was a test-harness artefact. The launch script typed `EnableCheats` while the game was still loading, so the letters reached the game as movement and interact keys.
+  - The script now waits for the game to be ready and has a `-NoCheats` mode.
+
+**Not verified in play:**
+- **Sitting from a normal walk.** It is covered by the `PerfectWorld.Furniture` automation (started, occupied, obstructed, busy, wrong level), but the scripted keyboard walk did not reach a seat.
+- **The care-origin start.**
+- **Transactional Start Life.**
+
+**Plan:** `Docs/LANE_LIFE_UPGRADE_PLAN_2026-10-17.md` is gpt-6-astra's plan for this round, with five work orders:
+- **LL-01, safe entry and seats:** integrator.
+- **LL-02, one schedule presenter with doorway yielding:** gpt-6.1-sol, after Anindita's content (AN) merges.
+- **LL-03, parametric interior kit, with the stationery shop as its public variant:** Claude Sonnet, running.
+- **LL-04, dawn title view and recomposed title:** Claude Sonnet, running.
+- **LL-05, measured scale and circulation:** integrator.
+
+Earlier today a gpt-6.1-sol run was refused for the account's usage limit and was not retried. The limit has since reset, and astra's planning run succeeded.
