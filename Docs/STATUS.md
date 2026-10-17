@@ -1668,3 +1668,45 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
   - The incremental `D:/pwm` run failed `PerfectWorldActivitiesTests` ("the real content validates") because the core library still held the old schedule loader, which refuses Anindita.
   - A test binary rebuilt with a probe did not contain the probe's text.
 - Until the owner fixes the clock, run Rung 1 in a fresh build directory, and check that Rung 2 lists the changed modules among its compile actions.
+
+## Checkpoint — interior kit, NPC presenter and start acknowledgement merged; first headless automation run, 2026-10-17
+
+**What merged:**
+- **gpt-6.1-sol, LL-02 (1):** `UPWNpcPresenceSubsystem`.
+  - One record per person, presented from `npc_schedule` at the lane clock's instant.
+  - Arrivals and departures happen out of view. A missing binding gives a diagnostic and never a default spawn.
+  - Provider-based lane bindings, including the children's home's.
+  - Doorway yielding with hysteresis.
+- **Integrator hooks:**
+  - The presenter is initialised with the lane life, reconciled after every accepted command, and reset with the world.
+  - Conversation availability comes from the presenter for its people.
+  - **The care worker now works to her schedule on the presenter** instead of a static spawn.
+  - Farida keeps her own path: the generic loader did not know her schedule yet (fixed in 2a, below).
+- **Claude Sonnet, LL-03 (1):**
+  - The portable parametric interior layout: compact residence, shop with stockroom and shared entry. Doorways are 90×210 clear, circulation 120, with door sweeps, mirroring and 22 refusal codes; a footprint sweep tests 7,896 layouts.
+  - The Unreal kit presenter.
+  - **The stationery shop** at the +Y index 2 frontage (X −100…600): sales room, counter with staff gap, stock room, packing desk, and the anchors Anindita's schedule names.
+- **Claude Sonnet, LL-04 (2):** a quiet start acknowledgement, played only after a fresh life is saved and placed. All sectors expand about 12% and fade over 450 ms. Nothing plays under reduced motion, and it never delays control.
+
+**Exact checks:**
+- **Rung 1:** at `b01c603`, in a fresh directory, **163/163**.
+- **Rung 2:** **Succeeded**. LL-03's tests first failed to compile (`Num()` on `std::vector`) and were fixed at `a902a39`. Rung 2 also succeeded at `a5a68e7`, with every game-module blob recompiled.
+- **Headless automation (`UnrealEditor-Cmd -nullrhi`), the first run of these suites:**
+  - **Pass:**
+    - `PerfectWorld.InteriorKit` (3/3);
+    - `PerfectWorld.TitleView` (4/4);
+    - `PerfectWorld.StartAcknowledgement` (4/4), after a test fix: Slate caches a bound visibility until a prepass;
+    - `CareHome`, `Doors` and most of `Furniture`, `NpcMovement` and `TeaShop`.
+  - **Fail, nine tests:**
+    - five of the new `PerfectWorld.NpcPresence` tests (missing bindings in their setup, and Farida's schedule not loadable by the generic loader);
+    - `Furniture.RefusesOccupiedAndObstructedSeats` ("another level refused");
+    - `NpcMovement.OnlyFarUnseenPeopleAreMovedAndNearOnesWalk` and `NpcMovement.BlockedPeopleWaitVisiblyAndNeverTeleportThroughWalls` (the far, unseen person is not moved);
+    - `TeaShop.Build` ("blocking boxes were recorded").
+  - The four older suites had never been run before (STATUS records only `PerfectWorld.Core`), so these are long-standing, not regressions of this round.
+  - The earlier statement that sitting is "covered by the Furniture automation" was too strong: one of its cases fails.
+
+**Why the sessions keep ending:**
+- The event log shows `qemu-ga.exe has initiated the power off of computer TRUECLOUD`. The cloud provider powers the VM off from outside, while Windows' AC sleep setting is "never".
+- Each boot then starts 5 h 30 min off (local time read as UTC) until NTP corrects it. That is the clock jump behind the stale incremental builds.
+- Both are for the owner: the provider's auto-shutdown setting, and the VM's real-time-clock time zone.
+- Long jobs now run detached (`D:\PWWork\run_codex.ps1`, `D:\PWWork\run_automation.ps1`), so a restart does not kill them.
