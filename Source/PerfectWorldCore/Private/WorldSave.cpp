@@ -1,6 +1,7 @@
 #include "WorldSave.h"
 
 #include "CreationSaveSerialization.h"
+#include "Doors.h"
 #include "GateSites.h"
 #include "Json.h"
 #include "WorldHash.h"
@@ -103,9 +104,16 @@ WorldSaveResult WorldSaveReadEnvelope(std::string_view text, const JsonValue& do
     result.SourceVersion = static_cast<std::int32_t>(version);
     if (version == WorldSaveSchemaVersion && hashVersion == static_cast<std::int64_t>(WorldHashVersion))
     {
-        if (HashWorldState(data.World) != storedHash)
+        // A door set written before a door was authored migrates on load (pw.doors), so the world no longer hashes as it
+        // was saved. Its checksum is still authenticated, over the door text as stored; the changed world loads unverified.
+        const JsonValue* storedDoors = doc.Find("world")->Find("doors");
+        const bool doorsMigrated = storedDoors != nullptr && storedDoors->IsString() &&
+                                   storedDoors->String != SerialiseDoorState(data.World.Doors);
+        const std::uint64_t expected =
+            doorsMigrated ? HashWorldStateWithDoorsText(data.World, storedDoors->String) : HashWorldState(data.World);
+        if (expected != storedHash)
             return WorldSaveFail(WorldSaveError::HashMismatch, "This save file is damaged: its world does not match its checksum.");
-        result.HashVerified = true;
+        result.HashVerified = !doorsMigrated;
     }
     out = std::move(data);
     return result;

@@ -585,3 +585,8 @@ target_sources(PerfectWorldCore PRIVATE
 add_executable(PerfectWorldLaneInteriorLayoutTests Tests/LaneInteriorLayoutTests.cpp)
 target_link_libraries(PerfectWorldLaneInteriorLayoutTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldLaneInteriorLayoutTests COMMAND PerfectWorldLaneInteriorLayoutTests)
+
+# LL-02 submission 2a: built stationery door hours, egress and ten-door save migration.
+add_executable(PerfectWorldStationeryDoorTests Tests/StationeryDoorTests.cpp)
+target_link_libraries(PerfectWorldStationeryDoorTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldStationeryDoorTests COMMAND PerfectWorldStationeryDoorTests)

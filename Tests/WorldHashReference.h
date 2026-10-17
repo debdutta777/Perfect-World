@@ -187,6 +187,11 @@ WorldState EdgeWorld()
 // Both change solely because the world version becomes 5 and the conversations and doors sections
 // are appended (empty conversation map and authored door defaults). The original six section encodings
 // and both fixture worlds remain unchanged; the fresh day hash remains 0x061523ec1fb41931.
-constexpr std::uint64_t GoldenHandBuilt = 0x154c24e70f8c58f2ULL;
-constexpr std::uint64_t GoldenEdge = 0x8046b352035ccc96ULL;
+// Re-pinned again 2026-10-17 (LL-02 submission 2a), from RefWorld, with WorldHashVersion still 5:
+// HandBuilt: 0x154c24e70f8c58f2 -> 0xc297c3f404fb502d.
+// Edge:      0x8046b352035ccc96 -> 0xe052cb39e28ac341.
+// Both change solely because the authored door set gains door.nabapara.stationery_front (closed), so the doors
+// section's default text has an eleventh entry. The encoding is unchanged; older ten-door saves migrate on load.
+constexpr std::uint64_t GoldenHandBuilt = 0xc297c3f404fb502dULL;
+constexpr std::uint64_t GoldenEdge = 0xe052cb39e28ac341ULL;
 } // namespace

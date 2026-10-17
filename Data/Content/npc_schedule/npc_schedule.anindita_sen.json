@@ -1,49 +1,219 @@
 {
   "type": "npc_schedule",
   "id": "npc_schedule.anindita_sen",
-  "note": "Anindita Sen, proprietor of the stationery shop on the lane's +Y side (LANE_LIFE_PLAN: 07:30 stock check; 08:00-13:00 counter; meal closure; 15:00-19:30 counter; reconciliation, home; sleep from 22:30). Every day is the same: a small family shop opens daily. The 07:30 stock check is in the stock room; she is at the counter by 08:00, and restocks from the stock room once each session (about 10:30 and 17:00). The midday meal closure 13:00 to 15:00 is taken at her own home, off the lane (Mira's family home, an authored leg like the care worker's, not a built interior): a two-hour closure is long enough to walk there and back and eat in peace, and it keeps the stationery interior free of a second resting spot. After closing at 19:30 she reconciles the day's takings and stock at the packing desk, then walks home and sleeps from 22:30. Anchors: counter (behind the counter, facing the door), stock room, packing desk, front door. LENGTHS ARE PROVISIONAL: the shop is about 700 cm wide on the +Y side and its interior is built by a separate order, so the building-local route lengths are conservative integer guesses (counter to stock room 700, counter to packing desk 600, counter to front door 600, door to pavement 300) and the integrator reconciles them with the built layout; the home leg of 2000 cm is an authored off-lane walk. Travel minutes are the ceiling of the summed lengths at 140 cm per minute.",
+  "note": "Anindita opens daily: 07:30 stock work; 08:00-13:00 and 15:00-19:30 counter service with restocking; midday meal at home; reconciliation at packing; home by 21:00; asleep from 22:30. Built routes are 635 cm to stock, 727 cm to packing, and 1100 cm to the front-door anchor, already on the footpath at U 250 V -45. No extra connector is charged. Home remains a 2000 cm authored off-lane leg. Every travel duration is ceil(sum(lengthCm)/140). Reconciliation takes 56 minutes to retain the 21:00 home arrival.",
   "person": "person.anindita_sen",
   "home": "location.nabapara.sen_home",
   "workplace": "location.nabapara.stationery",
   "door": "door.nabapara.stationery_front",
   "speedCmPerMinute": 140,
   "routine": [
-    {"days":127,"start":0,"end":375,"zone":"location.nabapara.sen_home","role":"sleeping"},
-    {"days":127,"start":375,"end":424,"zone":"location.nabapara.sen_home","role":"at_home"},
-    {"days":127,"start":450,"end":475,"zone":"anchor.stationery.stock_room","role":"stocking"},
-    {"days":127,"start":480,"end":630,"zone":"anchor.stationery.counter","role":"serving"},
-    {"days":127,"start":635,"end":655,"zone":"anchor.stationery.stock_room","role":"stocking"},
-    {"days":127,"start":660,"end":780,"zone":"anchor.stationery.counter","role":"serving"},
-    {"days":127,"start":801,"end":879,"zone":"location.nabapara.sen_home","role":"at_home"},
-    {"days":127,"start":900,"end":1020,"zone":"anchor.stationery.counter","role":"serving"},
-    {"days":127,"start":1025,"end":1045,"zone":"anchor.stationery.stock_room","role":"stocking"},
-    {"days":127,"start":1050,"end":1170,"zone":"anchor.stationery.counter","role":"serving"},
-    {"days":127,"start":1175,"end":1235,"zone":"anchor.stationery.packing_desk","role":"stocking"},
-    {"days":127,"start":1260,"end":1350,"zone":"location.nabapara.sen_home","role":"at_home"},
-    {"days":127,"start":1350,"end":1440,"zone":"location.nabapara.sen_home","role":"sleeping"}
+    {
+      "days": 127,
+      "start": 0,
+      "end": 375,
+      "zone": "location.nabapara.sen_home",
+      "role": "sleeping"
+    },
+    {
+      "days": 127,
+      "start": 375,
+      "end": 423,
+      "zone": "location.nabapara.sen_home",
+      "role": "at_home"
+    },
+    {
+      "days": 127,
+      "start": 450,
+      "end": 475,
+      "zone": "anchor.stationery.stock_room",
+      "role": "stocking"
+    },
+    {
+      "days": 127,
+      "start": 480,
+      "end": 630,
+      "zone": "anchor.stationery.counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 635,
+      "end": 655,
+      "zone": "anchor.stationery.stock_room",
+      "role": "stocking"
+    },
+    {
+      "days": 127,
+      "start": 660,
+      "end": 780,
+      "zone": "anchor.stationery.counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 803,
+      "end": 877,
+      "zone": "location.nabapara.sen_home",
+      "role": "at_home"
+    },
+    {
+      "days": 127,
+      "start": 900,
+      "end": 1020,
+      "zone": "anchor.stationery.counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 1025,
+      "end": 1045,
+      "zone": "anchor.stationery.stock_room",
+      "role": "stocking"
+    },
+    {
+      "days": 127,
+      "start": 1050,
+      "end": 1170,
+      "zone": "anchor.stationery.counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 1176,
+      "end": 1232,
+      "zone": "anchor.stationery.packing_desk",
+      "role": "stocking"
+    },
+    {
+      "days": 127,
+      "start": 1260,
+      "end": 1350,
+      "zone": "location.nabapara.sen_home",
+      "role": "at_home"
+    },
+    {
+      "days": 127,
+      "start": 1350,
+      "end": 1440,
+      "zone": "location.nabapara.sen_home",
+      "role": "sleeping"
+    }
   ],
   "routes": [
-    {"id":"route.stationery.counter_to_stock_room","from":"anchor.stationery.counter","to":"anchor.stationery.stock_room","lengthCm":700},
-    {"id":"route.stationery.counter_to_packing_desk","from":"anchor.stationery.counter","to":"anchor.stationery.packing_desk","lengthCm":600},
-    {"id":"route.stationery.counter_to_door","from":"anchor.stationery.counter","to":"anchor.stationery.front_door","lengthCm":600},
-    {"id":"route.stationery.door_to_footpath","from":"anchor.stationery.front_door","to":"location.nabapara.stationery_footpath","lengthCm":300},
-    {"id":"route.sen_home.footpath_to_home","from":"location.nabapara.stationery_footpath","to":"location.nabapara.sen_home","lengthCm":2000}
+    {
+      "id": "route.stationery.counter_to_stock_room",
+      "from": "anchor.stationery.counter",
+      "to": "anchor.stationery.stock_room",
+      "lengthCm": 635
+    },
+    {
+      "id": "route.stationery.counter_to_packing_desk",
+      "from": "anchor.stationery.counter",
+      "to": "anchor.stationery.packing_desk",
+      "lengthCm": 727
+    },
+    {
+      "id": "route.stationery.counter_to_door",
+      "from": "anchor.stationery.counter",
+      "to": "anchor.stationery.front_door",
+      "lengthCm": 1100
+    },
+    {
+      "id": "route.sen_home.footpath_to_home",
+      "from": "anchor.stationery.front_door",
+      "to": "location.nabapara.sen_home",
+      "lengthCm": 2000
+    }
   ],
   "travel": [
-    {"from":"anchor.stationery.counter","to":"anchor.stationery.front_door","minutes":5,"routes":["route.stationery.counter_to_door"]},
-    {"from":"anchor.stationery.counter","to":"anchor.stationery.packing_desk","minutes":5,"routes":["route.stationery.counter_to_packing_desk"]},
-    {"from":"anchor.stationery.counter","to":"anchor.stationery.stock_room","minutes":5,"routes":["route.stationery.counter_to_stock_room"]},
-    {"from":"anchor.stationery.counter","to":"location.nabapara.sen_home","minutes":21,"routes":["route.stationery.counter_to_door","route.stationery.door_to_footpath","route.sen_home.footpath_to_home"]},
-    {"from":"anchor.stationery.counter","to":"location.nabapara.stationery_footpath","minutes":7,"routes":["route.stationery.counter_to_door","route.stationery.door_to_footpath"]},
-    {"from":"anchor.stationery.front_door","to":"anchor.stationery.packing_desk","minutes":9,"routes":["route.stationery.counter_to_door","route.stationery.counter_to_packing_desk"]},
-    {"from":"anchor.stationery.front_door","to":"anchor.stationery.stock_room","minutes":10,"routes":["route.stationery.counter_to_door","route.stationery.counter_to_stock_room"]},
-    {"from":"anchor.stationery.front_door","to":"location.nabapara.sen_home","minutes":17,"routes":["route.stationery.door_to_footpath","route.sen_home.footpath_to_home"]},
-    {"from":"anchor.stationery.front_door","to":"location.nabapara.stationery_footpath","minutes":3,"routes":["route.stationery.door_to_footpath"]},
-    {"from":"anchor.stationery.packing_desk","to":"anchor.stationery.stock_room","minutes":10,"routes":["route.stationery.counter_to_packing_desk","route.stationery.counter_to_stock_room"]},
-    {"from":"anchor.stationery.packing_desk","to":"location.nabapara.sen_home","minutes":25,"routes":["route.stationery.counter_to_packing_desk","route.stationery.counter_to_door","route.stationery.door_to_footpath","route.sen_home.footpath_to_home"]},
-    {"from":"anchor.stationery.packing_desk","to":"location.nabapara.stationery_footpath","minutes":11,"routes":["route.stationery.counter_to_packing_desk","route.stationery.counter_to_door","route.stationery.door_to_footpath"]},
-    {"from":"anchor.stationery.stock_room","to":"location.nabapara.sen_home","minutes":26,"routes":["route.stationery.counter_to_stock_room","route.stationery.counter_to_door","route.stationery.door_to_footpath","route.sen_home.footpath_to_home"]},
-    {"from":"anchor.stationery.stock_room","to":"location.nabapara.stationery_footpath","minutes":12,"routes":["route.stationery.counter_to_stock_room","route.stationery.counter_to_door","route.stationery.door_to_footpath"]},
-    {"from":"location.nabapara.sen_home","to":"location.nabapara.stationery_footpath","minutes":15,"routes":["route.sen_home.footpath_to_home"]}
+    {
+      "from": "anchor.stationery.counter",
+      "to": "anchor.stationery.front_door",
+      "minutes": 8,
+      "routes": [
+        "route.stationery.counter_to_door"
+      ]
+    },
+    {
+      "from": "anchor.stationery.counter",
+      "to": "anchor.stationery.packing_desk",
+      "minutes": 6,
+      "routes": [
+        "route.stationery.counter_to_packing_desk"
+      ]
+    },
+    {
+      "from": "anchor.stationery.counter",
+      "to": "anchor.stationery.stock_room",
+      "minutes": 5,
+      "routes": [
+        "route.stationery.counter_to_stock_room"
+      ]
+    },
+    {
+      "from": "anchor.stationery.counter",
+      "to": "location.nabapara.sen_home",
+      "minutes": 23,
+      "routes": [
+        "route.stationery.counter_to_door",
+        "route.sen_home.footpath_to_home"
+      ]
+    },
+    {
+      "from": "anchor.stationery.front_door",
+      "to": "anchor.stationery.packing_desk",
+      "minutes": 14,
+      "routes": [
+        "route.stationery.counter_to_door",
+        "route.stationery.counter_to_packing_desk"
+      ]
+    },
+    {
+      "from": "anchor.stationery.front_door",
+      "to": "anchor.stationery.stock_room",
+      "minutes": 13,
+      "routes": [
+        "route.stationery.counter_to_door",
+        "route.stationery.counter_to_stock_room"
+      ]
+    },
+    {
+      "from": "anchor.stationery.front_door",
+      "to": "location.nabapara.sen_home",
+      "minutes": 15,
+      "routes": [
+        "route.sen_home.footpath_to_home"
+      ]
+    },
+    {
+      "from": "anchor.stationery.packing_desk",
+      "to": "anchor.stationery.stock_room",
+      "minutes": 10,
+      "routes": [
+        "route.stationery.counter_to_packing_desk",
+        "route.stationery.counter_to_stock_room"
+      ]
+    },
+    {
+      "from": "anchor.stationery.packing_desk",
+      "to": "location.nabapara.sen_home",
+      "minutes": 28,
+      "routes": [
+        "route.stationery.counter_to_packing_desk",
+        "route.stationery.counter_to_door",
+        "route.sen_home.footpath_to_home"
+      ]
+    },
+    {
+      "from": "anchor.stationery.stock_room",
+      "to": "location.nabapara.sen_home",
+      "minutes": 27,
+      "routes": [
+        "route.stationery.counter_to_stock_room",
+        "route.stationery.counter_to_door",
+        "route.sen_home.footpath_to_home"
+      ]
+    }
   ]
 }

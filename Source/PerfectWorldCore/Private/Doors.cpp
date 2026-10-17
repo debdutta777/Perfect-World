@@ -19,8 +19,9 @@ constexpr std::string_view OpeningHome = "location.nabapara.opening_home";
  * named for the room it enters. Keep these five entries first for historical /1 saves.
  */
 constexpr DoorOpeningWindow ChaiHours[]{{360, 690}, {930, 1140}};
+constexpr DoorOpeningWindow DoorsStationeryHours[]{{480, 780}, {900, 1170}};
 constexpr std::string_view CareHome = "location.nabapara.care_home";
-constexpr std::array<DoorDef, 10> DoorTable{{
+constexpr std::array<DoorDef, 11> DoorTable{{
     {"door.nabapara.home_front", OpeningHome, false, DoorAccess::Private, 0, 0},
     {"door.nabapara.home_living", OpeningHome, true, DoorAccess::Public, 0, 0},
     {"door.nabapara.home_bedroom", OpeningHome, false, DoorAccess::Private, 0, 0},
@@ -31,6 +32,7 @@ constexpr std::array<DoorDef, 10> DoorTable{{
     {"door.nabapara.care_dormitory", CareHome, false, DoorAccess::Private},
     {"door.nabapara.care_common", CareHome, true, DoorAccess::Public},
     {"door.nabapara.care_washroom", CareHome, false, DoorAccess::Public},
+    {"door.nabapara.stationery_front", "location.nabapara.stationery", false, DoorAccess::BusinessHours, 0, 0, DoorsStationeryHours},
 }};
 
 constexpr std::array<std::string_view, DoorAccessCount> AccessIds{"public", "private", "locked", "business_hours"};
@@ -380,7 +382,9 @@ DoorStateParse DeserialiseDoorState(std::string_view text)
     std::size_t count = 0;
     if (!NextLine(text, position, line) || !KeyValue(line, "count", value) || !ParseCount(value, count))
         return refuse("The door text has no valid count line.");
-    if (count != DoorTable.size() && !(legacy && count == 5))
+    // Explicit table migration: the ten-door edition predates stationery. Never accept an arbitrary prefix.
+    const bool stationeryMigration = count == 10;
+    if (count != DoorTable.size() && !stationeryMigration && !(legacy && count == 5))
         return refuse("The door text does not hold exactly the authored doors.");
     DoorState state = MakeInitialDoorState();
     for (std::size_t i = 0; i < count; ++i)
@@ -424,7 +428,7 @@ DoorStateParse DeserialiseDoorState(std::string_view text)
     if (position != text.size())
         return refuse("The door text has data after the end line.");
     result.State = std::move(state);
-    result.bMigrated = legacy;
+    result.bMigrated = legacy || stationeryMigration;
     return result;
 }
 } // namespace PerfectWorld

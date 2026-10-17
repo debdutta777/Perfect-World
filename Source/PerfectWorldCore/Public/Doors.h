@@ -33,9 +33,8 @@ namespace PerfectWorld
  * Adjacency of rooms is the interior layout's business: the opening-home ids are named for the room each door enters,
  * not for a fixed floor plan, so the layout may place them as it needs.
  *
- * DoorState keeps one entry for every authored door, in table order. Version /2 requires exactly that set; historical /1
- * saves migrate their sides and any newly authored entries. Future table additions require an explicit migration.
- * This module is standalone: it is not in WorldState, the reducer or the hash yet.
+ * DoorState keeps one entry for every authored door, in table order. Historical ten-door /2 saves add the stationery
+ * default; /1 saves also migrate their sides. Future table additions require an explicit migration.
  *
  * Integer arithmetic only. Nothing here throws.
  */
@@ -191,8 +190,9 @@ struct DoorStateParse
 
 /** Strict text form ("pw.doors/2"): door=id,open,side. An invalid state serialises to the empty string. */
 [[nodiscard]] PERFECTWORLDCORE_API std::string SerialiseDoorState(const DoorState& state);
-/** Also reads /1 (five historical home doors or the full table), adding authored defaults and preferred open sides.
- * Successful /1 reads set bMigrated. Refuses malformed, inconsistent, out-of-order or trailing data.
+/** Also reads the historical ten-door /2 set, and /1 (five home doors, ten doors or today's full table).
+ * Adds authored defaults and, for /1, preferred open sides. Successful migrations set bMigrated.
+ * Refuses malformed, inconsistent, out-of-order or trailing data.
  */
 [[nodiscard]] PERFECTWORLDCORE_API DoorStateParse DeserialiseDoorState(std::string_view text);
 } // namespace PerfectWorld

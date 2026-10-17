@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #ifndef PERFECTWORLDCORE_API
@@ -45,6 +46,12 @@ struct WorldSectionHash
 
 /** The fingerprint of the whole world. */
 [[nodiscard]] PERFECTWORLDCORE_API std::uint64_t HashWorldState(const WorldState& state);
+
+/**
+ * HashWorldState with the doors section taken over `doorsText`, the pw.doors text as a save stored it. A save whose door
+ * set migrated on load authenticates its original checksum with this; for unmigrated doors it equals HashWorldState.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API std::uint64_t HashWorldStateWithDoorsText(const WorldState& state, std::string_view doorsText);
 
 struct ReplayOptions
 {

@@ -56,16 +56,14 @@ constexpr std::string_view AnCounter = "anchor.stationery.counter";
 constexpr std::string_view AnStockRoom = "anchor.stationery.stock_room";
 constexpr std::string_view AnPackingDesk = "anchor.stationery.packing_desk";
 constexpr std::string_view AnFrontDoor = "anchor.stationery.front_door";
-constexpr std::string_view AnFootpath = "location.nabapara.stationery_footpath";
 constexpr std::string_view AnHome = "location.nabapara.sen_home";
-// PROVISIONAL conservative integer lengths for the stationery shop (about 700 cm wide on the lane's +Y side); the interior is
-// built by a separate order and the integrator reconciles these with it. Home is an authored off-lane leg.
-constexpr std::array<ApprovedRoute, 5> AninditaRoutes{{
-    {"route.stationery.counter_to_stock_room", AnCounter, AnStockRoom, 700},
-    {"route.stationery.counter_to_packing_desk", AnCounter, AnPackingDesk, 600},
-    {"route.stationery.counter_to_door", AnCounter, AnFrontDoor, 600},
-    {"route.stationery.door_to_footpath", AnFrontDoor, AnFootpath, 300},
-    {"route.sen_home.footpath_to_home", AnFootpath, AnHome, 2000},
+// Built shop polylines. The front-door anchor is already outside on the footpath (U 250, V -45),
+// so there is no additional door-to-footpath connector. Home retains its authored off-lane length.
+constexpr std::array<ApprovedRoute, 4> AninditaRoutes{{
+    {"route.stationery.counter_to_stock_room", AnCounter, AnStockRoom, 635},
+    {"route.stationery.counter_to_packing_desk", AnCounter, AnPackingDesk, 727},
+    {"route.stationery.counter_to_door", AnCounter, AnFrontDoor, 1100},
+    {"route.sen_home.footpath_to_home", AnFrontDoor, AnHome, 2000},
 }};
 // At the shop from the 07:30 stock check to the end of the reconciliation (minutes of the day, end exclusive).
 constexpr Spec AninditaSpec{"npc_schedule.anindita_sen", "person.anindita_sen", AnHome, "location.nabapara.stationery",
@@ -231,6 +229,7 @@ NpcScheduleResult LoadWithSpec(const ContentDb& db, const Spec& spec)
 NpcScheduleResult LoadNpcSchedule(const ContentDb& db, std::string_view scheduleId)
 {
     if (scheduleId == FaridaScheduleId)
+        // Preserve her complete frozen route/identity contract and resolved weekly coverage without duplicating it.
         return LoadFaridaSchedule(db);
     if (const auto* spec = FindSpecBySchedule(scheduleId))
         return LoadWithSpec(db, *spec);

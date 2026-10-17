@@ -33,7 +33,7 @@ constexpr std::string_view CareFront = "door.nabapara.care_front";
 void TestTable()
 {
     Expect(ValidateDoorTable(), "the authored door table is well formed");
-    Expect(AuthoredDoors().size() == 10, "home, shutter and care doors are authored");
+    Expect(AuthoredDoors().size() == 11, "home, shutter, care and stationery doors are authored");
     for (const std::string_view id : {Front, Living, Bedroom, Kitchen, Washroom})
     {
         const DoorDef* door = FindDoor(id);
@@ -333,7 +333,7 @@ void TestRoundTrip()
     DoorState state = MakeInitialDoorState();
     Play(state);
     const std::string text = SerialiseDoorState(state);
-    Expect(text.starts_with("pw.doors/2\ncount=10\n"), "the text opens with its version and count");
+    Expect(text.starts_with("pw.doors/2\ncount=11\n"), "the text opens with its version and count");
     const DoorStateParse parsed = DeserialiseDoorState(text);
     Expect(parsed.Ok() && !parsed.bMigrated && parsed.State == state, "the state and swing sides round trip without migration");
     Expect(SerialiseDoorState(parsed.State) == text, "and re-serialises identically");
@@ -361,8 +361,8 @@ void TestRefusedText()
     Expect(!DeserialiseDoorState(text + "x").Ok(), "trailing data is refused");
     Expect(!DeserialiseDoorState(text + "\n").Ok(), "a trailing blank line is refused");
     Expect(!DeserialiseDoorState(Replace(text, "pw.doors/2", "pw.doors/3")).Ok(), "a wrong header is refused");
-    Expect(!DeserialiseDoorState(Replace(text, "count=10", "count=9")).Ok(), "a wrong count is refused");
-    Expect(!DeserialiseDoorState(Replace(text, "count=10", "count=010")).Ok(), "a non-canonical count is refused");
+    Expect(!DeserialiseDoorState(Replace(text, "count=11", "count=9")).Ok(), "a wrong count is refused");
+    Expect(!DeserialiseDoorState(Replace(text, "count=11", "count=011")).Ok(), "a non-canonical count is refused");
     Expect(!DeserialiseDoorState(Replace(text, "home_front,0", "home_front,2")).Ok(), "a bad flag is refused");
     Expect(!DeserialiseDoorState(Replace(text, "home_front,0", "home_front")).Ok(), "a missing flag is refused");
     Expect(!DeserialiseDoorState(Replace(text, "home_front,0", "home_nowhere,0")).Ok(), "an unknown door is refused");
@@ -408,7 +408,7 @@ void TestCareAndMigration()
 {
     const DoorDef& front = *FindDoor(CareFront);
     Expect(!front.bTwoWay && front.PreferredSwingSide == 1, "care front is inward only");
-    for (const auto& door : AuthoredDoors().subspan(5))
+    for (const auto& door : AuthoredDoors().subspan(5, 5))
     {
         Expect(door.bTwoWay == (door.Id != CareFront), "new leaves have authored swing constraints");
         Expect(door.bInitiallyOpen == (door.Id == "door.nabapara.care_common"), "only common starts open among new leaves");
@@ -421,8 +421,8 @@ void TestCareAndMigration()
     DoorState source = MakeInitialDoorState();
     Play(source);
     std::string legacy = "pw.doors/1\ncount=10\n";
-    for (const auto& entry : source.Doors)
-        legacy += "door=" + entry.Id + "," + (entry.Open ? "1" : "0") + "\n";
+    for (std::size_t i = 0; i < 10; ++i)
+        legacy += "door=" + source.Doors[i].Id + "," + (source.Doors[i].Open ? "1" : "0") + "\n";
     legacy += "end\n";
     const auto migrated = DeserialiseDoorState(legacy);
     Expect(migrated.Ok() && migrated.bMigrated, "full-table /1 migrates");

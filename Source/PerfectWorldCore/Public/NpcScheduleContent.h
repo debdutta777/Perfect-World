@@ -7,7 +7,7 @@
 namespace PerfectWorld
 {
 /**
- * Generic loader for authored npc_schedule content (the lane's day-shift people other than Farida).
+ * Generic loader for authored npc_schedule content (Farida, the care worker and Anindita).
  *
  * It reuses the Farida shape and portable routine/travel validation (ContentSchema::ValidateNpcScheduleShape,
  * ValidatePersonSchedule, ValidateNpcSchedule, ValidateScheduleTravel, ValidateScheduleTravelCoverage,
@@ -25,7 +25,7 @@ constexpr std::string_view CareWorkerHomeZone = "location.nabapara.care_worker_h
 constexpr std::int32_t CareWorkerDutyStartMinute = 7 * 60;
 constexpr std::int32_t CareWorkerDutyEndMinute = 15 * 60;
 
-/** Strict typed decoding of one frozen schedule: "npc_schedule.farida_qadri" or "npc_schedule.care_worker". Any other ID is refused. */
+/** Strict typed decoding of a frozen Farida, care-worker or Anindita schedule. Any other ID is refused. */
 [[nodiscard]] PERFECTWORLDCORE_API NpcScheduleResult LoadNpcSchedule(const ContentDb& db, std::string_view scheduleId);
 /** Portable validation of a decoded schedule against the frozen contract of its person. "" when valid. */
 [[nodiscard]] PERFECTWORLDCORE_API std::string ValidateNpcScheduleContent(const NpcSchedule& schedule);
