@@ -30,6 +30,8 @@ FVector UaFeet(const APWNpcCharacter& Actor)
 
 struct FUaFixture : NpPresenceTest::FNpWorld
 {
+    FUaShopPhysics UaPhysics;
+
     bool UaInit(FAutomationTestBase& Test)
     {
         if (!Test.TestNotNull(TEXT("presence"), Presence)) { return false; }
@@ -49,6 +51,7 @@ struct FUaFixture : NpPresenceTest::FNpWorld
         Building.Side = 1;
         Building.Index = 2;
         Building.Detail = PWLane::ELaneDetail::Full;
+        UaPhysics.UaBuild(*World, Building);
         if (!Test.TestTrue(TEXT("production provider registers"), Presence->Bindings().RegisterProvider(
             FName(TEXT("building.test.ua_mira")), PWLane::NpStationeryBindings(Building)))) { return false; }
         return Test.TestTrue(TEXT("Mira registers"), Presence->RegisterScheduledPersonFromContent(
@@ -57,26 +60,25 @@ struct FUaFixture : NpPresenceTest::FNpWorld
 
     FVector UaPoint(const FName Anchor) const { return Presence->Bindings().FindAnchor(Anchor)->Feet.GetLocation(); }
 
-    // No world BeginPlay or floor in this isolated fixture. Drive the real character movement in the
-    // horizontal plane, with recent-render protection, so a catch-up snap cannot satisfy the walk.
+    // Drive walking physics every frame and steering at its authored interval, as NpcRoute does.
+    // Mark this actor rendered without rewinding world time or marking every other actor rendered.
     bool UaWalk(FAutomationTestBase& Test, APWNpcCharacter& Actor, const FVector& Target)
     {
-        World->TimeSeconds = 0.0;
-        auto* Physics = Actor.GetCharacterMovement();
-        Physics->SetMovementMode(MOVE_Flying);
-        Physics->BrakingDecelerationFlying = 1800.0f;
+        UaPhysics.UaBegin(Actor);
         bool UaContinuous = true;
-        for (int32 Step = 0; Step < 4000 && FVector::Dist2D(UaFeet(Actor), Target) > PWNpcMove::ArrivalToleranceCm; ++Step)
+        for (int32 Step = 0; Step < 9600 && FVector::Dist2D(UaFeet(Actor), Target) > PWNpcMove::ArrivalToleranceCm; ++Step)
         {
             const FVector Before = Actor.GetActorLocation();
-            Actor.GetNpcMovement()->TickPresentation(0.02f);
-            Physics->MaxFlySpeed = Physics->MaxWalkSpeed;
-            Physics->TickComponent(0.02f, LEVELTICK_All, nullptr);
-            Presence->Tick(0.02f);
+            UaPhysics.UaFrame(*World, Actor);
+            Presence->Tick(static_cast<float>(FUaShopPhysics::UaFrameSeconds));
             UaContinuous = UaContinuous && FVector::Dist(Before, Actor.GetActorLocation()) <= 5.0;
         }
         Test.TestTrue(TEXT("every rendered movement step is continuous"), UaContinuous);
-        return Test.TestTrue(TEXT("walk reaches the authored endpoint"), FVector::Dist2D(UaFeet(Actor), Target) <= PWNpcMove::ArrivalToleranceCm);
+        Test.TestTrue(TEXT("walk stays on the authored floor"), FMath::Abs(UaFeet(Actor).Z - Target.Z) <= 5.0);
+        return Test.TestTrue(*FString::Printf(TEXT("walk reaches the authored endpoint (%.1f cm left, mode %d, blocked %d)"),
+            FVector::Dist2D(UaFeet(Actor), Target), static_cast<int32>(Actor.GetCharacterMovement()->MovementMode),
+            Actor.GetNpcMovement()->IsPersistentlyBlocked() ? 1 : 0),
+            FVector::Dist2D(UaFeet(Actor), Target) <= PWNpcMove::ArrivalToleranceCm);
     }
 };
 
@@ -97,12 +99,12 @@ bool UaDay(FAutomationTestBase& Test, const int32 Day)
     Fixture.Presence->Reconcile(UaAt(Day, 1108)); // skip the entire 18:00-18:28 journey
     Test.TestTrue(TEXT("departure does not disappear at desk"), Fixture.Presence->FindPerson(UaPerson) == Actor);
     Test.TestTrue(TEXT("departure is physically Travel"), Actor->GetNpcMovement()->GetIntent().State == EPWNpcState::Travel);
-    Fixture.World->TimeSeconds = 10.0;
+    Fixture.World->TimeSeconds += 1.0;
     Fixture.Presence->Tick(0.1f);
     Test.TestTrue(TEXT("unseen departure still needs to reach threshold"), Fixture.Presence->FindPerson(UaPerson) == Actor);
     if (!Fixture.UaWalk(Test, *Actor, Fixture.UaPoint(UaThreshold))) { return false; }
     Test.TestTrue(TEXT("rendered person remains at exit"), Fixture.Presence->FindPerson(UaPerson) == Actor);
-    Fixture.World->TimeSeconds = 10.0;
+    Fixture.World->TimeSeconds += 1.0;
     Fixture.Presence->Tick(0.1f);
     Test.TestNull(TEXT("unseen person retires only at exit"), Fixture.Presence->FindPerson(UaPerson));
     return true;
@@ -153,14 +155,18 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUaMiraLoad, "PerfectWorld.MiraPresence.DirectL
 bool FUaMiraLoad::RunTest(const FString& Parameters)
 {
     using namespace UaMiraPresence;
-    FUaFixture Fixture;
-    if (!Fixture.UaInit(*this)) { return false; }
-    Fixture.Presence->ResetPresentation(UaAt(3, 1020));
-    auto* Actor = Fixture.Presence->FindPerson(UaPerson);
-    if (!TestNotNull(TEXT("load presents Mira"), Actor)) { return false; }
-    TestTrue(TEXT("load starts at threshold"), UaFeet(*Actor).Equals(Fixture.UaPoint(UaThreshold), 1.0));
-    TestTrue(TEXT("load never starts at desk"), FVector::Dist2D(UaFeet(*Actor), Fixture.UaPoint(UaDesk)) > 100.0);
-    return Fixture.UaWalk(*this, *Actor, Fixture.UaPoint(UaDesk));
+    for (const int32 UaDay : {1, 3})
+    {
+        FUaFixture Fixture;
+        if (!Fixture.UaInit(*this)) { return false; }
+        Fixture.Presence->ResetPresentation(UaAt(UaDay, 1020));
+        auto* Actor = Fixture.Presence->FindPerson(UaPerson);
+        if (!TestNotNull(TEXT("load presents Mira"), Actor)) { return false; }
+        TestTrue(TEXT("load starts at threshold"), UaFeet(*Actor).Equals(Fixture.UaPoint(UaThreshold), 1.0));
+        TestTrue(TEXT("load never starts at desk"), FVector::Dist2D(UaFeet(*Actor), Fixture.UaPoint(UaDesk)) > 100.0);
+        if (!Fixture.UaWalk(*this, *Actor, Fixture.UaPoint(UaDesk))) { return false; }
+    }
+    return true;
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUaMiraChat, "PerfectWorld.MiraPresence.ConversationPauseRelease",
