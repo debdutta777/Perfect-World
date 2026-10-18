@@ -1875,3 +1875,24 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 **Running:**
 - gpt-6.1-sol on persistence (B): Start, Save, Load and Continue on the v8 slots.
 - gpt-6-astra planning the next round, as the owner asked.
+
+## Checkpoint — persistence (B): Start, Save, Load and Continue use world-save-v8 slots; sol's upgrade plan, 2026-10-18
+
+**What merged (`02c9395`), from gpt-6.1-sol:**
+- **Start** writes a fresh v8 world transactionally.
+- **Save** (pause) captures the clock, door swings, conversation memory and receipts, and the player's placement. A failure is reported in the UI.
+- **Load and Continue** validate before anything live changes, then:
+  - close saved conversations without a second charge;
+  - restore doors and swings;
+  - reset NPC presentation once;
+  - restore placement if it is safe, otherwise fall back home.
+- **New tests:** `PerfectWorld.PersistenceFlow` (4).
+
+**Plan:** `Docs/UPGRADE_PLAN_2026-10-18.md` is gpt-6.1-sol's upgrade plan (UP-01..06), for Claude Sonnet subagents, at the owner's request.
+- **Running:** UP-04 (talkability and person heights; finished, not merged), UP-05 (stairs), UP-06 (creation and pause).
+- **Next:** UP-01 and UP-02 (Mira in Unreal) and UP-03 (Subrata) wait on NL-01 and NL-03.
+
+**Exact checks:**
+- **Rung 2:** at `02c9395`, **Succeeded**. The first attempt stalled: three `cl.exe` processes used about 8 s of CPU in 35 minutes while four agent builds competed for the machine. They were ended, and the rerun succeeded.
+- **Headless automation:** **64/64 Success** in one run.
+- **Not run yet:** a packaged restart (quit, relaunch, Continue). It needs the owner's windows closed.
