@@ -301,10 +301,16 @@ FNpBindingProvider NpStationeryBindings(const FLaneBuilding& Building)
     // The layout threshold is already on the footpath at U250/V-45. No extra travel segment is authored.
     const FNpAnchorBinding PbFootAnchor = *PbFront;
     PbProvider.Anchors.Add(PbFootpath, PbFootAnchor);
-    FNpAnchorBinding PbHome;
-    PbHome.Kind = ENpBindingKind::OffLane;
-    PbHome.ExitAnchor = PbFootpath;
-    PbProvider.Anchors.Add(FName(TEXT("location.nabapara.sen_home")), PbHome);
+    // Off-lane places of the Sen household (Anindita's home; Mira's home, school and personal-time destination). Every one
+    // enters and leaves the lane at the shop's threshold: the footpath anchor is the front door's transform, so nobody
+    // appears or vanishes anywhere else.
+    for (const TCHAR* PbOffLane : {TEXT("location.nabapara.sen_home"), TEXT("location.nabapara.school"), TEXT("location.nabapara.mira_out")})
+    {
+        FNpAnchorBinding PbPlace;
+        PbPlace.Kind = ENpBindingKind::OffLane;
+        PbPlace.ExitAnchor = PbFootpath;
+        PbProvider.Anchors.Add(FName(PbOffLane), PbPlace);
+    }
 
     constexpr const char* PbRouteNames[] = {"counter_to_stock_room", "counter_to_packing_desk", "counter_to_door"};
     for (const char* PbRouteName : PbRouteNames)
@@ -319,7 +325,14 @@ FNpBindingProvider NpStationeryBindings(const FLaneBuilding& Building)
         const std::string PbPublicId = std::string("route.stationery.") + PbRouteName;
         PbProvider.Routes.Add(FName(UTF8_TO_TCHAR(PbPublicId.c_str())), MoveTemp(PbLine));
     }
-    PbProvider.Routes.Add(FName(TEXT("route.sen_home.footpath_to_home")), FNpRouteBinding{{}, true});
+    // Off-lane legs: authored lengths only (Anindita's walk home; Mira's school and personal-time walks). They carry no points,
+    // so time spent on them is never compressed into the visible walk and the person is absent from the lane meanwhile.
+    for (const TCHAR* PbOffLaneRoute : {TEXT("route.sen_home.footpath_to_home"), TEXT("route.mira_school.home_to_school"),
+                                        TEXT("route.mira_school.door_to_school"), TEXT("route.mira_out.home_to_out"),
+                                        TEXT("route.mira_out.school_to_out")})
+    {
+        PbProvider.Routes.Add(FName(PbOffLaneRoute), FNpRouteBinding{{}, true});
+    }
 
     for (const LI::Opening& PbOpening : PbLayout.Openings)
     {
