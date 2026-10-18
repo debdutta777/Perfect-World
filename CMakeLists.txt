@@ -620,3 +620,9 @@ add_test(NAME PerfectWorldLaneInteriorShopFurnitureTests COMMAND PerfectWorldLan
 
 # NL-01: sixteen-door roster, visiting access and the frozen historical v8 door fixtures (10 and 11 doors).
 target_compile_definitions(PerfectWorldWorldSaveTests PRIVATE PW_DOORS_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
+
+# UP-05: stair contract (flights, landings, slab openings, guards, headroom volumes) and its portable tests.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/LaneStairLayout.cpp)
+add_executable(PerfectWorldLaneStairLayoutTests Tests/LaneStairLayoutTests.cpp)
+target_link_libraries(PerfectWorldLaneStairLayoutTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneStairLayoutTests COMMAND PerfectWorldLaneStairLayoutTests)
