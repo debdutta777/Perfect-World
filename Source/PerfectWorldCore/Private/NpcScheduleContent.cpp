@@ -92,7 +92,26 @@ constexpr std::array<ApprovedRoute, 7> MiraRoutes{{
 constexpr Spec MiraSpec{"npc_schedule.mira_sen", "person.mira_sen", MrHome, "location.nabapara.stationery",
                         "door.nabapara.stationery_front", MiraRoutes, "anchor.stationery.", 16 * 60 + 30, 18 * 60};
 
-constexpr std::array<const Spec*, 3> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec};
+// Subrata Dey, the lane caretaker. He lives in the caretaker flat; his rounds are the lane (an authored off-lane leg), the shared
+// entry of the tall flats (door.nabapara.tall_flats_front is public), its stair and its noticeboard. The tall-flats legs are
+// conservative ceilings until presenter bindings exist; the two walking legs are authored off-lane lengths. His flat's visiting
+// hours (Doors.cpp: 10:00-12:30 and 17:30-20:30) lie wholly inside his at-home stays. The tall-flats anchors are used only
+// between 07:16 and 17:00 (minutes of the day, end exclusive).
+constexpr std::string_view SdHome = "location.nabapara.caretaker_flat";
+constexpr std::string_view SdLane = "location.nabapara.lane_round";
+constexpr std::string_view SdEntry = "anchor.tall_flats.front_door";
+constexpr std::string_view SdBoard = "anchor.tall_flats.noticeboard";
+constexpr std::string_view SdStair = "anchor.tall_flats.stair";
+constexpr std::array<ApprovedRoute, 4> SubrataRoutes{{
+    {"route.caretaker.home_to_lane_round", SdHome, SdLane, 2400},
+    {"route.caretaker.lane_round_to_entry", SdLane, SdEntry, 2200},
+    {"route.tall_flats.entry_to_noticeboard", SdEntry, SdBoard, 500},
+    {"route.tall_flats.noticeboard_to_stair", SdBoard, SdStair, 500},
+}};
+constexpr Spec SubrataSpec{"npc_schedule.subrata_dey", "person.subrata_dey", SdHome, "location.nabapara.tall_flats",
+                           "door.nabapara.tall_flats_front", SubrataRoutes, "anchor.tall_flats.", 7 * 60 + 16, 17 * 60};
+
+constexpr std::array<const Spec*, 4> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec, &SubrataSpec};
 
 const Spec* FindSpec(std::string_view personId)
 {

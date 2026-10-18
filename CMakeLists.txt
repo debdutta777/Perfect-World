@@ -626,3 +626,14 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/LaneStai
 add_executable(PerfectWorldLaneStairLayoutTests Tests/LaneStairLayoutTests.cpp)
 target_link_libraries(PerfectWorldLaneStairLayoutTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldLaneStairLayoutTests COMMAND PerfectWorldLaneStairLayoutTests)
+
+# UP-03a: Subrata Dey (lane caretaker): schedule test, then conversation and world save v8 round trip test.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationSubrata.cpp)
+add_executable(PerfectWorldSubrataLifeTests Tests/SubrataLifeTests.cpp)
+target_include_directories(PerfectWorldSubrataLifeTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldSubrataLifeTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSubrataLifeTests COMMAND PerfectWorldSubrataLifeTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.subrata_dey.json)
+add_executable(PerfectWorldSubrataConversationTests Tests/SubrataConversationTests.cpp)
+target_link_libraries(PerfectWorldSubrataConversationTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSubrataConversationTests COMMAND PerfectWorldSubrataConversationTests)
