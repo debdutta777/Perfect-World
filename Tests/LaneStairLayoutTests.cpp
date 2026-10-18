@@ -72,9 +72,11 @@ void TestPassageStraight()
     Expect(l.Landings[0].Kind == LandingKind::Bottom && l.Landings[0].Plan == R(285, 415, 25, 125), "100 cm approach");
     Expect(l.Landings[1].Kind == LandingKind::Top && l.Landings[1].TopMm == 3000 && l.Landings[1].Plan == R(285, 415, 525, 675), "150 cm top landing");
     // Slab underside 2740, headroom 2200: a tread whose far nosing is above 540 mm needs the slab opened; the 4th level (708) is the first.
-    Expect(l.SlabUndersideMm == 2740 && l.Openings[0].Plan == R(285, 415, 175, 525), "the opening starts above the 3rd tread and ends at the last riser");
+    // The headroom volume reaches back 68 cm (two capsule radii) behind each tread, so the opening starts 68 cm before the 3rd tread.
+    Expect(l.SlabUndersideMm == 2740 && l.Openings[0].Plan == R(285, 415, 175 - 68, 525), "the opening starts 68 cm before the 3rd tread and ends at the last riser");
+    Expect(l.Clearances[2].Plan == R(285, 415, 125 - 68, 150), "a tread's headroom volume reaches back over the treads behind it");
     Expect(l.Openings[0].ArriveU == 0 && l.Openings[0].ArriveV == 1, "arrival at the head of the flight");
-    Expect(l.Guards.size() == 1 && l.Guards[0].Kind == GuardKind::Rim && l.Guards[0].Plan == R(285, 415, 169, 175) &&
+    Expect(l.Guards.size() == 1 && l.Guards[0].Kind == GuardKind::Rim && l.Guards[0].Plan == R(285, 415, 169 - 68, 175 - 68) &&
                l.Guards[0].BaseMm == 3000 && l.Guards[0].TopMm == 4000,
            "walled passage: one 100 cm rim guard behind the opening, none at the arrival edge");
     Expect(l.Clearances.size() == 18 && l.Clearances[0].Kind == ClearKind::Approach && l.Clearances[1].Kind == ClearKind::TopLanding && l.Clearances[2].Kind == ClearKind::Strip &&
@@ -175,6 +177,83 @@ void TestDirectionsAndMirror()
     const StairLayout m = GenerateStairLayout(moved);
     const StairLayout o = GenerateStairLayout(PassageInput());
     Expect(m.Steps[3].Plan == R(1285, 1415, 500, 525) && m.Levels == o.Levels && m.Openings[0].Plan.V0 - o.Openings[0].Plan.V0 == 300, "translation invariance");
+}
+
+/** The walking body as a square of its radius at every 3 cm of the footprint: it stands at the highest solid under it, and wherever
+ *  slab lies over any part of it the gap between its head and the slab must be the headroom less the body. Squares touching a
+ *  stringer guard or the top landing are not places to stand on the flight. */
+bool BodyClearsSlab(const StairLayout& l, int radius)
+{
+    const int body = l.Scale.BodyHeightCm * 10;
+    const int need = (l.Scale.HeadroomCm - l.Scale.BodyHeightCm) * 10;
+    const Rect& f = l.Footprint;
+    for (int u = f.U0 + radius; u <= f.U1 - radius; u += 3)
+    {
+        for (int v = f.V0 + radius; v <= f.V1 - radius; v += 3)
+        {
+            const Rect sq{u - radius, u + radius, v - radius, v + radius};
+            bool skip = false;
+            int feet = 0;
+            int holes = 0;
+            for (const Guard& g : l.Guards) { skip = skip || (g.Kind == GuardKind::Stringer && g.Plan.Overlaps(sq)); }
+            for (const Landing& x : l.Landings) { skip = skip || (x.Kind == LandingKind::Top && x.Plan.Overlaps(sq)); }
+            for (const Step& st : l.Steps) { if (st.Plan.Overlaps(sq)) feet = std::max(feet, st.TopMm); }
+            for (const Landing& x : l.Landings) { if (x.Solid && x.Plan.Overlaps(sq)) feet = std::max(feet, x.TopMm); }
+            for (const SlabOpening& o : l.Openings)
+            {
+                const int du = std::min(o.Plan.U1, sq.U1) - std::max(o.Plan.U0, sq.U0);
+                const int dv = std::min(o.Plan.V1, sq.V1) - std::max(o.Plan.V0, sq.V0);
+                if (du > 0 && dv > 0) holes += du * dv;
+            }
+            if (!skip && holes < sq.Width() * sq.Depth() && l.SlabUndersideMm - (feet + body) < need) return false;
+        }
+    }
+    return true;
+}
+
+void TestBodyHeadroom()
+{
+    std::vector<StairInput> inputs;
+    for (const int rise : {250, 300, 360, 450})
+    {
+        StairInput a = WithRise(PassageInput(), rise);
+        a.Footprint = Rect{0, 130, 0, 1000};
+        StairInput b = WithRise(SwitchbackInput(), rise);
+        b.Footprint = Rect{0, 230, 0, 1000};
+        StairInput c = b;
+        c.MirrorU = true;
+        c.Walls = Enclosure{false, true, true, false};
+        c.Footprint = Rect{0, 234, 0, 1010};
+        StairInput d = a;
+        d.Walls = Enclosure{false, false, false, false};
+        for (const StairInput& in : {a, b, c, d}) inputs.push_back(in);
+    }
+    StairInput alongU = SwitchbackInput();
+    alongU.Direction = Climb::MinusU;
+    alongU.Footprint = Rect{0, 500, 0, 230};
+    inputs.push_back(alongU);
+    StairInput fat = PassageInput();
+    fat.Scale.CapsuleRadiusCm = 40;
+    fat.Footprint = Rect{0, 150, 0, 700};
+    inputs.push_back(fat);
+    StairInput spill = WithRise(SwitchbackInput(), 450); // a low headroom requirement leaves the landing under the slab but not flight 2's reach over it
+    spill.Scale.HeadroomCm = 185;
+    spill.Footprint = Rect{0, 230, 0, 1000};
+    inputs.push_back(spill);
+    for (const StairInput& in : inputs)
+    {
+        const StairLayout l = GenerateStairLayout(in);
+        ExpectGood(l, "body headroom fixtures");
+        Expect(BodyClearsSlab(l, l.Scale.CapsuleRadiusCm), "a walking body keeps headroom less its height under the slab everywhere");
+    }
+    const StairLayout spilled = GenerateStairLayout(inputs.back());
+    Expect(spilled.Openings.size() == 2 && spilled.Openings[1].Plan.V0 == spilled.Openings[0].Plan.V1 && spilled.Openings[1].Plan.Depth() == 68, "spill case: flight 2 plus a partial landing opening");
+    // The check can fail: a stair derived for a 1 cm body is not safe for the 34 cm body.
+    StairInput thin = PassageInput();
+    thin.Scale.CapsuleRadiusCm = 1;
+    const StairLayout thinLayout = GenerateStairLayout(thin);
+    ExpectGood(thinLayout, "thin body stair");
+    Expect(!BodyClearsSlab(thinLayout, 34), "a stair built only for the tread itself leaves the body's head under the slab");
 }
 
 void TestExtremes()
@@ -299,7 +378,7 @@ void TestGuardsAndSlab()
     Expect(t.Openings[0].Plan.V0 < GenerateStairLayout(PassageInput()).Openings[0].Plan.V0, "more headroom opens the slab earlier");
     // A lower storey where every tread needs the opening still validates.
     const StairLayout shortStorey = GenerateStairLayout(WithRise(PassageInput(), 250));
-    Expect(shortStorey.Openings[0].Plan.V0 == 25 + 100, "the opening starts at the first tread in a 250 cm storey");
+    Expect(shortStorey.Openings[0].Plan.V0 == 25 + 100 - 68, "the opening starts at the first tread in a 250 cm storey");
 }
 
 void TestDamage()
@@ -330,6 +409,7 @@ void TestDamage()
                 l.Guards.push_back(g);
             },
             Refusal::ClearanceIntruded, "something in the headroom volume");
+    damaged(base, [](StairLayout& l) { l.Clearances[2].Plan.V0 += 68; }, Refusal::LayoutInconsistent, "a headroom volume that forgets the body's reach");
     damaged(base, [](StairLayout& l) { l.Openings[0].Plan.V1 -= 25; }, Refusal::SlabNotOpen, "slab left over the last tread");
     damaged(base, [](StairLayout& l) { l.Guards.clear(); }, Refusal::GuardMissing, "no guard behind the opening");
     damaged(base, [](StairLayout& l) { l.Guards[0].TopMm = l.RiseMm + 500; }, Refusal::GuardTooLow, "a 50 cm rim guard");
@@ -393,6 +473,7 @@ int main()
     TestPassageStraight();
     TestSwitchback();
     TestDirectionsAndMirror();
+    TestBodyHeadroom();
     TestExtremes();
     TestRefusals();
     TestGuardsAndSlab();

@@ -125,13 +125,19 @@ struct SlBuild
     StairLayout& L;
     SlMap M;
     int Hd = 0, Lim = 0, GuardMm = 0; // headroom, highest surface that still clears the slab, barrier height (mm)
+    int Reach = 0; // 2 x capsule radius: the body can be over plan this far behind a tread whose height it already stands at
     bool WallLo = true, WallHi = true, WallEnd = true;
 
     void AddStep(int flight, int tread, int riser, const Rect& plan)
     {
         const std::string tag = ".f" + std::to_string(flight) + ".t" + SlPad(tread);
         L.Steps.push_back({L.StairId + tag, flight, riser, plan, L.Levels[riser]});
-        L.Clearances.push_back({L.StairId + ".clear" + tag, ClearKind::Strip, plan, L.Levels[riser], L.Levels[riser + 1] + Hd});
+        // A character steps up onto a tread while its centre is still a radius short of the riser, so at that tread's height its
+        // body can reach back 2 x radius behind the tread: the headroom volume covers all of it.
+        int du = 0, dv = 0;
+        SlUnit(flight == 2 ? Opposite() : M.Dir, du, dv);
+        const Rect vol{plan.U0 - (du > 0 ? Reach : 0), plan.U1 + (du < 0 ? Reach : 0), plan.V0 - (dv > 0 ? Reach : 0), plan.V1 + (dv < 0 ? Reach : 0)};
+        L.Clearances.push_back({L.StairId + ".clear" + tag, ClearKind::Strip, vol, L.Levels[riser], L.Levels[riser + 1] + Hd});
     }
     void GuardBox(const std::string& id, const Rect& plan, int base) { L.Guards.push_back({L.StairId + ".guard." + id, GuardKind::Stringer, plan, base, base + GuardMm}); }
     bool Violates(int riser) const { return L.Levels[riser + 1] > Lim; } // a tread whose far nosing's headroom reaches the slab
@@ -153,7 +159,7 @@ Refusal SlBuildStraight(SlBuild& B, int ml, int mh)
     const StairScale& s = L.Scale;
     const int n = L.RiserCount;
     const int T = s.TreadCm;
-    const int ap = s.MinLandingCm;
+    const int ap = std::max(s.MinLandingCm, B.Reach + SlG); // the opening starts a body-reach before the first high tread, with its rim guard
     const int w = B.M.Lc() - ml - mh;
     if (w < s.MinFlightWidthCm) { return Refusal::FootprintTooNarrow; }
     if (w > s.MaxFlightWidthCm) { return Refusal::FootprintTooWide; }
@@ -177,7 +183,7 @@ Refusal SlBuildStraight(SlBuild& B, int ml, int mh)
     }
     int du = 0, dv = 0;
     SlUnit(B.M.Dir, du, dv);
-    B.AddOpening(B.M.R(ap + (open - 1) * T, ae, B.WallLo ? 0 : ml - SlG, B.WallHi ? B.M.Lc() : ml + w + SlG), du, dv);
+    B.AddOpening(B.M.R(ap + (open - 1) * T - B.Reach, ae, B.WallLo ? 0 : ml - SlG, B.WallHi ? B.M.Lc() : ml + w + SlG), du, dv);
     return Refusal::None;
 }
 
@@ -193,10 +199,10 @@ Refusal SlBuildSwitchback(SlBuild& B, int ml, int mh)
     if (w < s.MinFlightWidthCm) { return Refusal::FootprintTooNarrow; }
     if (w > s.MaxFlightWidthCm) { return Refusal::FootprintTooWide; }
     const int me = B.WallEnd ? 0 : 2 * SlG;
-    const int ap = s.MinLandingCm + (n2 - n1) * T; // keeps the top landing exactly MinLandingCm deep
+    const int ap = std::max(s.MinLandingCm, B.Reach + SlG) + (n2 - n1) * T; // keeps the top landing as deep as the straight approach
     const int lstart = ap + (n1 - 1) * T;
     const int lend = B.M.La() - me;
-    if (lend - lstart < std::max(w, s.MinLandingCm)) { return Refusal::FootprintTooShort; }
+    if (lend - lstart < std::max({w, s.MinLandingCm, B.Reach})) { return Refusal::FootprintTooShort; }
     const int top2 = lstart - (n2 - 1) * T; // the head of flight 2: the top landing lies in front of it
     const int c1 = ml + w;                  // flight 1 band [ml, c1], spine [c1, c2], flight 2 band [c2, c3]
     const int c2 = c1 + SpineCm;
@@ -242,12 +248,13 @@ Refusal SlBuildSwitchback(SlBuild& B, int ml, int mh)
     SlUnit(B.Opposite(), du, dv); // flight 2 arrives going back toward the foot
     if (h1 > B.Lim) // the landing's headroom reaches the slab: open it, and flight 1 from its first violating tread
     {
-        int au = 0;
-        int av = 0;
-        B.AddOpening(B.M.R(ap + (first1 - 1) * T, lstart, openLo, cs), au, av);
-        B.AddOpening(B.M.R(lstart, openEnd, openLo, openHi), au, av);
+        B.AddOpening(B.M.R(ap + (first1 - 1) * T - B.Reach, lstart, openLo, cs), 0, 0);
+        B.AddOpening(B.M.R(lstart, openEnd, openLo, openHi), 0, 0);
     }
-    B.AddOpening(B.M.R(top2, lstart - (first2 - 1) * T, cs, openHi), du, dv);
+    // Flight 2's headroom volumes reach back over the landing; when the landing itself needs no opening, open just that part.
+    const int end3 = lstart - (first2 - 1) * T + B.Reach;
+    B.AddOpening(B.M.R(top2, std::min(end3, lstart), cs, openHi), du, dv);
+    if (h1 <= B.Lim && end3 > lstart) { B.AddOpening(B.M.R(lstart, end3, cs, openHi), 0, 0); }
     return Refusal::None;
 }
 } // namespace
@@ -288,11 +295,7 @@ StairLayout GenerateStairLayout(const StairInput& in)
     out.RiserCount = static_cast<int>(out.Levels.size()) - 1;
     out.RiserMmMin = out.Levels[1];
     out.RiserMmMax = out.Levels[1];
-    for (int k = 2; k <= out.RiserCount; ++k)
-    {
-        out.RiserMmMin = std::min(out.RiserMmMin, out.Levels[k] - out.Levels[k - 1]);
-        out.RiserMmMax = std::max(out.RiserMmMax, out.Levels[k] - out.Levels[k - 1]);
-    }
+    for (int k = 2; k <= out.RiserCount; ++k) { out.RiserMmMin = std::min(out.RiserMmMin, out.Levels[k] - out.Levels[k - 1]); out.RiserMmMax = std::max(out.RiserMmMax, out.Levels[k] - out.Levels[k - 1]); }
 
     SlBuild b{out};
     b.M.F = in.Footprint;
@@ -300,6 +303,7 @@ StairLayout GenerateStairLayout(const StairInput& in)
     b.Hd = s.HeadroomCm * 10;
     b.Lim = out.SlabUndersideMm - b.Hd;
     b.GuardMm = s.BarrierHeightCm * 10;
+    b.Reach = 2 * s.CapsuleRadiusCm;
     const bool v = b.M.AlongV();
     b.WallLo = v ? walls.U0 : walls.V0;
     b.WallHi = v ? walls.U1 : walls.V1;
@@ -309,10 +313,7 @@ StairLayout GenerateStairLayout(const StairInput& in)
     const Refusal r = in.Kind == Arrangement::Straight ? SlBuildStraight(b, ml, mh) : SlBuildSwitchback(b, ml, mh);
     if (r != Refusal::None) { return refuse(r); }
     int rims = 0;
-    for (const Rect& rim : SlRims(out))
-    {
-        out.Guards.push_back({out.StairId + ".rim." + SlPad(++rims), GuardKind::Rim, rim, out.RiseMm, out.RiseMm + b.GuardMm});
-    }
+    for (const Rect& rim : SlRims(out)) { out.Guards.push_back({out.StairId + ".rim." + SlPad(++rims), GuardKind::Rim, rim, out.RiseMm, out.RiseMm + b.GuardMm}); }
     if (in.MirrorU) { ReflectStairU(out, in.Footprint.U0 + in.Footprint.U1); }
     return out;
 }
@@ -432,6 +433,7 @@ Refusal ValidateStairLayout(const StairLayout& L)
     for (const Guard& g : L.Guards) { solids.push_back({g.Plan, g.BaseMm, g.TopMm}); }
     for (const Clearance& c : L.Clearances)
     {
+        if (c.Kind == ClearKind::Strip && std::min(c.Plan.Width(), c.Plan.Depth()) < s.TreadCm + 2 * s.CapsuleRadiusCm) { return Refusal::LayoutInconsistent; }
         for (const SlSolid& x : solids)
         {
             if (x.Plan.Overlaps(c.Plan) && x.Base < c.TopMm && x.Top > c.BottomMm) { return Refusal::ClearanceIntruded; }
