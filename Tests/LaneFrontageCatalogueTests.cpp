@@ -154,10 +154,11 @@ void TestCatalogueShape()
         shared += e.Kind == Variant::SharedEntry ? 1 : 0;
         Expect(FindFrontageById(e.BuildingId) == &e, "lookup by id: " + id);
 
-        // Doors: a hung leaf must be an authored lane door; a planned one must not exist yet (it needs a migration).
-        for (const auto& d : PerfectWorld::AuthoredDoors())
+        // Doors: a hung leaf must be an authored lane door; since NL-01 every planned front door is authored too (sixteen-door
+        // roster with its migration), so the presenter may hang it.
+        if (!e.PlannedDoorId.empty())
         {
-            Expect(d.Id != e.PlannedDoorId, "a planned door is not authored yet: " + id);
+            Expect(PerfectWorld::FindDoor(e.PlannedDoorId) != nullptr, "a planned door is authored (NL-01): " + id);
         }
         if (!e.EntranceDoorId.empty())
         {

@@ -2,6 +2,7 @@
 
 #include "GameClock.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <span>
@@ -24,7 +25,10 @@ namespace PerfectWorld
  *
  * Entry rules, independent of leaf position (valid egress and closing are always allowed):
  *   Public         anyone, at any time.
- *   Private        residents or invited visitors; an unauthorized visitor is offered Knock.
+ *   Private        residents or invited visitors; an unauthorized visitor is offered Knock. A dwelling with authored
+ *                  visiting hours also admits a visitor whose Knock was answered: a resident is home (IsHostHome) and
+ *                  it is inside a visiting window. A Knock outside those, or at a door without visiting hours, admits
+ *                  nobody; an invitation is then the only legitimate way in.
  *   Locked         nobody, resident or not (no keys exist in this slice); DoorResult::Locked. A locked door starts closed.
  *   BusinessHours  anyone in the daily half-open window(s); outside those hours a visitor is refused with DoorResult::Closed.
  *                  A resident (staff) may always enter. An invitation does not override business hours.
@@ -33,8 +37,10 @@ namespace PerfectWorld
  * Adjacency of rooms is the interior layout's business: the opening-home ids are named for the room each door enters,
  * not for a fixed floor plan, so the layout may place them as it needs.
  *
- * DoorState keeps one entry for every authored door, in table order. Historical ten-door /2 saves add the stationery
- * default; /1 saves also migrate their sides. Future table additions require an explicit migration.
+ * DoorState keeps one entry for every authored door, in table order. A text holding one of the historical rosters
+ * (DoorRosterEditions: a fixed prefix length of today's table under its header) migrates by appending the authored
+ * defaults; /1 saves also migrate their sides. Any other count is refused. Future table additions append to the table
+ * and add today's count as a new edition; they never reorder or remove a door.
  *
  * Integer arithmetic only. Nothing here throws.
  */
@@ -67,6 +73,11 @@ struct DoorDef
     bool bTwoWay = true;
     /** +1 is inward, -1 outward; also the only accepted open side for a one-way leaf. */
     std::int8_t PreferredSwingSide = 1;
+    /**
+     * Private only: daily half-open windows (same rules as OpeningWindows) in which a resident who is home answers a
+     * Knock and lets the visitor in. Empty means visitors need an invitation.
+     */
+    std::span<const DoorOpeningWindow> VisitingWindows{};
 };
 
 enum class DoorResult : std::uint8_t
@@ -82,6 +93,13 @@ struct DoorUseContext
     bool IsResident = false;
     /** Caller-owned permission for this particular door; Knock never changes it. */
     bool IsInvited = false;
+    /** Caller fact: a resident of the door's dwelling is at home and able to come to the door (presence, schedule). */
+    bool IsHostHome = false;
+    /**
+     * Caller fact: this visitor knocked at this door on the current approach. It admits only when the core would answer
+     * the knock now (EvaluateDoorKnock gives DoorKnockAnswer::Admitted); the caller forgets it once the visitor leaves.
+     */
+    bool HasKnocked = false;
 };
 
 enum class DoorAction : std::uint8_t { None = 0, Open = 1, Close = 2, Knock = 3 };
@@ -95,11 +113,32 @@ struct DoorOffer
 };
 
 enum class DoorEvent : std::uint8_t { None = 0, Knock = 1 };
+/** What came of a delivered Knock. None when no knock was delivered. */
+enum class DoorKnockAnswer : std::uint8_t
+{
+    None = 0,
+    /** A resident is home in visiting hours: the visitor may enter on this approach (HasKnocked). */
+    Admitted = 1,
+    /** Nobody is home to answer. */
+    NoAnswer = 2,
+    /** A resident is home but it is outside visiting hours, or the dwelling has none: by invitation only. */
+    NotReceiving = 3
+};
 struct DoorKnockResult
 {
     DoorResult Result = DoorResult::NotAvailable;
     DoorEvent Event = DoorEvent::None;
+    DoorKnockAnswer Answer = DoorKnockAnswer::None;
+    /** NotReceiving at a door with visiting hours: minutes until the next window opens; otherwise -1. */
+    std::int32_t MinutesUntilVisiting = -1;
     friend bool operator==(const DoorKnockResult&, const DoorKnockResult&) = default;
+};
+
+/** One historical door roster the reader still accepts: the first Count authored doors under Header. */
+struct DoorRosterEdition
+{
+    std::string_view Header;
+    std::size_t Count = 0;
 };
 
 struct DoorEntry
@@ -146,13 +185,20 @@ struct DoorStateParse
 /** 0 during an opening window; otherwise distance to the next daily opening, or -1 for invalid/non-business doors. */
 [[nodiscard]] PERFECTWORLDCORE_API std::int32_t DoorMinutesUntilOpening(const DoorDef& door, std::int32_t minuteOfDay) noexcept;
 
+/** 0 inside a visiting window; otherwise distance to the next one, or -1 for invalid input or a door without visiting hours. */
+[[nodiscard]] PERFECTWORLDCORE_API std::int32_t DoorMinutesUntilVisiting(const DoorDef& door, std::int32_t minuteOfDay) noexcept;
+
 /** Permission only, independent of leaf position. Exit is allowed even after closing or through a locked door. */
 [[nodiscard]] PERFECTWORLDCORE_API DoorResult EvaluateDoorPassage(const DoorDef& door, std::int32_t minuteOfDay,
                                                                 const DoorUseContext& context) noexcept;
 /** Unauthorized private entry offers Knock even with an open leaf; an open leaf never grants permission. */
 [[nodiscard]] PERFECTWORLDCORE_API DoorOffer EvaluateDoorOffer(const DoorDef& door, bool currentlyOpen,
                                                               std::int32_t minuteOfDay, const DoorUseContext& context) noexcept;
-/** Explicit transient event. No state or invitation is stored or granted. */
+/**
+ * Explicit transient event. No state or invitation is stored or granted. A delivered knock carries its answer
+ * (Admitted, NoAnswer or NotReceiving); after Admitted the caller sets HasKnocked for this approach, and only then
+ * does passage, the offer and TrySetDoorOpen let the visitor open the leaf.
+ */
 [[nodiscard]] PERFECTWORLDCORE_API DoorKnockResult EvaluateDoorKnock(const DoorDef& door, std::int32_t minuteOfDay,
                                                                    const DoorUseContext& context) noexcept;
 
@@ -190,9 +236,12 @@ struct DoorStateParse
 
 /** Strict text form ("pw.doors/2"): door=id,open,side. An invalid state serialises to the empty string. */
 [[nodiscard]] PERFECTWORLDCORE_API std::string SerialiseDoorState(const DoorState& state);
-/** Also reads the historical ten-door /2 set, and /1 (five home doors, ten doors or today's full table).
+/** Also reads every historical roster in DoorRosterEditions (/2 with ten or eleven doors; /1 with five, ten or eleven).
  * Adds authored defaults and, for /1, preferred open sides. Successful migrations set bMigrated.
- * Refuses malformed, inconsistent, out-of-order or trailing data.
+ * Refuses unknown counts, malformed, inconsistent, out-of-order, duplicate or trailing data.
  */
 [[nodiscard]] PERFECTWORLDCORE_API DoorStateParse DeserialiseDoorState(std::string_view text);
+
+/** The rosters DeserialiseDoorState accepts, oldest first; the last is today's table under "pw.doors/2". */
+[[nodiscard]] PERFECTWORLDCORE_API std::span<const DoorRosterEdition> DoorRosterEditions() noexcept;
 } // namespace PerfectWorld

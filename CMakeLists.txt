@@ -617,3 +617,6 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/LaneInte
 add_executable(PerfectWorldLaneInteriorShopFurnitureTests Tests/LaneInteriorShopFurnitureTests.cpp)
 target_link_libraries(PerfectWorldLaneInteriorShopFurnitureTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldLaneInteriorShopFurnitureTests COMMAND PerfectWorldLaneInteriorShopFurnitureTests)
+
+# NL-01: sixteen-door roster, visiting access and the frozen historical v8 door fixtures (10 and 11 doors).
+target_compile_definitions(PerfectWorldWorldSaveTests PRIVATE PW_DOORS_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
