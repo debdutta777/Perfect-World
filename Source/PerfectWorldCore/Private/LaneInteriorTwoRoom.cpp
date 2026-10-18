@@ -180,7 +180,9 @@ Refusal BuildTwoRoom(Builder& b, bool shop)
 
     const Room front = b.AddRoom(shop ? "sales" : "living", shop ? RoomKind::Sales : RoomKind::Living, Rect{Inner.U0, Inner.U1, Inner.V0, pv0},
                                  "floor_oxide", "plaster_warm");
-    const Room back = b.AddRoom(shop ? "stock" : "sleeping", shop ? RoomKind::Stock : RoomKind::Sleeping, Rect{Inner.U0, Inner.U1, pv1, Inner.V1},
+    const bool workshop = shop && in.Furniture == FurnitureSet::Workshop;
+    const Room back = b.AddRoom(workshop ? "workshop" : (shop ? "stock" : "sleeping"),
+                                workshop ? RoomKind::Workshop : (shop ? RoomKind::Stock : RoomKind::Sleeping), Rect{Inner.U0, Inner.U1, pv1, Inner.V1},
                                 shop ? "floor_tile" : "floor_oxide", "plaster_pale");
 
     Run frontWall{"front", true, 0, WallThicknessCm, 0, W, {}};
@@ -224,6 +226,14 @@ Refusal BuildTwoRoom(Builder& b, bool shop)
     else if (residence && !shop)
     {
         if (!LtFurnishResidence(b, front, back, s, sd))
+        {
+            return Refusal::FurnitureDoesNotFit;
+        }
+    }
+    else if (shop && (in.Furniture == FurnitureSet::GeneralGoods || workshop))
+    {
+        const ShopFrame frame{front, back, cv1, pv0, pv1, gapC, sd, s};
+        if (!(workshop ? FurnishWorkshop(b, frame) : FurnishGeneralGoods(b, frame)))
         {
             return Refusal::FurnitureDoesNotFit;
         }

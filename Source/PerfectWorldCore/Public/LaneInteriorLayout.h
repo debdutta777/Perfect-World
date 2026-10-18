@@ -61,8 +61,15 @@ struct Rect
 };
 
 enum class Variant : std::uint8_t { CompactResidence, ShopWithStockroom, SharedEntry };
-/** What goes in the rooms. Residence suits CompactResidence and SharedEntry, Stationery suits ShopWithStockroom. */
-enum class FurnitureSet : std::uint8_t { None, Residence, Stationery };
+/**
+ * What goes in the rooms. Residence suits CompactResidence and SharedEntry; Stationery, GeneralGoods and Workshop suit
+ * ShopWithStockroom. The numeric values are frozen (NL-03): new sets only ever append.
+ *  - GeneralGoods: a provision / hardware-style counter shop. Sales room "sales" (customer browse points, a counter) and stock
+ *    room "stock" (rack, sacks and cartons).
+ *  - Workshop: a repair / tailoring / carpentry shop. Sales room "sales" (a service counter and a short display) and a work
+ *    floor "workshop" (RoomKind::Workshop) with benches, a tool rack and a finishing table.
+ */
+enum class FurnitureSet : std::uint8_t { None, Residence, Stationery, GeneralGoods, Workshop };
 
 enum class Refusal : std::uint8_t
 {
@@ -70,7 +77,9 @@ enum class Refusal : std::uint8_t
     InvalidBuildingId, WidthTooNarrow, DepthTooShallow, FootprintTooLarge, StoreyHeightInvalid, FloorDatumInvalid,
     EntranceOffFacade, InternalDoorOffWall, FurnitureSetMismatch, NoRoomForUnits, FurnitureDoesNotFit,
     RoomsDisconnected, DoorwayTooSmall, CirculationBlocked, SweepBlocked, ZoneBlocked, FurnitureOverlap,
-    FurnitureOutsideRoom, DuplicateId, AnchorInvalid, RouteBlocked, WallInvalid
+    FurnitureOutsideRoom, DuplicateId, AnchorInvalid, RouteBlocked, WallInvalid,
+    /** Appended by NL-03: a unit door id on a variant without dwelling units, or one repeating the other unit's or the entrance's id. */
+    UnitDoorIdInvalid
 };
 
 /** Stable machine-readable code ("width_too_narrow", ...). "ok" for None. */
@@ -92,9 +101,18 @@ struct InteriorInput
     int InternalDoorCentreU = 0;
     /** Lane door id for the front leaf (for example "door.nabapara.stationery_front"); empty builds an open doorway. */
     std::string EntranceDoorId;
+    /**
+     * SharedEntry only (NL-03 interface, consumed by NL-04): lane door ids for the leaves of the two dwelling doorways. A is the
+     * unit on the low-U side of the passage ("unit_a" before any mirroring), B the high-U side ("unit_b"). Empty keeps the
+     * doorway open (the behaviour before NL-04). A non-empty id on another variant, an id equal to the other unit's or to
+     * EntranceDoorId, or an id for a unit the footprint does not have, is refused with UnitDoorIdInvalid (the last check applies
+     * once NL-04 wires the leaves into LaneInteriorShared.cpp; until then the ids are validated for shape and otherwise ignored).
+     */
+    std::string UnitDoorIdA;
+    std::string UnitDoorIdB;
 };
 
-enum class RoomKind : std::uint8_t { Living, Sleeping, Sales, Stock, Passage, Dwelling };
+enum class RoomKind : std::uint8_t { Living, Sleeping, Sales, Stock, Passage, Dwelling, Workshop };
 struct Room
 {
     std::string Id;

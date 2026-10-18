@@ -77,13 +77,24 @@ Refusal LlCheckInput(const InteriorInput& in)
     {
         return Refusal::InternalDoorOffWall;
     }
-    if (in.Furniture == FurnitureSet::Stationery && !shop)
+    const bool shopSet = in.Furniture == FurnitureSet::Stationery || in.Furniture == FurnitureSet::GeneralGoods ||
+                         in.Furniture == FurnitureSet::Workshop;
+    if (shopSet && !shop)
     {
         return Refusal::FurnitureSetMismatch;
     }
     if (in.Furniture == FurnitureSet::Residence && shop)
     {
         return Refusal::FurnitureSetMismatch;
+    }
+    if (!in.UnitDoorIdA.empty() || !in.UnitDoorIdB.empty())
+    {
+        const bool clash = !shared || (!in.UnitDoorIdA.empty() && (in.UnitDoorIdA == in.UnitDoorIdB || in.UnitDoorIdA == in.EntranceDoorId)) ||
+                           (!in.UnitDoorIdB.empty() && in.UnitDoorIdB == in.EntranceDoorId);
+        if (clash)
+        {
+            return Refusal::UnitDoorIdInvalid;
+        }
     }
     return Refusal::None;
 }
@@ -163,6 +174,7 @@ std::string_view RefusalCode(Refusal refusal) noexcept
     case Refusal::AnchorInvalid: return "anchor_invalid";
     case Refusal::RouteBlocked: return "route_blocked";
     case Refusal::WallInvalid: return "wall_invalid";
+    case Refusal::UnitDoorIdInvalid: return "unit_door_id_invalid";
     }
     return "unknown";
 }
