@@ -99,6 +99,22 @@ public:
     [[nodiscard]] bool AddRoute(std::string_view name, std::string_view fromAnchor, std::string_view toAnchor, std::vector<RoutePoint> points);
 };
 
+/** The two-room shop's fixed geometry, handed to a furniture set (LaneInteriorShopFurniture.cpp). */
+struct ShopFrame
+{
+    Room Sales;   // front room: V from the interior's front face to the partition
+    Room Back;    // back room behind the partition
+    int Cv1 = 0;  // the counter's customer face
+    int Pv0 = 0;  // the partition's front face
+    int Pv1 = 0;  // the partition's back face
+    int GapC = 0; // centre of the staff gap and of the partition doorway
+    int Sd = 0;   // start of the 120 wide column behind the partition doorway
+    int S = 0;    // start of the 120 wide stem from the entrance
+};
+/** NL-03 furniture sets. Each returns false when a required piece does not fit (the caller refuses with FurnitureDoesNotFit). */
+[[nodiscard]] bool FurnishGeneralGoods(Builder& b, const ShopFrame& frame);
+[[nodiscard]] bool FurnishWorkshop(Builder& b, const ShopFrame& frame);
+
 [[nodiscard]] Refusal BuildTwoRoom(Builder& b, bool shop);
 [[nodiscard]] Refusal BuildSharedEntry(Builder& b);
 [[nodiscard]] int ClampInt(int v, int lo, int hi);

@@ -611,3 +611,9 @@ add_test(NAME PerfectWorldConversationMiraTests COMMAND PerfectWorldConversation
 add_executable(PerfectWorldWorldSaveMiraTests Tests/WorldSaveMiraTests.cpp)
 target_link_libraries(PerfectWorldWorldSaveMiraTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldWorldSaveMiraTests COMMAND PerfectWorldWorldSaveMiraTests)
+
+# NL-03: general-goods and workshop furniture sets for the two-room shop (portable core; tests live in LaneInteriorLayoutTests).
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/LaneInteriorShopFurniture.cpp)
+add_executable(PerfectWorldLaneInteriorShopFurnitureTests Tests/LaneInteriorShopFurnitureTests.cpp)
+target_link_libraries(PerfectWorldLaneInteriorShopFurnitureTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneInteriorShopFurnitureTests COMMAND PerfectWorldLaneInteriorShopFurnitureTests)
