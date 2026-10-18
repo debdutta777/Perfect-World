@@ -83,6 +83,18 @@ bool CpPauseCompact(const TWeakPtr<SWidget>& Self)
     return PWCreationPause::PauseDensity(static_cast<float>(Space.X), static_cast<float>(Space.Y)) > 0;
 }
 
+/** A 20 point button with a tighter vertical pad than MakeButton's (44 units tall at least). */
+TSharedRef<SWidget> CpPauseButton(const FText& Label, const PWUI::EButtonKind Kind, FOnClicked OnClicked)
+{
+    return PWUI::MakeContentButton(
+        SNew(SBox).HAlign(HAlign_Center).VAlign(VAlign_Center)
+        [
+            SNew(STextBlock).Text(Label).Font(PWUI::Font(20, PWUI::EFontWeight::Medium))
+            .ColorAndOpacity(FSlateColor::UseForeground()).Justification(ETextJustify::Center).AutoWrapText(true)
+        ],
+        Kind, OnClicked, false, true, FMargin(22.0f, 6.0f));
+}
+
 struct FCpPauseContext
 {
     FText Name;
@@ -135,11 +147,7 @@ void SPWPauseMenu::Construct(const FArguments& InArgs)
     ChildSlot
     [
         SAssignNew(ContentHolder, SBox)
-        .MaxDesiredHeight_Lambda([Self]()
-        {
-            const FVector2D Space = CpPauseSpace(Self);
-            return FOptionalSize(PWCreationPause::PauseMaxHeight(static_cast<float>(Space.X), static_cast<float>(Space.Y)));
-        })
+        .MaxDesiredHeight_Lambda([Self]() { const FVector2D S = CpPauseSpace(Self); return FOptionalSize(PWCreationPause::PauseMaxHeight(static_cast<float>(S.X), static_cast<float>(S.Y))); })
         [
             MenuContent.ToSharedRef()
         ]
@@ -156,30 +164,30 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
     const FCpPauseContext Context = CpGatherPauseContext(Hud.Get());
     const TSharedRef<int32> SaveCount = MakeShared<int32>(0);
 
-    ReturnToTitleButton = PWUI::MakeButton(
+    ReturnToTitleButton = CpPauseButton(
         LOCTEXT("ReturnToTitle", "Return to Title"), PWUI::EButtonKind::Secondary,
         FOnClicked::CreateSPLambda(this, [this]()
         {
             BeginExitConfirmation(EPendingExit::ReturnToTitle, ReturnToTitleButton.ToSharedRef());
             return FReply::Handled();
-        }), true, 22, 0.0f);
-    QuitButton = PWUI::MakeButton(
+        }));
+    QuitButton = CpPauseButton(
         LOCTEXT("Quit", "Quit"), PWUI::EButtonKind::Secondary,
         FOnClicked::CreateSPLambda(this, [this]()
         {
             BeginExitConfirmation(EPendingExit::QuitGame, QuitButton.ToSharedRef());
             return FReply::Handled();
-        }), true, 22, 0.0f);
+        }));
 
-    const TSharedRef<SWidget> ResumeButton = PWUI::MakeButton(
+    const TSharedRef<SWidget> ResumeButton = CpPauseButton(
         LOCTEXT("Resume", "Resume"), PWUI::EButtonKind::Primary,
         FOnClicked::CreateSPLambda(this, [this]()
         {
             if (APerfectWorldFrontEndHUD* Owner = Hud.Get()) Owner->ResumeGame();
             return FReply::Handled();
-        }), true, 22, 0.0f);
+        }));
 
-    const TSharedRef<SWidget> SaveButton = PWUI::MakeButton(
+    const TSharedRef<SWidget> SaveButton = CpPauseButton(
         LOCTEXT("Save", "Save"), PWUI::EButtonKind::Secondary,
         FOnClicked::CreateSPLambda(this, [this, SaveCount]()
         {
@@ -192,14 +200,10 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
             Status = bChooser ? FText::GetEmpty() : PWCreationPause::PauseSaveFeedbackText(bSucceeded, Message, *SaveCount);
             bStatusIsError = !bSucceeded && !bChooser;
             return FReply::Handled();
-        }), true, 22, 0.0f);
+        }));
 
-    const auto CompactVisibility = [Self](const bool bShowWhenCompact) -> EVisibility
-    {
-        return CpPauseCompact(Self) == bShowWhenCompact ? EVisibility::HitTestInvisible : EVisibility::Collapsed;
-    };
+    const auto CompactVisibility = [Self](const bool bShowWhenCompact) -> EVisibility { return CpPauseCompact(Self) == bShowWhenCompact ? EVisibility::HitTestInvisible : EVisibility::Collapsed; };
 
-    // A labelled line of the context card. The label drops out when space is short; the value never does.
     const auto ContextRow = [&Style, CompactVisibility](const FText& Label, const TAttribute<FText>& Value) -> TSharedRef<SWidget>
     {
         return SNew(SHorizontalBox)
@@ -213,7 +217,7 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
             ]
             + SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Top)
             [
-                PWUI::MakeText(Value, 16, Style.TextPrimary, false, true)
+                PWUI::MakeText(Value, 15, Style.TextPrimary, false, true)
             ];
     };
 
@@ -226,7 +230,7 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
     const TSharedRef<SWidget> ContextCard =
         SNew(SBorder)
         .BorderImage(&Style.BrushInset)
-        .Padding_Lambda([Self]() { return CpPauseCompact(Self) ? FMargin(14.0f, 8.0f) : FMargin(18.0f, 14.0f); })
+        .Padding_Lambda([Self]() { return CpPauseCompact(Self) ? FMargin(14.0f, 4.0f) : FMargin(18.0f, 14.0f); })
         [
             SNew(SVerticalBox)
             + SVerticalBox::Slot().AutoHeight()
@@ -252,7 +256,7 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
             [
                 ContextRow(LOCTEXT("PlaceLabel", "PLACE"), Context.Place)
             ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 4.0f, 0.0f, 0.0f)
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 2.0f, 0.0f, 0.0f)
             [
                 ContextRow(LOCTEXT("TimeLabel", "TIME"), TimeText)
             ]
@@ -266,7 +270,6 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
             ]
         ];
 
-    // Save feedback sits directly under the Save button. Success and failure differ by word and mark as well as colour.
     const TSharedRef<SWidget> SaveFeedback =
         SNew(SBorder)
         .Tag(TEXT("CpPauseSaveFeedback"))
@@ -302,11 +305,7 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
 
     const TSharedRef<SWidget> Column =
         SNew(SBox)
-        .WidthOverride_Lambda([Self]()
-        {
-            const FVector2D Space = CpPauseSpace(Self);
-            return PWCreationPause::PauseControlWidth(static_cast<float>(Space.X), static_cast<float>(Space.Y));
-        })
+        .WidthOverride_Lambda([Self]() { const FVector2D S = CpPauseSpace(Self); return PWCreationPause::PauseControlWidth(static_cast<float>(S.X), static_cast<float>(S.Y)); })
         [
             SNew(SVerticalBox)
             + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center).Padding(0.0f, 0.0f, 0.0f, 12.0f)
@@ -319,25 +318,26 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
             ]
             + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center)
             [
-                PWUI::MakeText(LOCTEXT("Title", "Paused"), 32, Style.TextPrimary, true)
+                SNew(STextBlock).Text(LOCTEXT("Title", "Paused")).Font_Lambda([Self]() { return PWUI::Font(CpPauseCompact(Self) ? 22 : 32, true); })
+                .ColorAndOpacity(FSlateColor(Style.TextPrimary))
             ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 12.0f, 0.0f, 12.0f)
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 8.0f, 0.0f, 8.0f)
             [
                 ContextCard
             ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 8.0f)
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)
             [
                 ResumeButton
             ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 8.0f)
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)
             [
                 SaveButton
             ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 8.0f)
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)
             [
                 SaveFeedback
             ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 8.0f)
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)
             [
                 ReturnToTitleButton.ToSharedRef()
             ]
@@ -347,7 +347,6 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
             ]
         ];
 
-    // MakeBracketPanel's brackets, with padding that follows the density.
     const TSharedRef<SWidget> Card =
         SNew(SBorder)
         .Tag(TEXT("CpPauseCard"))
@@ -362,14 +361,13 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
             + SOverlay::Slot()
             [
                 SNew(SBox)
-                .Padding_Lambda([Self]() { return CpPauseCompact(Self) ? FMargin(24.0f, 18.0f) : FMargin(48.0f, 36.0f); })
+                .Padding_Lambda([Self]() { return CpPauseCompact(Self) ? FMargin(24.0f, 10.0f) : FMargin(48.0f, 36.0f); })
                 [
                     Column
                 ]
             ]
         ];
 
-    // If even the compact card is taller than the screen it scrolls rather than clips.
     return SNew(SScrollBox)
         .ScrollBarStyle(&Style.ScrollBar)
         .AllowOverscroll(EAllowOverscroll::No)
@@ -390,7 +388,6 @@ TSharedRef<SWidget> SPWPauseMenu::BuildExitConfirmation()
     const FText ConfirmLabel = PendingExit == EPendingExit::ReturnToTitle
         ? LOCTEXT("ConfirmReturnToTitle", "Return to Title")
         : LOCTEXT("ConfirmQuit", "Quit");
-    // Time is held while paused, so a save made in this pause is still the whole of the life.
     const bool bJustSaved = !Status.IsEmpty() && !bStatusIsError;
     const FText Warning = bJustSaved
         ? LOCTEXT("SavedJustNow", "You saved just now, so nothing will be lost.")
