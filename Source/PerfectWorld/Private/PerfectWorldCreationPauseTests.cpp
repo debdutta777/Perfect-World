@@ -30,6 +30,7 @@
 namespace PWCreationPause
 {
 int32 PauseDensity(float Width, float Height);
+bool PauseTwoColumn(float Width, float Height);
 float PauseControlWidth(float Width, float Height);
 float PauseMaxHeight(float Width, float Height);
 FText PauseSaveFeedbackText(bool bSucceeded, const FText& CoreMessage, int32 SuccessCount);
@@ -216,6 +217,7 @@ bool FCpPauseLayoutTest::RunTest(const FString& Parameters)
     {
         const FString Name = FString::Printf(TEXT("%.0fx%.0f"), Size.Width, Size.Height);
         TestEqual(*(Name + TEXT(": density")), PWCreationPause::PauseDensity(Size.Width, Size.Height), Size.bCompactPause ? 1 : 0);
+        TestTrue(*(Name + TEXT(": short windows put the context beside the buttons")), PWCreationPause::PauseTwoColumn(Size.Width, Size.Height) == Size.bCompactPause);
         PWCreationPause::SetPauseSpaceForTest(Size.Width, Size.Height);
         const TSharedRef<SPWPauseMenu> Menu = SNew(SPWPauseMenu).Hud(TWeakObjectPtr<APerfectWorldFrontEndHUD>(Scene.Hud));
         CpRefresh(Menu);
@@ -223,10 +225,10 @@ bool FCpPauseLayoutTest::RunTest(const FString& Parameters)
         const TSharedPtr<SWidget> Card = CpFindTag(Menu, TEXT("CpPauseCard"));
         if (!TestTrue(*(Name + TEXT(": the card exists")), Card.IsValid())) continue;
         const FVector2D Desired(Card->GetDesiredSize());
+        AddInfo(FString::Printf(TEXT("%s: pause card %.0f x %.0f of %.0f x %.0f available"), *Name, Desired.X, Desired.Y, Size.Width - 32.0f, PWCreationPause::PauseMaxHeight(Size.Width, Size.Height)));
         TestTrue(*(Name + TEXT(": the card fits the height without scrolling")), Desired.Y <= PWCreationPause::PauseMaxHeight(Size.Width, Size.Height));
         TestTrue(*(Name + TEXT(": and the width with a 16 unit margin each side")), Desired.X <= Size.Width - 32.0f);
-        const float Control = PWCreationPause::PauseControlWidth(Size.Width, Size.Height);
-        TestTrue(*(Name + TEXT(": the controls keep a usable width")), Control >= 200.0f && Control <= 360.0f);
+        TestTrue(*(Name + TEXT(": the controls keep a usable width")), PWCreationPause::PauseControlWidth(Size.Width, Size.Height) >= 200.0f && PWCreationPause::PauseControlWidth(Size.Width, Size.Height) <= 360.0f);
 
         const TArray<FString> Texts = CpShownTexts(Menu);
         for (const TCHAR* Label : {TEXT("Paused"), TEXT("Resume"), TEXT("Save"), TEXT("Return to Title"), TEXT("Quit")})
