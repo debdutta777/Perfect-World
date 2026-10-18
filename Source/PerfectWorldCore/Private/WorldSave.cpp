@@ -104,11 +104,13 @@ WorldSaveResult WorldSaveReadEnvelope(std::string_view text, const JsonValue& do
     result.SourceVersion = static_cast<std::int32_t>(version);
     if (version == WorldSaveSchemaVersion && hashVersion == static_cast<std::int64_t>(WorldHashVersion))
     {
-        // A door set written before a door was authored migrates on load (pw.doors), so the world no longer hashes as it
-        // was saved. Its checksum is still authenticated, over the door text as stored; the changed world loads unverified.
+        // A historical door roster (DoorRosterEditions: ten or eleven doors in v8) migrates on load, so the world no longer
+        // hashes as it was saved. Its checksum is authenticated over the door text exactly as stored, so the appended
+        // defaults never count towards it; a tampered roster fails here. The changed world loads unverified, and its
+        // first save is certified again. Any other roster was already refused by the world reader.
         const JsonValue* storedDoors = doc.Find("world")->Find("doors");
         const bool doorsMigrated = storedDoors != nullptr && storedDoors->IsString() &&
-                                   storedDoors->String != SerialiseDoorState(data.World.Doors);
+                                   DeserialiseDoorState(storedDoors->String).bMigrated;
         const std::uint64_t expected =
             doorsMigrated ? HashWorldStateWithDoorsText(data.World, storedDoors->String) : HashWorldState(data.World);
         if (expected != storedHash)

@@ -192,6 +192,12 @@ WorldState EdgeWorld()
 // Edge:      0x8046b352035ccc96 -> 0xe052cb39e28ac341.
 // Both change solely because the authored door set gains door.nabapara.stationery_front (closed), so the doors
 // section's default text has an eleventh entry. The encoding is unchanged; older ten-door saves migrate on load.
-constexpr std::uint64_t GoldenHandBuilt = 0xc297c3f404fb502dULL;
-constexpr std::uint64_t GoldenEdge = 0xe052cb39e28ac341ULL;
+// Re-pinned again 2026-10-18 (NL-01), with PW_PRINT_GOLDEN=1, WorldHashVersion still 5:
+// HandBuilt: 0xc297c3f404fb502d -> 0x5521896d0168b7a4.
+// Edge:      0xe052cb39e28ac341 -> 0x9352f41c5cee3cf8.
+// Both change solely because the authored door set gains five closed frontage doors (caretaker_flat_front,
+// tall_flats_front, tall_flats_unit_a, tall_flats_unit_b, tea_row_house_front), so the doors section's default text
+// holds sixteen entries. The encoding is unchanged; ten- and eleven-door v8 saves migrate on load.
+constexpr std::uint64_t GoldenHandBuilt = 0x5521896d0168b7a4ULL;
+constexpr std::uint64_t GoldenEdge = 0x9352f41c5cee3cf8ULL;
 } // namespace

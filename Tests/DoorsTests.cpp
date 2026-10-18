@@ -33,7 +33,7 @@ constexpr std::string_view CareFront = "door.nabapara.care_front";
 void TestTable()
 {
     Expect(ValidateDoorTable(), "the authored door table is well formed");
-    Expect(AuthoredDoors().size() == 11, "home, shutter, care and stationery doors are authored");
+    Expect(AuthoredDoors().size() == 16, "home, shutter, care, stationery and frontage doors are authored");
     for (const std::string_view id : {Front, Living, Bedroom, Kitchen, Washroom})
     {
         const DoorDef* door = FindDoor(id);
@@ -165,7 +165,8 @@ void TestOffersAndPassage()
     Expect(EvaluateDoorOffer(front, false, 600, invited).Action == DoorAction::Open, "invitation offers Open");
     Expect(EvaluateDoorOffer(front, true, 600, invited).Action == DoorAction::Close, "authorized open leaf offers Close");
     Expect(EvaluateDoorOffer(front, false, 600, exiting).Action == DoorAction::Open, "private egress requires no invitation");
-    Expect(EvaluateDoorKnock(front, 600, visitor) == DoorKnockResult{DoorResult::Knocked, DoorEvent::Knock}, "Knock has an explicit event/result");
+    Expect(EvaluateDoorKnock(front, 600, visitor) == DoorKnockResult{DoorResult::Knocked, DoorEvent::Knock, DoorKnockAnswer::NoAnswer},
+           "Knock has an explicit event/result");
     Expect(EvaluateDoorKnock(front, 600, invited).Event == DoorEvent::None, "invited visitor has no Knock offer");
     Expect(EvaluateDoorKnock(front, 600, exiting).Result == DoorResult::NotAvailable, "egress does not knock");
     DoorState state = MakeInitialDoorState();
@@ -333,7 +334,7 @@ void TestRoundTrip()
     DoorState state = MakeInitialDoorState();
     Play(state);
     const std::string text = SerialiseDoorState(state);
-    Expect(text.starts_with("pw.doors/2\ncount=11\n"), "the text opens with its version and count");
+    Expect(text.starts_with("pw.doors/2\ncount=16\n"), "the text opens with its version and count");
     const DoorStateParse parsed = DeserialiseDoorState(text);
     Expect(parsed.Ok() && !parsed.bMigrated && parsed.State == state, "the state and swing sides round trip without migration");
     Expect(SerialiseDoorState(parsed.State) == text, "and re-serialises identically");
@@ -361,8 +362,8 @@ void TestRefusedText()
     Expect(!DeserialiseDoorState(text + "x").Ok(), "trailing data is refused");
     Expect(!DeserialiseDoorState(text + "\n").Ok(), "a trailing blank line is refused");
     Expect(!DeserialiseDoorState(Replace(text, "pw.doors/2", "pw.doors/3")).Ok(), "a wrong header is refused");
-    Expect(!DeserialiseDoorState(Replace(text, "count=11", "count=9")).Ok(), "a wrong count is refused");
-    Expect(!DeserialiseDoorState(Replace(text, "count=11", "count=011")).Ok(), "a non-canonical count is refused");
+    Expect(!DeserialiseDoorState(Replace(text, "count=16", "count=9")).Ok(), "a wrong count is refused");
+    Expect(!DeserialiseDoorState(Replace(text, "count=16", "count=016")).Ok(), "a non-canonical count is refused");
     Expect(!DeserialiseDoorState(Replace(text, "home_front,0", "home_front,2")).Ok(), "a bad flag is refused");
     Expect(!DeserialiseDoorState(Replace(text, "home_front,0", "home_front")).Ok(), "a missing flag is refused");
     Expect(!DeserialiseDoorState(Replace(text, "home_front,0", "home_nowhere,0")).Ok(), "an unknown door is refused");
@@ -415,7 +416,8 @@ void TestCareAndMigration()
         Expect(door.LocationId == (door.Id == Shutter ? "location.nabapara.shanti_chai" : "location.nabapara.care_home"), "new locations are stable");
     }
     Expect(EvaluateDoorOffer(front, false, 600, {}).Action == DoorAction::Knock, "care visitor offered Knock");
-    Expect(EvaluateDoorKnock(front, 600, {}) == DoorKnockResult{DoorResult::Knocked, DoorEvent::Knock}, "care Knock emits its event");
+    Expect(EvaluateDoorKnock(front, 600, {}) == DoorKnockResult{DoorResult::Knocked, DoorEvent::Knock, DoorKnockAnswer::NoAnswer},
+           "care Knock emits its event");
     Expect(EvaluateDoorPassage(front, 0, {DoorDirection::Entry, true}) == DoorResult::Ok, "care residents and on-duty staff enter");
     Expect(FindDoor("door.nabapara.care_dormitory")->Access == DoorAccess::Private && FindDoor("door.nabapara.care_common")->Access == DoorAccess::Public && FindDoor("door.nabapara.care_washroom")->Access == DoorAccess::Public, "care room access is authored");
     DoorState source = MakeInitialDoorState();
@@ -443,6 +445,34 @@ void TestCareAndMigration()
     malformed.PreferredSwingSide = 0;
     Expect(!IsDoorDefinitionValid(malformed), "preferred side must be a unit sign");
 }
+// NL-01: a private dwelling admits a visitor whose knock is answered (resident home, visiting hours); exit stays free.
+void TestVisiting()
+{
+    const DoorDef& flat = *FindDoor("door.nabapara.caretaker_flat_front");
+    const DoorUseContext answered{DoorDirection::Entry, false, false, true, true};
+    for (const auto* id : {"door.nabapara.caretaker_flat_front", "door.nabapara.tall_flats_unit_a", "door.nabapara.tall_flats_unit_b", "door.nabapara.tea_row_house_front"})
+        for (int minute = 0; minute < DoorMinutesPerDay; ++minute)
+        {
+            const DoorDef& door = *FindDoor(id);
+            const bool visiting = DoorMinutesUntilVisiting(door, minute) == 0;
+            Expect(EvaluateDoorPassage(door, minute, answered) == (visiting ? DoorResult::Ok : DoorResult::Private), "answered knock admits only in visiting hours");
+            Expect(EvaluateDoorPassage(door, minute, {DoorDirection::Entry, false, false, true}) == DoorResult::Private, "a host at home alone admits nobody without a knock");
+            Expect(EvaluateDoorPassage(door, minute, {DoorDirection::Entry, false, false, false, true}) == DoorResult::Private, "a knock nobody answers admits nobody");
+            Expect(EvaluateDoorKnock(door, minute, {DoorDirection::Entry, false, false, true}).Answer == (visiting ? DoorKnockAnswer::Admitted : DoorKnockAnswer::NotReceiving), "knock answer follows hours");
+            Expect(EvaluateDoorPassage(door, minute, {DoorDirection::Exit}) == DoorResult::Ok && EvaluateDoorOpen(door, true, false, minute, DoorUseContext{}) == DoorResult::Ok, "exit and closing are unrestricted");
+        }
+    Expect(EvaluateDoorKnock(flat, 800, {DoorDirection::Entry, false, false, true}) == DoorKnockResult{DoorResult::Knocked, DoorEvent::Knock, DoorKnockAnswer::NotReceiving, 250}, "not receiving says when visiting resumes");
+    Expect(EvaluateDoorKnock(flat, 600, {}) == DoorKnockResult{DoorResult::Knocked, DoorEvent::Knock, DoorKnockAnswer::NoAnswer, -1}, "nobody home");
+    Expect(EvaluateDoorKnock(flat, 600, answered).Result == DoorResult::NotAvailable && EvaluateDoorOffer(flat, false, 600, answered).Action == DoorAction::Open, "admitted visitor is offered Open");
+    Expect(DoorMinutesUntilVisiting(flat, 1230) == 810 && DoorMinutesUntilVisiting(*FindDoor(Front), 600) == -1 && DoorMinutesUntilVisiting(flat, 1440) == -1, "visiting delay wraps; none without hours");
+    Expect(EvaluateDoorPassage(*FindDoor(Front), 600, answered) == DoorResult::Private, "a home without visiting hours is by invitation only");
+    DoorState state = MakeInitialDoorState();
+    Expect(TrySetDoorOpen(state, flat.Id, true, 600, answered) == DoorResult::Ok && state.Doors[11].SwingSide == 1, "admitted visitor opens the inward leaf");
+    Expect(TrySetDoorOpen(state, flat.Id, false, 610, DoorUseContext{}) == DoorResult::Ok && TrySetDoorOpen(state, flat.Id, true, 1300, {DoorDirection::Exit}) == DoorResult::Ok, "close behind, leave after hours");
+    const DoorOpeningWindow hours[]{{600, 700}}, overlap[]{{600, 700}, {650, 800}};
+    Expect(!IsDoorDefinitionValid(DoorDef{"door.test.v", "location.test", false, DoorAccess::Public, 0, 0, {}, true, 1, hours}) && !IsDoorDefinitionValid(DoorDef{"door.test.v", "location.test", false, DoorAccess::Private, 0, 0, {}, true, 1, overlap}), "visiting hours are private-only and well formed");
+    Expect(FindDoor("door.nabapara.tall_flats_front")->Access == DoorAccess::Public && EvaluateDoorPassage(*FindDoor("door.nabapara.tall_flats_front"), 0, {}) == DoorResult::Ok, "the shared stair passage is public");
+}
 } // namespace
 
 int main()
@@ -463,6 +493,7 @@ int main()
     TestRefusedText();
     TestSettlement();
     TestCareAndMigration();
+    TestVisiting();
     std::cout << "PerfectWorld doors: " << Assertions << " assertions passed\n";
     return 0;
 }

@@ -611,3 +611,6 @@ add_test(NAME PerfectWorldConversationMiraTests COMMAND PerfectWorldConversation
 add_executable(PerfectWorldWorldSaveMiraTests Tests/WorldSaveMiraTests.cpp)
 target_link_libraries(PerfectWorldWorldSaveMiraTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldWorldSaveMiraTests COMMAND PerfectWorldWorldSaveMiraTests)
+
+# NL-01: sixteen-door roster, visiting access and the frozen historical v8 door fixtures (10 and 11 doors).
+target_compile_definitions(PerfectWorldWorldSaveTests PRIVATE PW_DOORS_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")

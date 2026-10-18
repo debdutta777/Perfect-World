@@ -21,7 +21,17 @@ constexpr std::string_view OpeningHome = "location.nabapara.opening_home";
 constexpr DoorOpeningWindow ChaiHours[]{{360, 690}, {930, 1140}};
 constexpr DoorOpeningWindow DoorsStationeryHours[]{{480, 780}, {900, 1170}};
 constexpr std::string_view CareHome = "location.nabapara.care_home";
-constexpr std::array<DoorDef, 11> DoorTable{{
+/**
+ * NL-01: the kit frontages (LANE_BUILDING_INVENTORY section 4) and the two dwellings inside tall_flats, whose ids follow
+ * the kit's rooms unit_a and unit_b. Each dwelling is its own household (its own location id, so residency is per flat);
+ * the stair passage behind tall_flats_front is common to both and public. Dwelling leaves are one-way and open inward.
+ * Visiting hours: the caretaker (Subrata Dey, LANE_LIFE_PLAN) receives late morning and evening, around his midday
+ * rest; the flats and the row house receive in the evening.
+ */
+constexpr DoorOpeningWindow CaretakerVisiting[]{{600, 750}, {1050, 1230}};
+constexpr DoorOpeningWindow FlatsVisiting[]{{1020, 1230}};
+constexpr DoorOpeningWindow RowHouseVisiting[]{{960, 1170}};
+constexpr std::array<DoorDef, 16> DoorTable{{
     {"door.nabapara.home_front", OpeningHome, false, DoorAccess::Private, 0, 0},
     {"door.nabapara.home_living", OpeningHome, true, DoorAccess::Public, 0, 0},
     {"door.nabapara.home_bedroom", OpeningHome, false, DoorAccess::Private, 0, 0},
@@ -33,9 +43,48 @@ constexpr std::array<DoorDef, 11> DoorTable{{
     {"door.nabapara.care_common", CareHome, true, DoorAccess::Public},
     {"door.nabapara.care_washroom", CareHome, false, DoorAccess::Public},
     {"door.nabapara.stationery_front", "location.nabapara.stationery", false, DoorAccess::BusinessHours, 0, 0, DoorsStationeryHours},
+    {"door.nabapara.caretaker_flat_front", "location.nabapara.caretaker_flat", false, DoorAccess::Private, 0, 0, {}, false, 1, CaretakerVisiting},
+    {"door.nabapara.tall_flats_front", "location.nabapara.tall_flats", false, DoorAccess::Public},
+    {"door.nabapara.tall_flats_unit_a", "location.nabapara.tall_flats_unit_a", false, DoorAccess::Private, 0, 0, {}, false, 1, FlatsVisiting},
+    {"door.nabapara.tall_flats_unit_b", "location.nabapara.tall_flats_unit_b", false, DoorAccess::Private, 0, 0, {}, false, 1, FlatsVisiting},
+    {"door.nabapara.tea_row_house_front", "location.nabapara.tea_row_house", false, DoorAccess::Private, 0, 0, {}, false, 1, RowHouseVisiting},
 }};
 
+// Every roster a save may hold, as a prefix length of DoorTable. /1 wrote five (2026-10-13); its reader also took the
+// full ten- and eleven-door tables of their day. /2 wrote ten (D2), eleven (stationery, LL-02 2a) and sixteen (NL-01).
+// Never add an arbitrary prefix: only a count some writer or reader really used.
+constexpr std::array<DoorRosterEdition, 6> RosterEditions{
+    {{"pw.doors/1", 5}, {"pw.doors/1", 10}, {"pw.doors/1", 11}, {DoorsHeader, 10}, {DoorsHeader, 11}, {DoorsHeader, DoorTable.size()}}};
+static_assert(RosterEditions.back().Count == DoorTable.size(), "today's roster is the last edition");
+
 constexpr std::array<std::string_view, DoorAccessCount> AccessIds{"public", "private", "locked", "business_hours"};
+
+/** Half-open windows: sorted, disjoint, non-empty, within one day. */
+bool AreWindowsValid(std::span<const DoorOpeningWindow> windows) noexcept
+{
+    std::int32_t previousClose = 0;
+    for (const auto& window : windows)
+    {
+        if (window.OpenMinute < previousClose || window.OpenMinute >= window.CloseMinute ||
+            window.CloseMinute > DoorMinutesPerDay)
+            return false;
+        previousClose = window.CloseMinute;
+    }
+    return true;
+}
+
+/** 0 inside a window, else the distance to the next opening (wrapping to tomorrow). Windows are valid and nonempty. */
+std::int32_t MinutesUntilWindow(std::span<const DoorOpeningWindow> windows, std::int32_t minuteOfDay) noexcept
+{
+    for (const auto& window : windows)
+    {
+        if (minuteOfDay < window.OpenMinute)
+            return window.OpenMinute - minuteOfDay;
+        if (minuteOfDay < window.CloseMinute)
+            return 0;
+    }
+    return DoorMinutesPerDay - minuteOfDay + windows.front().OpenMinute;
+}
 
 bool IsPhysicalPairValid(const DoorDef& door, bool open, std::int8_t side) noexcept
 {
@@ -118,21 +167,16 @@ bool IsDoorDefinitionValid(const DoorDef& door) noexcept
         (door.Access == DoorAccess::Locked && door.bInitiallyOpen) ||
         (door.PreferredSwingSide != -1 && door.PreferredSwingSide != 1))
         return false;
+    // Visiting hours belong to private dwellings only.
+    if (!door.VisitingWindows.empty() && (door.Access != DoorAccess::Private || !AreWindowsValid(door.VisitingWindows)))
+        return false;
     if (door.Access != DoorAccess::BusinessHours)
         return door.OpenMinute == 0 && door.CloseMinute == 0 && door.OpeningWindows.empty();
     if (door.OpeningWindows.empty())
         return door.OpenMinute >= 0 && door.OpenMinute < door.CloseMinute && door.CloseMinute <= DoorMinutesPerDay;
     if (door.OpenMinute != 0 || door.CloseMinute != 0)
         return false;
-    std::int32_t previousClose = 0;
-    for (const auto& window : door.OpeningWindows)
-    {
-        if (window.OpenMinute < previousClose || window.OpenMinute >= window.CloseMinute ||
-            window.CloseMinute > DoorMinutesPerDay)
-            return false;
-        previousClose = window.CloseMinute;
-    }
-    return true;
+    return AreWindowsValid(door.OpeningWindows);
 }
 
 std::string_view DoorAccessId(DoorAccess access) noexcept
@@ -201,14 +245,14 @@ std::int32_t DoorMinutesUntilOpening(const DoorDef& door, std::int32_t minuteOfD
         return -1;
     const DoorOpeningWindow legacy{door.OpenMinute, door.CloseMinute};
     const auto windows = door.OpeningWindows.empty() ? std::span<const DoorOpeningWindow>(&legacy, 1) : door.OpeningWindows;
-    for (const auto& window : windows)
-    {
-        if (minuteOfDay < window.OpenMinute)
-            return window.OpenMinute - minuteOfDay;
-        if (minuteOfDay < window.CloseMinute)
-            return 0;
-    }
-    return DoorMinutesPerDay - minuteOfDay + windows.front().OpenMinute;
+    return MinutesUntilWindow(windows, minuteOfDay);
+}
+
+std::int32_t DoorMinutesUntilVisiting(const DoorDef& door, std::int32_t minuteOfDay) noexcept
+{
+    if (minuteOfDay < 0 || minuteOfDay >= DoorMinutesPerDay || !IsDoorDefinitionValid(door) || door.VisitingWindows.empty())
+        return -1;
+    return MinutesUntilWindow(door.VisitingWindows, minuteOfDay);
 }
 
 DoorResult EvaluateDoorPassage(const DoorDef& door, std::int32_t minuteOfDay, const DoorUseContext& context) noexcept
@@ -224,7 +268,12 @@ DoorResult EvaluateDoorPassage(const DoorDef& door, std::int32_t minuteOfDay, co
     switch (door.Access)
     {
     case DoorAccess::Public: return DoorResult::Ok;
-    case DoorAccess::Private: return context.IsResident || context.IsInvited ? DoorResult::Ok : DoorResult::Private;
+    case DoorAccess::Private:
+        // A knock admits only when it would be answered now: someone home, inside visiting hours.
+        return context.IsResident || context.IsInvited ||
+                       (context.HasKnocked && context.IsHostHome && DoorMinutesUntilVisiting(door, minuteOfDay) == 0)
+                   ? DoorResult::Ok
+                   : DoorResult::Private;
     case DoorAccess::Locked: return DoorResult::Locked;
     case DoorAccess::BusinessHours:
         return context.IsResident || DoorMinutesUntilOpening(door, minuteOfDay) == 0 ? DoorResult::Ok : DoorResult::Closed;
@@ -246,9 +295,14 @@ DoorOffer EvaluateDoorOffer(const DoorDef& door, bool currentlyOpen, std::int32_
 DoorKnockResult EvaluateDoorKnock(const DoorDef& door, std::int32_t minuteOfDay, const DoorUseContext& context) noexcept
 {
     const DoorResult permission = EvaluateDoorPassage(door, minuteOfDay, context);
-    if (permission == DoorResult::Private)
-        return {DoorResult::Knocked, DoorEvent::Knock};
-    return {permission == DoorResult::Ok ? DoorResult::NotAvailable : permission, DoorEvent::None};
+    if (permission != DoorResult::Private)
+        return {permission == DoorResult::Ok ? DoorResult::NotAvailable : permission, DoorEvent::None};
+    if (!context.IsHostHome)
+        return {DoorResult::Knocked, DoorEvent::Knock, DoorKnockAnswer::NoAnswer, -1};
+    const std::int32_t untilVisiting = DoorMinutesUntilVisiting(door, minuteOfDay);
+    if (untilVisiting == 0)
+        return {DoorResult::Knocked, DoorEvent::Knock, DoorKnockAnswer::Admitted, -1};
+    return {DoorResult::Knocked, DoorEvent::Knock, DoorKnockAnswer::NotReceiving, untilVisiting};
 }
 
 DoorResult EvaluateDoorOpen(const DoorDef& door, bool currentlyOpen, bool open, std::int32_t minuteOfDay,
@@ -382,10 +436,14 @@ DoorStateParse DeserialiseDoorState(std::string_view text)
     std::size_t count = 0;
     if (!NextLine(text, position, line) || !KeyValue(line, "count", value) || !ParseCount(value, count))
         return refuse("The door text has no valid count line.");
-    // Explicit table migration: the ten-door edition predates stationery. Never accept an arbitrary prefix.
-    const bool stationeryMigration = count == 10;
-    if (count != DoorTable.size() && !stationeryMigration && !(legacy && count == 5))
+    // Explicit roster editions only (RosterEditions); never an arbitrary prefix.
+    const std::string_view header = legacy ? std::string_view("pw.doors/1") : DoorsHeader;
+    bool knownRoster = false;
+    for (const DoorRosterEdition& edition : RosterEditions)
+        knownRoster = knownRoster || (edition.Header == header && edition.Count == count);
+    if (!knownRoster)
         return refuse("The door text does not hold exactly the authored doors.");
+    const bool rosterMigration = count != DoorTable.size();
     DoorState state = MakeInitialDoorState();
     for (std::size_t i = 0; i < count; ++i)
     {
@@ -428,7 +486,12 @@ DoorStateParse DeserialiseDoorState(std::string_view text)
     if (position != text.size())
         return refuse("The door text has data after the end line.");
     result.State = std::move(state);
-    result.bMigrated = legacy || stationeryMigration;
+    result.bMigrated = legacy || rosterMigration;
     return result;
+}
+
+std::span<const DoorRosterEdition> DoorRosterEditions() noexcept
+{
+    return RosterEditions;
 }
 } // namespace PerfectWorld
