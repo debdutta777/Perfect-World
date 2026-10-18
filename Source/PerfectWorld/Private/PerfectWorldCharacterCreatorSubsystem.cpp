@@ -2,6 +2,7 @@
 
 #include "CreationSaveSerialization.h"
 #include "PerfectWorldCreationAdapter.h"
+#include "PerfectWorldLaneLifePersistence.h"
 #include "HAL/FileManager.h"
 #include "Misc/Paths.h"
 #include "SaveStore.h"
@@ -55,19 +56,6 @@ FPWAppearanceRecord ToUnrealAppearance(const PerfectWorld::AppearanceRecord& Rec
 std::string ToSlotPathUtf8(const FString& Path)
 {
     return ToUtf8(FPaths::ConvertRelativePathToFull(Path));
-}
-
-/** The store's validator: only text that parses as a creation record is a usable slot. */
-bool AcceptCreationSaveText(std::string_view Text, std::string& Error)
-{
-    PerfectWorld::CharacterCreationSave Scratch;
-    const PerfectWorld::OperationResult Result = PerfectWorld::DeserializeCreationSave(Text, Scratch);
-    if (!Result.Succeeded())
-    {
-        Error = Result.Message;
-        return false;
-    }
-    return true;
 }
 
 PerfectWorld::AppearanceRecord ToCoreAppearance(const FPWAppearanceRecord& View)
@@ -307,6 +295,7 @@ bool UPerfectWorldCharacterCreatorSubsystem::StartLife()
 
 void UPerfectWorldCharacterCreatorSubsystem::ResetCreation()
 {
+    ClearLoadedPlacement();
     Creator.Reset();
     LastError = EPWCreationError::None;
     LastErrorMessage = FText::GetEmpty();
@@ -349,18 +338,18 @@ FText UPerfectWorldCharacterCreatorSubsystem::DescribeSaveSlot(int32 SlotIndex) 
     {
         return FText::FromString(TEXT("No such slot"));
     }
-    const PerfectWorld::SaveReadResult Read = PerfectWorld::ReadSaveFile(ToSlotPathUtf8(Path), AcceptCreationSaveText);
+    const auto Read = PWLaneLifePersistence::ReadWorldSlot(ToSlotPathUtf8(Path));
     if (Read.Status == PerfectWorld::SaveReadStatus::Missing)
     {
         return FText::FromString(TEXT("Empty"));
     }
 
     // Describe without disturbing the draft: parse into a scratch record only.
-    PerfectWorld::CharacterCreationSave Parsed;
-    if (!Read.Succeeded() || !PerfectWorld::DeserializeCreationSave(Read.Text, Parsed).Succeeded())
+    if (!Read.Succeeded())
     {
         return FText::FromString(TEXT("Unreadable file"));
     }
+    const auto& Parsed = Read.Data->Creation;
     const PerfectWorld::HouseholdDefinition* Household =
         PerfectWorld::CharacterCreator::FindHousehold(Parsed.HouseholdTemplateId);
     const FString HouseholdName =
@@ -369,62 +358,6 @@ FText UPerfectWorldCharacterCreatorSubsystem::DescribeSaveSlot(int32 SlotIndex) 
                                                            : ToFString(Parsed.Identity.GivenName);
     return FText::FromString(FString::Printf(TEXT("%s | %s | %s"), *Name, *HouseholdName,
                                              Parsed.HasStarted ? TEXT("Origin confirmed") : TEXT("Draft")));
-}
-
-bool UPerfectWorldCharacterCreatorSubsystem::SaveToSlot(int32 SlotIndex)
-{
-    const FString Path = GetSaveSlotPath(SlotIndex);
-    if (Path.IsEmpty())
-    {
-        return RecordFileError(FText::FromString(TEXT("That save slot does not exist.")));
-    }
-
-    // The portable store writes a temp file, reads it back, validates it, keeps
-    // the previous version as .bak and only then replaces the slot (M1-04).
-    const std::string Text = PerfectWorld::SerializeCreationSave(Creator.CaptureSave());
-    const PerfectWorld::SaveOperationResult Written =
-        PerfectWorld::WriteSaveFile(ToSlotPathUtf8(Path), Text, AcceptCreationSaveText);
-    if (!Written)
-    {
-        return RecordFileError(FText::FromString(ToFString(Written.Message)));
-    }
-
-    LastError = EPWCreationError::None;
-    LastErrorMessage = FText::FromString(FString::Printf(TEXT("Saved to slot %d."), SlotIndex + 1));
-    return true;
-}
-
-bool UPerfectWorldCharacterCreatorSubsystem::LoadFromSlot(int32 SlotIndex)
-{
-    const FString Path = GetSaveSlotPath(SlotIndex);
-    if (Path.IsEmpty())
-    {
-        return RecordFileError(FText::FromString(TEXT("That save slot does not exist.")));
-    }
-    const PerfectWorld::SaveReadResult Read = PerfectWorld::ReadSaveFile(ToSlotPathUtf8(Path), AcceptCreationSaveText);
-    if (Read.Status == PerfectWorld::SaveReadStatus::Missing)
-    {
-        return RecordFileError(FText::FromString(FString::Printf(
-            TEXT("Slot %d is empty. The creation in progress is unchanged."), SlotIndex + 1)));
-    }
-    if (!Read.Succeeded())
-    {
-        return RecordFileError(FText::FromString(
-            ToFString(Read.Message) + TEXT(" The creation in progress is unchanged.")));
-    }
-
-    // Parse and validate before touching the live creator, so a corrupt file
-    // costs the player nothing.
-    PerfectWorld::CharacterCreationSave Parsed;
-    if (!RecordResult(PerfectWorld::DeserializeCreationSave(Read.Text, Parsed)) || !RecordResult(Creator.RestoreSave(Parsed)))
-    {
-        return false;
-    }
-    if (Read.Status == PerfectWorld::SaveReadStatus::RecoveredFromBackup)
-    {
-        LastErrorMessage = FText::FromString(ToFString(Read.Message));
-    }
-    return true;
 }
 
 bool UPerfectWorldCharacterCreatorSubsystem::DeleteSaveSlot(int32 SlotIndex)

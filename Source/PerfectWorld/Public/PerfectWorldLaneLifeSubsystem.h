@@ -7,6 +7,7 @@
 #include "Doors.h"
 #include "TimeContract.h"
 #include "WorldReducer.h"
+#include "WorldSave.h"
 
 #include <string>
 #include <string_view>
@@ -114,9 +115,19 @@ public:
 
     /**
      * Starts a fresh world: a new clock at 07:30 on 2 June 2042, every door at its authored state, no conversation memory.
-     * Registered doors and scheduled people are brought into step. TODO(world-save-v8): a loaded life restores a saved WorldState instead.
+     * Registered doors and scheduled people are brought into step. Loads use AdoptSavedWorld instead.
      */
     void ResetWorld();
+
+    /** Commits a fully validated, detached world; its saved conversation must already be closed. */
+    void AdoptSavedWorld(TUniquePtr<PerfectWorld::WorldSim> Prepared);
+    /** Validates and closes the saved session before committing any live state. */
+    bool LoadWorldSlot(const std::string& Path, PerfectWorld::CharacterCreator& Creation,
+        std::optional<PerfectWorld::PlayerPlacement>& Placement, std::string& Message);
+    bool HasMovingDoors() const;
+    void SettleForSave() { SettleUntilQuiescent(); }
+    /** Counts completed presentation resets for restore diagnostics and flow automation. */
+    uint64 GetRestorePresentationCount() const { return RestorePresentationCount; }
 
     // ---- People ----
 
@@ -182,6 +193,7 @@ private:
     void HandleReadRequested(FName ReadableId, FName ContentId, FText Title);
 
     TUniquePtr<PerfectWorld::WorldSim> Sim;
+    uint64 RestorePresentationCount = 0;
     PerfectWorld::TimeModeState ClockMode;
     EPWClockHold ClockHold = EPWClockHold::Menu;
     /** Real milliseconds below one whole millisecond, carried between ticks. */

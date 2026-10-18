@@ -1,5 +1,53 @@
 # World persistence submission A
 
+## Submission B
+
+Implemented, pending integrator compilation and execution (2026-10-17). Completion criterion: wire Start/Save/Load/Continue to v8 storage and detached restore, install saved doors and NPC presentation once, safely restore placement or use the origin, and author `PerfectWorld.PersistenceFlow` automation. No commits, Config edits, portable-core edits or Unreal builds. Integrator owns engine compilation, automation execution and packaged restart acceptance. Submission A's older proposals below are historical; this section describes the actual B code.
+
+Implementation: moved slot mutations into the allowed creator Entry translation unit to keep files below 500 lines; added LaneLife adoption; shared entry collision/floor logic in GameMode.cpp through a private persistence declaration (the public GameMode header is outside this submission's ownership). Reads and conversation closure finish before the live commit. Open panels and seated/transitional pawns refuse replacement before mutation. New Creation also refuses those states before discarding the draft.
+
+Files changed (relative to the worktree):
+
+- `Source/PerfectWorld/Public/PerfectWorldCharacterCreatorSubsystem.h`: pending placement and replacement guard API.
+- `Source/PerfectWorld/Private/PerfectWorldCharacterCreatorSubsystem.cpp`: world-aware slot descriptions, reset clears pending placement; slot mutations moved out.
+- `Source/PerfectWorld/Private/PerfectWorldCharacterCreatorSubsystemEntry.cpp`: Start, Save and Load integration and transient-state guard.
+- `Source/PerfectWorld/Public/PerfectWorldLaneLifeSubsystem.h`: validated load/adoption, settlement and reset-count diagnostic APIs.
+- `Source/PerfectWorld/Private/PerfectWorldLaneLifeClock.cpp`: detached load transaction, adoption, door restoration and NPC reset.
+- `Source/PerfectWorld/Private/PerfectWorldLaneLifeSubsystem.cpp`: corrected the late-door-registration comment; behavior already read saved swings.
+- `Source/PerfectWorld/Private/PerfectWorldFrontEndHUD.cpp`: removes Start's ResetWorld, guards New Creation, consumes pending placement, reports fallback.
+- `Source/PerfectWorld/Private/PerfectWorldBlockTestGameMode.cpp`: shared floor/capsule/occupancy tests, bounded origin alternatives and saved-entry seam.
+- `Source/PerfectWorld/Private/PerfectWorldLaneLifePersistence.h`: declares the engine placement seam; storage implementation and A's tests remain unchanged.
+- `Source/PerfectWorld/Private/PerfectWorldLaneLifePersistenceFlowTests.cpp`: four new engine automation cases.
+- `Docs/PERSISTENCE_HANDOFF.md`: this record. `Docs/STATUS.md` is outside the allowed edit list; integrator should copy this validation record there.
+
+Exact paths:
+
+| Player path | Behavior |
+|---|---|
+| Start (`StartNewLife` / `StartLifeAndSaveToSlot`) | Starts a copy of the full draft, builds a new core world (never captures the old lane), advances it from 06:00 to 07:30, captures and transactionally writes v8, then commits the creator and prepared sim. Write failure retains the entire draft, old live world and usable slot. Fresh placement is the core's home-zone zero marker; safe entry resolves it and explicitly sets first person. |
+| Pause Save (`SaveActiveGame` / `SaveGameToSlot` / `SaveToSlot`) | Captures the actual lane clock, doors with settled swings, conversation state/receipts, integer capsule-centre position, control yaw/pitch and explicit camera mode. Settles due events through the existing bounded loop before capture. Refuses seated/transitional pawns, moving doors or invalid capture. Failed writes return the storage reason through the existing Save UI; the prior usable slot remains available. Draft saves retain the creator-only format. |
+| Load (`LoadSlot` / `LoadFromSlot` / `LoadWorldSlot`) | Guards panels/seating; validates the full primary or recovered backup through A/core migrations and validates a scratch creator. A saved open talk receives only free ConversationLeave on the detached sim, retaining facts, choices, session count and receipts. Only then replaces creator/world and pending placement. No ResetWorld. Applies actor door states/swings without callbacks, resets clock fractions/mode/hold, calls NPC ResetPresentation once at restored time, and broadcasts the clock once. A refused read/validation changes no live world, creator, actors or pending placement. |
+| Continue | Selects the most recently written occupied slot using the existing timestamp policy, then calls exactly LoadSlot. No separate reset or save. |
+
+Placement runs AFTER restored doors and NPC presentation. Coordinates resume only in `zone.street.nabapara_lane`, the one currently built zone including interiors. A short floor probe (20 cm above / 30 cm below saved feet), walkable normal, full standing capsule clearance and separate pawn-occupancy query must pass. The centre is grounded 2 cm above the floor; yaw/pitch/camera are applied explicitly and velocity is stopped. Otherwise it calls PlacePlayerAtOpeningHome, trying its canonical point and six bounded 80 cm offsets. Fallback preserves the saved camera, uses safe home facing and logs `Persistence: saved placement ...; used safe origin placement.` Load/Continue also toast that home was used. A supported matching home-zone zero marker uses this same origin path; other home coordinates/unknown zones fall back. No fallback rewrites the file. No safe origin: leave pawn unmoved, menus/input held, report entry failure and retain pending placement for another attempt. At that stage the validated world has already been adopted; this is an entry failure, not a rejected slot read.
+
+Pending placement clears on successful entry, ResetCreation, UI BeginNewCreation and successful draft load. New Start replaces it with the fresh marker, so neither an old camera nor an old placement leaks into a new life. Conversation and reading panels must be closed before Load/Continue/New Creation/Start; no callback-free panel or seat reset was added. Loading a mid-conversation FILE is supported, while replacing a currently open live panel is refused. Old saved-session choice callbacks are rejected by the closed core session without another charge.
+
+Automation authored (not executed): `PerfectWorld.PersistenceFlow.RestoresWorldOnce`, `.RefusalLeavesWorldUntouched`, `.ClosesSavedTalkWithoutCharge`, `.PlacementRestoreAndFallback`. The first uses the production load transaction, a registered door actor and actual care-worker presenter; saves memory/receipts and a negative swing, advances time, flips the door and takes another paid choice, then compares the restored whole-world hash and reset count (+1), actor replacement and clock publication. Refusal damages an isolated slot with no backup. Placement exercises actual collision with flat floors/blockers, both origins/cameras, wrong zone, missing support and no safe origin. Tests use isolated world/slot fixtures; they do not click Slate or overwrite player slots. A's existing tests cover storage interruption, backup recovery and v1-v7 migration.
+
+Validation performed: source review and deterministic first-header / under-500-line audit of all ten touched source files; confirmed four automation registrations and no ResetWorld call in HUD. Inspected the readout binding: it reads GetClockText directly through a weak subsystem pointer, so it observes the adopted sim. Read project instructions, workflow section 4, master/system/roadmap/build/lane documents and A's restore policy. No Ruflo tool is exposed. Git and rg are unavailable on PATH; PowerShell was used for inspection. No CMake/CTest rerun (portable core unchanged), engine compilation, automation, PIE or packaged run. The owner's stated A baseline (60/60, Persistence 5/5) was not rerun or independently claimed here. No verification rung is claimed for B.
+
+Assumptions: synchronous game-thread slot operations; one built lane zone; the existing two family/care interior frames remain authoritative; no persistent seated or partially moving-door pose. New worlds start 07:30; creator-only migrated worlds keep the core's 06:00. Migration flags are preserved through the scratch creator, not inferred from HashVerified. A's physical-power-loss and non-authenticated placement-field limitations still apply.
+
+Integrator acceptance:
+
+1. Compile and run `Automation RunTests PerfectWorld.PersistenceFlow` (four new cases), then `PerfectWorld.Persistence` and the full regression set. Confirm actual discovery/results; these bodies have not compiled here.
+2. In a packaged build, Start a life and confirm initial v8 slot/07:30/home/first person. Open one two-way door on each swing side, leaving a recognizable open/closed arrangement. At a suitable time, take the paid evening-jobs topic and agree to dishes on weekdays. Close the talk, stand in a clear supported spot, choose a camera and facing, then pause Save. Record the displayed time and door states/sides.
+3. Quit completely, relaunch, Continue. Confirm the recorded time (allow normal free-roam advancement after release), the same door arrangement and swing sides, the recorded supported position/view/camera, and no second paid-time charge. Reopen the household talk: the settled line must remember dishes on weekdays (or next morning, “Good morning. You suggested taking the dishes on weekdays. Shall we keep it that way?”). No start acknowledgement on Continue.
+4. Repeat with care origin and the other camera. Exercise unsafe/unsupported placement fallback: origin entry, explicit fallback log/toast and unchanged file. Also exercise corrupt primary with no usable backup while a world is live: player-facing refusal, unchanged time/doors/memory/placement and no NPC reset. With a valid backup, expect recovery instead of refusal. Simulate an unwritable slot and confirm clear Save failure plus prior-slot recovery after restart.
+
+## Submission A historical record
+
 Storage and validation only; integration remains with the integrator. No commits or Unreal builds authorised.
 
 Completion criterion: the three new private files provide capture, atomic slot storage and validated reads, with focused `PerfectWorld.Persistence` automation. Restore and placement seams are supplied here as proposed code, not applied to shared files.

@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "CharacterCreation.h"
+#include "WorldSave.h"
 #include "PerfectWorldCreationViews.h"
 #include "PerfectWorldCharacterCreatorSubsystem.generated.h"
 
@@ -240,6 +241,10 @@ class PERFECTWORLD_API UPerfectWorldCharacterCreatorSubsystem : public UGameInst
     GENERATED_BODY()
 
 public:
+    const std::optional<PerfectWorld::PlayerPlacement>& GetLoadedPlacement() const { return LoadedPlacement; }
+    void ClearLoadedPlacement() { LoadedPlacement.reset(); }
+    /** Refuses replacement while panels or a seated transition still own live callbacks/state. */
+    bool CanReplaceWorld();
     UFUNCTION(BlueprintPure, Category = "Perfect World|Creation|Traits") TArray<FPWTraitGroupView> GetTraitGroups() const;
     UFUNCTION(BlueprintPure, Category = "Perfect World|Creation|Traits") FPWTraitDefinitionView GetTraitDefinition(FName TraitId) const;
     UFUNCTION(BlueprintPure, Category = "Perfect World|Creation|Traits") FPWTraitChangePreview PreviewTraitRank(FName TraitId, int32 ProposedRank) const;
@@ -459,6 +464,7 @@ private:
     static FString ToFString(std::string_view Value);
 
     PerfectWorld::CharacterCreator Creator;
+    std::optional<PerfectWorld::PlayerPlacement> LoadedPlacement;
 
     UPROPERTY(Transient)
     EPWCreationError LastError = EPWCreationError::None;

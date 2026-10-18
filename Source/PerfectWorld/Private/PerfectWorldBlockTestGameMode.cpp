@@ -1,6 +1,9 @@
 #include "PerfectWorldBlockTestGameMode.h"
 
 #include "Components/DirectionalLightComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "CollisionQueryParams.h"
+#include "CollisionShape.h"
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/SkyAtmosphereComponent.h"
 #include "Components/SkyLightComponent.h"
@@ -12,6 +15,7 @@
 #include "Engine/GameInstance.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "Materials/MaterialInterface.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
@@ -22,6 +26,7 @@
 #include "PerfectWorldLaneInteriors.h"
 #include "PerfectWorldPlayerCharacter.h"
 #include "PerfectWorldPlayerController.h"
+#include "PerfectWorldLaneLifePersistence.h"
 #include "UObject/ConstructorHelpers.h"
 
 namespace
@@ -34,6 +39,38 @@ constexpr float EnMorningSunYaw = 30.0f;
 // Light haze for depth, not murk. Tune these two first if the distance looks too clear or too milky.
 constexpr float EnMorningFogDensity = 0.012f;
 constexpr float EnMorningFogHeightFalloff = 0.25f;
+
+// A short floor probe keeps an airborne save from being teleported to a different storey.
+bool Pb2StandingCentre(APerfectWorldPlayerCharacter& Pawn, const FVector& Desired, FVector& Centre)
+{
+    UWorld* World = Pawn.GetWorld();
+    const auto* Capsule = Pawn.GetCapsuleComponent();
+    const auto* Movement = Pawn.GetCharacterMovement();
+    if (World == nullptr || Capsule == nullptr || Movement == nullptr || Pawn.IsSeated() || Desired.ContainsNaN()) return false;
+    const float HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
+    const float Radius = Capsule->GetScaledCapsuleRadius();
+    FCollisionQueryParams Params(SCENE_QUERY_STAT(Pb2ResumeFloor), false, &Pawn);
+    FHitResult Floor;
+    const FVector Feet = Desired - FVector(0, 0, HalfHeight);
+    if (!World->LineTraceSingleByChannel(Floor, Feet + FVector(0, 0, 20), Feet - FVector(0, 0, 30), ECC_Pawn, Params) ||
+        !Floor.bBlockingHit || !Movement->IsWalkable(Floor)) return false;
+    Centre = FVector(Desired.X, Desired.Y, Floor.ImpactPoint.Z + HalfHeight + 2.0);
+    const auto Shape = FCollisionShape::MakeCapsule(Radius, HalfHeight);
+    if (World->OverlapBlockingTestByChannel(Centre, FQuat::Identity, ECC_Pawn, Shape, Params)) return false;
+    // Pawn occupancy also matters when a person's collision profile overlaps the player channel.
+    return !World->OverlapAnyTestByObjectType(Centre, FQuat::Identity,
+        FCollisionObjectQueryParams(ECC_Pawn), Shape, Params);
+}
+
+bool Pb2PlaceStanding(APlayerController& Player, APerfectWorldPlayerCharacter& Pawn,
+    const FVector& Centre, const FRotator& Look)
+{
+    if (!Pawn.SetActorLocationAndRotation(Centre, FRotator(0, Look.Yaw, 0), false, nullptr, ETeleportType::TeleportPhysics)) return false;
+    Pawn.GetCharacterMovement()->StopMovementImmediately();
+    Pawn.GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+    Player.SetControlRotation(Look);
+    return true;
+}
 } // namespace
 
 APerfectWorldBlockTestGameMode::APerfectWorldBlockTestGameMode()
@@ -77,8 +114,8 @@ bool APerfectWorldBlockTestGameMode::PlacePlayerAtOpeningHome(APlayerController&
     UGameInstance* EnInstance = GetGameInstance();
     const UPerfectWorldCharacterCreatorSubsystem* EnCreator = EnInstance != nullptr
         ? EnInstance->GetSubsystem<UPerfectWorldCharacterCreatorSubsystem>() : nullptr;
-    APawn* EnPawn = Player.GetPawn();
-    if (EnCreator == nullptr || !EnCreator->HasLifeStarted() || EnPawn == nullptr)
+    auto* EnPawn = Cast<APerfectWorldPlayerCharacter>(Player.GetPawn());
+    if (EnCreator == nullptr || !EnCreator->HasLifeStarted() || EnPawn == nullptr || EnPawn->IsSeated())
     {
         return false;
     }
@@ -119,15 +156,46 @@ bool APerfectWorldBlockTestGameMode::PlacePlayerAtOpeningHome(APlayerController&
                                         PWPlayer::CapsuleHalfHeight);
     }
     const FRotator EnFacing(0.0, (EnLookAt - EnLocation).Rotation().Yaw, 0.0);
-    if (!EnPawn->SetActorLocationAndRotation(EnLocation, EnFacing, false, nullptr, ETeleportType::TeleportPhysics))
+    // Bounded alternate standing points inside the same built origin room.
+    for (const FVector Offset : {FVector::ZeroVector, FVector(80, 0, 0), FVector(-80, 0, 0),
+        FVector(0, 80, 0), FVector(0, -80, 0), FVector(80, 80, 0), FVector(-80, -80, 0)})
     {
-        return false;
+        FVector Pb2Centre;
+        if (Pb2StandingCentre(*EnPawn, EnLocation + Offset, Pb2Centre))
+            return Pb2PlaceStanding(Player, *EnPawn, Pb2Centre, EnFacing);
     }
-    if (UPawnMovementComponent* EnMovement = EnPawn->GetMovementComponent())
+    return false;
+}
+
+bool PWLaneLifePersistence::PlacePlayerAtSavedPlacement(APlayerController& Player,
+    const PerfectWorld::PlayerPlacement& Saved, bool& UsedOrigin)
+{
+    UsedOrigin = false;
+    UWorld* World = Player.GetWorld();
+    auto* Mode = World != nullptr ? Cast<APerfectWorldBlockTestGameMode>(World->GetAuthGameMode()) : nullptr;
+    auto* Pawn = Cast<APerfectWorldPlayerCharacter>(Player.GetPawn());
+    const auto* Instance = World != nullptr ? World->GetGameInstance() : nullptr;
+    const auto* Creator = Instance != nullptr ? Instance->GetSubsystem<UPerfectWorldCharacterCreatorSubsystem>() : nullptr;
+    if (Mode == nullptr || Pawn == nullptr || Pawn->IsSeated() || Creator == nullptr || !Creator->HasLifeStarted()) return false;
+    const std::string HomeZone = PerfectWorld::OriginHomeZoneId(TCHAR_TO_UTF8(*Creator->GetOpeningHome().HomeKitId.ToString()));
+    const bool Pb2HomeMarker = Saved.ZoneId == HomeZone && Saved.PositionCm == std::array<std::int64_t, 3>{};
+    // Only the lane has coordinate bindings today. Home-zone zero markers resolve through origin entry.
+    const bool Pb2SameZone = Saved.ZoneId == "zone.street.nabapara_lane";
+    FVector Centre;
+    const FVector Desired(static_cast<double>(Saved.PositionCm[0]), static_cast<double>(Saved.PositionCm[1]),
+        static_cast<double>(Saved.PositionCm[2]));
+    if (!Pb2HomeMarker && Pb2SameZone && Pb2StandingCentre(*Pawn, Desired, Centre))
     {
-        EnMovement->StopMovementImmediately();
+        if (!Pb2PlaceStanding(Player, *Pawn, Centre, FRotator(Saved.PitchCdeg / 100.0, Saved.YawCdeg / 100.0, 0))) return false;
     }
-    Player.SetControlRotation(EnFacing);
+    else
+    {
+        if (!Mode->PlacePlayerAtOpeningHome(Player)) return false;
+        UsedOrigin = true;
+        UE_LOG(LogTemp, Display, TEXT("Persistence: saved placement %s; used safe origin placement."),
+            Pb2HomeMarker ? TEXT("is an origin marker") : TEXT("has no safe support, clearance or matching zone"));
+    }
+    Pawn->SetCameraMode(Saved.Camera == PerfectWorld::CameraMode::ThirdPerson ? EPWCameraMode::ThirdPerson : EPWCameraMode::FirstPerson);
     return true;
 }
 
