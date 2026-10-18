@@ -231,7 +231,7 @@ void TestLayouts()
         const std::string id(e.BuildingId);
         const InteriorInput in = MakeFrontageInput(e, 15, 300);
         Expect(in.BuildingId == id && in.Kind == e.Kind && in.WidthCm == e.WidthCm && in.DepthCm == e.DepthCm && in.MirrorU == e.MirrorU &&
-                   in.EntranceCentreU == e.EntranceCentreU && in.EntranceDoorId.empty() == e.EntranceDoorId.empty(),
+                   in.EntranceCentreU == e.EntranceCentreU && in.EntranceDoorId == e.EntranceDoorId,
                "input mirrors the row: " + id);
         const InteriorLayout l = GenerateInteriorLayout(in);
         Expect(l.Ok(), "layout generates: " + id + " (" + std::string(RefusalCode(l.Status)) + ")");
@@ -239,15 +239,52 @@ void TestLayouts()
         Expect(DescribeLayout(l) == DescribeLayout(GenerateInteriorLayout(in)), "deterministic: " + id);
         Expect(l.Mirrored == e.MirrorU && l.FinishedFloorCm == 15 && l.ClearHeightCm == 274, "datum and mirror: " + id);
 
-        // The front entrance is an open doorway, 90 x 210 clear, centred on the pinned entrance.
+        // NL-04: every front door is hung (the planned id), and only the shared entry has flat doors.
+        Expect(!e.EntranceDoorId.empty() && e.EntranceDoorId == e.PlannedDoorId, "the planned front door is hung: " + id);
+        Expect(in.UnitDoorIdA.empty() == (e.Kind != Variant::SharedEntry) && in.UnitDoorIdB.empty() == (e.Kind != Variant::SharedEntry),
+               "flat doors only on the shared entry: " + id);
+        // The front entrance is a hung door, 90 x 210 clear, centred on the pinned entrance.
         const Opening* entrance = nullptr;
         for (const Opening& o : l.Openings)
             if (o.RoomA == "outside" && o.Kind != OpeningKind::Window) entrance = &o; // windows face outside too
         Expect(entrance != nullptr, "an entrance from outside: " + id);
-        Expect(entrance->Kind == OpeningKind::Doorway && entrance->DoorId.empty(), "the entrance is an open doorway (no lane door yet): " + id);
+        Expect(entrance->Kind == OpeningKind::Door && entrance->DoorId == e.EntranceDoorId, "the entrance hangs its lane door: " + id);
         Expect(entrance->ClearWidthCm >= 90 && entrance->W0 == 0 && entrance->W1 >= 210, "entrance is 90 x 210 clear: " + id);
         Expect(std::abs((entrance->Plan.U0 + entrance->Plan.U1) / 2 - e.EntranceCentreU) <= 1, "entrance is where the row says: " + id);
         Expect(entrance->Plan.V0 == 0, "the entrance is in the front wall: " + id);
+        int leaves = 0;
+        for (const Opening& o : l.Openings)
+        {
+            leaves += o.DoorId.empty() ? 0 : 1;
+        }
+        Expect(leaves == (e.Kind == Variant::SharedEntry ? 3 : 1), "one leaf per front door, plus one per flat: " + id);
+        if (e.Kind == Variant::SharedEntry)
+        {
+            for (const char* suffix : {"unit_a", "unit_b"})
+            {
+                const std::string want = std::string("door.nabapara.tall_flats_") + suffix;
+                const Opening* unit = nullptr;
+                for (const Opening& o : l.Openings)
+                    if (o.DoorId == want) unit = &o;
+                Expect(unit != nullptr && unit->Kind == OpeningKind::Door, std::string("the flat door is hung: ") + want);
+                if (unit == nullptr) continue;
+                Expect(unit->ClearWidthCm >= 90 && unit->W0 == 0 && unit->W1 >= 210, std::string("flat door 90 x 210 clear: ") + want);
+                const bool unitIsB = std::string(suffix) == "unit_b";
+                // The leaf closes along V in the partition; it swings into the flat, and the hinge sits on the low-V jamb.
+                Expect(unit->Plan.V1 - unit->Plan.V0 > unit->Plan.U1 - unit->Plan.U0, "a flat door runs along V: " + want);
+                Expect(unit->HingeV == unit->Plan.V0 && unit->HingeU > unit->Plan.U0 && unit->HingeU < unit->Plan.U1, "hinge on the low-V jamb: " + want);
+                Expect(unit->SweepSign == (unitIsB ? 1 : -1), "sweep sign points into the flat: " + want);
+                const Zone* sweep = nullptr;
+                for (const Zone& z : l.Zones)
+                    if (z.Kind == ZoneKind::DoorSweep && z.OwnerId == unit->Id) sweep = &z;
+                Expect(sweep != nullptr, "the flat door has a sweep zone: " + want);
+                if (sweep == nullptr) continue;
+                const Room* dwelling = FindRoom(l, sweep->RoomId);
+                Expect(dwelling != nullptr && dwelling->Kind == RoomKind::Dwelling, "the sweep lies in the flat: " + want);
+                Expect(dwelling != nullptr && dwelling->Area.Contains(sweep->Area), "the sweep fits inside the flat: " + want);
+                Expect(sweep->Area.Width() >= 90 && !Solid(l, sweep->Area), "the sweep is 90 deep and clear: " + want);
+            }
+        }
         for (const Opening& o : l.Openings)
         {
             if (o.Kind == OpeningKind::Window) continue;

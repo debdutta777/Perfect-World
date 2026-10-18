@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Containers/Ticker.h"
 #include "Subsystems/WorldSubsystem.h"
 
 #include "Conversation.h"
@@ -183,9 +184,15 @@ private:
     void RemoveClockReadout();
     void PresentEvents(const std::vector<PerfectWorld::DomainEvent>& Events) const;
 
-    // ---- Doors and conversation (PerfectWorldLaneLifeSubsystem.cpp) ----
+    // ---- Doors and conversation (PerfectWorldLaneLifeSubsystem.cpp; the knock in PerfectWorldLaneLifeKnock.cpp) ----
     void ResolveOriginResidency();
     bool IsResidentOf(const PerfectWorld::DoorDef& Door) const;
+    /** NL-04: a person whose schedule home is this door's location is registered with the presenter and at home right now. */
+    bool IsHostHome(const PerfectWorld::DoorDef& Door);
+    /** NL-04: an unauthorised entry to a Private door became a knock; shows the core's answer and remembers an admitted one. */
+    void HandleDoorKnock(APWDoorActor& Door, const PerfectWorld::DoorDef& Def, const PerfectWorld::DoorUseContext& Context, const APawn* By);
+    /** Forgets admitted knocks once the visitor is more than 3 m from the door (a ticker that runs only while knocks are held). */
+    bool TickKnocks(float DeltaTime);
     void ShowDoorRefusal(const APawn* By, PerfectWorld::DoorResult Result, const PerfectWorld::DoorDef* Def) const;
     /** APWDoorActor::OnSettled: the leaf's real outcome, reported to the core with door.settle. */
     void HandleDoorSettled(FName DoorId, bool bReachedTarget, bool bIsOpenNow, int8 SwingSide);
@@ -208,6 +215,13 @@ private:
     TSet<FName> ReportedUnknownDoors;
 
     TMap<FName, double> DoorInsideSides;
+
+    /** Doors whose knock was answered on the visitor's current approach (HasKnocked); cleared on leaving or when the door closes. */
+    TMap<FName, TWeakObjectPtr<APWDoorActor>> KnockedDoors;
+    FTSTicker::FDelegateHandle KnockTicker;
+    /** Schedule home zone -> the people who live there (from the validated content, built on first use). */
+    TMap<FName, TArray<FName>> ResidentsByHome;
+    bool bResidentsByHomeBuilt = false;
 
     TSharedPtr<SPWClockReadout> ClockReadout;
     TSharedPtr<SWeakWidget> ClockHolder;
