@@ -12,6 +12,7 @@
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SScrollBox.h"
+#include "Widgets/Layout/SWrapBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/SOverlay.h"
 #include "Widgets/Text/STextBlock.h"
@@ -24,14 +25,28 @@ namespace PWCreationPause
 {
 int32 PauseDensity(const float Width, const float Height)
 {
-    // Compact below 760 logical units either way: 1280x720 at 100%, and both common windows at 150% UI scale.
     return (Height < 760.0f || Width < 760.0f) ? 1 : 0;
 }
 
+/** Short or narrow windows put the context beside the buttons instead of above them: the card's height is then the taller column's. */
+bool PauseTwoColumn(const float Width, const float Height)
+{
+    return PauseDensity(Width, Height) > 0 && Width - 32.0f - 48.0f - 24.0f >= 560.0f;
+}
+
+/** One column's width. Two columns share the window less its 16 margins, 24 padding each side and a 24 gap. */
 float PauseControlWidth(const float Width, const float Height)
 {
+    if (PauseTwoColumn(Width, Height)) return FMath::Clamp((Width - 32.0f - 48.0f - 24.0f) * 0.5f, 280.0f, 360.0f);
     const float Pad = PauseDensity(Width, Height) > 0 ? 24.0f : 48.0f;
     return FMath::Clamp(Width - 32.0f - Pad * 2.0f, 200.0f, 360.0f);
+}
+
+/** The width at which the wrap panel starts a new line: both columns when they fit side by side, else one. */
+float PauseRowWidth(const float Width, const float Height)
+{
+    const float Column = PauseControlWidth(Width, Height);
+    return PauseTwoColumn(Width, Height) ? Column * 2.0f + 24.0f : Column;
 }
 
 float PauseMaxHeight(const float, const float Height)
@@ -262,11 +277,8 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
             ]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 6.0f, 0.0f, 0.0f)
             [
-                SNew(SBox)
-                .Visibility_Lambda([CompactVisibility]() { return CompactVisibility(false); })
-                [
-                    PWUI::MakeText(LOCTEXT("ClockHeld", "Time is held while the game is paused."), 14, Style.TextSecondary, false, true)
-                ]
+                SNew(SBox).Visibility_Lambda([CompactVisibility]() { return CompactVisibility(false); })
+                [PWUI::MakeText(LOCTEXT("ClockHeld", "Time is held while the game is paused."), 14, Style.TextSecondary, false, true)]
             ]
         ];
 
@@ -303,49 +315,43 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
             ]
         ];
 
-    const TSharedRef<SWidget> Column =
+    const auto ColumnWidth = [Self]() { const FVector2D S = CpPauseSpace(Self); return PWCreationPause::PauseControlWidth(static_cast<float>(S.X), static_cast<float>(S.Y)); };
+    const TSharedRef<SWidget> LeftColumn =
         SNew(SBox)
-        .WidthOverride_Lambda([Self]() { const FVector2D S = CpPauseSpace(Self); return PWCreationPause::PauseControlWidth(static_cast<float>(S.X), static_cast<float>(S.Y)); })
+        .WidthOverride_Lambda(ColumnWidth)
         [
             SNew(SVerticalBox)
             + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center).Padding(0.0f, 0.0f, 0.0f, 12.0f)
             [
-                SNew(SBox)
-                .Visibility_Lambda([CompactVisibility]() { return CompactVisibility(false); })
-                [
-                    SNew(SPWAwakeningSigil).SizeClass(EPWSigilSizeClass::Seal).Diameter(48)
-                ]
+                SNew(SBox).Visibility_Lambda([CompactVisibility]() { return CompactVisibility(false); })
+                [SNew(SPWAwakeningSigil).SizeClass(EPWSigilSizeClass::Seal).Diameter(48)]
             ]
             + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center)
             [
                 SNew(STextBlock).Text(LOCTEXT("Title", "Paused")).Font_Lambda([Self]() { return PWUI::Font(CpPauseCompact(Self) ? 22 : 32, true); })
                 .ColorAndOpacity(FSlateColor(Style.TextPrimary))
             ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 8.0f, 0.0f, 8.0f)
-            [
-                ContextCard
-            ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)
-            [
-                ResumeButton
-            ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)
-            [
-                SaveButton
-            ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)
-            [
-                SaveFeedback
-            ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)
-            [
-                ReturnToTitleButton.ToSharedRef()
-            ]
-            + SVerticalBox::Slot().AutoHeight()
-            [
-                QuitButton.ToSharedRef()
-            ]
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 8.0f, 0.0f, 8.0f)[ContextCard]
         ];
+
+    const TSharedRef<SWidget> RightColumn =
+        SNew(SBox)
+        .WidthOverride_Lambda(ColumnWidth)
+        [
+            SNew(SVerticalBox)
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[ResumeButton]
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[SaveButton]
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[SaveFeedback]
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[ReturnToTitleButton.ToSharedRef()]
+            + SVerticalBox::Slot().AutoHeight()[QuitButton.ToSharedRef()]
+        ];
+
+    const TSharedRef<SWidget> Column =
+        SNew(SWrapBox)
+        .PreferredSize_Lambda([Self]() { const FVector2D S = CpPauseSpace(Self); return PWCreationPause::PauseRowWidth(static_cast<float>(S.X), static_cast<float>(S.Y)); })
+        .InnerSlotPadding(FVector2D(24.0, 8.0))
+        + SWrapBox::Slot()[LeftColumn]
+        + SWrapBox::Slot()[RightColumn];
 
     const TSharedRef<SWidget> Card =
         SNew(SBorder)
