@@ -258,6 +258,14 @@ void PbSpawnAnindita(UWorld& World, const FLaneScene& Scene)
         {
             UE_LOG(LogTemp, Error, TEXT("Anindita's schedule registration failed; no fallback spawn."));
         }
+        // Mira helps at the packing desk on Tuesday and Thursday afternoons; school and her own afternoons are off-lane
+        // behind the shop threshold (UP-01), so she always enters and leaves the lane through this door.
+        // TODO(outfit): her own look (navy uniform, square satchel) replaces the placeholder outfit.
+        if (!PbPresence->RegisterScheduledPerson(FName(TEXT("person.mira_sen")),
+                NSLOCTEXT("PerfectWorldLane", "MiraName", "Mira"), EPWNpcOutfit::HouseholdAdult))
+        {
+            UE_LOG(LogTemp, Error, TEXT("Mira's schedule registration failed; no fallback spawn."));
+        }
         if (const auto* PbLife = UPWLaneLifeSubsystem::Get(&World)) { PbPresence->Reconcile(PbLife->GetNow()); }
         return;
     }
