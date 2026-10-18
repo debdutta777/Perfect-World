@@ -8,22 +8,95 @@
 #include "PerfectWorldContentSubsystem.h"
 #include "PerfectWorldNpcPresenceInternal.h"
 
-DEFINE_LOG_CATEGORY_STATIC(NpPresenceLog, Log, All);
+DEFINE_LOG_CATEGORY_STATIC(UaPresenceLog, Log, All);
 
 namespace
 {
-const FName NpWaitingAnchor(TEXT("anchor.presentation.doorway_wait"));
-const FName NpDepartureRoute(TEXT("route.presentation.departure"));
+const FName UaWaitingAnchor(TEXT("anchor.presentation.doorway_wait"));
+const FName UaDepartureRoute(TEXT("route.presentation.departure"));
+const FName UaArrivalRoute(TEXT("route.presentation.arrival"));
 
-void NpDestroyActor(FNpPresenceRecord& Record)
+void UaResolveArrival(FNpPresenceRecord& Record, const FNpLaneNpcBindings& Bindings,
+                      const PerfectWorld::GameInstant Now)
+{
+    Record.UaArrivalPoints.Reset();
+    if (Record.Actor.IsValid() || Record.Binding.Kind != ENpBindingKind::Local) { return; }
+    auto Journey = Record.Intent;
+    // A load has no previous presentation intent. Find the journey immediately preceding this stay,
+    // using the authoritative resolver (including the previous day), never a guessed source location.
+    for (int32 Back = 1; Journey.State != PerfectWorld::NpcState::Travel && Back <= 7 * 1440; ++Back)
+    {
+        const auto Previous = PerfectWorld::ResolveNpcIntentAt(Record.Schedule.Person, Record.Schedule.Travel, Now - Back, false, false);
+        if (!Previous.Ok() || Previous.Intent.AnchorId != Record.Intent.AnchorId) { return; }
+        Journey = Previous.Intent;
+    }
+    if (Journey.State != PerfectWorld::NpcState::Travel) { return; }
+    for (const auto& Path : Record.Schedule.Paths)
+    {
+        const std::string* Source = nullptr;
+        if (Journey.RouteId == "route:" + Path.From + "->" + Path.To) { Source = &Path.From; }
+        else if (Journey.RouteId == "route:" + Path.To + "->" + Path.From) { Source = &Path.To; }
+        if (Source == nullptr) { continue; }
+        const auto* Origin = Bindings.FindAnchor(FName(UTF8_TO_TCHAR(Source->c_str())));
+        if (Origin == nullptr || Origin->Kind != ENpBindingKind::OffLane) { return; }
+        const auto* Threshold = Bindings.FindAnchor(Origin->ExitAnchor);
+        const auto Route = Bindings.Resolve(Record.Schedule, Journey);
+        if (Threshold == nullptr || Threshold->Kind != ENpBindingKind::Local || Route.Kind == ENpBindingKind::Missing ||
+            Route.RoutePoints.Num() < 2 || !Route.RoutePoints[0].Equals(Threshold->Feet.GetLocation(), 1.0))
+        {
+            Record.Binding.Kind = ENpBindingKind::Missing;
+            Record.Binding.Diagnostic = FString::Printf(TEXT("arrival threshold/route unavailable '%hs'"), Journey.RouteId.c_str());
+            return;
+        }
+        Record.UaArrivalPoints = Route.RoutePoints;
+        Record.UaArrivalFeet = Threshold->Feet;
+        return;
+    }
+}
+
+void UaResolveDeparture(FNpPresenceRecord& Record, const FNpLaneNpcBindings& Bindings,
+                        const PerfectWorld::GameInstant Now)
+{
+    auto Journey = Record.Intent;
+    // Use the first journey crossed by the jump. The final off-lane stay can be days later
+    // and need not have a direct path from the old local anchor.
+    const auto Limit = FMath::Min<PerfectWorld::GameInstant>(Now, Record.UaIntentAt + 7 * 1440);
+    for (auto At = Record.UaIntentAt; At <= Limit; ++At)
+    {
+        if (At != Record.UaIntentAt)
+        {
+            const auto Next = PerfectWorld::ResolveNpcIntentAt(Record.Schedule.Person, Record.Schedule.Travel, At, false, false);
+            if (!Next.Ok()) { return; }
+            Journey = Next.Intent;
+        }
+        if (Journey.State == PerfectWorld::NpcState::Travel)
+        {
+            const auto* Destination = Bindings.FindAnchor(FName(UTF8_TO_TCHAR(Journey.AnchorId.c_str())));
+            if (Destination != nullptr && Destination->Kind == ENpBindingKind::OffLane)
+            {
+                Journey.ProgressPermille = 1000;
+                const auto Exit = Bindings.Resolve(Record.Schedule, Journey);
+                if (Exit.Kind != ENpBindingKind::Missing && Exit.RoutePoints.Num() >= 2)
+                {
+                    Record.DeparturePoints = Exit.RoutePoints;
+                    Record.DepartureAnchor = Destination->ExitAnchor;
+                    return;
+                }
+            }
+        }
+    }
+}
+
+void UaDestroyActor(FNpPresenceRecord& Record)
 {
     if (APWNpcCharacter* Actor = Record.Actor.Get()) { Actor->Destroy(); }
     Record.Actor.Reset();
     Record.Yield = {};
     Record.AppliedRoutePoints.Reset();
+    Record.UaArrivalPoints.Reset();
 }
 
-void NpApplyMovement(FNpPresenceRecord& Record, const FPWNpcIntentView& View, const TArray<FVector>& Points)
+void UaApplyMovement(FNpPresenceRecord& Record, const FPWNpcIntentView& View, const TArray<FVector>& Points)
 {
     UPWNpcMovementComponent* Movement = Record.Actor->GetNpcMovement();
     Movement->SetIntent(View);
@@ -50,7 +123,7 @@ void UPWNpcPresenceSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UPWNpcPresenceSubsystem::Deinitialize()
 {
-    for (auto& Pair : People) { NpDestroyActor(*Pair.Value); }
+    for (auto& Pair : People) { UaDestroyActor(*Pair.Value); }
     People.Reset();
     SpatialBindings.Reset();
     Super::Deinitialize();
@@ -73,7 +146,7 @@ bool UPWNpcPresenceSubsystem::RegisterScheduledPerson(const FName PersonId, cons
     const UPWContentSubsystem* Content = Instance != nullptr ? Instance->GetSubsystem<UPWContentSubsystem>() : nullptr;
     if (Content == nullptr || Content->GetDb() == nullptr)
     {
-        UE_LOG(NpPresenceLog, Error, TEXT("NPC %s: validated content database unavailable; no spawn."), *PersonId.ToString());
+        UE_LOG(UaPresenceLog, Error, TEXT("NPC %s: validated content database unavailable; no spawn."), *PersonId.ToString());
         return false;
     }
     return RegisterScheduledPersonFromContent(*Content->GetDb(), PersonId, DisplayName, Outfit);
@@ -93,7 +166,7 @@ bool UPWNpcPresenceSubsystem::RegisterScheduledPersonFromContent(const PerfectWo
             if (Field.first != "person" || Field.second.String != Person) { continue; }
             if (Match != nullptr)
             {
-                UE_LOG(NpPresenceLog, Error, TEXT("NPC %s: multiple authored schedules; no spawn."), *PersonId.ToString());
+                UE_LOG(UaPresenceLog, Error, TEXT("NPC %s: multiple authored schedules; no spawn."), *PersonId.ToString());
                 return false;
             }
             Match = Candidate;
@@ -101,13 +174,13 @@ bool UPWNpcPresenceSubsystem::RegisterScheduledPersonFromContent(const PerfectWo
     }
     if (Match == nullptr)
     {
-        UE_LOG(NpPresenceLog, Error, TEXT("NPC %s: no authored npc_schedule record; no spawn."), *PersonId.ToString());
+        UE_LOG(UaPresenceLog, Error, TEXT("NPC %s: no authored npc_schedule record; no spawn."), *PersonId.ToString());
         return false;
     }
     auto Loaded = PerfectWorld::LoadNpcSchedule(Db, Match->Id);
     if (!Loaded.Ok() || Loaded.Value->Person.PersonId != Person)
     {
-        UE_LOG(NpPresenceLog, Error, TEXT("NPC %s schedule %hs refused: %hs; no spawn."),
+        UE_LOG(UaPresenceLog, Error, TEXT("NPC %s schedule %hs refused: %hs; no spawn."),
                *PersonId.ToString(), Match->Id.c_str(), Loaded.Error.c_str());
         return false;
     }
@@ -122,7 +195,7 @@ bool UPWNpcPresenceSubsystem::RegisterScheduledPersonFromContent(const PerfectWo
 
 void UPWNpcPresenceSubsystem::UnregisterPerson(const FName PersonId)
 {
-    if (const auto* Record = People.Find(PersonId)) { NpDestroyActor(**Record); }
+    if (const auto* Record = People.Find(PersonId)) { UaDestroyActor(**Record); }
     People.Remove(PersonId);
 }
 
@@ -130,7 +203,7 @@ void UPWNpcPresenceSubsystem::ResetPresentation(const PerfectWorld::GameInstant 
 {
     for (auto& Pair : People)
     {
-        NpDestroyActor(*Pair.Value);
+        UaDestroyActor(*Pair.Value);
         Pair.Value->DeparturePoints.Reset();
         Pair.Value->DepartureAnchor = NAME_None;
     }
@@ -167,22 +240,16 @@ void UPWNpcPresenceSubsystem::Reconcile(const PerfectWorld::GameInstant GameInst
         }
         else
         {
-            // On a paid skip from a stay directly to home, reconstruct the authored exit journey, not a straight wall crossing.
             const auto NewBinding = Bindings().Resolve(Record.Schedule, Resolved.Intent);
             if (Record.Binding.Kind == ENpBindingKind::Local && NewBinding.Kind == ENpBindingKind::OffLane)
             {
-                PerfectWorld::NpcIntent ExitIntent = Resolved.Intent;
-                ExitIntent.State = PerfectWorld::NpcState::Travel;
-                ExitIntent.RouteId = "route:" + Record.Intent.AnchorId + "->" + Resolved.Intent.AnchorId;
-                ExitIntent.ProgressPermille = 1000;
-                const auto Exit = Bindings().Resolve(Record.Schedule, ExitIntent);
-                if (Exit.Kind == ENpBindingKind::OffLane && Exit.RoutePoints.Num() >= 2)
-                {
-                    Record.DeparturePoints = Exit.RoutePoints;
-                }
+                UaResolveDeparture(Record, Bindings(), Now);
             }
             Record.Intent = Resolved.Intent;
+            Record.UaIntentAt = Now;
             Record.Binding = NewBinding;
+            if (NewBinding.Kind == ENpBindingKind::Local) { Record.DepartureAnchor = NAME_None; }
+            UaResolveArrival(Record, Bindings(), Now);
             if (Record.Binding.Kind == ENpBindingKind::Local && !Record.Binding.RoutePoints.IsEmpty())
             {
                 Record.DeparturePoints = Record.Binding.RoutePoints;
@@ -204,7 +271,7 @@ bool UPWNpcPresenceSubsystem::IsPointVisible(const FVector& Feet) const
         const FVector Target = Feet + FVector(0.0, 0.0, Height);
         // Conservatively wider than the gameplay frustum: delaying an arrival is preferable to a visible pop.
         if (FVector::DotProduct((Target - Eye).GetSafeNormal(), View.Vector()) < 0.1) { continue; }
-        FCollisionQueryParams Params(SCENE_QUERY_STAT(NpPresenceSight), false, Controller->GetPawn());
+        FCollisionQueryParams Params(SCENE_QUERY_STAT(UaPresenceSight), false, Controller->GetPawn());
         FHitResult Hit;
         if (!GetWorld()->LineTraceSingleByChannel(Hit, Eye, Target, ECC_Visibility, Params)) { return true; }
         if (FVector::DistSquared(Hit.ImpactPoint, Target) < FMath::Square(40.0)) { return true; }
@@ -216,7 +283,7 @@ void UPWNpcPresenceSubsystem::Present(const FName PersonId, FNpPresenceRecord& R
 {
     if (Record.Binding.Kind == ENpBindingKind::Missing && Record.LastDiagnostic != Record.Binding.Diagnostic)
     {
-        UE_LOG(NpPresenceLog, Error, TEXT("NPC %s at %lld: %s; no spawn."), *PersonId.ToString(),
+        UE_LOG(UaPresenceLog, Error, TEXT("NPC %s at %lld: %s; no spawn."), *PersonId.ToString(),
                static_cast<long long>(Now), *Record.Binding.Diagnostic);
         Record.LastDiagnostic = Record.Binding.Diagnostic;
     }
@@ -230,7 +297,13 @@ void UPWNpcPresenceSubsystem::Present(const FName PersonId, FNpPresenceRecord& R
         if (Actor == nullptr) { return; }
         if (Actor->GetNpcMovement()->GetPresentedState() == EPWNpcState::Chat) { return; }
         const FVector Feet = Actor->GetActorLocation() - FVector(0.0, 0.0, Actor->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
-        if (!Actor->WasRecentlyRendered(0.3f) && !IsPointVisible(Feet)) { NpDestroyActor(Record); return; }
+        if (Record.DepartureAnchor.IsNone()) { Record.DepartureAnchor = Record.Binding.ExitAnchor; }
+        const auto* UaThreshold = Bindings().FindAnchor(Record.DepartureAnchor);
+        const bool UaAtExit = UaThreshold != nullptr && UaThreshold->Kind == ENpBindingKind::Local &&
+            FVector::Dist2D(Feet, UaThreshold->Feet.GetLocation()) <= PWNpcMove::ArrivalToleranceCm &&
+            FMath::Abs(Feet.Z - UaThreshold->Feet.GetLocation().Z) <= PWNpcMove::ArrivalToleranceCm;
+        if ((Record.Binding.Kind == ENpBindingKind::Missing || UaAtExit) &&
+            !Actor->WasRecentlyRendered(0.3f) && !IsPointVisible(Feet)) { UaDestroyActor(Record); return; }
         Record.Yield = {};
         if (Record.Binding.Kind == ENpBindingKind::Missing)
         {
@@ -240,26 +313,27 @@ void UPWNpcPresenceSubsystem::Present(const FName PersonId, FNpPresenceRecord& R
             Actor->GetNpcMovement()->SetIntent(Hold);
             return;
         }
-        Record.DepartureAnchor = Record.Binding.ExitAnchor;
-        if (Record.DeparturePoints.Num() >= 2)
+        if (UaThreshold != nullptr && Record.DeparturePoints.Num() >= 2 &&
+            Record.DeparturePoints.Last().Equals(UaThreshold->Feet.GetLocation(), 1.0))
         {
             FPWNpcIntentView Exit;
             Exit.State = EPWNpcState::Travel;
-            Exit.RouteId = NpDepartureRoute;
+            Exit.RouteId = UaDepartureRoute;
             Exit.ProgressPermille = 1000;
-            NpApplyMovement(Record, Exit, Record.DeparturePoints);
+            UaApplyMovement(Record, Exit, Record.DeparturePoints);
         }
         else
         {
             FPWNpcIntentView Exit;
-            Exit.AnchorId = Record.DepartureAnchor;
+            Exit.State = EPWNpcState::Yield; // No authored exit route: hold rather than walk through geometry.
             Actor->GetNpcMovement()->SetIntent(Exit);
         }
         return;
     }
     if (Actor == nullptr)
     {
-        if (IsPointVisible(Record.Binding.Feet.GetLocation())) { return; } // Retry on tick when out of view.
+        const FTransform UaSpawnFeet = Record.UaArrivalPoints.IsEmpty() ? Record.Binding.Feet : Record.UaArrivalFeet;
+        if (IsPointVisible(UaSpawnFeet.GetLocation())) { return; } // Retry on tick when out of view.
         // Reject legacy/static duplicates as an integration error, rather than silently owning somebody else's actor.
         for (TActorIterator<APWNpcCharacter> It(GetWorld()); It; ++It)
         {
@@ -267,15 +341,15 @@ void UPWNpcPresenceSubsystem::Present(const FName PersonId, FNpPresenceRecord& R
             {
                 if (Record.LastDiagnostic != TEXT("unmanaged duplicate"))
                 {
-                    UE_LOG(NpPresenceLog, Error, TEXT("NPC %s: unmanaged duplicate; remove static spawn; no spawn."), *PersonId.ToString());
+                    UE_LOG(UaPresenceLog, Error, TEXT("NPC %s: unmanaged duplicate; remove static spawn; no spawn."), *PersonId.ToString());
                     Record.LastDiagnostic = TEXT("unmanaged duplicate");
                 }
                 return;
             }
         }
         // The same per-person standing height that sizes the body (UP-04) decides whether there is room to appear.
-        if (!PWNpc::HasSpawnClearance(*GetWorld(), Record.Binding.Feet.GetLocation(), PersonId, Record.Outfit)) { return; }
-        Actor = APWNpcCharacter::SpawnAt(*GetWorld(), Record.Binding.Feet, PersonId, Record.DisplayName, Record.Outfit);
+        if (!PWNpc::HasSpawnClearance(*GetWorld(), UaSpawnFeet.GetLocation(), PersonId, Record.Outfit)) { return; }
+        Actor = APWNpcCharacter::SpawnAt(*GetWorld(), UaSpawnFeet, PersonId, Record.DisplayName, Record.Outfit);
         if (Actor == nullptr) { return; }
         Record.Actor = Actor;
         Record.LastDiagnostic.Reset();
@@ -290,6 +364,15 @@ void UPWNpcPresenceSubsystem::Present(const FName PersonId, FNpPresenceRecord& R
             const auto* Presence = Weak.Get();
             return Presence != nullptr && Presence->ResolveActorRoute(PersonId, Id, Out);
         });
+        if (!Record.UaArrivalPoints.IsEmpty() && Record.Intent.State != PerfectWorld::NpcState::Travel)
+        {
+            FPWNpcIntentView UaArrival = MakeNpcIntentView(Record.Intent);
+            UaArrival.State = EPWNpcState::Travel;
+            UaArrival.RouteId = UaArrivalRoute;
+            UaArrival.ProgressPermille = 1000;
+            UaApplyMovement(Record, UaArrival, Record.UaArrivalPoints);
+            // The work intent below hands this polyline to the mover's existing FinishRoute.
+        }
     }
     if (Record.Yield.IsActive()) { return; } // Yield owns its temporary walking target until released.
     FPWNpcIntentView View = MakeNpcIntentView(Record.Intent, Record.Binding.bPreferSit);
@@ -297,14 +380,14 @@ void UPWNpcPresenceSubsystem::Present(const FName PersonId, FNpPresenceRecord& R
     {
         View.ProgressPermille = Record.Binding.LocalProgress;
     }
-    NpApplyMovement(Record, View, Record.Binding.RoutePoints);
+    UaApplyMovement(Record, View, Record.Binding.RoutePoints);
 }
 
 bool UPWNpcPresenceSubsystem::ResolveActorAnchor(const FName PersonId, const FName AnchorId, FTransform& Out) const
 {
     const auto* Record = People.Find(PersonId);
     if (Record == nullptr) { return false; }
-    if (AnchorId == NpWaitingAnchor && (*Record)->Yield.IsActive())
+    if (AnchorId == UaWaitingAnchor && (*Record)->Yield.IsActive())
     {
         Out = FTransform((*Record)->Yield.WaitingFeet);
         return true;
@@ -319,7 +402,8 @@ bool UPWNpcPresenceSubsystem::ResolveActorRoute(const FName PersonId, const FNam
 {
     const auto* Record = People.Find(PersonId);
     if (Record == nullptr) { return false; }
-    Out = RouteId == NpDepartureRoute ? (*Record)->DeparturePoints : (*Record)->Binding.RoutePoints;
+    Out = RouteId == UaDepartureRoute ? (*Record)->DeparturePoints :
+        (RouteId == UaArrivalRoute ? (*Record)->UaArrivalPoints : (*Record)->Binding.RoutePoints);
     return Out.Num() >= 2;
 }
 
@@ -329,7 +413,12 @@ void UPWNpcPresenceSubsystem::Tick(const float DeltaTime)
     for (auto& Pair : People)
     {
         // Providers may be added after world construction. Missing bindings recover without a new clock minute.
-        if (Pair.Value->bIntentValid) { Pair.Value->Binding = Bindings().Resolve(Pair.Value->Schedule, Pair.Value->Intent); }
+        if (Pair.Value->bIntentValid)
+        {
+            const bool UaWasMissing = Pair.Value->Binding.Kind == ENpBindingKind::Missing;
+            Pair.Value->Binding = Bindings().Resolve(Pair.Value->Schedule, Pair.Value->Intent);
+            if (UaWasMissing) { UaResolveArrival(*Pair.Value, Bindings(), Now); }
+        }
         Present(Pair.Key, *Pair.Value);
         UpdateYield(Pair.Key, *Pair.Value, DeltaTime);
     }

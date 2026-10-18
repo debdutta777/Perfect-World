@@ -51,7 +51,7 @@ const FRosterPerson RosterPeople[] = {
     {TEXT("person.care_worker"), TEXT("Care worker"), 162.0, EPWNpcOutfit::HouseholdAdult, true, true, true, TEXT(""), 450},
     {TEXT("person.anindita_sen"), TEXT("Anindita"), 154.0, EPWNpcOutfit::ShopProprietor, true, true, true, TEXT(""), 540},
     {TEXT("person.farida_qadri"), TEXT("Farida"), 158.0, EPWNpcOutfit::ShopProprietor, true, true, true, TEXT(""), 685},
-    {TEXT("person.mira_sen"), TEXT("Mira"), 160.0, EPWNpcOutfit::HouseholdAdult, false, true, true, TEXT(""), 0},
+    {TEXT("person.mira_sen"), TEXT("Mira"), 160.0, EPWNpcOutfit::HouseholdAdult, true, true, true, TEXT(""), 1440 + 1020},
     {TEXT("person.subrata_dey"), TEXT("Subrata"), 181.0, EPWNpcOutfit::HouseholdAdult, false, false, false,
      TEXT("UP-03 has not authored his schedule or conversation yet, so the lane does not place him."), 0},
 };
@@ -329,11 +329,11 @@ bool FPWRosterSpawnedTest::RunTest(const FString& Parameters)
     NpPresenceTest::FNpWorld Fixture;
     if (!TestNotNull(TEXT("presence subsystem"), Fixture.Presence)) { return false; }
 
-    // Anindita's schedule joins the fixture's database (it carries the care worker's and Farida's).
-    for (const TCHAR* FileId : {TEXT("npc_schedule.anindita_sen")})
+    // Anindita's and Mira's schedules join the fixture's database (it carries the care worker's and Farida's).
+    for (const TCHAR* FileId : {TEXT("npc_schedule.anindita_sen"), TEXT("npc_schedule.mira_sen")})
     {
         FString Text;
-        if (!TestTrue(TEXT("Anindita's schedule file loads"),
+        if (!TestTrue(FString::Printf(TEXT("%s loads"), FileId),
                       FFileHelper::LoadFileToString(Text, *(FPaths::ProjectDir() / TEXT("Data/Content/npc_schedule") / (FString(FileId) + TEXT(".json")))))) { return false; }
         const auto Parsed = PerfectWorld::ParseJson(TCHAR_TO_UTF8(*Text));
         if (!TestTrue(TEXT("and parses"), Parsed.Value.has_value())) { return false; }
