@@ -5,6 +5,7 @@
 // Run in the editor under "PerfectWorld.NpcRoster" (Session Frontend, or the Unreal MCP AutomationTestToolset).
 
 #include "PerfectWorldNpcPresenceTests.h"
+#include "PerfectWorldMiraPresenceTests.h"
 
 #if WITH_DEV_AUTOMATION_TESTS && !UE_BUILD_SHIPPING
 
@@ -41,7 +42,7 @@ struct FRosterPerson
     bool bConversation;
     /** Why there is no conversation, when bConversation is false. Required in that case. */
     const TCHAR* WhyNoConversation;
-    /** Absolute minute of day 0 at which a placed, scheduled person stands at a local anchor with the test bindings. */
+    /** Minute since day 0 midnight; Mira's probe is Tuesday 17:00. */
     int32 ProbeMinute;
 };
 
@@ -327,6 +328,7 @@ bool FPWRosterSpawnedTest::RunTest(const FString& Parameters)
 {
     using namespace PWRosterTest;
     NpPresenceTest::FNpWorld Fixture;
+    UaMiraPresence::FUaShopPhysics UaShopPhysics;
     if (!TestNotNull(TEXT("presence subsystem"), Fixture.Presence)) { return false; }
 
     // Anindita's and Mira's schedules join the fixture's database (it carries the care worker's and Farida's).
@@ -363,6 +365,7 @@ bool FPWRosterSpawnedTest::RunTest(const FString& Parameters)
         Building.Side = 1;
         Building.Index = 2;
         Building.Detail = PWLane::ELaneDetail::Full;
+        UaShopPhysics.UaBuild(*Fixture.World, Building);
         if (!TestTrue(TEXT("the stationery building is the lane's"), PWLane::IsStationeryBuilding(Building))) { return false; }
         if (!TestTrue(TEXT("stationery bindings"), Fixture.Presence->Bindings().RegisterProvider(
                 FName(TEXT("building.test.stationery")), PWLane::NpStationeryBindings(Building)))) { return false; }
@@ -380,6 +383,24 @@ bool FPWRosterSpawnedTest::RunTest(const FString& Parameters)
             continue;
         }
         const FName Id(Person.Id);
+        if (Id == FName(TEXT("person.mira_sen")))
+        {
+            // Earlier probes never ticked physics: their positions cannot represent Tuesday.
+            // Start a fresh Tuesday presentation, then run the other shop resident's physics.
+            Fixture.Presence->ResetPresentation(InstantOf(Person.ProbeMinute));
+            APWNpcCharacter* UaAnindita = Fixture.Presence->FindPerson(FName(TEXT("person.anindita_sen")));
+            if (!TestNotNull(TEXT("Mira's mother is present before the Tuesday probe"), UaAnindita)) { continue; }
+            UaShopPhysics.UaBegin(*UaAnindita);
+            for (int32 UaFrame = 0; UaFrame < 2400; ++UaFrame)
+            {
+                UaShopPhysics.UaFrame(*Fixture.World, *UaAnindita);
+                Fixture.Presence->Tick(static_cast<float>(UaMiraPresence::FUaShopPhysics::UaFrameSeconds));
+            }
+            const FVector UaThreshold = Fixture.Presence->Bindings().FindAnchor(
+                FName(TEXT("location.nabapara.stationery_footpath")))->Feet.GetLocation();
+            TestTrue(TEXT("Anindita walked clear of Mira's arrival threshold"),
+                FVector::Dist2D(UaAnindita->GetActorLocation(), UaThreshold) > 2.0 * PWNpc::CapsuleRadius);
+        }
         APWNpcCharacter* Npc = nullptr;
         if (!Person.bScheduled)
         {
@@ -395,6 +416,23 @@ bool FPWRosterSpawnedTest::RunTest(const FString& Parameters)
         Fixture.Presence->Reconcile(At);
         Npc = Fixture.Presence->FindPerson(Id);
         if (!CheckPlacedPerson(*this, *Fixture.World, Npc, Person)) { continue; }
+        if (Id == FName(TEXT("person.mira_sen")))
+        {
+            const auto* UaDoor = Fixture.Presence->Bindings().FindAnchor(FName(TEXT("location.nabapara.stationery_footpath")));
+            const auto* UaDesk = Fixture.Presence->Bindings().FindAnchor(FName(TEXT("anchor.stationery.packing_desk")));
+            const FVector UaFeet = Npc->GetActorLocation() - FVector(0.0, 0.0, Npc->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+            TestTrue(TEXT("Tuesday 17:00 presents Mira at the threshold"), UaFeet.Equals(UaDoor->Feet.GetLocation(), 1.0));
+            TestTrue(TEXT("Tuesday 17:00 resolves Mira's packing work"),
+                Fixture.Presence->FindIntent(Id)->State == PerfectWorld::NpcState::Work);
+            UaShopPhysics.UaBegin(*Npc);
+            for (int32 UaFrame = 0; UaFrame < 2400; ++UaFrame)
+            {
+                UaShopPhysics.UaFrame(*Fixture.World, *Npc);
+                Fixture.Presence->Tick(static_cast<float>(UaMiraPresence::FUaShopPhysics::UaFrameSeconds));
+            }
+            TestTrue(TEXT("Mira finishes the ingress route at her desk before Talk"),
+                FVector::Dist2D(Npc->GetActorLocation(), UaDesk->Feet.GetLocation()) <= PWNpcMove::ArrivalToleranceCm);
+        }
 
         // Stable identity: reconciling the same instant and ticking presentation keep the same actor.
         Fixture.Presence->Reconcile(At);
