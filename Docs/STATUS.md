@@ -1925,3 +1925,22 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 - **Rung 1:** for this merge, interrupted by power-offs and not completed.
 
 **Power-offs:** the host powered the VM off at 18:29, 19:14, 22:32 and 22:59 on 2026-10-18. Build jobs no longer refresh timestamps on a rerun, so an interrupted build's objects are kept. The owner has asked to favour pushing and delegating over long builds.
+
+## Checkpoint — UP-02 (Mira's arrivals), AW-01 (the scenario driver) and the stair and UI fixes compiled; 87/95, 2026-10-18
+
+**What merged and compiled, at `28f8b29`:**
+- **gpt-6.1-sol, UP-02:** off-lane arrivals reconstruct the authored journey and appear unseen at the threshold, then walk in. Departures walk out to the threshold before unseen removal. Eight `MiraPresence` tests.
+- **Claude Sonnet, AW-01:** the non-Shipping scenario driver (`-PWAcceptance`). It walks the real pawn and writes an atomic result per step, with screenshots. Four `Acceptance` tests.
+- **Claude Sonnet, fixes:**
+  - UP-05: stair headroom volumes reach back two capsule radii.
+  - UP-06: a 22 pt creation header and a tighter pause card.
+
+**Exact checks:**
+- **Rung 2:** **Succeeded**. This was the first compile of AW-01 and UP-02.
+- **Headless automation:** 95 found, all completed, **87 passed, 8 failed**.
+  - **Fixed:** `LaneStair.Walk` and the creation header.
+  - **Still failing:**
+    - `CreationPause.PauseFitsEveryWindowAndScale`: the pause card still overflows 853×480.
+    - Six `MiraPresence` tests: "walk reaches the authored endpoint".
+    - `NpcRoster.SpawnedPeopleAreTalkable`: Mira is not physically present at Tuesday 17:00.
+  - All of these went back to their authors.
