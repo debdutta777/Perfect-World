@@ -611,3 +611,9 @@ add_test(NAME PerfectWorldConversationMiraTests COMMAND PerfectWorldConversation
 add_executable(PerfectWorldWorldSaveMiraTests Tests/WorldSaveMiraTests.cpp)
 target_link_libraries(PerfectWorldWorldSaveMiraTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldWorldSaveMiraTests COMMAND PerfectWorldWorldSaveMiraTests)
+
+# UP-05: stair contract (flights, landings, slab openings, guards, headroom volumes) and its portable tests.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/LaneStairLayout.cpp)
+add_executable(PerfectWorldLaneStairLayoutTests Tests/LaneStairLayoutTests.cpp)
+target_link_libraries(PerfectWorldLaneStairLayoutTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneStairLayoutTests COMMAND PerfectWorldLaneStairLayoutTests)
