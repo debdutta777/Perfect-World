@@ -273,11 +273,8 @@ void UPWNpcPresenceSubsystem::Present(const FName PersonId, FNpPresenceRecord& R
                 return;
             }
         }
-        const double Half = Record.Outfit == EPWNpcOutfit::ShopProprietor ? 79.0
-            : Record.Outfit == EPWNpcOutfit::ParentHousehold ? 84.0 : 81.0;
-        const FVector Centre = Record.Binding.Feet.GetLocation() + FVector(0.0, 0.0, Half + 2.0);
-        if (GetWorld()->OverlapBlockingTestByChannel(Centre, FQuat::Identity, ECC_Pawn,
-            FCollisionShape::MakeCapsule(PWNpc::CapsuleRadius, static_cast<float>(Half)))) { return; }
+        // The same per-person standing height that sizes the body (UP-04) decides whether there is room to appear.
+        if (!PWNpc::HasSpawnClearance(*GetWorld(), Record.Binding.Feet.GetLocation(), PersonId, Record.Outfit)) { return; }
         Actor = APWNpcCharacter::SpawnAt(*GetWorld(), Record.Binding.Feet, PersonId, Record.DisplayName, Record.Outfit);
         if (Actor == nullptr) { return; }
         Record.Actor = Actor;
