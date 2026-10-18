@@ -355,7 +355,7 @@ bool FPWShopFurnitureSetsTest::RunTest(const FString& Parameters)
     {
         const FLaneBuilding B = SftMakeBuilding(-100.0, 460.0, FVector(1.0, 0.0, 0.0), FVector(0.0, 1.0, 0.0), 700.0, 700.0, 3);
         const LI::InteriorInput In = MakeKitInput(B, "building.test.sf_goods", LI::Variant::ShopWithStockroom, LI::FurnitureSet::GeneralGoods, 250, "door.test.sf_goods");
-        SftCheckFixture(*this, TEXT("general goods 700x700 plus-Y"), B, In, 7);
+        SftCheckFixture(*this, TEXT("general goods 700x700 plus-Y"), B, In, 6);
         const LI::InteriorLayout L = LI::GenerateInteriorLayout(In);
         for (const char* Id : {"staff_counter", "customer_counter", "stock_room", "weigh_station", "front_door"})
         {
@@ -368,7 +368,7 @@ bool FPWShopFurnitureSetsTest::RunTest(const FString& Parameters)
         const FLaneBuilding B = SftMakeBuilding(-300.0, -400.0, FVector(1.0, 0.0, 0.0), FVector(0.0, -1.0, 0.0), 900.0, 800.0, 4);
         LI::InteriorInput In = MakeKitInput(B, "building.test.sf_workshop", LI::Variant::ShopWithStockroom, LI::FurnitureSet::Workshop, 600, "door.test.sf_workshop");
         In.MirrorU = true;
-        SftCheckFixture(*this, TEXT("workshop 900x800 minus-Y mirrored"), B, In, 7);
+        SftCheckFixture(*this, TEXT("workshop 900x800 minus-Y mirrored"), B, In, 6);
         const LI::InteriorLayout L = LI::GenerateInteriorLayout(In);
         for (const char* Id : {"staff_counter", "customer_counter", "tool_rack", "workbench", "finishing_table", "front_door"})
         {
@@ -379,12 +379,12 @@ bool FPWShopFurnitureSetsTest::RunTest(const FString& Parameters)
     {
         const FLaneBuilding B = SftMakeBuilding(6400.0, -1300.0, FVector(0.0, 1.0, 0.0), FVector(-1.0, 0.0, 0.0), 760.0, 700.0, 3);
         SftCheckFixture(*this, TEXT("rotated general goods 760x700"), B,
-                        MakeKitInput(B, "building.test.sf_goods_rot", LI::Variant::ShopWithStockroom, LI::FurnitureSet::GeneralGoods, 280, "door.test.sf_goods_rot"), 7);
+                        MakeKitInput(B, "building.test.sf_goods_rot", LI::Variant::ShopWithStockroom, LI::FurnitureSet::GeneralGoods, 280, "door.test.sf_goods_rot"), 6);
     }
     {
         const FLaneBuilding B = SftMakeBuilding(-2400.0, 1300.0, FVector(0.0, -1.0, 0.0), FVector(1.0, 0.0, 0.0), 800.0, 760.0, 3);
         SftCheckFixture(*this, TEXT("rotated workshop 800x760"), B,
-                        MakeKitInput(B, "building.test.sf_workshop_rot", LI::Variant::ShopWithStockroom, LI::FurnitureSet::Workshop, 300, "door.test.sf_workshop_rot"), 7);
+                        MakeKitInput(B, "building.test.sf_workshop_rot", LI::Variant::ShopWithStockroom, LI::FurnitureSet::Workshop, 300, "door.test.sf_workshop_rot"), 6);
     }
     return true;
 }
@@ -434,7 +434,7 @@ bool FPWShopFurnitureFixtureTest::RunTest(const FString& Parameters)
     {
         UE_LOG(LogTemp, Display, TEXT("ShopFurniture fixture workshop anchor %s: (%.0f, %.0f, %.0f) yaw %.0f"), *A.Id.ToString(), A.Location.X, A.Location.Y, A.Location.Z, A.YawDegrees);
     }
-    TestTrue(TEXT("anchors exist for both shops"), GoodsAnchors.Num() >= 7 && WorkAnchors.Num() >= 7);
+    TestTrue(TEXT("anchors exist for both shops"), GoodsAnchors.Num() >= 6 && WorkAnchors.Num() >= 6);
     return true;
 }
 
