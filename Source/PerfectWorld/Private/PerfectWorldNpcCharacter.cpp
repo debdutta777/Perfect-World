@@ -39,10 +39,45 @@ void Put(TArray<FPartSpec>& Out, const FVector& Centre, const FVector& Size, con
 
 EPWNpcPartGroup ArmOf(const double Side) { return Side < 0.0 ? EPWNpcPartGroup::ArmLeft : EPWNpcPartGroup::ArmRight; }
 
-double HeightFor(const EPWNpcOutfit Outfit)
+/** The outfit's default height, used only for a person the cast table does not know. */
+double NhOutfitDefaultHeight(const EPWNpcOutfit Outfit)
 {
     if (Outfit == EPWNpcOutfit::ShopProprietor) { return 158.0; }
     return Outfit == EPWNpcOutfit::HouseholdAdult ? 162.0 : 168.0;
+}
+
+/** LANE_LIFE_PLAN section B, "Block identity" column. Ids follow the stable "person.<first>_<surname>" convention. */
+struct FNhAuthoredHeight
+{
+    const TCHAR* PersonId;
+    double Cm;
+};
+
+const FNhAuthoredHeight NhAuthoredHeights[] = {
+    {TEXT("person.farida_qadri"), 158.0},     // sturdy frame, tied-back hair
+    {TEXT("person.mira_sen"), 160.0},         // straight bob, square satchel
+    {TEXT("person.ishan_sheikh"), 173.0},
+    {TEXT("person.tara_das"), 168.0},
+    {TEXT("person.amrita_basu"), 163.0},
+    {TEXT("person.ananya_chatterjee"), 166.0},
+    {TEXT("person.amit_roy"), 178.0},
+    {TEXT("person.care_worker"), 162.0},      // the staff-caregiver prototype
+    {TEXT("person.household_adult"), 168.0},  // the parent household of the default origin
+    {TEXT("person.anindita_sen"), 154.0},     // short wavy hair, plum blouse
+    {TEXT("person.debashis_pal"), 171.0},
+    {TEXT("person.leela_dutta"), 176.0},
+    {TEXT("person.subrata_dey"), 181.0},      // narrow build, slightly stooped
+};
+
+const FNhAuthoredHeight* NhFindAuthoredHeight(const FName PersonId)
+{
+    if (PersonId.IsNone()) { return nullptr; }
+    const FString Id = PersonId.ToString();
+    for (const FNhAuthoredHeight& Row : NhAuthoredHeights)
+    {
+        if (Id.Equals(Row.PersonId, ESearchCase::CaseSensitive)) { return &Row; }
+    }
+    return nullptr;
 }
 
 /**
@@ -132,11 +167,41 @@ void AppendParts(const EPWNpcOutfit Outfit, const double H, TArray<FPartSpec>& O
 }
 } // namespace
 
+namespace PWNpc
+{
+double StandingHeightCm(const FName PersonId, const EPWNpcOutfit Outfit)
+{
+    const FNhAuthoredHeight* Row = NhFindAuthoredHeight(PersonId);
+    return Row != nullptr ? Row->Cm : NhOutfitDefaultHeight(Outfit);
+}
+
+bool HasAuthoredHeight(const FName PersonId)
+{
+    return NhFindAuthoredHeight(PersonId) != nullptr;
+}
+
+double CapsuleHalfHeightCm(const FName PersonId, const EPWNpcOutfit Outfit)
+{
+    return StandingHeightCm(PersonId, Outfit) * 0.5;
+}
+
+FVector SpawnCapsuleCentre(const FVector& Feet, const FName PersonId, const EPWNpcOutfit Outfit)
+{
+    return Feet + FVector(0.0, 0.0, CapsuleHalfHeightCm(PersonId, Outfit) + 2.0);
+}
+
+bool HasSpawnClearance(const UWorld& World, const FVector& Feet, const FName PersonId, const EPWNpcOutfit Outfit)
+{
+    const FCollisionShape Shape = FCollisionShape::MakeCapsule(CapsuleRadius, static_cast<float>(CapsuleHalfHeightCm(PersonId, Outfit)));
+    return !World.OverlapBlockingTestByChannel(SpawnCapsuleCentre(Feet, PersonId, Outfit), FQuat::Identity, ECC_Pawn, Shape);
+}
+} // namespace PWNpc
+
 APWNpcCharacter::APWNpcCharacter()
 {
     PrimaryActorTick.bCanEverTick = false; // the movement component ticks, at 10 to 30 Hz
 
-    GetCapsuleComponent()->InitCapsuleSize(PWNpc::CapsuleRadius, static_cast<float>(HeightFor(Outfit) * 0.5));
+    GetCapsuleComponent()->InitCapsuleSize(PWNpc::CapsuleRadius, static_cast<float>(StandingHeight * 0.5)); // SpawnAt resizes it per person
 
     // A standing person: no AI controller, no wandering. Physics still runs without a controller so they settle on the floor.
     AutoPossessAI = EAutoPossessAI::Disabled;
@@ -165,7 +230,7 @@ APWNpcCharacter::APWNpcCharacter()
 APWNpcCharacter* APWNpcCharacter::SpawnAt(UWorld& World, const FTransform& Transform, const FName PersonId,
                                           const FText& DisplayName, const EPWNpcOutfit Outfit)
 {
-    const double Height = HeightFor(Outfit);
+    const double Height = PWNpc::StandingHeightCm(PersonId, Outfit);
     FTransform At = Transform;
     At.AddToTranslation(FVector(0.0, 0.0, Height * 0.5)); // the transform is where the feet stand; the capsule is centred
     APWNpcCharacter* Npc = World.SpawnActorDeferred<APWNpcCharacter>(
@@ -177,6 +242,7 @@ APWNpcCharacter* APWNpcCharacter::SpawnAt(UWorld& World, const FTransform& Trans
     Npc->PersonId = PersonId;
     Npc->DisplayName = DisplayName;
     Npc->Outfit = Outfit;
+    Npc->StandingHeight = Height;
     Npc->GetCapsuleComponent()->InitCapsuleSize(PWNpc::CapsuleRadius, static_cast<float>(Height * 0.5));
     Npc->BaseEyeHeight = static_cast<float>(Height * 0.94 - Height * 0.5);
     Npc->FinishSpawning(At);
@@ -196,7 +262,7 @@ void APWNpcCharacter::BuildBody()
     {
         return;
     }
-    const double Height = HeightFor(Outfit);
+    const double Height = StandingHeight;
     TArray<FPartSpec> Specs;
     AppendParts(Outfit, Height, Specs);
 
@@ -238,7 +304,7 @@ void APWNpcCharacter::ApplyPose(const FPWNpcPose& Pose)
     {
         return;
     }
-    const double Height = HeightFor(Outfit);
+    const double Height = StandingHeight;
     const double HalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
     const double Drop = 0.2 * Height * Pose.Sit; // hips sink onto a seat about 45 cm up
     const FVector Hip(0.0, 0.0, 0.48 * Height - Drop);
@@ -300,7 +366,7 @@ FText APWNpcCharacter::GetInteractionVerb(const APawn* By) const
 
 FVector APWNpcCharacter::GetInteractionPoint() const
 {
-    return GetActorLocation() + FVector(0.0, 0.0, 25.0); // chest height for either outfit
+    return GetActorLocation() + FVector(0.0, 0.0, 0.15 * StandingHeight); // chest height: 23 cm above the centre at 154, 27 at 181
 }
 
 int32 APWNpcCharacter::GetInteractionPriority() const

@@ -10,6 +10,7 @@ class UMaterialInstanceDynamic;
 class UMaterialInterface;
 class UStaticMesh;
 class UStaticMeshComponent;
+class UWorld;
 
 /** Which placeholder block outfit a person wears. Real art replaces the whole body at M9; gameplay never reads it. */
 enum class EPWNpcOutfit : uint8
@@ -47,6 +48,29 @@ constexpr float CapsuleRadius = 34.0f;        // the same as the player, so the 
 constexpr float LookAtRangeCm = 300.0f;       // within 3 m a person slowly turns to face the player
 constexpr float TurnDegreesPerSecond = 70.0f; // slow: about two and a half seconds for a half turn
 constexpr int32 InteractionPriority = 20;     // people outrank doors (10)
+
+/**
+ * The one answer to "how tall does this person stand?", in cm (LANE_LIFE_PLAN section B cast table; SCALE_AUDIT: doors are
+ * 210 cm, the walking player's capsule 165). Spawning, the clearance probe, the capsule, the generated body and the pose all
+ * read this and nothing else. A known person id returns the authored height (Mira 160, Anindita 154, Subrata 181 ...); an
+ * unknown id falls back to the outfit's default so a test or a new person still spawns with a plausible body.
+ */
+PERFECTWORLD_API double StandingHeightCm(FName PersonId, EPWNpcOutfit Outfit);
+
+/** True when PersonId has an authored height in the cast table (so StandingHeightCm did not fall back to the outfit). */
+PERFECTWORLD_API bool HasAuthoredHeight(FName PersonId);
+
+/** Half of StandingHeightCm: the capsule half height. */
+PERFECTWORLD_API double CapsuleHalfHeightCm(FName PersonId, EPWNpcOutfit Outfit);
+
+/** The centre of this person's capsule when standing with their feet at Feet, 2 cm above the floor so it does not overlap it. */
+PERFECTWORLD_API FVector SpawnCapsuleCentre(const FVector& Feet, FName PersonId, EPWNpcOutfit Outfit);
+
+/**
+ * True when nothing blocks the pawn channel where this person would stand: the same capsule SpawnAt builds, tested at
+ * SpawnCapsuleCentre. The presence subsystem calls this instead of keeping its own half-height constants.
+ */
+PERFECTWORLD_API bool HasSpawnClearance(const UWorld& World, const FVector& Feet, FName PersonId, EPWNpcOutfit Outfit);
 } // namespace PWNpc
 
 /**
@@ -84,6 +108,10 @@ public:
 
     UPWNpcMovementComponent* GetNpcMovement() const { return NpcMovement; }
 
+    /** This person's standing height in cm (PWNpc::StandingHeightCm for their id and outfit); the capsule, body and pose all follow it. */
+    double GetStandingHeightCm() const { return StandingHeight; }
+    EPWNpcOutfit GetOutfit() const { return Outfit; }
+
     /**
      * Why they cannot be talked to right now, as a short sentence for the interaction notice ("Farida is asleep."), or
      * empty when nothing declines. The verb stays "Talk to <name>" when the intent is not talkable, so the person can
@@ -104,6 +132,8 @@ private:
     FName PersonId;
     FText DisplayName;
     EPWNpcOutfit Outfit = EPWNpcOutfit::HouseholdAdult;
+    /** Set once by SpawnAt from PWNpc::StandingHeightCm, before BeginPlay builds the body. */
+    double StandingHeight = 162.0;
 
     UPROPERTY()
     TObjectPtr<UPWNpcMovementComponent> NpcMovement;
