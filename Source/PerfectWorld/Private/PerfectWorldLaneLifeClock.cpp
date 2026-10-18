@@ -10,6 +10,8 @@
 #include "PerfectWorldFrontEndHUD.h"
 #include "PerfectWorldNpcPresenceSubsystem.h"
 #include "PerfectWorldReadingPresenter.h"
+#include "PerfectWorldLaneLifePersistence.h"
+#include "PerfectWorldPlayerCharacter.h"
 #include "UI/SPWClockReadout.h"
 #include "Widgets/SWeakWidget.h"
 
@@ -148,6 +150,86 @@ void UPWLaneLifeSubsystem::ResetWorld()
         NpPresence->ResetPresentation(GetNow());
     }
     OnClockChanged.Broadcast(GetNow());
+}
+
+bool UPWLaneLifeSubsystem::LoadWorldSlot(const std::string& Path, PerfectWorld::CharacterCreator& Creation,
+    std::optional<PerfectWorld::PlayerPlacement>& Placement, std::string& Message)
+{
+    const auto* Talk = UPWConversationPresenter::Get(this);
+    const auto* Reading = UPWReadingPresenter::Get(this);
+    const auto* Player = GetWorld()->GetFirstPlayerController();
+    const auto* Pawn = Player != nullptr ? Cast<APerfectWorldPlayerCharacter>(Player->GetPawn()) : nullptr;
+    if ((Talk != nullptr && Talk->IsOpen()) || (Reading != nullptr && Reading->IsOpen()) ||
+        (Pawn != nullptr && Pawn->IsSeated()))
+    {
+        Message = "Close the conversation or reading panel and stand up before loading. Your current world is unchanged.";
+        return false;
+    }
+    auto Read = PWLaneLifePersistence::ReadWorldSlot(Path);
+    Message = Read.Message;
+    if (!Read.Succeeded()) return false;
+    PerfectWorld::CharacterCreator Scratch;
+    const auto Restored = Scratch.RestoreSave(Read.Data->Creation);
+    if (!Restored.Succeeded()) { Message = Restored.Message; return false; }
+    TUniquePtr<PerfectWorld::WorldSim> Prepared;
+    if (Scratch.HasStarted())
+    {
+        Prepared = MakeUnique<PerfectWorld::WorldSim>(Read.Data->World);
+        const std::string Person(PerfectWorld::OpenConversationPersonId(Prepared->State()));
+        if (!Person.empty() && !Prepared->Submit({PerfectWorld::CommandSource::Player,
+            PerfectWorld::ConversationLeave{Person}}).Accepted)
+        {
+            Message = "The saved conversation could not be closed. Your current world is unchanged.";
+            return false;
+        }
+    }
+    // Commit point: parsing, migration, creator validation and session closure all succeeded.
+    Creation = MoveTemp(Scratch);
+    Placement.reset();
+    if (Prepared)
+    {
+        Placement = Read.Data->Player;
+        AdoptSavedWorld(MoveTemp(Prepared));
+    }
+    return true;
+}
+
+void UPWLaneLifeSubsystem::AdoptSavedWorld(TUniquePtr<PerfectWorld::WorldSim> Prepared)
+{
+    Sim = MoveTemp(Prepared);
+    ClockMode = PerfectWorld::TimeModeState{};
+    RealMsFraction = 0.0;
+    LastClockRefusal.Reset();
+    LastBroadcastInstant = GetNow();
+    ClockHold = EPWClockHold::Menu;
+    ResolveOriginResidency();
+    for (const auto& Weak : RegisteredDoors)
+    {
+        if (auto* Door = Weak.Get())
+        {
+            for (const auto& Entry : Sim->State().Doors.Doors)
+            {
+                if (Entry.Id == PWLaneLife::ToStd(Door->GetDoorId()))
+                {
+                    Door->SetOpenImmediate(Entry.Open, static_cast<int8>(Entry.SwingSide));
+                    break;
+                }
+            }
+        }
+    }
+    if (auto* Presence = GetWorld()->GetSubsystem<UPWNpcPresenceSubsystem>())
+    {
+        Presence->ResetPresentation(GetNow());
+        ++RestorePresentationCount;
+    }
+    OnClockChanged.Broadcast(GetNow());
+}
+
+bool UPWLaneLifeSubsystem::HasMovingDoors() const
+{
+    for (const auto& Weak : RegisteredDoors)
+        if (const auto* Door = Weak.Get(); Door != nullptr && Door->IsMoving()) return true;
+    return false;
 }
 
 PerfectWorld::CommandResult UPWLaneLifeSubsystem::SubmitCommand(const PerfectWorld::Command& Command)

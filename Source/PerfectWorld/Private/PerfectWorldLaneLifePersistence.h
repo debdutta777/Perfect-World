@@ -6,12 +6,20 @@
 #include <string>
 #include <string_view>
 
+class APlayerController;
+
 /** Storage only. All calls run synchronously on the game thread with one writer per slot.
  * Paths are absolute UTF-8, using the creator's existing creation_slot_N.json names.
  * These functions never access actors, subsystems, panels or the live creator.
  */
 namespace PWLaneLifePersistence
 {
+/** Engine entry seam, implemented beside the origin resolver in GameMode.cpp.
+ * Only the built lane can resume coordinates; the current origin's zero marker resolves at home.
+ * A blocked/unsupported resume uses safe origin entry without rewriting the slot.
+ */
+bool PlacePlayerAtSavedPlacement(APlayerController& Player, const PerfectWorld::PlayerPlacement& Saved,
+    bool& UsedOrigin);
 struct CaptureResult
 {
     /** Present only when the complete serialised snapshot passes the core reader. */

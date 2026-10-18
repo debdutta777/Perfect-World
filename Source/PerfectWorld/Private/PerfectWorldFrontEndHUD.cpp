@@ -12,6 +12,7 @@
 #include "PerfectWorldBlockTestGameMode.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
+#include "PerfectWorldLaneLifePersistence.h"
 #include "PerfectWorldPresentationSettings.h"
 #include "PerfectWorldTitleView.h"
 #include "UI/PWDelegates.h"
@@ -127,6 +128,12 @@ void APerfectWorldFrontEndHUD::BeginNewCreation()
     {
         return;
     }
+    if (!Creator->CanReplaceWorld())
+    {
+        Root->ShowToast(Creator->GetLastErrorMessage());
+        return;
+    }
+    Creator->ClearLoadedPlacement();
     Creator->BeginNewCreation();
     ActiveSlot = -1;
     Root->ShowCreation(static_cast<int32>(PWUI::ECreationStep::Household));
@@ -192,13 +199,6 @@ FText APerfectWorldFrontEndHUD::StartNewLife(int32 SlotIndex)
     {
         return EnHudMessageOrFallback(Creator->GetLastErrorMessage());
     }
-    // A new life starts a fresh lane world (07:30 on 2 June 2042, authored doors, no conversations), even when an
-    // earlier life was played in this session. TODO(world-save-v8): Continue/Load restore the saved world instead.
-    if (UPWLaneLifeSubsystem* Life = UPWLaneLifeSubsystem::Get(this))
-    {
-        Life->ResetWorld();
-    }
-
     ActiveSlot = SlotIndex;
     const FText Notice = FText::Format(LOCTEXT("StartedAndSaved", "Your life has begun. Saved to slot {0}."),
                                      FText::AsNumber(SlotIndex + 1));
@@ -277,11 +277,17 @@ FText APerfectWorldFrontEndHUD::EnterWorld(const FText& Notice, const bool bFres
     UWorld* EnWorld = GetWorld();
     APerfectWorldBlockTestGameMode* EnGameMode = EnWorld != nullptr
         ? Cast<APerfectWorldBlockTestGameMode>(EnWorld->GetAuthGameMode()) : nullptr;
-    const bool bEnPlaced = PlayerOwner != nullptr && EnGameMode != nullptr && EnGameMode->PlacePlayerAtOpeningHome(*PlayerOwner);
+    auto* Creator = GetCreator();
+    const auto* Saved = Creator != nullptr && Creator->GetLoadedPlacement() ? &*Creator->GetLoadedPlacement() : nullptr;
+    bool Pb2UsedOrigin = false;
+    const bool bEnPlaced = PlayerOwner != nullptr && EnGameMode != nullptr &&
+        (Saved != nullptr ? PWLaneLifePersistence::PlacePlayerAtSavedPlacement(*PlayerOwner, *Saved, Pb2UsedOrigin)
+                          : EnGameMode->PlacePlayerAtOpeningHome(*PlayerOwner));
     if (!bEnPlaced)
     {
-        return LOCTEXT("HomeEntryFailed", "Your saved life could not be placed at home. Please load the slot to try again.");
+        return LOCTEXT("HomeEntryFailed", "There is no safe place to resume. Please load the slot to try again.");
     }
+    if (Creator != nullptr) Creator->ClearLoadedPlacement();
     // Placement succeeded: only now does the view go back to the pawn, which has not been moved or turned by the title.
     Mode = EFrontEndMode::Playing;
     UGameplayStatics::SetGamePaused(this, false);
@@ -292,6 +298,8 @@ FText APerfectWorldFrontEndHUD::EnterWorld(const FText& Notice, const bool bFres
     {
         Root->ShowToast(Notice);
     }
+    if (Pb2UsedOrigin && !bFreshLifeSaved)
+        Root->ShowToast(LOCTEXT("ResumeUsedOrigin", "Resumed safely at your opening home."));
     // Last, and only now: input already belongs to the game, so the cue (an overlay that fades by itself) delays nothing.
     // A load or Continue is not a start and never plays it.
     if (PWUI::FStartAcknowledgement::ShouldPlay(bFreshLifeSaved, bEnPlaced))

@@ -211,7 +211,7 @@ void UPWLaneLifeSubsystem::RegisterDoor(APWDoorActor& Door)
     Door.OnSettled.RemoveAll(this);
     Door.OnSettled.AddUObject(this, &UPWLaneLifeSubsystem::HandleDoorSettled);
     RegisteredDoors.AddUnique(TWeakObjectPtr<APWDoorActor>(&Door));
-    // TODO(world-save-v8): a loaded world's DoorState (and swing side) arrives here instead of the authored start.
+    // Late registration also uses the adopted world's saved state and swing.
     const PerfectWorld::DoorEntry* Entry = BrFindDoorEntry(Sim->State().Doors, Id);
     Door.SetOpenImmediate(Entry != nullptr ? Entry->Open : Def->bInitiallyOpen, Entry != nullptr ? static_cast<int8>(Entry->SwingSide) : int8(0));
 }
