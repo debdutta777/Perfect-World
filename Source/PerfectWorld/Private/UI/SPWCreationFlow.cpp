@@ -253,7 +253,7 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
                 [
                     SNew(STextBlock)
                     .Text_Lambda([this]() { return PWCreationPause::CreationStepName(CurrentStep); })
-                    .Font_Lambda([Compact]() { return PWUI::Font(Compact() ? 22 : 28, true); })
+                    .Font_Lambda([Compact]() { return PWUI::Font(Compact() ? 20 : 22, true); })
                     .ColorAndOpacity(FSlateColor(Style.TextPrimary))
                 ]
                 + SHorizontalBox::Slot().FillWidth(1.0f)[SNullWidget::NullWidget]
