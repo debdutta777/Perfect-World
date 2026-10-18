@@ -1896,3 +1896,32 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 - **Rung 2:** at `02c9395`, **Succeeded**. The first attempt stalled: three `cl.exe` processes used about 8 s of CPU in 35 minutes while four agent builds competed for the machine. They were ended, and the rerun succeeded.
 - **Headless automation:** **64/64 Success** in one run.
 - **Not run yet:** a packaged restart (quit, relaunch, Continue). It needs the owner's windows closed.
+
+## Checkpoint — Batch A pieces merged: furniture sets, heights, 16 doors with knocking, Mira's bindings, stairs and richer creation and pause, 2026-10-19
+
+**What merged (integrate at `0329a19`):**
+- **NL-03:** general-goods and workshop furniture sets.
+- **UP-04:** per-person authored heights and the `NpcRoster` talkability gate. Presence spawn clearance now uses the person's height.
+- **NL-01 (Claude deep-work):** a 16-door roster with private-dwelling access (knock, visiting hours, host home) and unrestricted exit.
+  - 10- and 11-door v8 saves migrate. Real frozen fixtures, and the generator that made them, are in `Tools/DoorFixtures/`.
+  - The hash goldens were re-pinned.
+- **NL-04 (Claude Sonnet):**
+  - The three kit front doors and the two tall-flats unit doors are hung.
+  - Each door's two-way flag comes from the core.
+  - The LaneLife bridge handles knocking (`PerfectWorldLaneLifeKnock.cpp`).
+- **UP-01:** Mira's bindings. School and her own afternoons are off-lane behind the shop threshold. A standalone probe walked all 30 journeys with no wall crossing.
+- **Integrator:** Mira is registered with the presenter.
+- **UP-05:** a stair layout contract and an isolated test fixture.
+- **UP-06:** richer creation and pause screens.
+- **Fixed:** the `ShopFurniture` test expected 7 anchors, but each set publishes 6 by design.
+
+**Exact checks:**
+- **Rung 2:** at `0329a19`, **Succeeded**.
+- **Headless automation:** 83 found, **80 passed, 3 failed**:
+  - `CreationPause.CreationHierarchyAndProgressionHoldAtEverySize`: the header wraps at 150%-scaled sizes;
+  - `CreationPause.PauseFitsEveryWindowAndScale`: the pause card overflows at 853×480;
+  - `LaneStair.Walk`: about 23 cm of headroom to the slab against 25 cm required.
+  - These went back to their authors, who are fixing them.
+- **Rung 1:** for this merge, interrupted by power-offs and not completed.
+
+**Power-offs:** the host powered the VM off at 18:29, 19:14, 22:32 and 22:59 on 2026-10-18. Build jobs no longer refresh timestamps on a rerun, so an interrupted build's objects are kept. The owner has asked to favour pushing and delegating over long builds.
