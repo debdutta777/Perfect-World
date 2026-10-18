@@ -13,6 +13,7 @@
 #include "UI/SPWStreamPage.h"
 #include "UI/SPWTraitsPage.h"
 #include "UI/SPWAwakeningSigil.h"
+#include "Widgets/Images/SImage.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
@@ -22,6 +23,50 @@
 #include "Widgets/Text/STextBlock.h"
 
 #define LOCTEXT_NAMESPACE "PerfectWorldCreationFlowUI"
+
+// Header and footer rules of the creation flow, linked by name so the PerfectWorld.CreationPause automation can exercise
+// them without a header (UP-06). The widget calls these same functions; sizes are the flow's own logical size.
+namespace
+{
+FVector2D CpFlowSpaceOverride = FVector2D::ZeroVector;
+
+/** The flow's own logical size; before the first layout it reports a roomy window so nothing starts squeezed. */
+FVector2D CpFlowSpace(const SWidget& Flow)
+{
+    if (CpFlowSpaceOverride.X > 0.0 && CpFlowSpaceOverride.Y > 0.0) return CpFlowSpaceOverride;
+    const FVector2D Size(Flow.GetCachedGeometry().GetLocalSize());
+    return Size.X > 1.0 && Size.Y > 1.0 ? Size : FVector2D(1920.0, 1080.0);
+}
+} // namespace
+
+namespace PWCreationPause
+{
+FText CreationStepName(const int32 Step)
+{
+    switch (Step)
+    {
+    case 0: return LOCTEXT("StepHousehold", "Household");
+    case 1: return LOCTEXT("StepTraits", "Traits");
+    case 2: return LOCTEXT("StepIdentity", "Identity");
+    case 3: return LOCTEXT("StepStream", "Stream");
+    default: return LOCTEXT("StepReview", "Review");
+    }
+}
+
+/** Below 1000 units wide, steps other than the current one show their number alone, so the current name keeps its room. */
+bool CreationRailNumbersOnly(const float Width) { return Width < 1000.0f; }
+
+/** The small "New life" label and some spacing go first when the flow is short (1280x720 at 150% is 448 units tall). */
+bool CreationCompactChrome(const float Height) { return Height < 560.0f; }
+
+/** The label of the forward button: it names the page it leads to. */
+FText CreationNextLabel(const int32 Step)
+{
+    return FText::Format(LOCTEXT("NextFmt", "Next: {0}"), CreationStepName(FMath::Min(Step + 1, PWUI::CreationStepCount - 1)));
+}
+
+void SetCreationSpaceForTest(const float Width, const float Height) { CpFlowSpaceOverride = FVector2D(Width, Height); }
+} // namespace PWCreationPause
 
 void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacterCreatorSubsystem* InSubsystem)
 {
@@ -34,19 +79,29 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
     PageReveal = PageTransition.AddCurve(0.0f, 0.16f, ECurveEaseFunction::CubicOut);
     ModalReveal = ModalTransition.AddCurve(0.0f, 0.18f, ECurveEaseFunction::CubicOut);
 
-    const FText StepNames[PWUI::CreationStepCount] = {
-        LOCTEXT("StepHousehold", "Household"), LOCTEXT("StepTraits", "Traits"), LOCTEXT("StepIdentity", "Identity"),
-        LOCTEXT("StepStream", "Stream"), LOCTEXT("StepReview", "Review")};
-
+    const auto Compact = [this]() { return PWCreationPause::CreationCompactChrome(static_cast<float>(CpFlowSpace(*this).Y)); };
+    const auto NumbersOnly = [this]() { return PWCreationPause::CreationRailNumbersOnly(static_cast<float>(CpFlowSpace(*this).X)); };
     const TSharedRef<SHorizontalBox> StepRow = SNew(SHorizontalBox);
     const EPWSigilPictogram Pictograms[PWUI::CreationStepCount] = {
         EPWSigilPictogram::Doorway, EPWSigilPictogram::Ledger, EPWSigilPictogram::Person,
         EPWSigilPictogram::Paths, EPWSigilPictogram::FirstMorning};
     for (int32 Step = 0; Step < PWUI::CreationStepCount; ++Step)
     {
+        const FText StepName = PWCreationPause::CreationStepName(Step);
+        // The current step reads in full and bold; steps already visited keep ivory; steps ahead step back to the secondary
+        // tone (still well above 4.5:1 on the chip). Every chip stays a button, so navigation is unchanged.
+        const TSharedRef<STextBlock> ChipText = SNew(STextBlock)
+            .Text_Lambda([this, Step, StepName, NumbersOnly]()
+            {
+                return Step != CurrentStep && NumbersOnly() ? FText::AsNumber(Step + 1)
+                    : FText::Format(LOCTEXT("StepChipFmt", "{0}  {1}"), FText::AsNumber(Step + 1), StepName);
+            })
+            .Font_Lambda([this, Step]() { return PWUI::Font(15, Step == CurrentStep); })
+            .ColorAndOpacity_Lambda([this, Step]() { return FSlateColor(Step > CurrentStep ? PWUI::FStyle::Get().TextSecondary : PWUI::FStyle::Get().TextPrimary); })
+            .TextShapingMethod(ETextShapingMethod::FullShaping)
+            .AutoWrapText(true);
         const auto StepButton = PWUI::MakeContentButton(
-                PWUI::MakeText(FText::Format(LOCTEXT("StepChipFmt", "{0}  {1}"), FText::AsNumber(Step + 1), StepNames[Step]),
-                               15, Style.TextPrimary, false, true),
+                ChipText,
                 PWUI::EButtonKind::Chip,
                 FOnClicked::CreateLambda([this, Step]()
                 {
@@ -55,18 +110,28 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
                 }),
                 TAttribute<bool>::CreateLambda([this, Step]() { return CurrentStep == Step; }), true, FMargin(8));
 #if WITH_ACCESSIBILITY
-        StepButton->SetAccessibleBehavior(EAccessibleBehavior::Custom, TAttribute<FText>::CreateLambda([this, Step, Name = StepNames[Step]]()
+        StepButton->SetAccessibleBehavior(EAccessibleBehavior::Custom, TAttribute<FText>::CreateLambda([this, Step, StepName]()
         {
             const FText Status = CurrentStep == Step ? LOCTEXT("StepCurrent", "Current")
-                : Model->Summary.bReadyToStart ? LOCTEXT("StepComplete", "Complete") : LOCTEXT("StepAttention", "Needs attention");
-            return FText::Format(LOCTEXT("AccessibleStep", "Step {0}: {1}, {2}"), FText::AsNumber(Step + 1), Name, Status);
+                : Step < CurrentStep ? LOCTEXT("StepVisited", "Visited") : LOCTEXT("StepAhead", "Not yet visited");
+            return FText::Format(LOCTEXT("AccessibleStep", "Step {0}: {1}, {2}"), FText::AsNumber(Step + 1), StepName, Status);
         }));
 #endif
-        StepRow->AddSlot().FillWidth(1.0f).Padding(0.0f, 0.0f, 8.0f, 0.0f)
-        [SNew(SHorizontalBox)
-            + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0, 0, 4, 0)
-            [SNew(SPWAwakeningSigil).SizeClass(EPWSigilSizeClass::Seal).Diameter(32).Pictogram(Pictograms[Step])]
-            + SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Center)[StepButton]];
+        // A short rule under each chip fills up to the current step: progress without a second control to focus.
+        const TSharedRef<SWidget> Track = SNew(SBox).HeightOverride(3.0f)
+            [SNew(SImage).Image_Lambda([this, Step]() { return Step <= CurrentStep ? &PWUI::FStyle::Get().BrushAccentRule : &PWUI::FStyle::Get().BrushRule; })];
+        StepRow->AddSlot()
+        .FillWidth(TAttribute<float>::CreateLambda([this, Step, NumbersOnly]() { return Step != CurrentStep ? 1.0f : (NumbersOnly() ? 3.0f : 1.7f); }))
+        .Padding(0.0f, 0.0f, 8.0f, 0.0f)
+        [SNew(SVerticalBox)
+            + SVerticalBox::Slot().AutoHeight()
+            [SNew(SHorizontalBox)
+                + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0, 0, 4, 0)
+                [SNew(SBox)
+                    .Visibility_Lambda([this]() { return CpFlowSpace(*this).X >= 640.0 ? EVisibility::HitTestInvisible : EVisibility::Collapsed; })
+                    [SNew(SPWAwakeningSigil).SizeClass(EPWSigilSizeClass::Seal).Diameter(32).Pictogram(Pictograms[Step])]]
+                + SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Center)[StepButton]]
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 6.0f, 0.0f, 0.0f)[Track]];
     }
 
     Pages = SNew(SWidgetSwitcher)
@@ -110,13 +175,14 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
         true, 20, 150.0f);
 
     const TSharedRef<SWidget> NextButton = PWUI::MakeButton(
-        LOCTEXT("Next", "Next"), PWUI::EButtonKind::Primary,
+        TAttribute<FText>::CreateLambda([this]() { return PWCreationPause::CreationNextLabel(CurrentStep); }),
+        PWUI::EButtonKind::Primary,
         FOnClicked::CreateLambda([this]()
         {
             GoToStep(CurrentStep + 1);
             return FReply::Handled();
         }),
-        true, 20, 150.0f);
+        true, 20, 210.0f);
     NextButton->SetVisibility(TAttribute<EVisibility>::CreateLambda(
         [this]() { return CurrentStep < PWUI::CreationStepCount - 1 ? EVisibility::Visible : EVisibility::Collapsed; }));
     BackButton->SetVisibility(TAttribute<EVisibility>::CreateLambda(
@@ -151,8 +217,7 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
         LOCTEXT("ConfirmStart", "Begin this life"), PWUI::EButtonKind::Primary,
         FOnClicked::CreateLambda([this]()
         {
-            // The confirmation stays up while Start Life runs, so a slot chooser opened from here remembers a
-            // visible button to return focus to; RequestStartLife closes it once the outcome is known.
+            // The confirmation stays up while Start Life runs (a slot chooser remembers a visible button to return to).
             RequestStartLife();
             return FReply::Handled();
         }),
@@ -171,8 +236,33 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
         .Padding_Lambda([this]() { return NarrowLayout.Get(false) ? FMargin(16) : FMargin(32); })
         [
             SNew(SVerticalBox)
-            + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 8)
-            [PWUI::MakeText(LOCTEXT("NewLife", "New life"), PWUI::ETextRole::Meta, Style.TextSecondary)]
+            + SVerticalBox::Slot().AutoHeight()
+            .Padding(TAttribute<FMargin>::CreateLambda([Compact]() { return Compact() ? FMargin(0, 0, 0, 4) : FMargin(0, 0, 0, 10); }))
+            [
+                // Where the player is, said first: the step's number and name, large beside the small "New life" label.
+                SNew(SHorizontalBox)
+                .Tag(TEXT("CpStepHeader"))
+                + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Bottom).Padding(0.0f, 0.0f, 12.0f, 3.0f)
+                [
+                    SNew(STextBlock)
+                    .Text_Lambda([this]() { return FText::Format(LOCTEXT("StepOfFmt", "Step {0} of {1}"), FText::AsNumber(CurrentStep + 1), FText::AsNumber(PWUI::CreationStepCount)); })
+                    .Font(PWUI::Font(16, true))
+                    .ColorAndOpacity(FSlateColor(Style.Accent))
+                ]
+                + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Bottom)
+                [
+                    SNew(STextBlock)
+                    .Text_Lambda([this]() { return PWCreationPause::CreationStepName(CurrentStep); })
+                    .Font_Lambda([Compact]() { return PWUI::Font(Compact() ? 22 : 28, true); })
+                    .ColorAndOpacity(FSlateColor(Style.TextPrimary))
+                ]
+                + SHorizontalBox::Slot().FillWidth(1.0f)[SNullWidget::NullWidget]
+                + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Bottom).Padding(0.0f, 0.0f, 0.0f, 3.0f)
+                [
+                    SNew(SBox).Visibility_Lambda([Compact]() { return Compact() ? EVisibility::Collapsed : EVisibility::HitTestInvisible; })
+                    [PWUI::MakeText(LOCTEXT("NewLife", "New life"), PWUI::ETextRole::Meta, Style.TextSecondary)]
+                ]
+            ]
             + SVerticalBox::Slot().AutoHeight()
             [
                 SNew(SHorizontalBox)
@@ -181,7 +271,8 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
                     SNew(SBox).MinDesiredHeight_Lambda([this]() { return NarrowLayout.Get(false) ? 48.f : 64.f; })[StepRow]
                 ]
             ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 16.0f, 0.0f, 20.0f)
+            + SVerticalBox::Slot().AutoHeight()
+            .Padding(TAttribute<FMargin>::CreateLambda([Compact]() { return Compact() ? FMargin(0, 8, 0, 10) : FMargin(0, 16, 0, 20); }))
             [
                 PWUI::MakeRule()
             ]
@@ -202,7 +293,8 @@ void SPWCreationFlow::Construct(const FArguments& InArgs, UPerfectWorldCharacter
                 SNew(SBox).Visibility_Lambda([this]() { return CurrentStep == 1 ? EVisibility::Visible : EVisibility::Collapsed; })
                 [TraitsPage->BuildBudget()]
             ]
-            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 16.0f, 0.0f, 16.0f)
+            + SVerticalBox::Slot().AutoHeight()
+            .Padding(TAttribute<FMargin>::CreateLambda([Compact]() { return Compact() ? FMargin(0, 8, 0, 8) : FMargin(0, 16, 0, 16); }))
             [
                 PWUI::MakeRule()
             ]
