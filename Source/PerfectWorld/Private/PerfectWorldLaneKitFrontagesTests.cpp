@@ -149,8 +149,8 @@ bool FPWKitFrontagesRecognitionTest::RunTest(const FString& Parameters)
         TestEqual(*FString::Printf(TEXT("%s: building id"), *Name), Out.BuildingId.ToString(), Name);
         TestTrue(*FString::Printf(TEXT("%s: variant, furniture set, entrance and mirror come from the row"), *Name),
                  Out.Kind == Row.Kind && Out.Furniture == Row.Furniture && Out.EntranceCentreU == Row.EntranceCentreU && Out.bMirrorU == Row.MirrorU);
-        TestTrue(*FString::Printf(TEXT("%s: no lane door id is hung and the planned one is only named"), *Name),
-                 Out.DoorId.IsNone() && !Out.PlannedDoorId.IsNone());
+        TestTrue(*FString::Printf(TEXT("%s: the planned front door is hung (NL-04)"), *Name),
+                 !Out.DoorId.IsNone() && Out.DoorId == Out.PlannedDoorId);
         for (const LI::FrontageEntry& Other : LI::KitFrontageEntries())
         {
             if (&Other != &Row)
@@ -302,7 +302,13 @@ bool FPWKitFrontagesCollisionTest::RunTest(const FString& Parameters)
             Expected += O.Kind == LI::OpeningKind::Window ? 1 : 0;
         }
         TestEqual(*FString::Printf(TEXT("%s: collision box count (the street face adds none)"), *Name), Blocking.Num(), Expected);
-        TestEqual(*FString::Printf(TEXT("%s: open doorways only, so no door spec"), *Name), Scene.Doors.Num(), 0);
+        int32 HungLeaves = 0;
+        for (const LI::Opening& O : Layout.Openings)
+        {
+            HungLeaves += O.DoorId.empty() ? 0 : 1;
+        }
+        TestTrue(*FString::Printf(TEXT("%s: the front door is hung, so it has a door spec"), *Name), HungLeaves >= 1);
+        TestEqual(*FString::Printf(TEXT("%s: one door spec per hung leaf (the front door, plus a leaf to each flat)"), *Name), Scene.Doors.Num(), HungLeaves);
         TestEqual(*FString::Printf(TEXT("%s: one room light per layout light"), *Name), Scene.RoomLights.Num(), static_cast<int32>(Layout.Lights.size()));
         TestTrue(*FString::Printf(TEXT("%s: the floor slab tops out at the finished floor"), *Name),
                  Blocking.ContainsByPredicate([&](const FBox& Box) { return FMath::IsNearlyEqual(Box.Max.Z, FloorAbs, 0.1) && Box.Min.Z <= GroundZ + 0.1; }));

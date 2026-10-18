@@ -156,6 +156,9 @@ void UPWLaneLifeSubsystem::Deinitialize()
 {
     RemoveClockReadout();
     DoorInsideSides.Reset();
+    KnockedDoors.Reset();
+    FTSTicker::GetCoreTicker().RemoveTicker(KnockTicker);
+    KnockTicker.Reset();
     OnClockChanged.Clear();
     APWReadableActor::GlobalReadRequested().RemoveAll(this);
     if (UPWConversationPresenter* Presenter = UPWConversationPresenter::Get(this))
@@ -230,6 +233,10 @@ void UPWLaneLifeSubsystem::HandleDoorSettled(const FName DoorId, const bool bRea
     Settle.DoorId = PWLaneLife::ToStd(DoorId);
     Settle.IsOpenNow = bIsOpenNow;
     Settle.SwingSide = static_cast<std::int8_t>(SwingSide);
+    if (!bIsOpenNow)
+    {
+        KnockedDoors.Remove(DoorId); // a closed door ends the knock's approach
+    }
     PerfectWorld::Command Command;
     Command.Source = PerfectWorld::CommandSource::Presentation;
     Command.Payload = Settle;
@@ -270,7 +277,11 @@ void UPWLaneLifeSubsystem::RequestDoorToggle(APWDoorActor& Door, APawn* By)
     Set.Open = !bWasOpen;
     Set.Context.Direction = PbIsInside ? PerfectWorld::DoorDirection::Exit : PerfectWorld::DoorDirection::Entry;
     Set.Context.IsResident = IsResidentOf(*Def);
+    // NL-04 access bridge. IsInvited stays false until a fact says otherwise: TODO(invitations) set it from the world's invitation
+    // facts (a visitor asked to this home by a resident) once such a fact exists; nothing in the core records one yet.
     Set.Context.IsInvited = false;
+    Set.Context.IsHostHome = Def->Access == PerfectWorld::DoorAccess::Private && IsHostHome(*Def);
+    Set.Context.HasKnocked = KnockedDoors.Contains(Door.GetDoorId());
     PerfectWorld::Command Command;
     Command.Source = PerfectWorld::CommandSource::Player;
     Command.Payload = Set;
@@ -278,7 +289,13 @@ void UPWLaneLifeSubsystem::RequestDoorToggle(APWDoorActor& Door, APawn* By)
     if (!Result.Accepted)
     {
         UE_LOG(LogPWLaneLife, Display, TEXT("Door %s refused by the core: %hs"), *Door.GetDoorId().ToString(), Result.Why.Code.c_str());
-        ShowDoorRefusal(By, BrDoorResultFromCode(PWLaneLife::ToFString(Result.Why.Code)), Def);
+        const PerfectWorld::DoorResult Why = BrDoorResultFromCode(PWLaneLife::ToFString(Result.Why.Code));
+        if (Why == PerfectWorld::DoorResult::Private && Set.Open && Set.Context.Direction == PerfectWorld::DoorDirection::Entry)
+        {
+            HandleDoorKnock(Door, *Def, Set.Context, By); // entry to someone's home without permission becomes a knock
+            return;
+        }
+        ShowDoorRefusal(By, Why, Def);
         return;
     }
     if (!Door.TryMoveTo(Set.Open, By))

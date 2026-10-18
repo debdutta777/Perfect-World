@@ -16,9 +16,28 @@ bool LsBuildUnit(Builder& b, const Room& unit, const Room& passage, Run& wall, c
     const int vc = in.V0 + LsUnitDoorV;
     const std::string name = "unit" + suffix;
     const std::string openingId = b.Key("opening", name);
-    // The doorway is an open frame (no leaf): a leaf would be a new lane door, which needs a door-set migration first.
-    b.AddOpening(wall, name, OpeningKind::Doorway, vc - LsHalfDoor, vc + LsHalfDoor, 0, DoorOpeningHeightCm, leftUnit ? unit.Id : passage.Id,
-                 leftUnit ? passage.Id : unit.Id);
+    // With a unit door id the doorway hangs a leaf (hinge on the low-V jamb, mid-partition). The builder places the sweep on the +U
+    // side of the partition; the leaf swings into the dwelling, so the left unit's sweep is moved to its own side. SweepSign is the
+    // sign of the swing along U for this V-axis wall (the kit presenter reads the sweep zone, which survives a mirror).
+    const std::string& doorId = leftUnit ? b.In.UnitDoorIdA : b.In.UnitDoorIdB;
+    const bool hung = !doorId.empty();
+    b.AddOpening(wall, name, hung ? OpeningKind::Door : OpeningKind::Doorway, vc - LsHalfDoor, vc + LsHalfDoor, 0, DoorOpeningHeightCm,
+                 leftUnit ? unit.Id : passage.Id, leftUnit ? passage.Id : unit.Id, doorId, true);
+    if (hung)
+    {
+        wall.Open.back().SweepSign = leftUnit ? -1 : 1;
+        if (leftUnit)
+        {
+            for (Zone& z : b.L.Zones)
+            {
+                if (z.Kind == ZoneKind::DoorSweep && z.OwnerId == openingId)
+                {
+                    z.Area = Rect{wall.P0 - DoorClearWidthCm, wall.P0, z.Area.V0, z.Area.V1};
+                    z.RoomId = unit.Id;
+                }
+            }
+        }
+    }
     b.AddConnection(name, passage.Id, unit.Id, openingId, DoorClearWidthCm);
     const int u0 = leftUnit ? unit.Area.U1 - CirculationCm : unit.Area.U0;
     b.AddZone(ZoneKind::Circulation, unit.Id, Rect{u0, u0 + CirculationCm, vc - CirculationCm / 2, vc + CirculationCm / 2}, openingId,

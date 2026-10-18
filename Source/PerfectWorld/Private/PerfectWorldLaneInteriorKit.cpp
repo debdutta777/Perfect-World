@@ -1,5 +1,7 @@
 #include "PerfectWorldLaneInteriorKit.h"
 
+#include "Doors.h"
+
 #include <algorithm>
 
 namespace PWLane
@@ -199,13 +201,35 @@ FLaneDoorSpec KitDoorSpec(const FLaneBuilding& B, const LI::InteriorLayout& L, c
     FLaneDoorSpec Spec;
     Spec.Id = IkName(O.DoorId);
     Spec.Hinge = KitPoint(B, L, O.HingeU, O.HingeV, 0.0);
-    // The closed leaf runs from the hinge across the doorway: toward +U when the hinge is on the low jamb, else toward -U.
-    const bool bHingeLow = O.HingeU == O.Plan.U0;
-    const FVector Dir = (bHingeLow ? B.Frame.U : -B.Frame.U).GetSafeNormal();
+    // A front door sits in a wall that runs along U; a flat door sits in a partition that runs along V (same test as IkDressOpening).
+    const bool bAlongU = O.Plan.Width() > O.Plan.Depth();
+    // The closed leaf runs from the hinge across the doorway: along U (toward +U when the hinge is on the low jamb, else -U), or
+    // along V for a partition door.
+    const bool bHingeLow = bAlongU ? O.HingeU == O.Plan.U0 : O.HingeV == O.Plan.V0;
+    const FVector& Across = bAlongU ? B.Frame.U : B.Frame.V;
+    const FVector Dir = (bHingeLow ? Across : -Across).GetSafeNormal();
     Spec.ClosedYaw = FMath::RadiansToDegrees(FMath::Atan2(Dir.Y, Dir.X));
     const FVector LocalY(-Dir.Y, Dir.X, 0.0); // the actor's local +Y is its closed direction turned by +90 degrees of yaw
-    Spec.PreferredSwing = FVector::DotProduct(B.Frame.V * O.SweepSign, LocalY) >= 0.0 ? 1.0 : -1.0; // default swing is into the building
-    Spec.bTwoWay = true; // a customer must be able to leave after closing time
+    // The swing side is the dwelling (or passage) side: +V from a front wall (SweepSign), and for a partition door the side its
+    // sweep zone lies on along U, which survives a mirrored layout. That sign is also the inside side LaneLife registers.
+    FVector Into = B.Frame.V * O.SweepSign;
+    if (!bAlongU)
+    {
+        double SweepSideU = static_cast<double>(O.SweepSign);
+        for (const LI::Zone& Z : L.Zones)
+        {
+            if (Z.Kind == LI::ZoneKind::DoorSweep && Z.OwnerId == O.Id)
+            {
+                SweepSideU = Z.Area.U0 >= O.Plan.U1 ? 1.0 : -1.0;
+                break;
+            }
+        }
+        Into = B.Frame.U * SweepSideU;
+    }
+    Spec.PreferredSwing = FVector::DotProduct(Into, LocalY) >= 0.0 ? 1.0 : -1.0; // default swing is into the building
+    // The authored door decides: a private dwelling leaf is one-way (NL-01), a lane or business door may swing both ways.
+    const PerfectWorld::DoorDef* Def = PerfectWorld::FindDoor(O.DoorId);
+    Spec.bTwoWay = Def != nullptr ? Def->bTwoWay : true;
     return Spec;
 }
 
