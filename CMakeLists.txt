@@ -665,3 +665,9 @@ target_link_libraries(PerfectWorldSahanaLifeTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldSahanaLifeTests COMMAND PerfectWorldSahanaLifeTests
     ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.sahana_mitra.json
     ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.nirmal_bose.json)
+
+# NR-06: the tall flats' first real stair and upper dwelling (portable layout and tests).
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/LaneTallFlatsLayout.cpp)
+add_executable(PerfectWorldLaneTallFlatsLayoutTests Tests/LaneTallFlatsLayoutTests.cpp)
+target_link_libraries(PerfectWorldLaneTallFlatsLayoutTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneTallFlatsLayoutTests COMMAND PerfectWorldLaneTallFlatsLayoutTests)

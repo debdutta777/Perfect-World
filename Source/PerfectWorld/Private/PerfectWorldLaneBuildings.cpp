@@ -4,6 +4,7 @@
 #include "PerfectWorldLaneShops.h"
 #include "PerfectWorldLaneCareInterior.h"
 #include "PerfectWorldLaneKitFrontages.h"
+#include "PerfectWorldLaneTallFlats.h"
 #include "PerfectWorldLaneStationeryShop.h"
 #include "PerfectWorldLaneTeaShop.h"
 
@@ -233,6 +234,11 @@ void BuildFull(FLaneScene& S, const FLaneBuilding& B)
         // The opening home (first row, -Y side, Index 2, X -300 to 700) is hollow: walls with openings, rooms, a ceiling,
         // and the solid upper storeys above it. See PerfectWorldLaneInteriors.h.
         BuildOpeningHome(S, B);
+    }
+    else if (IsTallFlatsUpstairs(B))
+    {
+        // The tall flats (NR-06): the kit's shared-entry ground floor plus the first real stair and an upper dwelling.
+        BuildTallFlatsUpstairs(S, B);
     }
     else if (FLaneKitFrontage KitFrontage; IsKitFrontage(B, KitFrontage))
     {

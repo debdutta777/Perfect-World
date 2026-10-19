@@ -1,4 +1,6 @@
 #include "PerfectWorldAcceptanceSubsystem.h"
+#include "PerfectWorldAcceptanceFrontages.h"
+#include "PerfectWorldLaneTallFlats.h"
 
 #include "EngineUtils.h"
 #include "Engine/Engine.h"
@@ -447,6 +449,21 @@ bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps)
     if (Name == TEXT("origins_seating_cameras"))
     {
         AppendOriginsSeatingCamerasSteps(OutSteps);
+        return true;
+    }
+    if (Name == TEXT("resident_homes"))
+    {
+        AppendResidentHomesSteps(OutSteps);
+        return true;
+    }
+    if (Name == TEXT("frontage_three"))
+    {
+        AppendFrontageThreeSteps(OutSteps);
+        return true;
+    }
+    if (Name == TEXT("tall_flats_upstairs"))
+    {
+        AppendTallFlatsUpstairsSteps(OutSteps);
         return true;
     }
     if (Name == TEXT("stationery_shift"))

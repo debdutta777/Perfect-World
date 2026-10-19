@@ -163,6 +163,7 @@ void AppendSaveRestartSteps(TArray<FStepDef>& OutSteps);
 void AppendDoorsKnockSteps(TArray<FStepDef>& OutSteps);
 void AppendAninditaMiraSteps(TArray<FStepDef>& OutSteps);
 void AppendOriginsSeatingCamerasSteps(TArray<FStepDef>& OutSteps);
+void AppendResidentHomesSteps(TArray<FStepDef>& OutSteps);
 
 // Step builders shared by scenarios (PerfectWorldAcceptanceLaneScenario.cpp).
 FStepDef MakeWorldReadyStep();
