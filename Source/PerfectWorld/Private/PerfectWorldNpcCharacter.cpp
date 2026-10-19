@@ -9,182 +9,13 @@
 #include "Materials/MaterialInterface.h"
 #include "PerfectWorldConversationPresenter.h"
 #include "PerfectWorldInteractionComponent.h"
+#include "PerfectWorldNpcLooks.h"
 #include "UObject/ConstructorHelpers.h"
 
 #define LOCTEXT_NAMESPACE "PerfectWorldNpcCharacter"
 
-namespace
-{
-/** One block of the placeholder body. Centre is X forward, Y right, Z above the floor; Size is the full extent; all in cm. */
-struct FPartSpec
-{
-    FVector Centre;
-    FVector Size;
-    FColor Tint;
-    EPWNpcPartGroup Group = EPWNpcPartGroup::Body;
-    FVector Pivot = FVector::ZeroVector; // the joint a limb swings about (X forward, Y right, Z above the floor)
-};
-
-void Put(TArray<FPartSpec>& Out, const FVector& Centre, const FVector& Size, const FColor& Tint,
-         const EPWNpcPartGroup Group = EPWNpcPartGroup::Body, const FVector& Pivot = FVector::ZeroVector)
-{
-    FPartSpec Spec;
-    Spec.Centre = Centre;
-    Spec.Size = Size;
-    Spec.Tint = Tint;
-    Spec.Group = Group;
-    Spec.Pivot = Pivot;
-    Out.Add(Spec);
-}
-
-EPWNpcPartGroup ArmOf(const double Side) { return Side < 0.0 ? EPWNpcPartGroup::ArmLeft : EPWNpcPartGroup::ArmRight; }
-
-/** The outfit's default height, used only for a person the cast table does not know. */
-double NhOutfitDefaultHeight(const EPWNpcOutfit Outfit)
-{
-    if (Outfit == EPWNpcOutfit::ShopProprietor) { return 158.0; }
-    return Outfit == EPWNpcOutfit::HouseholdAdult ? 162.0 : 168.0;
-}
-
-/** LANE_LIFE_PLAN section B, "Block identity" column. Ids follow the stable "person.<first>_<surname>" convention. */
-struct FNhAuthoredHeight
-{
-    const TCHAR* PersonId;
-    double Cm;
-};
-
-const FNhAuthoredHeight NhAuthoredHeights[] = {
-    {TEXT("person.farida_qadri"), 158.0},     // sturdy frame, tied-back hair
-    {TEXT("person.mira_sen"), 160.0},         // straight bob, square satchel
-    {TEXT("person.ishan_sheikh"), 173.0},
-    {TEXT("person.tara_das"), 168.0},
-    {TEXT("person.amrita_basu"), 163.0},
-    {TEXT("person.ananya_chatterjee"), 166.0},
-    {TEXT("person.amit_roy"), 178.0},
-    {TEXT("person.care_worker"), 162.0},      // the staff-caregiver prototype
-    {TEXT("person.household_adult"), 168.0},  // the parent household of the default origin
-    {TEXT("person.anindita_sen"), 154.0},     // short wavy hair, plum blouse
-    {TEXT("person.debashis_pal"), 171.0},
-    {TEXT("person.leela_dutta"), 176.0},
-    {TEXT("person.subrata_dey"), 181.0},      // narrow build, slightly stooped
-};
-
-const FNhAuthoredHeight* NhFindAuthoredHeight(const FName PersonId)
-{
-    if (PersonId.IsNone()) { return nullptr; }
-    const FString Id = PersonId.ToString();
-    for (const FNhAuthoredHeight& Row : NhAuthoredHeights)
-    {
-        if (Id.Equals(Row.PersonId, ESearchCase::CaseSensitive)) { return &Row; }
-    }
-    return nullptr;
-}
-
-/**
- * The blocks for an outfit, proportioned from the standing height H. Two people differ in at least two silhouette
- * attributes (LANE_LIFE_PLAN section B): the household adult has a hip-length overshirt and a key pouch; the parent has
- * a belted plain shirt and fuller dark hair.
- */
-void AppendParts(const EPWNpcOutfit Outfit, const double H, TArray<FPartSpec>& Out)
-{
-    const double LegHeight = 0.48 * H;
-    const double TorsoHeight = 0.36 * H;
-    const double TorsoCentre = 0.66 * H;
-    const double SleeveHeight = 0.20 * H;
-    const double ForearmHeight = 0.14 * H;
-    const double HeadHeight = 0.152 * H;
-
-    if (Outfit == EPWNpcOutfit::HouseholdAdult)
-    {
-        const FColor Skin(176, 128, 92), Trousers(70, 74, 84), Cream(214, 206, 186), Sage(128, 150, 118);
-        const FColor Silver(192, 192, 198), Leather(112, 80, 54);
-        Put(Out, FVector(0.0, -9.0, LegHeight * 0.5), FVector(14.0, 14.0, LegHeight), Trousers, EPWNpcPartGroup::LegLeft, FVector(0.0, -9.0, LegHeight));
-        Put(Out, FVector(0.0, 9.0, LegHeight * 0.5), FVector(14.0, 14.0, LegHeight), Trousers, EPWNpcPartGroup::LegRight, FVector(0.0, 9.0, LegHeight));
-        Put(Out, FVector(0.0, 0.0, TorsoCentre), FVector(20.0, 40.0, TorsoHeight), Cream);
-        // The sage overshirt, hip length, with the cream shirt showing down the open front.
-        Put(Out, FVector(0.0, 0.0, 0.62 * H), FVector(24.0, 44.0, 0.44 * H), Sage);
-        Put(Out, FVector(12.5, 0.0, TorsoCentre), FVector(2.0, 9.0, TorsoHeight), Cream);
-        for (const double Side : {-1.0, 1.0})
-        {
-            const FVector Shoulder(0.0, Side * 26.0, 0.84 * H);
-            Put(Out, FVector(0.0, Side * 26.0, 0.84 * H - SleeveHeight * 0.5), FVector(12.0, 12.0, SleeveHeight), Sage, ArmOf(Side), Shoulder);
-            Put(Out, FVector(0.0, Side * 26.0, 0.84 * H - SleeveHeight - ForearmHeight * 0.5), FVector(9.0, 9.0, ForearmHeight), Skin, ArmOf(Side), Shoulder);
-        }
-        Put(Out, FVector(0.0, 0.0, H - HeadHeight * 0.5), FVector(20.0, 20.0, HeadHeight), Skin);
-        Put(Out, FVector(0.0, 0.0, H - 3.5), FVector(22.0, 22.0, 7.0), Silver);      // silver-streaked hair
-        Put(Out, FVector(3.0, 25.0, 0.47 * H), FVector(8.0, 11.0, 12.0), Leather);    // the key pouch
-    }
-    else if (Outfit == EPWNpcOutfit::ShopProprietor)
-    {
-        const FColor FaSkin(174, 119, 84), FaTrousers(64, 59, 56), FaCream(230, 220, 196);
-        const FColor FaApron(176, 86, 59), FaHair(42, 32, 29);
-        for (const double Side : {-1.0, 1.0})
-        {
-            const EPWNpcPartGroup FaLeg = Side < 0.0 ? EPWNpcPartGroup::LegLeft : EPWNpcPartGroup::LegRight;
-            Put(Out, FVector(0.0, Side * 10.0, LegHeight * 0.5), FVector(17.0, 17.0, LegHeight), FaTrousers,
-                FaLeg, FVector(0.0, Side * 10.0, LegHeight));
-            const FVector FaShoulder(0.0, Side * 29.0, 0.84 * H);
-            Put(Out, FVector(0.0, Side * 29.0, 0.84 * H - SleeveHeight * 0.5), FVector(14.0, 14.0, SleeveHeight),
-                FaCream, ArmOf(Side), FaShoulder);
-            Put(Out, FVector(0.0, Side * 29.0, 0.84 * H - SleeveHeight - ForearmHeight * 0.5), FVector(11.0, 11.0, ForearmHeight),
-                FaSkin, ArmOf(Side), FaShoulder);
-        }
-        Put(Out, FVector(0.0, 0.0, TorsoCentre), FVector(26.0, 46.0, TorsoHeight), FaCream);
-        Put(Out, FVector(14.0, 0.0, 0.62 * H), FVector(3.0, 35.0, 0.42 * H), FaApron);
-        Put(Out, FVector(0.0, 0.0, 0.52 * H), FVector(28.0, 48.0, 4.0), FaApron);
-        Put(Out, FVector(0.0, 0.0, H - HeadHeight * 0.5), FVector(20.0, 22.0, HeadHeight), FaSkin);
-        Put(Out, FVector(0.0, 0.0, H - 3.5), FVector(22.0, 24.0, 7.0), FaHair);
-        Put(Out, FVector(-11.0, 0.0, H - 9.0), FVector(9.0, 14.0, 12.0), FaHair); // tied-back bun
-    }
-    else
-    {
-        const FColor Skin(206, 160, 122), Trousers(58, 60, 66), Shirt(216, 210, 194), Belt(34, 32, 34), Hair(44, 36, 34);
-        Put(Out, FVector(0.0, -9.5, LegHeight * 0.5), FVector(15.0, 15.0, LegHeight), Trousers, EPWNpcPartGroup::LegLeft, FVector(0.0, -9.5, LegHeight));
-        Put(Out, FVector(0.0, 9.5, LegHeight * 0.5), FVector(15.0, 15.0, LegHeight), Trousers, EPWNpcPartGroup::LegRight, FVector(0.0, 9.5, LegHeight));
-        Put(Out, FVector(0.0, 0.0, TorsoCentre), FVector(20.0, 42.0, TorsoHeight), Shirt);
-        Put(Out, FVector(0.0, 0.0, LegHeight + 1.5), FVector(22.0, 43.0, 3.0), Belt);
-        for (const double Side : {-1.0, 1.0})
-        {
-            const FVector Shoulder(0.0, Side * 27.0, 0.84 * H);
-            Put(Out, FVector(0.0, Side * 27.0, 0.84 * H - SleeveHeight * 0.5), FVector(12.0, 12.0, SleeveHeight), Shirt, ArmOf(Side), Shoulder);
-            Put(Out, FVector(0.0, Side * 27.0, 0.84 * H - SleeveHeight - ForearmHeight * 0.5), FVector(9.0, 9.0, ForearmHeight), Skin, ArmOf(Side), Shoulder);
-        }
-        Put(Out, FVector(0.0, 0.0, H - HeadHeight * 0.5), FVector(20.0, 20.0, HeadHeight), Skin);
-        Put(Out, FVector(0.0, 0.0, H - 4.5), FVector(22.0, 22.0, 9.0), Hair);          // fuller, dark hair
-        Put(Out, FVector(-8.0, 0.0, H - 0.1 * H), FVector(6.0, 21.0, 0.1 * H), Hair);
-    }
-
-    // A minimal face on the +X side (the actor's forward), so a player can read which way a person faces: the first
-    // packaged walk-in (2026-10-14) could not tell a symmetric block head's front from its back.
-    const FColor Eye(30, 26, 26), Brow(52, 40, 36), Nose(150, 104, 78);
-    const double EyeZ = H - 0.075 * H;
-    for (const double Side : {-1.0, 1.0})
-    {
-        Put(Out, FVector(10.6, Side * 4.5, EyeZ), FVector(1.2, 3.0, 2.4), Eye);
-        Put(Out, FVector(10.6, Side * 4.5, EyeZ + 3.2), FVector(1.2, 4.2, 1.0), Brow);
-    }
-    Put(Out, FVector(11.2, 0.0, EyeZ - 4.0), FVector(2.4, 2.4, 3.6), Nose);
-}
-} // namespace
-
 namespace PWNpc
 {
-double StandingHeightCm(const FName PersonId, const EPWNpcOutfit Outfit)
-{
-    const FNhAuthoredHeight* Row = NhFindAuthoredHeight(PersonId);
-    return Row != nullptr ? Row->Cm : NhOutfitDefaultHeight(Outfit);
-}
-
-bool HasAuthoredHeight(const FName PersonId)
-{
-    return NhFindAuthoredHeight(PersonId) != nullptr;
-}
-
-double CapsuleHalfHeightCm(const FName PersonId, const EPWNpcOutfit Outfit)
-{
-    return StandingHeightCm(PersonId, Outfit) * 0.5;
-}
-
 FVector SpawnCapsuleCentre(const FVector& Feet, const FName PersonId, const EPWNpcOutfit Outfit)
 {
     return Feet + FVector(0.0, 0.0, CapsuleHalfHeightCm(PersonId, Outfit) + 2.0);
@@ -263,14 +94,14 @@ void APWNpcCharacter::BuildBody()
         return;
     }
     const double Height = StandingHeight;
-    TArray<FPartSpec> Specs;
-    AppendParts(Outfit, Height, Specs);
+    TArray<FPWNpcBlock> Specs;
+    PWNpcLooks::BuildBlocks(PersonId, Outfit, Height, Specs); // keyed by person id, the outfit as the fallback
 
     UCapsuleComponent* Capsule = GetCapsuleComponent();
     const double HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
     for (int32 Index = 0; Index < Specs.Num(); ++Index)
     {
-        const FPartSpec& Spec = Specs[Index];
+        const FPWNpcBlock& Spec = Specs[Index];
         UStaticMeshComponent* Part = NewObject<UStaticMeshComponent>(this, *FString::Printf(TEXT("NpcBodyPart%d"), Index));
         Part->SetStaticMesh(CubeMesh);
         Part->SetupAttachment(Capsule);
@@ -306,45 +137,11 @@ void APWNpcCharacter::ApplyPose(const FPWNpcPose& Pose)
     }
     const double Height = StandingHeight;
     const double HalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-    const double Drop = 0.2 * Height * Pose.Sit; // hips sink onto a seat about 45 cm up
-    const FVector Hip(0.0, 0.0, 0.48 * Height - Drop);
-    const FQuat Lean(FVector::RightVector, FMath::DegreesToRadians(static_cast<double>(Pose.LeanPitch)));
-    const FQuat Roll(FVector::ForwardVector, FMath::DegreesToRadians(static_cast<double>(Pose.SwayRoll)));
-    const FQuat Lie(FVector::RightVector, FMath::DegreesToRadians(-90.0 * Pose.Lie)); // onto the back, head towards -X
     for (int32 Index = 0; Index < BodyParts.Num(); ++Index)
     {
-        const FPWNpcPartRest& Rest = PartRests[Index];
-        FVector P = Rest.Rest;
+        FVector P = FVector::ZeroVector;
         FQuat Q = FQuat::Identity;
-        double Swing = 0.0; // degrees, positive swings a hanging limb forward (+X)
-        switch (Rest.Group)
-        {
-        case EPWNpcPartGroup::LegLeft: Swing = Pose.LegPitch[0] + 90.0 * Pose.Sit; break;
-        case EPWNpcPartGroup::LegRight: Swing = Pose.LegPitch[1] + 90.0 * Pose.Sit; break;
-        case EPWNpcPartGroup::ArmLeft: Swing = Pose.ArmPitch[0]; break;
-        case EPWNpcPartGroup::ArmRight: Swing = Pose.ArmPitch[1]; break;
-        default: break;
-        }
-        if (Rest.Group != EPWNpcPartGroup::Body)
-        {
-            const FQuat Limb(FVector::RightVector, FMath::DegreesToRadians(-Swing));
-            P = Rest.Pivot + Limb.RotateVector(P - Rest.Pivot);
-            Q = Limb;
-        }
-        P.Z -= Drop;
-        if (Rest.Group != EPWNpcPartGroup::LegLeft && Rest.Group != EPWNpcPartGroup::LegRight)
-        {
-            P = Hip + Lean.RotateVector(P - Hip); // everything above the hips leans together
-            Q = Lean * Q;
-        }
-        P = Roll.RotateVector(P);
-        Q = Roll * Q;
-        if (Pose.Lie > 0.0f)
-        {
-            P = Lie.RotateVector(P) + FVector(0.5 * Height * Pose.Lie, 0.0, 14.0 * Pose.Lie);
-            Q = Lie * Q;
-        }
-        P.Z += Pose.BobCm;
+        PWNpcLooks::PoseBlock(PartRests[Index], Pose, Height, P, Q); // the math is shared with the tests
         BodyParts[Index]->SetRelativeLocationAndRotation(FVector(P.X, P.Y, P.Z - HalfHeight), Q);
     }
 }

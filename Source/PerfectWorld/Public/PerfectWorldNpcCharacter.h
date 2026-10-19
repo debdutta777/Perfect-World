@@ -12,7 +12,11 @@ class UStaticMesh;
 class UStaticMeshComponent;
 class UWorld;
 
-/** Which placeholder block outfit a person wears. Real art replaces the whole body at M9; gameplay never reads it. */
+/**
+ * Which placeholder block outfit a person wears when the cast table (PerfectWorldNpcLooks.cpp) gives them no look of their own.
+ * Real art replaces the whole body at M9; gameplay never reads it. People with a bespoke look (Mira, Anindita, Subrata, Rupa,
+ * Nirmal, Sahana) ignore this value for their body; it still picks the default height of an unknown person.
+ */
 enum class EPWNpcOutfit : uint8
 {
     /** The staff-caregiver prototype from LANE_LIFE_PLAN section B: 162 cm, silver-streaked hair, sage overshirt, key pouch. */
@@ -53,7 +57,9 @@ constexpr int32 InteractionPriority = 20;     // people outrank doors (10)
  * The one answer to "how tall does this person stand?", in cm (LANE_LIFE_PLAN section B cast table; SCALE_AUDIT: doors are
  * 210 cm, the walking player's capsule 165). Spawning, the clearance probe, the capsule, the generated body and the pose all
  * read this and nothing else. A known person id returns the authored height (Mira 160, Anindita 154, Subrata 181 ...); an
- * unknown id falls back to the outfit's default so a test or a new person still spawns with a plausible body.
+ * unknown id falls back to the outfit's default so a test or a new person still spawns with a plausible body. The cast table
+ * behind it, and the block look each authored person wears (keyed by person id, the outfit being the fallback), live in
+ * PerfectWorldNpcLooks.cpp (NR-04); this declaration and its meaning are unchanged.
  */
 PERFECTWORLD_API double StandingHeightCm(FName PersonId, EPWNpcOutfit Outfit);
 
