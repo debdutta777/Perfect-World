@@ -160,6 +160,10 @@ struct ConversationCatalogue
 /** Sahana Mitra's catalogue (person.sahana_mitra, ConversationSahana.cpp). */
 [[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue SahanaConversationCatalogue() noexcept;
 [[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue AmbientConversationCatalogue() noexcept;
+/** Debashis Pal's catalogue (person.debashis_pal, ConversationDebashis.cpp). */
+[[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue DebashisConversationCatalogue() noexcept;
+/** Mahua Saha's catalogue (person.mahua_saha, ConversationMahua.cpp). */
+[[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue MahuaConversationCatalogue() noexcept;
 /** The default catalogue's nodes. */
 [[nodiscard]] PERFECTWORLDCORE_API std::span<const ConversationNodeDef> ConversationNodes() noexcept;
 
