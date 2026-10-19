@@ -637,3 +637,11 @@ add_test(NAME PerfectWorldSubrataLifeTests COMMAND PerfectWorldSubrataLifeTests
 add_executable(PerfectWorldSubrataConversationTests Tests/SubrataConversationTests.cpp)
 target_link_libraries(PerfectWorldSubrataConversationTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldSubrataConversationTests COMMAND PerfectWorldSubrataConversationTests)
+
+# NR-02: Nirmal Bose, unit A life, conversation interruption and persisted memory/receipts.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationNirmal.cpp)
+add_executable(PerfectWorldNirmalLifeTests Tests/NirmalLifeTests.cpp)
+target_include_directories(PerfectWorldNirmalLifeTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldNirmalLifeTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldNirmalLifeTests COMMAND PerfectWorldNirmalLifeTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.nirmal_bose.json)
