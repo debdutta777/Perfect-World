@@ -637,3 +637,14 @@ add_test(NAME PerfectWorldSubrataLifeTests COMMAND PerfectWorldSubrataLifeTests
 add_executable(PerfectWorldSubrataConversationTests Tests/SubrataConversationTests.cpp)
 target_link_libraries(PerfectWorldSubrataConversationTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldSubrataConversationTests COMMAND PerfectWorldSubrataConversationTests)
+
+# NR-01: Rupa Ghosh (tea row house resident): schedule and visiting-hours test, then conversation and world save v8 round trip test.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationRupa.cpp)
+add_executable(PerfectWorldRupaLifeTests Tests/RupaLifeTests.cpp)
+target_include_directories(PerfectWorldRupaLifeTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldRupaLifeTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldRupaLifeTests COMMAND PerfectWorldRupaLifeTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.rupa_ghosh.json)
+add_executable(PerfectWorldRupaConversationTests Tests/RupaConversationTests.cpp)
+target_link_libraries(PerfectWorldRupaConversationTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldRupaConversationTests COMMAND PerfectWorldRupaConversationTests)
