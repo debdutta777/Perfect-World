@@ -45,7 +45,7 @@ Frame for both sides: origin X is the "X from" column; the frontage line is at |
 | -Y0 | -2400 to -1400 | 1000 x 800 | 0 | 3 | Ochre | sealed shell, shutters | shop with stockroom (needs a new furniture set) | `building.nabapara.cloth_merchant` (proposed) | no | no | no | no | no |
 | -Y1 | -1400 to -300 | 1100 x 900 | 0 | 3 | Butter | **children's home** (own code, `PerfectWorldLaneCareInterior`) | own shell (institutional care) | `building.nabapara.care_home` | yes | yes | yes | yes (care worker) | yes (reported, 2026-10-17 walks) |
 | -Y2 | -300 to 700 | 1000 x 900 | 0 | 5 | Cream | **opening home** (own code, `PerfectWorldLaneInteriors`) | own shell (family flat) | `building.nabapara.opening_home` | yes | yes | yes | yes (household adult) | yes (packaged walk 2026-10-17) |
-| -Y3 | 800 to 1700 | 900 x 900 | 60 | 4 | Butter | sealed shell, shutters | shop with stockroom, workshop set (the LANE_LIFE_PLAN repair workshop) | `building.nabapara.repair_workshop` (proposed) | no | no | no | no | no |
+| -Y3 | 800 to 1700 | 900 x 900 | 60 | 4 | Butter | kit ground floor (NR-05; Unreal uncompiled) | shop with stockroom, Workshop set | `building.nabapara.repair_workshop` | coded (portable layout passed) | coded (portable circulation passed) | no (open doorway; planned `door.nabapara.repair_workshop_front`) | no (unoccupied) | no |
 | -Y4 | 1700 to 2600 | 900 x 800 | 120 | 4 | Sage | sealed shell, open stalls | shop with stockroom behind the stalls (stall face kept) | `building.nabapara.market_stalls_a` (proposed) | no | no | no | no | no |
 | -Y5 | 2600 to 3300 | 700 x 700 | 60 | 3 | Teal | sealed shell, house door | **compact residence** (batch 1) | `building.nabapara.caretaker_flat` | coded | coded | no (open doorway; door planned) | no | no |
 | -Y6 | 3300 to 3900 | 600 x 700 | 0 | 4 | Sage | sealed shell, shutters | shop with stockroom | `building.nabapara.narrow_shop` (proposed) | no | no | no | no | no |
@@ -64,8 +64,8 @@ Frame for both sides: origin X is the "X from" column; the frontage line is at |
 | +Y4 | 1400 to 2100 | 700 x 800 | 120 | 4 | Pink | sealed shell, house door | **compact residence**, mirrored (batch 1) | `building.nabapara.tea_row_house` | coded | coded | no (open doorway; door planned) | no | no |
 | +Y5 | 2100 to 2800 | 700 x 900 | 60 | 3 | Teal | sealed shell, shutters | shop with stockroom | `building.nabapara.tailor_shop` (proposed) | no | no | no | no | no |
 | +Y6 | 3400 to 4500 | 1100 x 700 | 120 | 4 | Cream | sealed shell, open stalls | shop with stockroom behind the stalls | `building.nabapara.market_stalls_b` (proposed) | no | no | no | no | no |
-| +Y7 | 4500 to 5200 | 700 x 800 | 0 | 5 | Teal | sealed shell, house door | compact residence | `building.nabapara.old_house` (proposed) | no | no | no | no | no |
-| +Y8 | 5200 to 6400 | 1200 x 700 | 0 | 4 | Terracotta | sealed shell, shutters | shop with stockroom | `building.nabapara.hardware_store` (proposed) | no | no | no | no | no |
+| +Y7 | 4500 to 5200 | 700 x 800 | 0 | 5 | Teal | kit ground floor (NR-05; Unreal uncompiled) | compact residence, Residence set | `building.nabapara.old_house` | coded (portable layout passed) | coded (portable circulation passed) | no (open doorway; planned `door.nabapara.old_house_front`, private, no host) | no (unoccupied) | no |
+| +Y8 | 5200 to 6400 | 1200 x 700 | 0 | 4 | Terracotta | kit ground floor (NR-05; Unreal uncompiled) | shop with stockroom, GeneralGoods set | `building.nabapara.hardware_store` | coded (portable layout passed) | coded (portable circulation passed) | no (open doorway; planned `door.nabapara.hardware_store_front`) | no (unoccupied) | no |
 
 ### 2.3 End-closing masses (`Side 0`, not in `Fronts`)
 
