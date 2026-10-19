@@ -29,6 +29,13 @@ const FNlPerson NlPeople[] = {
     {TEXT("person.rupa_ghosh"), 157.0, EPWNpcOutfit::ParentHousehold, true},
     {TEXT("person.nirmal_bose"), 174.0, EPWNpcOutfit::ParentHousehold, true},
     {TEXT("person.sahana_mitra"), 164.0, EPWNpcOutfit::ParentHousehold, true},
+    // Round 4 (R4-06). Heights frozen with the round plan; Mahua is 162 cm like the care-worker prototype, so the distinctness
+    // test below accepts an equal height only when the silhouettes differ in at least three attributes.
+    {TEXT("person.debashis_pal"), 171.0, EPWNpcOutfit::ParentHousehold, true},
+    {TEXT("person.mahua_saha"), 162.0, EPWNpcOutfit::ParentHousehold, true},
+    {TEXT("person.purnima_das"), 155.0, EPWNpcOutfit::ShopProprietor, true},
+    {TEXT("person.arun_paul"), 176.0, EPWNpcOutfit::ParentHousehold, true},
+    {TEXT("person.rekha_bose"), 161.0, EPWNpcOutfit::ParentHousehold, true},
 };
 
 constexpr double NlCapsuleRadius = 34.0;
@@ -109,6 +116,29 @@ bool FPWNpcLooksHeightsTest::RunTest(const FString& Parameters)
     TestNearlyEqual(TEXT("Rupa Ghosh is 157 cm"), PWNpc::StandingHeightCm(FName(TEXT("person.rupa_ghosh")), EPWNpcOutfit::ParentHousehold), 157.0, 0.001);
     TestNearlyEqual(TEXT("Nirmal Bose is 174 cm"), PWNpc::StandingHeightCm(FName(TEXT("person.nirmal_bose")), EPWNpcOutfit::ParentHousehold), 174.0, 0.001);
     TestNearlyEqual(TEXT("Sahana Mitra is 164 cm"), PWNpc::StandingHeightCm(FName(TEXT("person.sahana_mitra")), EPWNpcOutfit::ParentHousehold), 164.0, 0.001);
+    // Round 4: the five newcomers' authoritative heights.
+    TestNearlyEqual(TEXT("Debashis Pal is 171 cm"), PWNpc::StandingHeightCm(FName(TEXT("person.debashis_pal")), EPWNpcOutfit::ParentHousehold), 171.0, 0.001);
+    TestNearlyEqual(TEXT("Mahua Saha is 162 cm"), PWNpc::StandingHeightCm(FName(TEXT("person.mahua_saha")), EPWNpcOutfit::ParentHousehold), 162.0, 0.001);
+    TestNearlyEqual(TEXT("Purnima Das is 155 cm"), PWNpc::StandingHeightCm(FName(TEXT("person.purnima_das")), EPWNpcOutfit::ShopProprietor), 155.0, 0.001);
+    TestNearlyEqual(TEXT("Arun Paul is 176 cm"), PWNpc::StandingHeightCm(FName(TEXT("person.arun_paul")), EPWNpcOutfit::ParentHousehold), 176.0, 0.001);
+    TestNearlyEqual(TEXT("Rekha Bose is 161 cm"), PWNpc::StandingHeightCm(FName(TEXT("person.rekha_bose")), EPWNpcOutfit::ParentHousehold), 161.0, 0.001);
+    // Nobody who stood in the table before round 4 has moved: these are the heights they had at the round-4 baseline (083b0e2).
+    const struct { const TCHAR* Id; double Cm; } Baseline[] = {
+        {TEXT("person.farida_qadri"), 158.0}, {TEXT("person.mira_sen"), 160.0}, {TEXT("person.ishan_sheikh"), 173.0},
+        {TEXT("person.tara_das"), 168.0}, {TEXT("person.amrita_basu"), 163.0}, {TEXT("person.ananya_chatterjee"), 166.0},
+        {TEXT("person.amit_roy"), 178.0}, {TEXT("person.care_worker"), 162.0}, {TEXT("person.household_adult"), 168.0},
+        {TEXT("person.anindita_sen"), 154.0}, {TEXT("person.leela_dutta"), 176.0}, {TEXT("person.subrata_dey"), 181.0},
+        {TEXT("person.rupa_ghosh"), 157.0}, {TEXT("person.nirmal_bose"), 174.0}, {TEXT("person.sahana_mitra"), 164.0}};
+    for (const auto& Row : Baseline)
+    {
+        TestNearlyEqual(*(FString(Row.Id) + TEXT(": height unchanged since the round-4 baseline")),
+                        PWNpc::StandingHeightCm(FName(Row.Id), EPWNpcOutfit::ParentHousehold), Row.Cm, 0.001);
+    }
+    // The supported player band is 145 to 195 cm (ASSET_PIPELINE, proportions policy: 1.45 to 1.95 m); everyone authored stands inside it.
+    for (const PWNpcLooks::FCastRow& Row : PWNpcLooks::CastTable())
+    {
+        TestTrue(*(FString(Row.PersonId) + TEXT(": inside the supported 145 to 195 cm band")), Row.HeightCm >= 145.0 && Row.HeightCm <= 195.0);
+    }
     // A stranger still takes the outfit's default (UP-04), so a new person always gets a body.
     const FName Stranger(TEXT("person.not_in_the_table"));
     TestFalse(TEXT("a stranger has no authored height"), PWNpc::HasAuthoredHeight(Stranger));
@@ -219,7 +249,8 @@ bool FPWNpcLooksSilhouettesTest::RunTest(const FString& Parameters)
             const TArray<FPWNpcBlock> BlocksB = NlBlocks(NlPeople[B]);
             TestTrue(*(Pair + TEXT(": different block geometry")), NlGeometryHash(BlocksA) != NlGeometryHash(BlocksB));
             TestTrue(*(Pair + TEXT(": different palette")), NlPaletteHash(BlocksA) != NlPaletteHash(BlocksB));
-            TestTrue(*(Pair + TEXT(": different height")) , !FMath::IsNearlyEqual(NlPeople[A].HeightCm, NlPeople[B].HeightCm, 0.5));
+            TestTrue(*(Pair + TEXT(": different height, or at least three silhouette attributes apart")),
+                     !FMath::IsNearlyEqual(NlPeople[A].HeightCm, NlPeople[B].HeightCm, 0.5) || PWNpcLooks::SilhouetteDifferences(SA, SB) >= 3);
         }
     }
 
@@ -264,6 +295,86 @@ bool FPWNpcLooksSilhouettesTest::RunTest(const FString& Parameters)
         { return B.Centre.X < -11.0 && B.Size.Z > 30.0 && B.Centre.Z > 164.0 - 45.0 && B.Tint == FColor(46, 32, 30); }));
     TestTrue(TEXT("Sahana: round glasses"), NlHasBlock(Sahana, [](const FPWNpcBlock& B) { return B.Tint == FColor(30, 28, 34) && B.Centre.X > 11.0; }));
     TestTrue(TEXT("Sahana: a knee-length kurta"), NlHasBlock(Sahana, [](const FPWNpcBlock& B) { return B.Tint == FColor(58, 64, 126) && B.Size.Y >= 42.0; }));
+
+    // Round 4 (R4-06): the named features of the five newcomers.
+    const TArray<FPWNpcBlock> Debashis = Blocks(TEXT("person.debashis_pal"));
+    TestTrue(TEXT("Debashis: a leather apron over the torso"), NlHasBlock(Debashis, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(96, 64, 40) && B.Centre.X > 11.0 && B.Size.Z > 0.4 * 171.0; }));
+    TestTrue(TEXT("Debashis: a sleeve garter on each arm"), NlHasBlock(Debashis, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(58, 60, 70) && B.Group == EPWNpcPartGroup::ArmLeft; })
+        && NlHasBlock(Debashis, [](const FPWNpcBlock& B) { return B.Tint == FColor(58, 60, 70) && B.Group == EPWNpcPartGroup::ArmRight; }));
+    TestTrue(TEXT("Debashis: a brass loupe on the forehead, under the head top"), NlHasBlock(Debashis, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(190, 150, 60) && B.Centre.Z > 171.0 - 10.0 && B.Centre.Z + B.Size.Z * 0.5 <= 171.0 + 0.05; }));
+    const TArray<FPWNpcBlock> Mahua = Blocks(TEXT("person.mahua_saha"));
+    TestTrue(TEXT("Mahua: a moss cardigan, open at the front"), NlHasBlock(Mahua, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(98, 126, 104) && B.Group == EPWNpcPartGroup::Body && B.Size.Z > 0.35 * 162.0; })
+        && !NlHasBlock(Mahua, [](const FPWNpcBlock& B) { return B.Tint == FColor(98, 126, 104) && B.Centre.X > 11.0 && FMath::Abs(B.Centre.Y) < 5.0; }));
+    TestTrue(TEXT("Mahua: a yellow tape measure at the chest"), NlHasBlock(Mahua, [](const FPWNpcBlock& B) { return B.Tint == FColor(222, 186, 56) && B.Centre.X > 14.0; }));
+    TestTrue(TEXT("Mahua: a maroon ledger held at the hip"), NlHasBlock(Mahua, [](const FPWNpcBlock& B) { return B.Tint == FColor(110, 34, 38) && B.Size.Z > 20.0 && B.Centre.X > 12.0; }));
+    TestTrue(TEXT("Mahua: grey hair pinned in a coil at the back"), NlHasBlock(Mahua, [](const FPWNpcBlock& B) { return B.Tint == FColor(190, 188, 186) && B.Centre.X < -9.0 && B.Size.Y > 12.0; }));
+    const TArray<FPWNpcBlock> Purnima = Blocks(TEXT("person.purnima_das"));
+    TestTrue(TEXT("Purnima: a saffron head-wrap whose top is her height"), [&]
+        {
+            double WrapTop = 0.0;
+            for (const FPWNpcBlock& B : Purnima) { if (B.Tint == FColor(226, 140, 40)) { WrapTop = FMath::Max(WrapTop, B.Centre.Z + B.Size.Z * 0.5); } }
+            return FMath::IsNearlyEqual(WrapTop, 155.0, 0.05);
+        }());
+    TestTrue(TEXT("Purnima: an emerald shawl across the shoulders, wider than the torso"), NlHasBlock(Purnima, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(44, 112, 76) && B.Size.Y >= 50.0 && B.Centre.Z > 0.84 * 155.0; }));
+    TestTrue(TEXT("Purnima: a money pouch at her belt"), NlHasBlock(Purnima, [](const FPWNpcBlock& B) { return B.Tint == FColor(88, 58, 40) && B.Centre.X > 12.0; }));
+    const TArray<FPWNpcBlock> Arun = Blocks(TEXT("person.arun_paul"));
+    TestTrue(TEXT("Arun: a pale blue office shirt with a white collar"), NlHasBlock(Arun, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(150, 178, 208) && B.Group == EPWNpcPartGroup::Body; })
+        && NlHasBlock(Arun, [](const FPWNpcBlock& B) { return B.Tint == FColor(236, 238, 242); }));
+    TestTrue(TEXT("Arun: a messenger bag at his right hip"), NlHasBlock(Arun, [](const FPWNpcBlock& B) { return B.Tint == FColor(120, 84, 56) && B.Centre.Y > 28.0 && B.Size.Z > 20.0; }));
+    TestTrue(TEXT("Arun: a lanyard card on the chest"), NlHasBlock(Arun, [](const FPWNpcBlock& B) { return B.Tint == FColor(240, 240, 236) && B.Centre.X > 10.0 && B.Centre.Z < 0.84 * 176.0; }));
+    const TArray<FPWNpcBlock> Rekha = Blocks(TEXT("person.rekha_bose"));
+    TestTrue(TEXT("Rekha: a rose saree wrapped to the ankle with a gold border at the hem"), NlHasBlock(Rekha, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(232, 214, 150) && B.Centre.Z < 10.0 && B.Group == EPWNpcPartGroup::LegLeft; })
+        && NlHasBlock(Rekha, [](const FPWNpcBlock& B) { return B.Tint == FColor(176, 52, 84) && B.Group == EPWNpcPartGroup::LegRight && B.Size.Z > 0.4 * 161.0; }));
+    TestTrue(TEXT("Rekha: the pallu over her right shoulder, where Rupa's is over the left"), NlHasBlock(Rekha, [](const FPWNpcBlock& B)
+        { return B.Centre.Y > 10.0 && B.Centre.Z > 0.84 * 161.0 && B.Tint == FColor(176, 52, 84); }));
+    TestTrue(TEXT("Rekha: a long plait down her back"), NlHasBlock(Rekha, [](const FPWNpcBlock& B) { return B.Centre.X < -11.0 && B.Size.Z > 0.3 * 161.0 && B.Tint == FColor(26, 22, 26); }));
+    TestTrue(TEXT("Rekha: a furled umbrella that swings with her left arm, its tip clear of the floor"), [&]
+        {
+            bool bSwings = false;
+            double TipBottom = 1e9;
+            for (const FPWNpcBlock& B : Rekha)
+            {
+                if (B.Tint == FColor(30, 30, 34) && B.Group == EPWNpcPartGroup::ArmLeft) { bSwings = true; }
+                if (B.Tint == FColor(160, 160, 166)) { TipBottom = FMath::Min(TipBottom, B.Centre.Z - B.Size.Z * 0.5); }
+            }
+            return bSwings && TipBottom > 0.2 * 161.0 - 6.0;
+        }());
+    return true;
+}
+
+// Round 4: the hair, wrap and cap envelope. Nothing worn on the head may rise above the authored height, and the gaze sits where
+// the face puts it (0.925 H), within a comfortable eyeline of the 145 to 195 cm supported player band.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPWNpcLooksRoundFourEnvelopeTest, "PerfectWorld.NpcLooks.RoundFourEnvelope",
+                                 EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FPWNpcLooksRoundFourEnvelopeTest::RunTest(const FString& Parameters)
+{
+    const TCHAR* Ids[] = {TEXT("person.debashis_pal"), TEXT("person.mahua_saha"), TEXT("person.purnima_das"), TEXT("person.arun_paul"), TEXT("person.rekha_bose")};
+    for (const TCHAR* Id : Ids)
+    {
+        const FName Name(Id);
+        const double H = PWNpc::StandingHeightCm(Name, EPWNpcOutfit::ParentHousehold);
+        TArray<FPWNpcBlock> Blocks;
+        PWNpcLooks::BuildBlocks(Name, EPWNpcOutfit::ParentHousehold, H, Blocks);
+        double Highest = 0.0;
+        double EyeZ = 0.0;
+        for (const FPWNpcBlock& B : Blocks)
+        {
+            Highest = FMath::Max(Highest, B.Centre.Z + B.Size.Z * 0.5);
+            // The eyes are the dark 1.2 x 3.0 x 2.4 blocks PWNpcLooks::AppendFace puts on the +X side.
+            if (B.Tint == FColor(30, 26, 26) && FMath::IsNearlyEqual(B.Size.Z, 2.4) && B.Centre.X > 10.0) { EyeZ = B.Centre.Z; }
+        }
+        TestTrue(*(FString(Id) + TEXT(": nothing, hair or wrap included, rises above the authored height")), Highest <= H + 0.05);
+        TestNearlyEqual(*(FString(Id) + TEXT(": gaze height is 0.925 H")), EyeZ, 0.925 * H, 0.05);
+        TestTrue(*(FString(Id) + TEXT(": the eyes of a 145 cm and a 195 cm player (0.939 of height) are each within 55 cm of theirs")),
+                 FMath::Abs(EyeZ - 145.0 * 0.939) < 55.0 && FMath::Abs(EyeZ - 195.0 * 0.939) < 55.0);
+    }
     return true;
 }
 
