@@ -252,25 +252,12 @@ struct PERFECTWORLD_API FPWNpcPolyline
     TArray<FVector> Points;
     TArray<double> Cumulative; // distance along the line to each point, 3D
 
-    /** Replaces the line; points closer than 1 cm to the previous one are dropped. */
-    void Set(const TArray<FVector>& InPoints)
-    {
-        Points.Reset();
-        Cumulative.Reset();
-        for (const FVector& P : InPoints)
-        {
-            if (Points.IsEmpty())
-            {
-                Points.Add(P);
-                Cumulative.Add(0.0);
-            }
-            else if (FVector::Dist(Points.Last(), P) >= 1.0)
-            {
-                Cumulative.Add(Cumulative.Last() + FVector::Dist(Points.Last(), P));
-                Points.Add(P);
-            }
-        }
-    }
+    /**
+     * Replaces the line; points closer than 1 cm to the previous one are dropped. A leg that turns straight back along the
+     * one before it (a journey composed through a hub it only passes, such as door -> counter -> packing desk) is collapsed
+     * to the line it folds onto: the dead-end spur would leave the way ahead behind the walker. Defined in the .cpp.
+     */
+    void Set(const TArray<FVector>& InPoints);
 
     bool IsValid() const { return Points.Num() >= 2; }
     double Length() const { return Cumulative.IsEmpty() ? 0.0 : Cumulative.Last(); }
