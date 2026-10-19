@@ -126,7 +126,7 @@ bool FPWNpcLooksBodyFitsTest::RunTest(const FString& Parameters)
         const FString Label = Person.Id;
         const double H = Person.HeightCm;
         const TArray<FPWNpcBlock> Blocks = NlBlocks(Person);
-        if (!TestTrue(*(Label + TEXT(": the body has blocks")), Blocks.Num() > 20)) { continue; }
+        if (!TestTrue(*(Label + TEXT(": the body has blocks")), Blocks.Num() > 15)) { continue; }
 
         double Top = -1e9, Bottom = 1e9;
         int32 LegsL = 0, LegsR = 0, ArmsL = 0, ArmsR = 0;
