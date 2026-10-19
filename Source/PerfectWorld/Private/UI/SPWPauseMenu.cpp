@@ -8,6 +8,7 @@
 #include "UI/PWStyle.h"
 #include "UI/PWWidgets.h"
 #include "UI/SPWAwakeningSigil.h"
+#include "UI/SPWJournalPanel.h"
 #include "Widgets/Images/SImage.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
@@ -202,6 +203,14 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
             return FReply::Handled();
         }));
 
+    TodayButton = CpPauseButton(
+        LOCTEXT("Today", "Today"), PWUI::EButtonKind::Secondary,
+        FOnClicked::CreateSPLambda(this, [this]()
+        {
+            OpenToday();
+            return FReply::Handled();
+        }));
+
     const TSharedRef<SWidget> SaveButton = CpPauseButton(
         LOCTEXT("Save", "Save"), PWUI::EButtonKind::Secondary,
         FOnClicked::CreateSPLambda(this, [this, SaveCount]()
@@ -340,6 +349,7 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
         [
             SNew(SVerticalBox)
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[ResumeButton]
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[TodayButton.ToSharedRef()]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[SaveButton]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[SaveFeedback]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[ReturnToTitleButton.ToSharedRef()]
@@ -385,89 +395,29 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
         ];
 }
 
-TSharedRef<SWidget> SPWPauseMenu::BuildExitConfirmation()
+void SPWPauseMenu::OpenToday()
 {
-    const PWUI::FStyle& Style = PWUI::FStyle::Get();
-    const FText Title = PendingExit == EPendingExit::ReturnToTitle
-        ? LOCTEXT("ReturnToTitleConfirmTitle", "Return to Title?")
-        : LOCTEXT("QuitConfirmTitle", "Quit Perfect World?");
-    const FText ConfirmLabel = PendingExit == EPendingExit::ReturnToTitle
-        ? LOCTEXT("ConfirmReturnToTitle", "Return to Title")
-        : LOCTEXT("ConfirmQuit", "Quit");
-    const bool bJustSaved = !Status.IsEmpty() && !bStatusIsError;
-    const FText Warning = bJustSaved
-        ? LOCTEXT("SavedJustNow", "You saved just now, so nothing will be lost.")
-        : LOCTEXT("UnsavedProgressWarning", "Unsaved progress since your last save will be lost.");
-
-    return PWUI::MakeDialog(
-        SNew(SVerticalBox)
-        + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center)
-        [
-            PWUI::MakeText(Title, 30, Style.TextPrimary, true)
-        ]
-        + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 12.0f, 0.0f, 24.0f)
-        [
-            PWUI::MakeText(Warning, 18, bJustSaved ? Style.Good : Style.TextSecondary, false, true)
-        ]
-        + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 12.0f)
-        [
-            SNew(SBox).WidthOverride(360.0f)
-            [
-                PWUI::MakeButton(LOCTEXT("CancelExit", "Cancel"), PWUI::EButtonKind::Primary,
-                    FOnClicked::CreateSPLambda(this, [this]()
-                    {
-                        CancelExitConfirmation();
-                        return FReply::Handled();
-                    }), true, 22, 0.0f)
-            ]
-        ]
-        + SVerticalBox::Slot().AutoHeight()
-        [
-            SNew(SBox).WidthOverride(360.0f)
-            [
-                PWUI::MakeButton(ConfirmLabel, PWUI::EButtonKind::Secondary,
-                    FOnClicked::CreateSPLambda(this, [this]()
-                    {
-                        ConfirmExit();
-                        return FReply::Handled();
-                    }), true, 22, 0.0f)
-            ]
-        ],
-        FMargin(48.0f, 36.0f));
-}
-
-void SPWPauseMenu::BeginExitConfirmation(EPendingExit Exit, const TSharedRef<SWidget>& InvokingWidget)
-{
-    PWUI::CancelPendingFocus(AsShared());
-    PendingExit = Exit;
-    InvokingControl = InvokingWidget;
-    ContentHolder->SetContent(BuildExitConfirmation());
-    PWUI::FocusWhenReady(AsShared(), ContentHolder);
-}
-
-void SPWPauseMenu::CancelExitConfirmation()
-{
-    PWUI::CancelPendingFocus(AsShared());
-    const TWeakPtr<SWidget> RestoreFocus = InvokingControl;
-    PendingExit = EPendingExit::None;
-    ContentHolder->SetContent(MenuContent.ToSharedRef());
-    InvokingControl.Reset();
-    PWUI::FocusWhenReady(AsShared(), RestoreFocus);
-}
-
-void SPWPauseMenu::ConfirmExit()
-{
-    if (APerfectWorldFrontEndHUD* Owner = Hud.Get())
+    if (bTodayOpen || PendingExit != EPendingExit::None)
     {
-        if (PendingExit == EPendingExit::ReturnToTitle)
-        {
-            Owner->ReturnToTitle();
-        }
-        else if (PendingExit == EPendingExit::QuitGame)
-        {
-            Owner->QuitGame();
-        }
+        return;
     }
+    PWUI::CancelPendingFocus(AsShared());
+    bTodayOpen = true;
+    const TWeakPtr<SWidget> Self = AsShared();
+    // The journal reads the one authoritative world through the lane-life subsystem (the same path as the clock above); time is already held.
+    ContentHolder->SetContent(
+        SNew(SPWJournalPanel)
+        .Model(PWJournal::ReadModel(Hud.Get()))
+        .Space_Lambda([Self]() { return CpPauseSpace(Self); })
+        .OnClose(FSimpleDelegate::CreateSPLambda(this, [this]() { CloseToday(); })));
+}
+
+void SPWPauseMenu::CloseToday()
+{
+    PWUI::CancelPendingFocus(AsShared());
+    bTodayOpen = false;
+    ContentHolder->SetContent(MenuContent.ToSharedRef());
+    PWUI::FocusWhenReady(AsShared(), TodayButton);
 }
 
 FReply SPWPauseMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent)
@@ -482,6 +432,11 @@ FReply SPWPauseMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InK
         && (Key == EKeys::Escape || Key == EKeys::Gamepad_FaceButton_Right || Key == EKeys::Gamepad_Special_Right))
     {
         CancelExitConfirmation();
+        return FReply::Handled();
+    }
+    if (bTodayOpen && (Key == EKeys::Escape || Key == EKeys::Gamepad_FaceButton_Right || Key == EKeys::Gamepad_Special_Right))
+    {
+        CloseToday();
         return FReply::Handled();
     }
     if (Key == EKeys::Escape || Key == EKeys::Gamepad_Special_Right)
