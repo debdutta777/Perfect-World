@@ -144,7 +144,7 @@ void NlRupa(const double H, TArray<FPWNpcBlock>& Out)
     PutBlock(Out, FVector(-11.5, -8.0, 0.58 * H), FVector(3.0, 22.0, 0.52 * H), Teal);       // and back
     PutBlock(Out, FVector(0.0, -14.0, 0.855 * H), FVector(22.0, 14.0, 3.0), Teal);           // and over the shoulder
     PutBlock(Out, FVector(0.0, 0.0, H - 3.0), FVector(22.0, 22.0, 6.0), Hair);
-    PutBlock(Out, FVector(-9.0, 0.0, H - 9.0), FVector(4.0, 20.0, 0.12 * H), Hair);
+    PutBlock(Out, FVector(-9.0, 0.0, H - 0.06 * H), FVector(4.0, 20.0, 0.12 * H), Hair);
     PutBlock(Out, FVector(-12.0, 0.0, H - 0.115 * H), FVector(7.0, 12.0, 10.0), Hair);       // the low bun, at the nape
     PutBlock(Out, FVector(-15.8, 5.0, H - 0.105 * H), FVector(2.0, 4.0, 4.0), Flower);
     PutBlock(Out, FVector(0.0, 30.0, 0.37 * H), FVector(7.0, 5.0, 0.17 * H), Bag);           // the cloth bag at her right hip
@@ -189,7 +189,7 @@ void NlSahana(const double H, TArray<FPWNpcBlock>& Out)
     PutBlock(Out, FVector(0.0, 0.0, 0.30 * H + 1.2), FVector(25.0, 43.0, 2.5), Hem);
     PutBlock(Out, FVector(10.8, 0.0, 0.76 * H), FVector(1.5, 20.0, 8.0), Yoke);              // the embroidered yoke
     PutBlock(Out, FVector(0.0, 0.0, H - 3.0), FVector(22.0, 22.0, 6.0), Hair);
-    PutBlock(Out, FVector(-9.0, 0.0, H - 11.0), FVector(4.0, 20.0, 0.14 * H), Hair);
+    PutBlock(Out, FVector(-9.0, 0.0, H - 0.07 * H), FVector(4.0, 20.0, 0.14 * H), Hair);
     PutBlock(Out, FVector(-11.0, 0.0, H - 6.0), FVector(5.0, 6.0, 5.0), Tie);                // the hair tie
     PutBlock(Out, FVector(-12.5, 0.0, H - 26.0), FVector(5.0, 7.0, 36.0), Hair);             // and the ponytail down her back
     AppendFace(H, 0.0, Out);
