@@ -130,7 +130,7 @@ bool FPWKitFrontagesRecognitionTest::RunTest(const FString& Parameters)
         TestFalse(*FString::Printf(TEXT("the %s is not a kit frontage"), Item.Name), IsKitFrontage(B, Out));
     }
 
-    TestEqual(TEXT("batch 1 has three frontages"), static_cast<int32>(LI::KitFrontageEntries().size()), 3);
+    TestEqual(TEXT("the catalogue has nine kit frontages (batch 1, NR-05 and R4-01)"), static_cast<int32>(LI::KitFrontageEntries().size()), 9);
     int32 SideCount[2] = {0, 0};
     for (const LI::FrontageEntry& Row : LI::KitFrontageEntries())
     {

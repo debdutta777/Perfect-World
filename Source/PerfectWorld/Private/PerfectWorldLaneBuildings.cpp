@@ -4,6 +4,7 @@
 #include "PerfectWorldLaneShops.h"
 #include "PerfectWorldLaneCareInterior.h"
 #include "PerfectWorldLaneKitFrontages.h"
+#include "PerfectWorldLaneKitStalls.h"
 #include "PerfectWorldLaneTallFlats.h"
 #include "PerfectWorldLaneStationeryShop.h"
 #include "PerfectWorldLaneTeaShop.h"
@@ -245,6 +246,9 @@ void BuildFull(FLaneScene& S, const FLaneBuilding& B)
         // A frontage pinned in the portable frontage catalogue (LaneFrontageCatalogue.h) gets an enterable ground floor
         // from the interior kit, with the solid storeys above. See Docs/LANE_BUILDING_INVENTORY.md.
         BuildKitFrontage(S, B, KitFrontage);
+        // R4-01: the unstaffed browsing shops (market_stalls_a, market_stalls_b, end_shop) keep their open stalls, brought forward out of
+        // the niche the kit's wall no longer allows, and post their hours. A no-op for every other kit frontage. See PerfectWorldLaneKitStalls.h.
+        BuildKitPublicFace(S, B, KitFrontage);
     }
     else
     {

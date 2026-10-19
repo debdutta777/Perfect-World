@@ -483,6 +483,11 @@ bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps)
         AppendProprietorsWorkdaySteps(OutSteps);
         return true;
     }
+    if (Name == TEXT("frontages_round4"))
+    {
+        AppendFrontagesRound4Steps(OutSteps);
+        return true;
+    }
     if (Name == TEXT("stationery_shift"))
     {
         AppendStationeryShiftSteps(OutSteps);
