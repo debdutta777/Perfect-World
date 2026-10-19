@@ -377,6 +377,21 @@ bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps)
         AppendSaveRestartSteps(OutSteps);
         return true;
     }
+    if (Name == TEXT("doors_knock"))
+    {
+        AppendDoorsKnockSteps(OutSteps);
+        return true;
+    }
+    if (Name == TEXT("anindita_mira"))
+    {
+        AppendAninditaMiraSteps(OutSteps);
+        return true;
+    }
+    if (Name == TEXT("origins_seating_cameras"))
+    {
+        AppendOriginsSeatingCamerasSteps(OutSteps);
+        return true;
+    }
     if (Name == TEXT("stationery_shift"))
     {
         AppendStationeryShiftSteps(OutSteps);
