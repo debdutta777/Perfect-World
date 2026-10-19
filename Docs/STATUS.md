@@ -1979,3 +1979,19 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
   - NR-01: Rupa Ghosh, the row-house resident, and the `doors_knock` scenario (Claude Sonnet);
   - NR-02: Nirmal Bose, tall-flats unit A, and `save_restart` (gpt-6.1-sol);
   - NR-04: person looks, `anindita_mira` and `origins_seating_cameras` (Claude Sonnet).
+
+## Checkpoint — the first automated packaged walk ran offscreen, 2026-10-19
+
+**Package:** Rung 4 at `b96234a`, `BUILD SUCCESSFUL`. Executable SHA-256 `6662afa7…`.
+- The first attempt shipped a truncated executable: exactly 2 MiB, against about 335 MB. A power-off at 12:27 had cut the link short, and UBT then treated the file as up to date. Windows refused to launch it ("file is corrupted and unreadable", WinError 1392).
+- The truncated file was deleted and relinked. The spike job now deletes the executable before packaging whenever it is under 100 MB.
+
+**Acceptance spike:** `run_lane_acceptance.py --scenario boot_walk_interact --start new`, offscreen, one process. No owner windows were open.
+- **Passed:**
+  - `world_ready`: offscreen flag on, 1280×720 viewport, 5 seats and 16 doors built;
+  - `enter_world`: a new family life;
+  - `walk_to_living_doorway`: reached in 1.4 s by real movement input;
+  - `shot_living_doorway`: a real rendered PNG, `Docs/Images/acceptance-offscreen-living-doorway.png`, showing the clock "Mon 2 Jun · 07:32" and the "Your life has begun" notice.
+- **Failed:** `walk_to_table_chair`, blocked 160 cm short. The straight-line path runs into the open living-room door leaf, so this is a driver path fix, sent back to AW-01's author.
+- **Your saves:** a private `-UserDir`, with verified backup and restore of the real save slot. "Save restoration verified: True".
+- **Overall:** FAIL (incomplete scenario). **Offscreen capture is proven on this VM.**
