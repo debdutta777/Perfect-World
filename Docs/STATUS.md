@@ -2126,3 +2126,22 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 **Round 5** (`Docs/ROUND5_PLAN_2026-10-19.md`, gpt-6-astra) recommends serial engine verification before merging more Unreal features. That decision is put to the owner. Branch work continues.
 
 **R4-05** ("Today" journal screen, Claude Sonnet) is in progress on `ui/r405-today`.
+
+## Checkpoint — v0.2.0-alpha published, 2026-10-19
+
+**Released as `v0.2.0-alpha` (prerelease):**
+- Tag `v0.2.0-alpha` on `0c32eea`: https://github.com/debdutta777/Perfect-World/releases/tag/v0.2.0-alpha
+- Asset `PerfectWorld-v0.2.0-alpha-Win64.zip`: 410,987,006 bytes, sha256 `feaeb77d9293ebdea9b133074487044bd0ad6d590d362487477e04f1c5d59534`, 201 files. It is the Development packaged build, with the `Saved` folder left out.
+
+**First compile of the Round 3/4 backlog.** The game target failed in two places, both now fixed:
+- `PerfectWorldAcceptanceHomes.h` forward-declared `NpcSchedule` as a struct, but it is a type alias. It now includes `NpcScheduleContent.h`.
+  - The scenario also called the private `IsHostHome`. It now uses the public `IsHostHomeForAcceptance`.
+- `PerfectWorldAcceptanceTests.cpp` reached `PerfectWorld::ParseJson` only through unity-blob neighbours: a bare `"Json.h"` can be the engine's. It now includes `ContentRegistry.h`.
+
+**Verification:**
+- **Rung 1:** 183/183.
+- **Game target:** compiled.
+- **Rung 4:** package succeeded (BuildCookRun exit 0; exe 337,518,080 bytes).
+- **Not run:** the editor build (Rung 2), engine automation, and every AW scenario. It is not boot-tested, because the owner's windows were open, so the game was not launched.
+
+**Next:** Round 5. R5-01, R5-04 and R5-06 are on their branches, awaiting integration.
