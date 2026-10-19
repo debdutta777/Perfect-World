@@ -69,7 +69,7 @@ bool InWindows(std::span<const DoorOpeningWindow> windows, int minute)
 void R20TestTable()
 {
     const auto doors = AuthoredDoors();
-    R20Expect(ValidateDoorTable() && doors.size() == 20, "twenty well-formed doors");
+    R20Expect(ValidateDoorTable() && doors.size() == 23, "twenty-door prefix in today's well-formed roster");
     for (std::size_t i = 0; i < Frozen16.size(); ++i)
         R20Expect(doors[i].Id == Frozen16[i], "the sixteen-door prefix is unchanged: " + std::string(Frozen16[i]));
     // The exact DoorDefs recorded by NR-05 and NR-06, appended in this order.
@@ -172,10 +172,10 @@ void R20TestMigration()
 {
     const auto editions = DoorRosterEditions();
     const DoorRosterEdition want[]{{"pw.doors/1", 5}, {"pw.doors/1", 10}, {"pw.doors/1", 11}, {"pw.doors/2", 10},
-                                   {"pw.doors/2", 11}, {"pw.doors/2", 16}, {"pw.doors/2", 20}};
-    R20Expect(editions.size() == 7, "seven roster editions");
-    for (std::size_t i = 0; i < editions.size() && i < 7; ++i)
-        R20Expect(editions[i].Header == want[i].Header && editions[i].Count == want[i].Count, "editions oldest first, ending at twenty");
+                                   {"pw.doors/2", 11}, {"pw.doors/2", 16}, {"pw.doors/2", 20}, {"pw.doors/2", 23}};
+    R20Expect(editions.size() == 8, "eight roster editions");
+    for (std::size_t i = 0; i < editions.size() && i < 8; ++i)
+        R20Expect(editions[i].Header == want[i].Header && editions[i].Count == want[i].Count, "historical editions retained before twenty-three");
 
     DoorState played = MakeInitialDoorState();
     R20Expect(ApplyDoorSettlement(played, "door.nabapara.home_front", true, -1) == DoorResult::Ok &&
@@ -189,7 +189,7 @@ void R20TestMigration()
     for (std::size_t i = 0; i < 20; ++i)
         R20Expect(parsed.State.Doors[i] == (i < 16 ? played.Doors[i] : initial.Doors[i]), "stored facts kept; the four new doors closed");
     const std::string resaved = SerialiseDoorState(parsed.State);
-    R20Expect(resaved.starts_with("pw.doors/2\ncount=20\n"), "the migrated roster resaves at twenty");
+    R20Expect(resaved.starts_with("pw.doors/2\ncount=23\n"), "the migrated roster resaves at twenty-three");
     const DoorStateParse again = DeserialiseDoorState(resaved);
     R20Expect(again.Ok() && !again.bMigrated && again.State == parsed.State, "and round trips without migrating again");
 
@@ -197,8 +197,8 @@ void R20TestMigration()
     R20Expect(ApplyDoorSettlement(twentyPlayed, Workshop, true, 1) == DoorResult::Ok && ApplyDoorSettlement(twentyPlayed, Upper, true, 1) == DoorResult::Ok,
               "new leaves can stand open");
     const std::string twenty = RosterText("pw.doors/2", twentyPlayed, 20, 20, true);
-    R20Expect(twenty == SerialiseDoorState(twentyPlayed) && DeserialiseDoorState(twenty).State == twentyPlayed && !DeserialiseDoorState(twenty).bMigrated,
-              "today's roster round trips");
+    R20Expect(DeserialiseDoorState(twenty).State == twentyPlayed && DeserialiseDoorState(twenty).bMigrated,
+              "the historical twenty-door roster retains its facts and appends three defaults");
 
     for (std::size_t count = 0; count <= 22; ++count)
     {

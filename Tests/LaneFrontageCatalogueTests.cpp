@@ -163,7 +163,7 @@ void F5TestCatalogueShape()
         F5Expect(e.PlannedDoorId.empty() || (e.PlannedDoorId.rfind("door.nabapara.", 0) == 0 && planned.insert(std::string(e.PlannedDoorId)).second),
                "planned door id is namespaced and unique: " + id);
     }
-    F5Expect(KitFrontageEntries().size() == 6, "two batches of three frontages");
+    F5Expect(KitFrontageEntries().size() == 9, "three batches of three frontages");
     F5Expect(sides[0] >= 1 && sides[1] >= 1, "at least one frontage on each side of the lane");
     F5Expect(compact >= 1 && shared >= 1, "at least one compact residence and one shared entry");
 
@@ -317,7 +317,10 @@ void F5TestNewRows()
     const F5Pin pins[]{
         {"repair_workshop", -1, 3, 800, 900, 900, Variant::ShopWithStockroom, FurnitureSet::Workshop},
         {"hardware_store", 1, 8, 5200, 1200, 700, Variant::ShopWithStockroom, FurnitureSet::GeneralGoods},
-        {"old_house", 1, 7, 4500, 700, 800, Variant::CompactResidence, FurnitureSet::Residence}};
+        {"old_house", 1, 7, 4500, 700, 800, Variant::CompactResidence, FurnitureSet::Residence},
+        {"market_stalls_a", -1, 4, 1700, 900, 800, Variant::ShopWithStockroom, FurnitureSet::GeneralGoods},
+        {"market_stalls_b", 1, 6, 3400, 1100, 700, Variant::ShopWithStockroom, FurnitureSet::GeneralGoods},
+        {"end_shop", -1, 9, 5700, 700, 900, Variant::ShopWithStockroom, FurnitureSet::GeneralGoods}};
     for (const auto& pin : pins)
     {
         const std::string id = std::string("building.nabapara.") + pin.Name;
@@ -429,6 +432,25 @@ void F5TestDoorDrafts()
         }
     }
 }
+void R1FrontageSwingSides()
+{
+    for (const char* R1Name : {"market_stalls_a", "market_stalls_b", "end_shop"})
+    {
+        const auto* R1Row = FindFrontageById(std::string("building.nabapara.") + R1Name);
+        F5Expect(R1Row != nullptr, "round4 row exists");
+        const auto R1Layout = GenerateInteriorLayout(MakeFrontageInput(*R1Row, 15, 300));
+        const auto* R1Door = PerfectWorld::FindDoor(R1Row->EntranceDoorId);
+        F5Expect(R1Layout.Ok() && R1Door != nullptr, "round4 layout and door exist");
+        for (const auto& R1Opening : R1Layout.Openings)
+        {
+            if (R1Opening.DoorId != R1Row->EntranceDoorId) continue;
+            F5Expect(R1Opening.HingeU == R1Opening.Plan.U0 && R1Opening.SweepSign == 1 && !R1Row->MirrorU,
+                "round4 low-U hinge swings into +V");
+            F5Expect(R1Door->PreferredSwingSide == R1Row->Side && !R1Door->bTwoWay,
+                "core physical side matches KitDoorSpec on both lane orientations");
+        }
+    }
+}
 } // namespace
 
 int main()
@@ -439,6 +461,7 @@ int main()
     F5TestLayouts();
     F5TestNewRows();
     F5TestDoorDrafts();
+    R1FrontageSwingSides();
     std::cout << "LaneFrontageCatalogueTests: " << F5Assertions << " assertions passed\n";
     return 0;
 }
