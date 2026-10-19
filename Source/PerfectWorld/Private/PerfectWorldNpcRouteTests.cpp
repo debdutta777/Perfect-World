@@ -251,4 +251,68 @@ bool FNpRouteLateTest::RunTest(const FString& Parameters)
     return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FNpRouteHubTest, "PerfectWorld.NpcRoute.JourneyThroughAHubSpurNeverTurnsBack",
+                                 EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FNpRouteHubTest::RunTest(const FString& Parameters)
+{
+    using namespace NpRouteTest;
+    // A journey composed of two authored legs through the counter hub: stock room -> counter (counter_to_stock_room reversed),
+    // then counter -> customer side (counter_to_door's first three points). The second leg starts by retracing the first
+    // one's last 365 cm, a dead-end spur at the counter (Mira's walk in from the door to the packing desk has the same shape).
+    const FVector Customer(250.0, 165.0, 0.0);
+    const TArray<FVector> Journey = {NrStock, FVector(615.0, 325.0, 0.0), NrCounter, FVector(615.0, 325.0, 0.0),
+                                     FVector(615.0, 165.0, 0.0), Customer};
+    FPWNpcPolyline Line;
+    Line.Set(Journey);
+    TestEqual(TEXT("the spur to the counter is collapsed"), Line.Points.Num(), 4);
+    TestNearlyEqual(TEXT("the walked length is the line it folds onto"), Line.Length(), 270.0 + 160.0 + 365.0, 0.01);
+    FPWNpcPolyline Loop;
+    Loop.Set({FVector(0, 0, 0), FVector(500, 0, 0), FVector(0, 0, 0)});
+    TestEqual(TEXT("an out-and-back collapses to its start"), Loop.Points.Num(), 1);
+    FPWNpcPolyline Corner;
+    Corner.Set({FVector(0, 0, 0), FVector(1000, 0, 0), FVector(1000, 100, 0), FVector(0, 100, 0)});
+    TestEqual(TEXT("two right angles are not a spur"), Corner.Points.Num(), 4);
+
+    FNrWorld Fixture;
+    if (!TestNotNull(TEXT("test world"), Fixture.World))
+    {
+        return false;
+    }
+    Fixture.BuildShop();
+    FNrPerson Person;
+    if (!TestTrue(TEXT("person spawned"), Person.Spawn(*Fixture.World)))
+    {
+        return false;
+    }
+    const FName CustomerId(TEXT("anchor.test.customer_side"));
+    Person.Move->SetAnchorResolver([CustomerId, Customer](const FName Id, FTransform& Out) {
+        if (Id != CustomerId)
+        {
+            return false;
+        }
+        Out = FTransform(FRotator(0.0, 90.0, 0.0), Customer);
+        return true;
+    });
+    FPWNpcIntentView Travel = NrTravel(0);
+    Travel.AnchorId = CustomerId;
+    Person.Move->SetIntent(Travel);
+    Person.Move->SetRoute(Journey);
+    for (int32 Second = 1; Second <= 8; ++Second)
+    {
+        Person.Run(*Fixture.World, Fixture.Obstacles, 1.0);
+        Travel.ProgressPermille = FMath::Min(1000, Second * 125);
+        Person.Move->SetIntent(Travel);
+    }
+    FPWNpcIntentView Work = NrWork();
+    Work.AnchorId = CustomerId;
+    Person.Move->SetIntent(Work);
+    Person.Run(*Fixture.World, Fixture.Obstacles, 6.0);
+
+    const double Left = FVector::Dist2D(Person.Feet(), Customer);
+    TestTrue(*FString::Printf(TEXT("reaches the end of the journey (%.1f cm off)"), Left), Left <= 20.0);
+    TestTrue(*FString::Printf(TEXT("never touched the partition or the desk (closest %.1f cm)"), Person.MinClearanceCm), Person.MinClearanceCm >= 2.0);
+    TestFalse(TEXT("never persistently blocked"), Person.Move->IsPersistentlyBlocked());
+    return true;
+}
+
 #endif // WITH_DEV_AUTOMATION_TESTS

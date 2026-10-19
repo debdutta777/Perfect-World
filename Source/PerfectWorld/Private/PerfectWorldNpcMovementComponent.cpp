@@ -51,6 +51,44 @@ FPWNpcIntentView MakeNpcIntentView(const PerfectWorld::NpcIntent& Core, const bo
     return View;
 }
 
+void FPWNpcPolyline::Set(const TArray<FVector>& InPoints)
+{
+    TArray<FVector> Kept;
+    for (const FVector& P : InPoints)
+    {
+        if (!Kept.IsEmpty() && FVector::Dist(Kept.Last(), P) < 1.0)
+        {
+            continue;
+        }
+        Kept.Add(P);
+        // A -> B -> C where B -> C runs straight back along A -> B (within about 2 degrees): B is the tip of a spur the journey
+        // only passes through. Walking it means turning on the spot at its tip, where every point ahead lies behind the walker.
+        // Drop B; A -> C stays on the same authored line. Repeat, since C may also fold back past A.
+        while (Kept.Num() >= 3)
+        {
+            const FVector A = Kept[Kept.Num() - 3];
+            const FVector B = Kept[Kept.Num() - 2];
+            const FVector C = Kept.Last();
+            if (FVector::DotProduct((B - A).GetSafeNormal(), (C - B).GetSafeNormal()) > -0.9995)
+            {
+                break;
+            }
+            Kept.RemoveAt(Kept.Num() - 2);
+            if (FVector::Dist(Kept[Kept.Num() - 2], Kept.Last()) < 1.0)
+            {
+                Kept.Pop(); // the spur returned exactly where it left
+            }
+        }
+    }
+    Points.Reset();
+    Cumulative.Reset();
+    for (const FVector& P : Kept)
+    {
+        Cumulative.Add(Points.IsEmpty() ? 0.0 : Cumulative.Last() + FVector::Dist(Points.Last(), P));
+        Points.Add(P);
+    }
+}
+
 // --- component: intent in -----------------------------------------------------------------------------------------
 
 UPWNpcMovementComponent::UPWNpcMovementComponent()
