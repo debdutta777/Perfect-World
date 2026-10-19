@@ -285,7 +285,7 @@ bool FRupaBindingsRouteTest::RunTest(const FString& Parameters)
             }
         }
     }
-    TestTrue(TEXT("the journey was checked in both directions"), Journeys == Rupa.Paths.Num() * 2 && Journeys == 2);
+    TestTrue(TEXT("the journey was checked in both directions"), Journeys == static_cast<int32>(Rupa.Paths.size()) * 2 && Journeys == 2);
     return true;
 }
 

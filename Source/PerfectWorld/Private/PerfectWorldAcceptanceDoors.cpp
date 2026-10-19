@@ -10,8 +10,8 @@
 #include "NpcScheduleContent.h"
 #include "PerfectWorldContentSubsystem.h"
 #include "PerfectWorldDoorActor.h"
-#include "PerfectWorldInteractionComponent.h"
 #include "PerfectWorldLaneInteriorKit.h"
+#include "PerfectWorldInteractionComponent.h"
 #include "PerfectWorldLaneKitFrontages.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
 #include "PerfectWorldNpcPresenceSubsystem.h"
@@ -110,10 +110,10 @@ bool DkDoorGeo(const TCHAR* BuildingId, const TCHAR* DoorId, FDkGeo& Out)
     PWLane::FLaneBuilding Building;
     PWLane::FLaneKitFrontage Kit;
     if (!PWLane::MakeSubrataBuilding(BuildingId, Building) || !PWLane::IsKitFrontage(Building, Kit)) { return false; }
-    const LI::InteriorLayout Layout = PWLane::MakeKitFrontageLayout(Building, Kit);
+    const PWLane::LI::InteriorLayout Layout = PWLane::MakeKitFrontageLayout(Building, Kit);
     if (!Layout.Ok()) { return false; }
     const std::string Id(TCHAR_TO_UTF8(DoorId));
-    for (const LI::Opening& Opening : Layout.Openings)
+    for (const PWLane::LI::Opening& Opening : Layout.Openings)
     {
         if (Opening.DoorId != Id) { continue; }
         const PWLane::FLaneDoorSpec Spec = PWLane::KitDoorSpec(Building, Layout, Opening);
