@@ -166,6 +166,8 @@ void AppendOriginsSeatingCamerasSteps(TArray<FStepDef>& OutSteps);
 void AppendResidentHomesSteps(TArray<FStepDef>& OutSteps);
 /** R4-02: Debashis and Mahua open, work and close their shops (PerfectWorldAcceptanceProprietors.cpp). */
 void AppendProprietorsWorkdaySteps(TArray<FStepDef>& OutSteps);
+/** R4-04: dated encounters and remembered agreements survive a fresh-process Continue (PerfectWorldAcceptanceJournalState.cpp). */
+void AppendJournalStateSteps(TArray<FStepDef>& OutSteps);
 /** R4-01: the three unstaffed browsing frontages (market_stalls_a, market_stalls_b, end_shop); a fresh-process pair (PerfectWorldAcceptanceFrontagesR4.cpp). */
 void AppendFrontagesRound4Steps(TArray<FStepDef>& OutSteps);
 

@@ -488,6 +488,11 @@ bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps)
         AppendFrontagesRound4Steps(OutSteps);
         return true;
     }
+    if (Name == TEXT("journal_state"))
+    {
+        AppendJournalStateSteps(OutSteps);
+        return true;
+    }
     if (Name == TEXT("stationery_shift"))
     {
         AppendStationeryShiftSteps(OutSteps);

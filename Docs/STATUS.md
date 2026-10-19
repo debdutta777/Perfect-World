@@ -2103,3 +2103,26 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
   - `frontages_round4` registered for the restart pair.
 
 **R4-04** (journal state, gpt-6.1-sol) is running on `core/r404-journal`.
+
+## Checkpoint — R4-01 and R4-04 merged; Rung 1 183/183; Round 5 planned, 2026-10-19
+
+**R4-01** (`39912f6`):
+- Three browsing frontages (`market_stalls_a`, `market_stalls_b`, `end_shop`) and the 20→23 door edition.
+- The real frozen 20-door fixture, generated from `git archive 843f73e`.
+- Unreal production faces (Claude Sonnet): stalls, posted hours, "Browse goods", and `frontages_round4`.
+- Rung 1: 182/182 on the branch.
+
+**R4-04** (`7f3c045`, gpt-6.1-sol; integration fixes by Claude):
+- The lane journal: dated encounters per person per day, and agreements derived from conversation facts.
+- Save schema 9, hash version 6, and `pw.lane_journal/1`. Older saves keep their agreements with an empty encounter log.
+- The journal test had assumed the rota conversation was open at breakfast; it now moves to the real conversation windows. The rollback test now asserts that only the event cap refuses its paid choice.
+- Current-schema assertions read `WorldSaveSchemaVersion`.
+- Goldens re-pinned after the reference encoder agreed.
+- `journal_state` is registered, including as a restart pair.
+- **Rung 1 on the merged tree: 183/183.**
+
+**Not run:** the Unreal compile, automation, packaging and every AW scenario. The owner is holding builds.
+
+**Round 5** (`Docs/ROUND5_PLAN_2026-10-19.md`, gpt-6-astra) recommends serial engine verification before merging more Unreal features. That decision is put to the owner. Branch work continues.
+
+**R4-05** ("Today" journal screen, Claude Sonnet) is in progress on `ui/r405-today`.
