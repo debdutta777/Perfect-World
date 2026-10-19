@@ -2054,3 +2054,27 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 **Not run** (the owner asked to hold builds): the merged Rung 1, the Unreal compile, automation, and packaging. The parked package and acceptance job (`D:\PWWork\job_acceptance.ps1`) is ready to rerun.
 
 **Remaining sealed:** 9 side frontages and the 2 end masses.
+
+## Checkpoint — doors 16→20 merged; round 4 under way, 2026-10-19
+
+**What merged (`843f73e`):** the door roster grows from 16 to 20 doors (Claude deep-work agent).
+- New doors: the repair workshop and hardware store (business hours), the old house (private visiting), and the tall-flats upper flat (private).
+- 16-door saves migrate and authenticate against their stored door text.
+- A real frozen 16-door fixture.
+- The three frontages now hang their doors.
+- The hash goldens were re-pinned.
+- **Rung 1:** 178/178 on the branch.
+- **Unreal:** not built, by the owner's request to hold builds.
+- **Follow-ups:**
+  - The old house and the upper flat need a resident or a real invitation before the walk scenarios can enter them.
+  - The upper-flat leaf is authored but not hung yet.
+
+**Round 4** (`Docs/ROUND4_PLAN_2026-10-19.md`, gpt-6-astra):
+- **R4-03, gpt-6.1-sol:** ambient life (vendor Purnima Das with a cart, passers-by Arun Paul and Rekha Bose). Pushed on `content/r403-ambient`, not yet merged: its portable tests could not run in the sandbox.
+- **R4-02, Claude Sonnet:** the proprietors Debashis Pal and Mahua Saha.
+- **R4-06, Claude Sonnet:** looks and heights for the five newcomers.
+- R4-02 and R4-06 are in progress, with WIP pushed on their branches.
+- **Queued:**
+  - R4-01: three more frontages and a 20→23 door migration;
+  - R4-04: journal state;
+  - R4-05: the "Today" journal screen.
