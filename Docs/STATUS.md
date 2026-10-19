@@ -2024,3 +2024,33 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 - **Rung 1:** at `b44782a`, **175/175**.
 - **Rung 2:** **Succeeded**.
 - **Headless automation:** **108/108 Success** in one run.
+
+## Checkpoint — round 3, batch B merged (not yet built in Unreal): Sahana, three more frontages, the first real upstairs, 2026-10-19
+
+**What merged (`d6f1add`, pushed):**
+- **Claude Sonnet, NR-03:** Sahana Mitra of tall-flats unit B.
+  - Sewing at home, plus an off-lane errand.
+  - Home and awake for every minute of her door's 17:00–20:30 visiting hours.
+  - A remembered sewing agreement.
+  - Her bindings, and the `resident_homes` scenario covering Subrata, Nirmal, Rupa and Sahana: host truth, real knocks, Talk and Leave, and save read-back.
+  - Focused portable tests pass: `SahanaLifeTests`, content, and `pwcontent` at 148 files and 184 records.
+- **gpt-6.1-sol, NR-05:** three more catalogue frontages, with 794 focused portable assertions passing:
+  - `repair_workshop` (−Y/3, X 800–1700, Workshop);
+  - `hardware_store` (+Y/8, X 5200–6400, GeneralGoods);
+  - `old_house` (+Y/7, X 4500–5200, Residence).
+  - Planned door definitions for a 16→19 door migration. Doorways stay unhung until it lands.
+  - The `frontage_three` scenario.
+- **gpt-6.1-sol, NR-06:** the first real upstairs.
+  - The stair fits inside `tall_flats` without losing either ground unit: 130×640 cm, two 120 cm landings, 17 risers from 15 to 315 cm, a 130×418 slab opening, 220 cm headroom and 100 cm guards.
+  - A furnished upper dwelling (its door is planned for a 19→20 migration), its presenter, and the `tall_flats_upstairs` scenario.
+  - 10,303 layout assertions and 231,482 stair assertions pass.
+- **Integrator hooks:**
+  - Sahana's spawn and roster row;
+  - three scenario dispatches;
+  - the tall flats are built by `BuildTallFlatsUpstairs` before the generic kit branch;
+  - CMake lines;
+  - content pins at 148 files and 184 records.
+
+**Not run** (the owner asked to hold builds): the merged Rung 1, the Unreal compile, automation, and packaging. The parked package and acceptance job (`D:\PWWork\job_acceptance.ps1`) is ready to rerun.
+
+**Remaining sealed:** 9 side frontages and the 2 end masses.
