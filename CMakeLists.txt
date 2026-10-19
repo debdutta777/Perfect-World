@@ -656,3 +656,12 @@ add_test(NAME PerfectWorldRupaLifeTests COMMAND PerfectWorldRupaLifeTests
 add_executable(PerfectWorldRupaConversationTests Tests/RupaConversationTests.cpp)
 target_link_libraries(PerfectWorldRupaConversationTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldRupaConversationTests COMMAND PerfectWorldRupaConversationTests)
+
+# NR-03: Sahana Mitra (tall-flats unit B resident): schedule, visiting hours, independence from unit A, conversation and world save round trip.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationSahana.cpp)
+add_executable(PerfectWorldSahanaLifeTests Tests/SahanaLifeTests.cpp)
+target_include_directories(PerfectWorldSahanaLifeTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldSahanaLifeTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSahanaLifeTests COMMAND PerfectWorldSahanaLifeTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.sahana_mitra.json
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.nirmal_bose.json)
