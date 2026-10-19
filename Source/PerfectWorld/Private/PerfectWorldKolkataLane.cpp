@@ -21,6 +21,8 @@
 #include "PerfectWorldNirmalBindings.h"
 #include "PerfectWorldRupaBindings.h"
 #include "PerfectWorldSahanaBindings.h"
+#include "PerfectWorldAmbientBindings.h"
+#include "PerfectWorldProprietorBindings.h"
 #include "PerfectWorldSubrataBindings.h"
 
 namespace PWLane
@@ -301,6 +303,9 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     SpawnNirmal(World, Scene);
     SpawnRupa(World, Scene);
     SpawnSahana(World, Scene);
+    SpawnAmbientLife(World);
+    SpawnDebashis(World, Scene);
+    SpawnMahua(World, Scene);
     if (Scene.bOpeningHomeBuilt)
     {
         SpawnHouseholdAdult(World);

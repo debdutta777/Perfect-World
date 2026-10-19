@@ -681,3 +681,24 @@ add_test(NAME PerfectWorldDoorsRoster20Tests COMMAND PerfectWorldDoorsRoster20Te
 add_executable(PerfectWorldDoorsRoster23Tests Tests/DoorsRoster23Tests.cpp)
 target_link_libraries(PerfectWorldDoorsRoster23Tests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldDoorsRoster23Tests COMMAND PerfectWorldDoorsRoster23Tests)
+
+# R4-03: talkable vendor/passers and shared authored ambient routes.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/LaneAmbient.cpp
+    Source/PerfectWorldCore/Private/ConversationAmbient.cpp)
+add_executable(PerfectWorldLaneAmbientTests Tests/LaneAmbientTests.cpp)
+target_link_libraries(PerfectWorldLaneAmbientTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneAmbientTests COMMAND PerfectWorldLaneAmbientTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# R4-02: the two working proprietors (Debashis Pal, repair workshop; Mahua Saha, hardware store): schedules, conversations and world save.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationDebashis.cpp
+                                        Source/PerfectWorldCore/Private/ConversationMahua.cpp)
+add_executable(PerfectWorldProprietorLifeTests Tests/ProprietorLifeTests.cpp)
+target_include_directories(PerfectWorldProprietorLifeTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldProprietorLifeTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldProprietorLifeTests COMMAND PerfectWorldProprietorLifeTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.debashis_pal.json
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.mahua_saha.json)
+add_executable(PerfectWorldProprietorConversationTests Tests/ProprietorConversationTests.cpp)
+target_link_libraries(PerfectWorldProprietorConversationTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldProprietorConversationTests COMMAND PerfectWorldProprietorConversationTests)

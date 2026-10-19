@@ -15,7 +15,7 @@ class UWorld;
 /**
  * Which placeholder block outfit a person wears when the cast table (PerfectWorldNpcLooks.cpp) gives them no look of their own.
  * Real art replaces the whole body at M9; gameplay never reads it. People with a bespoke look (Mira, Anindita, Subrata, Rupa,
- * Nirmal, Sahana) ignore this value for their body; it still picks the default height of an unknown person.
+ * Nirmal, Sahana and, from round 4, Debashis, Mahua, Purnima, Arun, Rekha) ignore this value for their body; it still picks the default height of an unknown person.
  */
 enum class EPWNpcOutfit : uint8
 {

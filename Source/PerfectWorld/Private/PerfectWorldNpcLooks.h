@@ -27,15 +27,21 @@ namespace PWNpcLooks
 /** The attributes that make a silhouette readable at lane distance. Two people must differ in at least two (LANE_LIFE_PLAN section B). */
 enum class EHair : uint8
 {
-    SilverStreaked, FullDark, TiedBackBun, Bob, ShortWavy, Thinning, LowBun, FlatCap, Ponytail
+    SilverStreaked, FullDark, TiedBackBun, Bob, ShortWavy, Thinning, LowBun, FlatCap, Ponytail,
+    /** Round 4 (R4-06), appended: close-cropped grey, pinned grey coil, saffron head-wrap, neat side parting, long plait. */
+    CloseCrop, PinnedCoil, HeadWrap, SidePart, LongPlait
 };
 enum class EGarment : uint8
 {
-    Overshirt, BeltedShirt, WaistApron, Pinafore, BibApron, Workwear, Saree, Waistcoat, Kurta
+    Overshirt, BeltedShirt, WaistApron, Pinafore, BibApron, Workwear, Saree, Waistcoat, Kurta,
+    /** Round 4 (R4-06), appended: leather work apron over rolled sleeves, open cardigan, heavy shawl, office shirt. */
+    LeatherApron, Cardigan, ShawlWrap, OfficeShirt
 };
 enum class EAccessory : uint8
 {
-    None, KeyPouch, Satchel, Clipboard, ClothBag, Glasses
+    None, KeyPouch, Satchel, Clipboard, ClothBag, Glasses,
+    /** Round 4 (R4-06), appended: head loupe and sleeve garters, tape measure and ledger, waist money pouch, messenger bag, furled umbrella. */
+    LoupeGarters, TapeAndLedger, MoneyPouch, MessengerBag, Umbrella
 };
 enum class EBuild : uint8
 {
@@ -56,7 +62,9 @@ int32 SilhouetteDifferences(const FSilhouette& A, const FSilhouette& B);
 /** Which body builder a person uses. Outfit means "build from the outfit enum", which is every person without a bespoke look. */
 enum class ELook : uint8
 {
-    Outfit, Mira, Anindita, Subrata, Rupa, Nirmal, Sahana
+    Outfit, Mira, Anindita, Subrata, Rupa, Nirmal, Sahana,
+    /** Round 4 (R4-06): the two proprietors, the vendor and the two passers-by. */
+    Debashis, Mahua, Purnima, Arun, Rekha
 };
 
 /** One row of the cast table: the stable person id, the standing height (LANE_LIFE_PLAN section B) and the look. */

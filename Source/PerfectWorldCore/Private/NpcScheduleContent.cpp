@@ -148,7 +148,77 @@ constexpr std::array<ApprovedRoute, 2> SmRoutes{{
 constexpr Spec SahanaSpec{"npc_schedule.sahana_mitra", "person.sahana_mitra", SmHome, SmErrand,
                           "door.nabapara.tall_flats_unit_b", SmRoutes, SmErrand, 10 * 60, 16 * 60};
 
-constexpr std::array<const Spec*, 7> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec, &SubrataSpec, &NirmalSpec, &RupaSpec, &SahanaSpec};
+// Ambient door metadata names logical side-alley thresholds, not new hung leaves.
+// No Doors state or access operation is attached to these exit markers.
+constexpr std::array<ApprovedRoute, 3> AmpurnimaRoutes{{
+    {"route.purnima.home_east", "location.ambient.purnima.home", "anchor.ambient.purnima.east", 1680},
+    {"route.purnima.east_middle", "anchor.ambient.purnima.east", "anchor.ambient.purnima.middle", 1260},
+    {"route.purnima.middle_west", "anchor.ambient.purnima.middle", "anchor.ambient.purnima.west", 1260},
+}};
+constexpr Spec AmpurnimaSpec{"npc_schedule.purnima_das", "person.purnima_das", "location.ambient.purnima.home", "anchor.ambient.purnima.west",
+    "door.nabapara.ambient_north_threshold", AmpurnimaRoutes, "anchor.ambient.purnima.", 540, 1098};
+
+constexpr std::array<ApprovedRoute, 2> AmarunRoutes{{
+    {"route.arun.home_pause", "location.ambient.arun.home", "anchor.ambient.arun.pause", 280},
+    {"route.arun.pause_out", "anchor.ambient.arun.pause", "location.ambient.arun.out", 2520},
+}};
+constexpr Spec AmarunSpec{"npc_schedule.arun_paul", "person.arun_paul", "location.ambient.arun.home", "location.ambient.arun.out",
+    "door.nabapara.ambient_north_threshold", AmarunRoutes, "anchor.ambient.arun.", 540, 1058};
+
+constexpr std::array<ApprovedRoute, 2> AmrekhaRoutes{{
+    {"route.rekha.home_pause", "location.ambient.rekha.home", "anchor.ambient.rekha.pause", 2660},
+    {"route.rekha.pause_out", "anchor.ambient.rekha.pause", "location.ambient.rekha.out", 140},
+}};
+constexpr Spec AmrekhaSpec{"npc_schedule.rekha_bose", "person.rekha_bose", "location.ambient.rekha.home", "location.ambient.rekha.out",
+    "door.nabapara.ambient_south_threshold", AmrekhaRoutes, "anchor.ambient.rekha.", 540, 1058};
+
+
+// Debashis Pal, repair workshop proprietor (R4-02). The anchors are the kit's Workshop set for building.nabapara.repair_workshop
+// (900 by 900, entrance centre U 250). The first four routes are the kit's staff polylines from the counter; the next three are
+// sub-paths of those same polylines (so no unverified geometry): workbench to tool rack 306 cm, workbench to finishing table 590 cm
+// (the finishing-table line along V 639) and door to workbench 1399 cm (the door line to the staff gap, then down it). Home is an
+// authored off-lane leg behind the front threshold. At the workshop only between 07:30 and 19:00 (minutes of the day, end exclusive).
+constexpr std::string_view PdCounter = "anchor.repair_workshop.staff_counter";
+constexpr std::string_view PdToolRack = "anchor.repair_workshop.tool_rack";
+constexpr std::string_view PdWorkbench = "anchor.repair_workshop.workbench";
+constexpr std::string_view PdFinishing = "anchor.repair_workshop.finishing_table";
+constexpr std::string_view PdFrontDoor = "anchor.repair_workshop.front_door";
+constexpr std::string_view PdHome = "location.nabapara.pal_home";
+constexpr std::array<ApprovedRoute, 8> DebashisRoutes{{
+    {"route.repair_workshop.counter_to_door", PdCounter, PdFrontDoor, 1582},
+    {"route.repair_workshop.counter_to_tool_rack", PdCounter, PdToolRack, 953},
+    {"route.repair_workshop.counter_to_workbench", PdCounter, PdWorkbench, 947},
+    {"route.repair_workshop.counter_to_finishing_table", PdCounter, PdFinishing, 1537},
+    {"route.repair_workshop.workbench_to_tool_rack", PdWorkbench, PdToolRack, 306},
+    {"route.repair_workshop.workbench_to_finishing_table", PdWorkbench, PdFinishing, 590},
+    {"route.repair_workshop.door_to_workbench", PdFrontDoor, PdWorkbench, 1399},
+    {"route.pal_home.footpath_to_home", PdFrontDoor, PdHome, 1680},
+}};
+constexpr Spec DebashisSpec{"npc_schedule.debashis_pal", "person.debashis_pal", PdHome, "location.nabapara.repair_workshop",
+                            "door.nabapara.repair_workshop_front", DebashisRoutes, "anchor.repair_workshop.", 7 * 60 + 30, 19 * 60};
+
+// Mahua Saha, hardware store proprietor (R4-02). The anchors are the kit's GeneralGoods set for building.nabapara.hardware_store
+// (1200 by 700, entrance centre U 250): the first three routes are the kit's staff polylines from the counter; the next two are
+// sub-paths of those polylines (weigh station to stock room 158 cm, door to stock room 1505 cm). Home is an authored off-lane leg
+// behind the front threshold. At the store only between 08:20 and 20:30 (minutes of the day, end exclusive).
+constexpr std::string_view MsCounter = "anchor.hardware_store.staff_counter";
+constexpr std::string_view MsStockRoom = "anchor.hardware_store.stock_room";
+constexpr std::string_view MsWeigh = "anchor.hardware_store.weigh_station";
+constexpr std::string_view MsFrontDoor = "anchor.hardware_store.front_door";
+constexpr std::string_view MsHome = "location.nabapara.saha_home";
+constexpr std::array<ApprovedRoute, 6> MahuaRoutes{{
+    {"route.hardware_store.counter_to_door", MsCounter, MsFrontDoor, 2100},
+    {"route.hardware_store.counter_to_stock_room", MsCounter, MsStockRoom, 1135},
+    {"route.hardware_store.counter_to_weigh_station", MsCounter, MsWeigh, 1197},
+    {"route.hardware_store.weigh_station_to_stock_room", MsWeigh, MsStockRoom, 158},
+    {"route.hardware_store.door_to_stock_room", MsFrontDoor, MsStockRoom, 1505},
+    {"route.saha_home.footpath_to_home", MsFrontDoor, MsHome, 1820},
+}};
+constexpr Spec MahuaSpec{"npc_schedule.mahua_saha", "person.mahua_saha", MsHome, "location.nabapara.hardware_store",
+                         "door.nabapara.hardware_store_front", MahuaRoutes, "anchor.hardware_store.", 8 * 60 + 20, 20 * 60 + 30};
+
+constexpr std::array<const Spec*, 12> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec, &SubrataSpec, &NirmalSpec, &RupaSpec, &SahanaSpec, &AmpurnimaSpec, &AmarunSpec, &AmrekhaSpec,
+                                               &DebashisSpec, &MahuaSpec};
 
 const Spec* FindSpec(std::string_view personId)
 {

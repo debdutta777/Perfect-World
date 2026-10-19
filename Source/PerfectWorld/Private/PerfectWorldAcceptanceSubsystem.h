@@ -164,6 +164,8 @@ void AppendDoorsKnockSteps(TArray<FStepDef>& OutSteps);
 void AppendAninditaMiraSteps(TArray<FStepDef>& OutSteps);
 void AppendOriginsSeatingCamerasSteps(TArray<FStepDef>& OutSteps);
 void AppendResidentHomesSteps(TArray<FStepDef>& OutSteps);
+/** R4-02: Debashis and Mahua open, work and close their shops (PerfectWorldAcceptanceProprietors.cpp). */
+void AppendProprietorsWorkdaySteps(TArray<FStepDef>& OutSteps);
 
 // Step builders shared by scenarios (PerfectWorldAcceptanceLaneScenario.cpp).
 FStepDef MakeWorldReadyStep();

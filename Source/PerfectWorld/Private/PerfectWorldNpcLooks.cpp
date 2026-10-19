@@ -16,12 +16,16 @@ const FCastRow NlCast[] = {
     {TEXT("person.care_worker"), 162.0, ELook::Outfit},       // the staff-caregiver prototype (HouseholdAdult)
     {TEXT("person.household_adult"), 168.0, ELook::Outfit},   // the parent household of the default origin (ParentHousehold)
     {TEXT("person.anindita_sen"), 154.0, ELook::Anindita},    // short wavy hair, plum blouse, paper-coloured apron
-    {TEXT("person.debashis_pal"), 171.0, ELook::Outfit},
+    {TEXT("person.debashis_pal"), 171.0, ELook::Debashis},    // R4-06: repair workshop; leather apron, head loupe, sleeve garters
     {TEXT("person.leela_dutta"), 176.0, ELook::Outfit},
     {TEXT("person.subrata_dey"), 181.0, ELook::Subrata},      // narrow build, thinning grey hair, sage workwear, clipboard
     {TEXT("person.rupa_ghosh"), 157.0, ELook::Rupa},          // NR-01: row-house resident; saree with a mustard border, low bun
     {TEXT("person.nirmal_bose"), 174.0, ELook::Nirmal},       // NR-02: tall-flats unit A; broad build, flat cap, waistcoat
     {TEXT("person.sahana_mitra"), 164.0, ELook::Sahana},      // NR-03: tall-flats unit B; ponytail, round glasses, indigo kurta
+    {TEXT("person.mahua_saha"), 162.0, ELook::Mahua},         // R4-06: hardware store; pinned grey coil, moss cardigan, tape measure, ledger
+    {TEXT("person.purnima_das"), 155.0, ELook::Purnima},      // R4-06: travelling vendor; saffron head-wrap, green shawl, money pouch
+    {TEXT("person.arun_paul"), 176.0, ELook::Arun},           // R4-06: passer-by; side parting, blue office shirt, messenger bag
+    {TEXT("person.rekha_bose"), 161.0, ELook::Rekha},         // R4-06: passer-by; long plait, rose saree, furled umbrella
 };
 
 void NlLegacyHouseholdAdult(const double H, TArray<FPWNpcBlock>& Out)
@@ -98,6 +102,11 @@ FSilhouette NlSilhouetteOfLook(const ELook Look, const EPWNpcOutfit Outfit)
     case ELook::Rupa: return {EHair::LowBun, EGarment::Saree, EAccessory::ClothBag, EBuild::Medium};
     case ELook::Nirmal: return {EHair::FlatCap, EGarment::Waistcoat, EAccessory::None, EBuild::Broad};
     case ELook::Sahana: return {EHair::Ponytail, EGarment::Kurta, EAccessory::Glasses, EBuild::Medium};
+    case ELook::Debashis: return {EHair::CloseCrop, EGarment::LeatherApron, EAccessory::LoupeGarters, EBuild::Sturdy};
+    case ELook::Mahua: return {EHair::PinnedCoil, EGarment::Cardigan, EAccessory::TapeAndLedger, EBuild::Sturdy};
+    case ELook::Purnima: return {EHair::HeadWrap, EGarment::ShawlWrap, EAccessory::MoneyPouch, EBuild::Broad};
+    case ELook::Arun: return {EHair::SidePart, EGarment::OfficeShirt, EAccessory::MessengerBag, EBuild::Medium};
+    case ELook::Rekha: return {EHair::LongPlait, EGarment::Saree, EAccessory::Umbrella, EBuild::Slight};
     default: break;
     }
     switch (Outfit)

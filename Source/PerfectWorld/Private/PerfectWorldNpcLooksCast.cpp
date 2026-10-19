@@ -203,6 +203,172 @@ void NlSahana(const double H, TArray<FPWNpcBlock>& Out)
         PutBlock(Out, FVector(6.0, Side * 10.4, EyeZ + 2.0), FVector(10.0, 1.0, 1.0), Frame); // the arms over the ears
     }
 }
+
+// Round 4 (R4-06). The five newcomers. Every hair, wrap and cap block stays at or under H (the head top is the authored height to
+// 0.05 cm, which the NpcLooks test enforces), and every block stays inside the 34 cm capsule (arm outer edges 33.75 at most).
+void NlR4Debashis(const double H, TArray<FPWNpcBlock>& Out)
+{
+    // 171 cm; sturdy repairer: close-cropped grey hair, a head loupe flipped up on the forehead, faded shirt with the sleeves
+    // rolled, a dark leather work apron with a tool pocket, and sleeve garters on both upper arms.
+    FNlFigure F;
+    F.Skin = F.Forearm = FColor(178, 126, 90);
+    F.Legs = FColor(72, 78, 92);
+    F.Top = F.Sleeves = FColor(206, 198, 176);
+    F.LegW = 15.0; F.LegOff = 9.5; F.TorsoX = 22.0; F.TorsoY = 44.0; F.ArmOff = 27.5; F.ArmT = 12.0; F.bHands = true;
+    NlAddFigure(F, H, Out);
+    const FColor Leather(96, 64, 40), LeatherDark(72, 46, 30), Garter(58, 60, 70), Grey(150, 150, 148), Band(40, 40, 44);
+    const FColor Brass(190, 150, 60), Red(180, 50, 40), Yellow(210, 170, 50);
+    PutBlock(Out, FVector(12.5, 0.0, 0.58 * H), FVector(3.0, 36.0, 0.44 * H), Leather);     // the work apron
+    PutBlock(Out, FVector(0.0, 0.0, 0.835 * H), FVector(4.0, 22.0, 2.5), LeatherDark);        // its neck loop
+    PutBlock(Out, FVector(-11.5, 0.0, 0.50 * H), FVector(3.0, 40.0, 3.0), LeatherDark);       // and the waist tie at the back
+    PutBlock(Out, FVector(14.5, 0.0, 0.47 * H), FVector(2.0, 15.0, 10.0), LeatherDark);       // the tool pocket
+    PutBlock(Out, FVector(14.6, -3.5, 0.47 * H + 8.0), FVector(2.0, 2.4, 7.0), Red);          // screwdriver handles
+    PutBlock(Out, FVector(14.6, 3.5, 0.47 * H + 8.0), FVector(2.0, 2.4, 6.0), Yellow);
+    for (const double Side : {-1.0, 1.0})
+    {
+        PutBlock(Out, FVector(0.0, Side * F.ArmOff, 0.84 * H - 0.07 * H), FVector(12.5, 12.5, 3.0), Garter, ArmGroup(Side),
+                 FVector(0.0, Side * F.ArmOff, 0.84 * H)); // the sleeve garters
+    }
+    PutBlock(Out, FVector(0.0, 0.0, H - 2.5), FVector(22.0, 22.0, 5.0), Grey);                // close-cropped grey hair
+    PutBlock(Out, FVector(0.0, -10.5, H - 8.0), FVector(20.0, 3.0, 7.0), Grey);
+    PutBlock(Out, FVector(0.0, 10.5, H - 8.0), FVector(20.0, 3.0, 7.0), Grey);
+    PutBlock(Out, FVector(0.0, 0.0, H - 7.2), FVector(21.5, 21.5, 1.6), Band);                // the loupe's headband
+    PutBlock(Out, FVector(12.0, 5.5, H - 5.5), FVector(3.0, 8.0, 4.0), Brass);                // and the loupe, flipped up
+    AppendFace(H, 0.0, Out);
+}
+
+void NlR4Mahua(const double H, TArray<FPWNpcBlock>& Out)
+{
+    // 162 cm; hardware shopkeeper: hair pinned in a grey coil, moss cardigan open over a cream blouse, a yellow tape measure
+    // round her neck and hanging at the chest, a maroon ledger held at the hip, a pencil behind her ear.
+    FNlFigure F;
+    F.Skin = F.Forearm = FColor(186, 136, 100);
+    F.Legs = FColor(84, 82, 76);
+    F.Top = FColor(232, 224, 206);
+    F.Sleeves = FColor(98, 126, 104);
+    F.LegW = 14.0; F.LegOff = 9.0; F.TorsoX = 22.0; F.TorsoY = 42.0; F.ArmOff = 26.5; F.ArmT = 12.0; F.bHands = true;
+    NlAddFigure(F, H, Out);
+    const FColor Moss(98, 126, 104), MossDark(80, 104, 88), Silver(190, 188, 186), Yellow(222, 186, 56), Dark(60, 60, 60);
+    const FColor Maroon(110, 34, 38), Paper(238, 232, 214), Pencil(220, 180, 50);
+    PutBlock(Out, FVector(-11.5, 0.0, 0.64 * H), FVector(3.0, 44.0, 0.40 * H), Moss);         // the cardigan: back, sides, two fronts
+    PutBlock(Out, FVector(0.0, -22.5, 0.64 * H), FVector(22.0, 3.0, 0.40 * H), Moss);
+    PutBlock(Out, FVector(0.0, 22.5, 0.64 * H), FVector(22.0, 3.0, 0.40 * H), Moss);
+    PutBlock(Out, FVector(12.5, -14.5, 0.64 * H), FVector(3.0, 15.0, 0.40 * H), Moss);        // open at the front, cream blouse showing
+    PutBlock(Out, FVector(12.5, 14.5, 0.64 * H), FVector(3.0, 15.0, 0.40 * H), Moss);
+    PutBlock(Out, FVector(0.0, 0.0, 0.44 * H), FVector(25.0, 46.0, 3.0), MossDark);           // the ribbed hem
+    PutBlock(Out, FVector(0.0, 0.0, 0.835 * H), FVector(24.0, 28.0, 2.2), Yellow);      // the tape measure round the neck
+    PutBlock(Out, FVector(14.8, -5.5, 0.72 * H), FVector(1.2, 3.0, 0.20 * H), Yellow);        // and its two hanging lengths
+    PutBlock(Out, FVector(14.8, 5.5, 0.72 * H), FVector(1.2, 3.0, 0.20 * H), Yellow);
+    PutBlock(Out, FVector(14.8, 5.5, 0.62 * H), FVector(4.0, 5.0, 5.0), Dark);                // the tape's case
+    PutBlock(Out, FVector(15.0, -10.0, 0.52 * H), FVector(5.0, 17.0, 23.0), Maroon);          // the ledger at her hip
+    PutBlock(Out, FVector(17.8, -10.0, 0.52 * H), FVector(0.6, 14.0, 19.0), Paper);
+    PutBlock(Out, FVector(0.0, 0.0, H - 2.5), FVector(22.0, 22.0, 5.0), Silver);              // hair pinned up, grey
+    PutBlock(Out, FVector(0.0, -10.5, H - 8.0), FVector(20.0, 3.0, 6.0), Silver);
+    PutBlock(Out, FVector(0.0, 10.5, H - 8.0), FVector(20.0, 3.0, 6.0), Silver);
+    PutBlock(Out, FVector(-10.5, 0.0, H - 6.0), FVector(3.0, 20.0, 9.0), Silver);
+    PutBlock(Out, FVector(-10.5, 0.0, H - 8.5), FVector(9.0, 13.0, 7.0), Silver);              // the coil
+    PutBlock(Out, FVector(-1.0, 11.0, H - 11.0), FVector(8.0, 1.6, 1.6), Pencil);             // the pencil behind her ear
+    AppendFace(H, 0.0, Out);
+}
+
+void NlR4Purnima(const double H, TArray<FPWNpcBlock>& Out)
+{
+    // 155 cm; the travelling vendor: a saffron head-wrap knotted at the back, an emerald shawl over both shoulders, an ochre
+    // wrapped skirt with a dark hem, brass bangles and a leather money pouch on her belt. A broad build for the cart.
+    FNlFigure F;
+    F.Skin = F.Forearm = FColor(162, 110, 78);
+    F.Legs = FColor(176, 128, 70);
+    F.Top = F.Sleeves = FColor(192, 150, 96);
+    F.LegW = 15.0; F.LegOff = 9.0; F.TorsoX = 24.0; F.TorsoY = 44.0; F.ArmOff = 27.0; F.ArmT = 12.0; F.bHands = true;
+    NlAddFigure(F, H, Out);
+    const FColor Ochre(176, 128, 70), HemDark(120, 60, 40), Green(44, 112, 76), Saffron(226, 140, 40), Orange(180, 90, 30);
+    const FColor Brass(220, 190, 80), Pouch(88, 58, 40), Belt(60, 40, 30);
+    PutBlock(Out, FVector(0.0, 0.0, 0.38 * H), FVector(26.0, 44.0, 0.26 * H), Ochre);         // the wrapped skirt
+    PutBlock(Out, FVector(0.0, 0.0, 0.25 * H), FVector(27.0, 45.0, 3.0), HemDark);            // and its hem band
+    PutBlock(Out, FVector(0.0, 0.0, 0.485 * H), FVector(25.0, 46.0, 3.0), Belt);
+    PutBlock(Out, FVector(13.5, 12.0, 0.47 * H), FVector(8.0, 14.0, 10.0), Pouch);            // the money pouch on her belt
+    PutBlock(Out, FVector(-12.5, 0.0, 0.58 * H), FVector(3.0, 46.0, 0.52 * H), Green);        // the shawl: a back panel,
+    PutBlock(Out, FVector(0.0, 0.0, 0.855 * H), FVector(26.0, 54.0, 4.0), Green);             // a cape over the shoulders,
+    PutBlock(Out, FVector(12.5, -16.0, 0.68 * H), FVector(3.0, 10.0, 0.34 * H), Green);       // and two front lengths with the blouse between
+    PutBlock(Out, FVector(12.5, 16.0, 0.68 * H), FVector(3.0, 10.0, 0.34 * H), Green);
+    PutBlock(Out, FVector(-14.3, 0.0, 0.34 * H), FVector(2.0, 46.0, 3.0), Orange);            // a border along the back hem
+    for (const double Side : {-1.0, 1.0})
+    {
+        PutBlock(Out, FVector(0.0, Side * F.ArmOff, 0.84 * H - 0.20 * H - 0.09 * H), FVector(9.6, 9.6, 2.0), Brass, ArmGroup(Side),
+                 FVector(0.0, Side * F.ArmOff, 0.84 * H)); // bangles
+    }
+    PutBlock(Out, FVector(0.0, 0.0, H - 3.5), FVector(23.0, 23.0, 7.0), Saffron);             // the head-wrap
+    PutBlock(Out, FVector(11.9, 0.0, H - 5.5), FVector(1.0, 23.2, 2.0), Orange);              // its darker band (above the brows)
+    PutBlock(Out, FVector(-12.5, 0.0, H - 8.5), FVector(9.0, 12.0, 8.0), Saffron);            // the knot at the back
+    PutBlock(Out, FVector(-15.5, 4.0, H - 18.0), FVector(3.0, 8.0, 14.0), Saffron);           // and a tail hanging from it
+    AppendFace(H, 0.0, Out);
+}
+
+void NlR4Arun(const double H, TArray<FPWNpcBlock>& Out)
+{
+    // 176 cm; an office worker on his way somewhere: neat side-parted black hair, a pale blue office shirt with a white open
+    // collar and a pen in the pocket, charcoal trousers, a lanyard with a card, a leather messenger bag at his right hip.
+    FNlFigure F;
+    F.Skin = FColor(176, 128, 92);
+    F.Legs = FColor(50, 52, 60);
+    F.Top = F.Sleeves = F.Forearm = FColor(150, 178, 208);
+    F.LegW = 14.0; F.LegOff = 9.0; F.TorsoX = 20.0; F.TorsoY = 40.0; F.ArmOff = 25.5; F.ArmT = 11.0; F.bHands = true;
+    NlAddFigure(F, H, Out);
+    const FColor Collar(236, 238, 242), Belt(30, 28, 30), Pocket(126, 152, 184), Pen(30, 40, 110), Lanyard(46, 140, 96);
+    const FColor Card(240, 240, 236), Hair(24, 22, 24), Leather(120, 84, 56), LeatherDark(92, 62, 40);
+    PutBlock(Out, FVector(0.0, 0.0, 0.835 * H), FVector(14.0, 16.0, 3.0), Collar);
+    PutBlock(Out, FVector(0.0, 0.0, 0.485 * H), FVector(21.0, 41.0, 3.0), Belt);
+    PutBlock(Out, FVector(10.8, -8.0, 0.74 * H), FVector(1.5, 8.0, 8.0), Pocket);              // the shirt pocket and its pen
+    PutBlock(Out, FVector(11.2, -8.0, 0.74 * H + 6.0), FVector(1.0, 1.2, 6.0), Pen);
+    PutBlock(Out, FVector(10.9, -3.0, 0.745 * H), FVector(1.0, 2.0, 0.12 * H), Lanyard);       // the lanyard, two strands
+    PutBlock(Out, FVector(10.9, 3.0, 0.745 * H), FVector(1.0, 2.0, 0.12 * H), Lanyard);
+    PutBlock(Out, FVector(11.3, 0.0, 0.64 * H), FVector(1.2, 6.0, 8.0), Card);                 // and the card
+    PutBlock(Out, FVector(0.0, 0.0, H - 2.75), FVector(22.0, 22.0, 5.5), Hair);
+    PutBlock(Out, FVector(0.0, -10.5, H - 8.5), FVector(20.0, 3.0, 7.0), Hair);
+    PutBlock(Out, FVector(0.0, 10.5, H - 8.5), FVector(20.0, 3.0, 7.0), Hair);
+    PutBlock(Out, FVector(-10.5, 0.0, H - 7.0), FVector(3.0, 20.0, 10.0), Hair);
+    PutBlock(Out, FVector(10.8, 3.0, H - 7.5), FVector(2.5, 14.0, 3.0), Hair);                 // the fringe swept to one side
+    PutBlock(Out, FVector(-3.0, 29.5, 0.40 * H), FVector(12.0, 8.0, 24.0), Leather);          // the messenger bag at his right hip
+    PutBlock(Out, FVector(-3.0, 29.5, 0.40 * H + 13.0), FVector(12.5, 8.5, 4.0), LeatherDark);  // its flap
+    PutBlock(Out, FVector(9.8, 13.0, 0.64 * H), FVector(1.6, 4.0, 0.34 * H), Leather);        // and its strap, front and back
+    PutBlock(Out, FVector(-9.8, 13.0, 0.64 * H), FVector(1.6, 4.0, 0.34 * H), Leather);
+    AppendFace(H, 0.0, Out);
+}
+
+void NlR4Rekha(const double H, TArray<FPWNpcBlock>& Out)
+{
+    // 161 cm; a slight woman in a rose saree with a cream border and the pallu over her RIGHT shoulder, cream blouse, a long
+    // black plait tied with a red ribbon, and a furled black umbrella carried in her LEFT hand (it swings with that arm).
+    FNlFigure F;
+    F.Skin = F.Forearm = FColor(198, 150, 112);
+    F.Legs = FColor(176, 52, 84);
+    F.Top = F.Sleeves = FColor(236, 226, 206);
+    F.LegW = 14.5; F.LegOff = 8.0; F.TorsoX = 18.0; F.TorsoY = 38.0; F.ArmOff = 24.5; F.ArmT = 11.0; F.bHands = true;
+    NlAddFigure(F, H, Out);
+    const FColor Rose(176, 52, 84), RoseDark(140, 36, 66), Gold(232, 214, 150), Hair(26, 22, 26), Ribbon(200, 60, 60);
+    const FColor Black(30, 30, 34), Wood(130, 90, 58), Metal(160, 160, 166);
+    for (const double Side : {-1.0, 1.0})
+    {
+        PutBlock(Out, FVector(0.0, Side * F.LegOff, 6.0), FVector(F.LegW + 1.0, F.LegW + 1.0, 3.0), Gold, LegGroup(Side),
+                 FVector(0.0, Side * F.LegOff, 0.48 * H)); // the border at the ankle
+    }
+    PutBlock(Out, FVector(0.0, 0.0, 0.40 * H), FVector(24.0, 40.0, 0.24 * H), Rose);           // the drape over the hips and thighs
+    PutBlock(Out, FVector(12.5, 0.0, 0.40 * H), FVector(2.0, 13.0, 0.22 * H), RoseDark);       // the pleats
+    PutBlock(Out, FVector(10.5, 12.0, 0.65 * H), FVector(3.0, 14.0, 0.38 * H), Rose);          // the pallu: front,
+    PutBlock(Out, FVector(10.6, 17.5, 0.65 * H), FVector(3.2, 3.0, 0.38 * H), Gold);
+    PutBlock(Out, FVector(-10.5, 10.0, 0.58 * H), FVector(3.0, 18.0, 0.52 * H), Rose);         // back,
+    PutBlock(Out, FVector(0.0, 14.0, 0.855 * H), FVector(22.0, 14.0, 3.0), Rose);              // and over the right shoulder
+    PutBlock(Out, FVector(0.0, 0.0, H - 3.0), FVector(22.0, 22.0, 6.0), Hair);
+    PutBlock(Out, FVector(-9.0, 0.0, H - 0.06 * H), FVector(4.0, 20.0, 0.12 * H), Hair);
+    PutBlock(Out, FVector(-12.5, 0.0, H - 0.12 * H - 0.17 * H), FVector(5.0, 6.0, 0.34 * H), Hair); // the long plait down her back
+    PutBlock(Out, FVector(-12.5, 0.0, H - 0.46 * H + 1.5), FVector(6.0, 7.0, 2.5), Ribbon);
+    const FVector Shoulder(0.0, -F.ArmOff, 0.84 * H);
+    PutBlock(Out, FVector(0.0, -31.5, 0.35 * H), FVector(3.0, 3.0, 0.22 * H), Black, EPWNpcPartGroup::ArmLeft, Shoulder);   // the compact furled umbrella (its tip stays above 0.2 H so a seated pose never sinks it)
+    PutBlock(Out, FVector(0.0, -31.5, 0.51 * H), FVector(3.4, 3.4, 0.10 * H), Wood, EPWNpcPartGroup::ArmLeft, Shoulder);    // gripped beside her hand
+    PutBlock(Out, FVector(0.0, -31.5, 0.56 * H + 1.5), FVector(3.8, 3.8, 3.0), Wood, EPWNpcPartGroup::ArmLeft, Shoulder);   // with a cap on the handle
+    PutBlock(Out, FVector(0.0, -31.5, 0.24 * H - 2.0), FVector(1.6, 1.6, 4.0), Metal, EPWNpcPartGroup::ArmLeft, Shoulder);  // and a metal tip
+    AppendFace(H, 0.0, Out);
+}
 } // namespace
 
 bool AppendCastLook(const ELook Look, const double H, TArray<FPWNpcBlock>& Out)
@@ -215,6 +381,11 @@ bool AppendCastLook(const ELook Look, const double H, TArray<FPWNpcBlock>& Out)
     case ELook::Rupa: NlRupa(H, Out); return true;
     case ELook::Nirmal: NlNirmal(H, Out); return true;
     case ELook::Sahana: NlSahana(H, Out); return true;
+    case ELook::Debashis: NlR4Debashis(H, Out); return true;
+    case ELook::Mahua: NlR4Mahua(H, Out); return true;
+    case ELook::Purnima: NlR4Purnima(H, Out); return true;
+    case ELook::Arun: NlR4Arun(H, Out); return true;
+    case ELook::Rekha: NlR4Rekha(H, Out); return true;
     default: return false;
     }
 }
