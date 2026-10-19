@@ -10,6 +10,7 @@
 #include "PerfectWorldLaneBuildings.h"
 #include "PerfectWorldLaneCareInterior.h"
 #include "PerfectWorldLaneHomeFurniture.h"
+#include "PerfectWorldLaneKitDisplays.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
 #include "PerfectWorldLaneNpcBindings.h"
 #include "PerfectWorldLaneProps.h"
@@ -306,6 +307,7 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     SpawnAmbientLife(World);
     SpawnDebashis(World, Scene);
     SpawnMahua(World, Scene);
+    SpawnKitShopDisplays(World, Scene); // R4-01: the browse actors and posted hours of market_stalls_a, market_stalls_b and end_shop
     if (Scene.bOpeningHomeBuilt)
     {
         SpawnHouseholdAdult(World);
