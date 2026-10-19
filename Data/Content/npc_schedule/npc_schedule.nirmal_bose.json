@@ -1,0 +1,34 @@
+{
+  "type": "npc_schedule",
+  "id": "npc_schedule.nirmal_bose",
+  "note": "Nirmal Bose lives exclusively in tall-flats unit A. Every day he sleeps 22:00-06:00, prepares breakfast 06:00-06:30, eats breakfast 06:30-07:00, and leaves at 07:36 for an off-lane stocking job, 08:00-16:00 with a 12:00-12:30 lunch break. He returns at 16:24, prepares supper until 17:00, eats 17:00-17:30, reads until 19:30, rests until 20:30 and stays home until sleep. He is home and Awake throughout the door's 17:00-20:30 visiting window all seven days. His home is off-lane behind the unit door inside the shared passage; the visible 500 cm route ceiling joins its doorstep to the public front threshold. The remaining 2800 cm job route is off-lane. Travel is ceil(total route length / 140), 24 minutes each way.",
+  "person": "person.nirmal_bose",
+  "home": "location.nabapara.tall_flats_unit_a",
+  "workplace": "location.nabapara.nirmal_work",
+  "door": "door.nabapara.tall_flats_unit_a",
+  "speedCmPerMinute": 140,
+  "routine": [
+    { "days": 127, "start": 0, "end": 360, "zone": "location.nabapara.tall_flats_unit_a", "role": "sleeping" },
+    { "days": 127, "start": 360, "end": 390, "zone": "location.nabapara.tall_flats_unit_a", "role": "cooking" },
+    { "days": 127, "start": 390, "end": 420, "zone": "location.nabapara.tall_flats_unit_a", "role": "break" },
+    { "days": 127, "start": 420, "end": 456, "zone": "location.nabapara.tall_flats_unit_a", "role": "at_home" },
+    { "days": 127, "start": 480, "end": 720, "zone": "location.nabapara.nirmal_work", "role": "stocking" },
+    { "days": 127, "start": 720, "end": 750, "zone": "location.nabapara.nirmal_work", "role": "break" },
+    { "days": 127, "start": 750, "end": 960, "zone": "location.nabapara.nirmal_work", "role": "stocking" },
+    { "days": 127, "start": 984, "end": 1020, "zone": "location.nabapara.tall_flats_unit_a", "role": "cooking" },
+    { "days": 127, "start": 1020, "end": 1050, "zone": "location.nabapara.tall_flats_unit_a", "role": "break" },
+    { "days": 127, "start": 1050, "end": 1170, "zone": "location.nabapara.tall_flats_unit_a", "role": "reading" },
+    { "days": 127, "start": 1170, "end": 1230, "zone": "location.nabapara.tall_flats_unit_a", "role": "resting" },
+    { "days": 127, "start": 1230, "end": 1320, "zone": "location.nabapara.tall_flats_unit_a", "role": "at_home" },
+    { "days": 127, "start": 1320, "end": 1440, "zone": "location.nabapara.tall_flats_unit_a", "role": "sleeping" }
+  ],
+  "routes": [
+    { "id": "route.nirmal.unit_to_front", "from": "location.nabapara.tall_flats_unit_a", "to": "anchor.nirmal.tall_flats_front", "lengthCm": 500 },
+    { "id": "route.nirmal.front_to_work", "from": "anchor.nirmal.tall_flats_front", "to": "location.nabapara.nirmal_work", "lengthCm": 2800 }
+  ],
+  "travel": [
+    { "from": "location.nabapara.tall_flats_unit_a", "to": "anchor.nirmal.tall_flats_front", "minutes": 4, "routes": ["route.nirmal.unit_to_front"] },
+    { "from": "anchor.nirmal.tall_flats_front", "to": "location.nabapara.nirmal_work", "minutes": 20, "routes": ["route.nirmal.front_to_work"] },
+    { "from": "location.nabapara.tall_flats_unit_a", "to": "location.nabapara.nirmal_work", "minutes": 24, "routes": ["route.nirmal.unit_to_front", "route.nirmal.front_to_work"] }
+  ]
+}

@@ -111,7 +111,17 @@ constexpr std::array<ApprovedRoute, 4> SubrataRoutes{{
 constexpr Spec SubrataSpec{"npc_schedule.subrata_dey", "person.subrata_dey", SdHome, "location.nabapara.tall_flats",
                            "door.nabapara.tall_flats_front", SubrataRoutes, "anchor.tall_flats.", 7 * 60 + 16, 17 * 60};
 
-constexpr std::array<const Spec*, 4> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec, &SubrataSpec};
+constexpr std::string_view NbHome = "location.nabapara.tall_flats_unit_a";
+constexpr std::string_view NbFront = "anchor.nirmal.tall_flats_front";
+constexpr std::string_view NbWork = "location.nabapara.nirmal_work";
+constexpr std::array<ApprovedRoute, 2> NbRoutes{{
+    {"route.nirmal.unit_to_front", NbHome, NbFront, 500},
+    {"route.nirmal.front_to_work", NbFront, NbWork, 2800},
+}};
+constexpr Spec NirmalSpec{"npc_schedule.nirmal_bose", "person.nirmal_bose", NbHome, NbWork,
+    "door.nabapara.tall_flats_unit_a", NbRoutes, NbWork, 480, 960};
+
+constexpr std::array<const Spec*, 5> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec, &SubrataSpec, &NirmalSpec};
 
 const Spec* FindSpec(std::string_view personId)
 {
