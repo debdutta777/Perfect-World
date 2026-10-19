@@ -32,6 +32,8 @@ using PWAcceptance::FStepRuntime;
 constexpr double AwEntryTolerance = 220.0;   // how far from the authored entry point a family start may stand
 constexpr double AwDoorwayTolerance = 40.0;
 constexpr double AwStandTolerance = 30.0;
+constexpr double AwWaypointTolerance = 35.0; // intermediate route points
+constexpr double AwAdultClearanceCm = 75.0;  // a route point must stay this far from the household adult (two capsules of 34 cm plus slack)
 constexpr double AwSettleSeconds = 0.8;      // after entering the world, before the first assertion
 
 /** The opening home's frame, as PerfectWorldKolkataLane.cpp builds it: origin (-300, -400), U = +X, V = -Y. */
@@ -295,6 +297,73 @@ FStepDef MakeInteractStep(const FString& StepName, TFunction<AActor*(UPWAcceptan
 
 namespace
 {
+/**
+ * The way from the living doorway to the table chair's stand point, in building-local U, V. A straight line is blocked: the household
+ * adult stands at HomeAdultSpot (U 520, V 290) facing the doorway, 125 cm in. So the route goes through the doorway's centre, keeps
+ * V 370+ past the adult (the kitchen door's swing zone, U 445-547 V 345+, is closed by default), then turns down the room at
+ * U 405, 120 cm west of the adult, to the stand point (U 393, V 215). Every point is checked against the adult's spot at run time.
+ */
+bool AwChairRoute(TArray<FVector>& OutRoute, FString& Why)
+{
+    PWLane::FHomeSeatSpec Spec;
+    if (!AwFindSeatSpec(AwTableChairId, Spec))
+    {
+        Why = TEXT("the authored seat specs no longer name seat.nabapara.home_table_chair");
+        return false;
+    }
+    const PWLane::FLaneFrame Frame = AwHomeFrame();
+    const double Points[][2] = {{630.0, 365.0}, {560.0, 375.0}, {440.0, 370.0}, {405.0, 265.0}, {Spec.StandU, Spec.StandV}};
+    const PWLane::FHomeAdultSpot Adult = PWLane::HomeAdultSpot();
+    OutRoute.Reset();
+    for (const double (&Point)[2] : Points)
+    {
+        if (FVector2D::Distance(FVector2D(Point[0], Point[1]), FVector2D(Adult.U, Adult.V)) < AwAdultClearanceCm)
+        {
+            Why = FString::Printf(TEXT("the route point (U %.0f, V %.0f) is within %.0f cm of the household adult's spot; the layout changed"),
+                                  Point[0], Point[1], AwAdultClearanceCm);
+            return false;
+        }
+        OutRoute.Add(PWLane::HomeWorldPoint(Frame, Point[0], Point[1], 0.0));
+    }
+    return true;
+}
+
+/** Walks AwChairRoute point by point with real movement input; the stuck detector restarts at every point. */
+FStepDef AwRouteStep(const FString& StepName, const double TimeoutSeconds)
+{
+    FStepDef Def;
+    Def.Name = StepName;
+    Def.TimeoutSeconds = TimeoutSeconds;
+    Def.Run = [](UPWAcceptanceSubsystem& Sub, FStepRuntime& Rt) -> FStepOutcome
+    {
+        TArray<FVector> Route;
+        FString Why;
+        if (!AwChairRoute(Route, Why))
+        {
+            return FStepOutcome::Fail(Why);
+        }
+        const bool bLast = Rt.Phase >= Route.Num() - 1;
+        const FStepOutcome Outcome = Sub.TickWalk(Route[FMath::Min(Rt.Phase, Route.Num() - 1)], bLast ? AwStandTolerance : AwWaypointTolerance, Rt);
+        if (Outcome.State == EStepState::Passed && !bLast)
+        {
+            Rt.NextPhase();
+            Rt.LastProbe = 0.0;
+            Rt.StuckSince = 0.0;
+            return FStepOutcome::Wait();
+        }
+        if (Outcome.State == EStepState::Passed)
+        {
+            return FStepOutcome::Pass(FString::Printf(TEXT("%d route points; %s"), Route.Num(), *Outcome.Detail));
+        }
+        if (Outcome.State == EStepState::Failed)
+        {
+            return FStepOutcome::Fail(FString::Printf(TEXT("route point %d of %d: %s"), Rt.Phase + 1, Route.Num(), *Outcome.Detail));
+        }
+        return Outcome;
+    };
+    return Def;
+}
+
 void AwAppendBootWalkInteract(TArray<FStepDef>& Out)
 {
     Out.Add(MakeWorldReadyStep());
@@ -320,19 +389,7 @@ void AwAppendBootWalkInteract(TArray<FStepDef>& Out)
         },
         AwDoorwayTolerance, 30.0));
     Out.Add(MakeShotStep(TEXT("shot_living_doorway")));
-    Out.Add(MakeWalkStep(TEXT("walk_to_table_chair"),
-        [](UPWAcceptanceSubsystem&, FVector& OutTarget, FString& Why)
-        {
-            PWLane::FHomeSeatSpec Spec;
-            if (!AwFindSeatSpec(AwTableChairId, Spec))
-            {
-                Why = TEXT("the authored seat specs no longer name seat.nabapara.home_table_chair");
-                return false;
-            }
-            OutTarget = PWLane::HomeWorldPoint(AwHomeFrame(), Spec.StandU, Spec.StandV, 0.0);
-            return true;
-        },
-        AwStandTolerance, 30.0));
+    Out.Add(AwRouteStep(TEXT("walk_to_table_chair"), 40.0));
     Out.Add(MakeInteractStep(TEXT("sit_at_table"),
         [](UPWAcceptanceSubsystem& Sub) -> AActor* { return AwFindSeat(Sub.GetPlayWorld(), AwTableChairId); },
         [](UPWAcceptanceSubsystem& Sub, FString& Detail)
