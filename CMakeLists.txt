@@ -671,3 +671,16 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/LaneTall
 add_executable(PerfectWorldLaneTallFlatsLayoutTests Tests/LaneTallFlatsLayoutTests.cpp)
 target_link_libraries(PerfectWorldLaneTallFlatsLayoutTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldLaneTallFlatsLayoutTests COMMAND PerfectWorldLaneTallFlatsLayoutTests)
+
+# R4-02: the two working proprietors (Debashis Pal, repair workshop; Mahua Saha, hardware store): schedules, conversations and world save.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationDebashis.cpp
+                                        Source/PerfectWorldCore/Private/ConversationMahua.cpp)
+add_executable(PerfectWorldProprietorLifeTests Tests/ProprietorLifeTests.cpp)
+target_include_directories(PerfectWorldProprietorLifeTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldProprietorLifeTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldProprietorLifeTests COMMAND PerfectWorldProprietorLifeTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.debashis_pal.json
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.mahua_saha.json)
+add_executable(PerfectWorldProprietorConversationTests Tests/ProprietorConversationTests.cpp)
+target_link_libraries(PerfectWorldProprietorConversationTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldProprietorConversationTests COMMAND PerfectWorldProprietorConversationTests)
