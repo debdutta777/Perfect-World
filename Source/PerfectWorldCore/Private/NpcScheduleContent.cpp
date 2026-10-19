@@ -134,7 +134,21 @@ constexpr std::array<ApprovedRoute, 1> RupaRoutes{{
 constexpr Spec RupaSpec{"npc_schedule.rupa_ghosh", "person.rupa_ghosh", RgHome, RgWork, "door.nabapara.tea_row_house_front",
                         RupaRoutes, RgWork, 8 * 60, 16 * 60};
 
-constexpr std::array<const Spec*, 6> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec, &SubrataSpec, &NirmalSpec, &RupaSpec};
+// Sahana Mitra, who works at home in tall-flats unit B (a tailoring trade) and goes out on one off-lane errand (Monday to Friday
+// 14:00-15:30, Saturday 10:30-12:00, never Sunday). Her home is off-lane behind unit B's own door; the visible route joins its
+// doorstep to the public front threshold (500 cm ceiling) and the errand lies 1680 cm beyond. She is at the errand only inside
+// [10:00, 16:00) (minutes of the day, end exclusive).
+constexpr std::string_view SmHome = "location.nabapara.tall_flats_unit_b";
+constexpr std::string_view SmFront = "anchor.sahana.tall_flats_front";
+constexpr std::string_view SmErrand = "location.nabapara.sahana_errand";
+constexpr std::array<ApprovedRoute, 2> SmRoutes{{
+    {"route.sahana.unit_to_front", SmHome, SmFront, 500},
+    {"route.sahana.front_to_errand", SmFront, SmErrand, 1680},
+}};
+constexpr Spec SahanaSpec{"npc_schedule.sahana_mitra", "person.sahana_mitra", SmHome, SmErrand,
+                          "door.nabapara.tall_flats_unit_b", SmRoutes, SmErrand, 10 * 60, 16 * 60};
+
+constexpr std::array<const Spec*, 7> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec, &SubrataSpec, &NirmalSpec, &RupaSpec, &SahanaSpec};
 
 const Spec* FindSpec(std::string_view personId)
 {
