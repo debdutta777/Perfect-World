@@ -1,5 +1,7 @@
 #include "PerfectWorldAcceptanceSubsystem.h"
 #include "PerfectWorldAcceptanceFrontages.h"
+#include "PerfectWorldAcceptanceScaleR4.h"
+#include "PerfectWorldAmbientBindings.h"
 #include "PerfectWorldLaneTallFlats.h"
 
 #include "EngineUtils.h"
@@ -464,6 +466,16 @@ bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps)
     if (Name == TEXT("tall_flats_upstairs"))
     {
         AppendTallFlatsUpstairsSteps(OutSteps);
+        return true;
+    }
+    if (Name == TEXT("ambient_lane"))
+    {
+        AppendAmbientLaneSteps(OutSteps);
+        return true;
+    }
+    if (Name == TEXT("scale_round4"))
+    {
+        AppendScaleRound4Steps(OutSteps);
         return true;
     }
     if (Name == TEXT("stationery_shift"))

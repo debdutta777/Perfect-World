@@ -676,3 +676,11 @@ add_test(NAME PerfectWorldLaneTallFlatsLayoutTests COMMAND PerfectWorldLaneTallF
 add_executable(PerfectWorldDoorsRoster20Tests Tests/DoorsRoster20Tests.cpp)
 target_link_libraries(PerfectWorldDoorsRoster20Tests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldDoorsRoster20Tests COMMAND PerfectWorldDoorsRoster20Tests)
+
+# R4-03: talkable vendor/passers and shared authored ambient routes.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/LaneAmbient.cpp
+    Source/PerfectWorldCore/Private/ConversationAmbient.cpp)
+add_executable(PerfectWorldLaneAmbientTests Tests/LaneAmbientTests.cpp)
+target_link_libraries(PerfectWorldLaneAmbientTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneAmbientTests COMMAND PerfectWorldLaneAmbientTests ${CMAKE_SOURCE_DIR}/Data/Content)

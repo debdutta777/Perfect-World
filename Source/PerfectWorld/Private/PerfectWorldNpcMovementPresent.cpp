@@ -9,6 +9,7 @@
 #include "PerfectWorldConversationPresenter.h"
 #include "PerfectWorldNpcCharacter.h"
 #include "PerfectWorldPresentationSettings.h"
+#include "PerfectWorldVendorCart.h"
 
 namespace
 {
@@ -139,6 +140,7 @@ bool UPWNpcMovementComponent::SweepBlocked(const FVector& Direction, AActor*& Ou
     const float Half = static_cast<float>(FMath::Max(PWNpcMove::SweepRadiusCm, HalfHeight() - 30.0)); // clears kerbs, stays under the head
     const FVector Start = Owner->GetActorLocation();
     FCollisionQueryParams Params(SCENE_QUERY_STAT(NpcAvoid), false, Owner);
+    PWLane::AmbientMoveIgnoreParams(*Owner, Params); // a vendor never avoids her own cart (R4-03)
     FHitResult Hit;
     if (!GetWorld()->SweepSingleByChannel(Hit, Start, Start + Direction.GetSafeNormal() * PWNpcMove::SweepAheadCm, FQuat::Identity, ECC_Pawn,
                                           FCollisionShape::MakeCapsule(static_cast<float>(PWNpcMove::SweepRadiusCm), Half), Params))
@@ -192,9 +194,14 @@ bool UPWNpcMovementComponent::TrySnap(const FVector& FeetDestination, const doub
     {
         return false;
     }
+    if (!PWLane::AmbientAllowsSnap(*Owner)) // a cart-led vendor walks; she is never snapped (R4-03)
+    {
+        return false;
+    }
     const double Half = HalfHeight();
     const FVector Centre = FeetDestination + FVector(0.0, 0.0, Half + 2.0);
     FCollisionQueryParams Params(SCENE_QUERY_STAT(NpcSnap), false, Owner);
+    PWLane::AmbientMoveIgnoreParams(*Owner, Params);
     if (GetWorld()->OverlapBlockingTestByChannel(Centre, FQuat::Identity, ECC_Pawn,
                                                  FCollisionShape::MakeCapsule(PWNpc::CapsuleRadius, static_cast<float>(Half)), Params))
     {

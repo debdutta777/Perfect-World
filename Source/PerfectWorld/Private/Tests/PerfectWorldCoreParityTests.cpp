@@ -139,8 +139,8 @@ bool FPerfectWorldContentParityTest::RunTest(const FString& Parameters)
                                  UTF8_TO_TCHAR(Issue.Message.c_str())));
     }
     TestTrue(TEXT("Data/Content validates inside Unreal"), Result.Ok());
-    TestEqual(TEXT("148 content files, as pwcontent reports"), static_cast<int32>(Files.size()), 148);
-    TestEqual(TEXT("184 records, as pwcontent reports"), static_cast<int32>(Result.Db.Count()), 184);
+    TestEqual(TEXT("151 content files, as pwcontent reports"), static_cast<int32>(Files.size()), 151);
+    TestEqual(TEXT("187 records, as pwcontent reports"), static_cast<int32>(Result.Db.Count()), 187);
     return true;
 }
 
