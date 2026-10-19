@@ -1944,3 +1944,38 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
     - Six `MiraPresence` tests: "walk reaches the authored endpoint".
     - `NpcRoster.SpawnedPeopleAreTalkable`: Mira is not physically present at Tuesday 17:00.
   - All of these went back to their authors.
+
+## Checkpoint — Batch A compiles and passes: 100/100 engine automation, 2026-10-19
+
+**What merged since 87/95:**
+- **gpt-6.1-sol:**
+  - AW-02, the acceptance runner: a private `-UserDir` plus verified save backups with a restore journal, and evidence checks. Self-test 41/41.
+  - The UP-02 test fix.
+- **Claude Sonnet:**
+  - UP-06 fix 2: a two-column compact pause card, measured at 792×262 of 821×448.
+  - UP-03a: Subrata's portable life (schedule, conversation, tests).
+  - UP-03b: Subrata's bindings and spawn.
+- **Claude deep-work:** NPC polylines collapse exact reversals.
+  - Mira's walk-in ran out to the counter hub and straight back along the same line. The 50 cm look-ahead then folded back on itself and she oscillated 298.7 cm from her desk.
+  - The same latent bug existed in every journey composed through a hub.
+- **Integrator:**
+  - the roster lists Subrata as scheduled;
+  - content pins at 145 files and 181 records;
+  - Subrata's spawn hook;
+  - a `size()` fix in Subrata's binding test.
+
+**Exact checks:**
+- **Rung 2:** at `b96234a`, **Succeeded**.
+- **Headless automation:** **100/100 Success** in one run, including:
+  - `MiraPresence` 8/8, `NpcRoster`, `SubrataBindings`, `NpcRoute` (with the new hub-spur test), `CreationPause`, `LaneStair`, `Acceptance`, `PersistenceFlow`, `KitDoors`, `KitFrontages`, `ShopFurniture`, `MiraBindings` and the rest.
+- **Expected warnings:**
+  - Subrata's tall-flats passage legs are 395 and 390 cm, against the schedule's 500 cm minimums, so his walk is paced at about 78–79%;
+  - his roster row is not yet marked "placed".
+- **Rung 1:** the merged run is still pending.
+- **Next:** the packaged build and the first offscreen acceptance spike (AW-01/02).
+
+**Plan:** `Docs/ROUND3_PLAN_2026-10-19.md` (gpt-6.1-sol, NR-01..06).
+- **Running:**
+  - NR-01: Rupa Ghosh, the row-house resident, and the `doors_knock` scenario (Claude Sonnet);
+  - NR-02: Nirmal Bose, tall-flats unit A, and `save_restart` (gpt-6.1-sol);
+  - NR-04: person looks, `anindita_mira` and `origins_seating_cameras` (Claude Sonnet).
