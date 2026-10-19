@@ -1,0 +1,130 @@
+{
+  "type": "npc_schedule",
+  "id": "npc_schedule.arun_paul",
+  "note": "R4-03. Seven-day local walks through the north and south side-alley thresholds. Explicit off-lane home and destination; all-pairs travel is sorted strictly by (from,to). The vendor serves at three road-edge bays, with two rounds and an off-lane meal/rest interval. Passers pause briefly on the north footpath while crossing between off-lane commitments. No purchasing command is implied.",
+  "person": "person.arun_paul",
+  "home": "location.ambient.arun.home",
+  "workplace": "location.ambient.arun.out",
+  "door": "door.nabapara.ambient_north_threshold",
+  "speedCmPerMinute": 140,
+  "routine": [
+    {
+      "days": 127,
+      "start": 0,
+      "end": 360,
+      "zone": "location.ambient.arun.home",
+      "role": "sleeping"
+    },
+    {
+      "days": 127,
+      "start": 360,
+      "end": 420,
+      "zone": "location.ambient.arun.home",
+      "role": "at_home"
+    },
+    {
+      "days": 127,
+      "start": 420,
+      "end": 480,
+      "zone": "location.ambient.arun.home",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 480,
+      "end": 538,
+      "zone": "location.ambient.arun.home",
+      "role": "at_home"
+    },
+    {
+      "days": 127,
+      "start": 540,
+      "end": 548,
+      "zone": "anchor.ambient.arun.pause",
+      "role": "observing"
+    },
+    {
+      "days": 127,
+      "start": 566,
+      "end": 1032,
+      "zone": "location.ambient.arun.out",
+      "role": "at_home"
+    },
+    {
+      "days": 127,
+      "start": 1050,
+      "end": 1058,
+      "zone": "anchor.ambient.arun.pause",
+      "role": "observing"
+    },
+    {
+      "days": 127,
+      "start": 1060,
+      "end": 1200,
+      "zone": "location.ambient.arun.home",
+      "role": "at_home"
+    },
+    {
+      "days": 127,
+      "start": 1200,
+      "end": 1260,
+      "zone": "location.ambient.arun.home",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 1260,
+      "end": 1320,
+      "zone": "location.ambient.arun.home",
+      "role": "resting"
+    },
+    {
+      "days": 127,
+      "start": 1320,
+      "end": 1440,
+      "zone": "location.ambient.arun.home",
+      "role": "sleeping"
+    }
+  ],
+  "routes": [
+    {
+      "id": "route.arun.home_pause",
+      "from": "location.ambient.arun.home",
+      "to": "anchor.ambient.arun.pause",
+      "lengthCm": 280
+    },
+    {
+      "id": "route.arun.pause_out",
+      "from": "anchor.ambient.arun.pause",
+      "to": "location.ambient.arun.out",
+      "lengthCm": 2520
+    }
+  ],
+  "travel": [
+    {
+      "from": "anchor.ambient.arun.pause",
+      "to": "location.ambient.arun.home",
+      "minutes": 2,
+      "routes": [
+        "route.arun.home_pause"
+      ]
+    },
+    {
+      "from": "anchor.ambient.arun.pause",
+      "to": "location.ambient.arun.out",
+      "minutes": 18,
+      "routes": [
+        "route.arun.pause_out"
+      ]
+    },
+    {
+      "from": "location.ambient.arun.home",
+      "to": "location.ambient.arun.out",
+      "minutes": 20,
+      "routes": [
+        "route.arun.home_pause",
+        "route.arun.pause_out"
+      ]
+    }
+  ]
+}

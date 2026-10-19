@@ -148,7 +148,32 @@ constexpr std::array<ApprovedRoute, 2> SmRoutes{{
 constexpr Spec SahanaSpec{"npc_schedule.sahana_mitra", "person.sahana_mitra", SmHome, SmErrand,
                           "door.nabapara.tall_flats_unit_b", SmRoutes, SmErrand, 10 * 60, 16 * 60};
 
-constexpr std::array<const Spec*, 7> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec, &SubrataSpec, &NirmalSpec, &RupaSpec, &SahanaSpec};
+// Ambient door metadata names logical side-alley thresholds, not new hung leaves.
+// No Doors state or access operation is attached to these exit markers.
+constexpr std::array<ApprovedRoute, 3> AmpurnimaRoutes{{
+    {"route.purnima.home_east", "location.ambient.purnima.home", "anchor.ambient.purnima.east", 1680},
+    {"route.purnima.east_middle", "anchor.ambient.purnima.east", "anchor.ambient.purnima.middle", 1260},
+    {"route.purnima.middle_west", "anchor.ambient.purnima.middle", "anchor.ambient.purnima.west", 1260},
+}};
+constexpr Spec AmpurnimaSpec{"npc_schedule.purnima_das", "person.purnima_das", "location.ambient.purnima.home", "anchor.ambient.purnima.west",
+    "door.nabapara.ambient_north_threshold", AmpurnimaRoutes, "anchor.ambient.purnima.", 540, 1098};
+
+constexpr std::array<ApprovedRoute, 2> AmarunRoutes{{
+    {"route.arun.home_pause", "location.ambient.arun.home", "anchor.ambient.arun.pause", 280},
+    {"route.arun.pause_out", "anchor.ambient.arun.pause", "location.ambient.arun.out", 2520},
+}};
+constexpr Spec AmarunSpec{"npc_schedule.arun_paul", "person.arun_paul", "location.ambient.arun.home", "location.ambient.arun.out",
+    "door.nabapara.ambient_north_threshold", AmarunRoutes, "anchor.ambient.arun.", 540, 1058};
+
+constexpr std::array<ApprovedRoute, 2> AmrekhaRoutes{{
+    {"route.rekha.home_pause", "location.ambient.rekha.home", "anchor.ambient.rekha.pause", 2660},
+    {"route.rekha.pause_out", "anchor.ambient.rekha.pause", "location.ambient.rekha.out", 140},
+}};
+constexpr Spec AmrekhaSpec{"npc_schedule.rekha_bose", "person.rekha_bose", "location.ambient.rekha.home", "location.ambient.rekha.out",
+    "door.nabapara.ambient_south_threshold", AmrekhaRoutes, "anchor.ambient.rekha.", 540, 1058};
+
+constexpr std::array<const Spec*, 10> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec, &SubrataSpec, &NirmalSpec, &RupaSpec, &SahanaSpec,
+    &AmpurnimaSpec, &AmarunSpec, &AmrekhaSpec};
 
 const Spec* FindSpec(std::string_view personId)
 {
