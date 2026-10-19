@@ -321,7 +321,7 @@ bool FSubrataBindingsRoutesTest::RunTest(const FString& Parameters)
             }
         }
     }
-    TestTrue(TEXT("every schedule journey was checked in both directions"), Journeys == Subrata.Paths.Num() * 2 && Journeys >= 20);
+    TestTrue(TEXT("every schedule journey was checked in both directions"), Journeys == static_cast<int32>(Subrata.Paths.size()) * 2 && Journeys >= 20);
     return true;
 }
 
