@@ -102,20 +102,22 @@ WorldSaveResult WorldSaveReadEnvelope(std::string_view text, const JsonValue& do
         return WorldSaveMalformed("the world hash is missing or malformed.");
     WorldSaveResult result;
     result.SourceVersion = static_cast<std::int32_t>(version);
-    if (version == WorldSaveSchemaVersion && hashVersion == static_cast<std::int64_t>(WorldHashVersion))
+    const bool R4JHistoricalHash = version == 8 && hashVersion == 5;
+    if (R4JHistoricalHash || (version == WorldSaveSchemaVersion && hashVersion == static_cast<std::int64_t>(WorldHashVersion)))
     {
-        // A historical door roster (DoorRosterEditions: ten, eleven or sixteen doors in v8) migrates on load, so the world no longer
+        // Historical door rosters (ten, eleven, sixteen or twenty doors) and the v8 empty-journal migration change the loaded world.
         // hashes as it was saved. Its checksum is authenticated over the door text exactly as stored, so the appended
         // defaults never count towards it; a tampered roster fails here. The changed world loads unverified, and its
-        // first save is certified again. Any other roster was already refused by the world reader.
+        // first save is certified again. Unknown rosters were already refused by the world reader.
         const JsonValue* storedDoors = doc.Find("world")->Find("doors");
         const bool doorsMigrated = storedDoors != nullptr && storedDoors->IsString() &&
                                    DeserialiseDoorState(storedDoors->String).bMigrated;
-        const std::uint64_t expected =
-            doorsMigrated ? HashWorldStateWithDoorsText(data.World, storedDoors->String) : HashWorldState(data.World);
+        const std::uint64_t expected = R4JHistoricalHash
+            ? HashWorldStateWithDoorsText(data.World, storedDoors->String, 5)
+            : doorsMigrated ? HashWorldStateWithDoorsText(data.World, storedDoors->String) : HashWorldState(data.World);
         if (expected != storedHash)
             return WorldSaveFail(WorldSaveError::HashMismatch, "This save file is damaged: its world does not match its checksum.");
-        result.HashVerified = !doorsMigrated;
+        result.HashVerified = !doorsMigrated && !R4JHistoricalHash;
     }
     out = std::move(data);
     return result;

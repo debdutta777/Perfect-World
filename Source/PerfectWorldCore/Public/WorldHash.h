@@ -32,8 +32,9 @@ namespace PerfectWorld
  * 3 (2026-10-05): adds the rng section, the four stream states (ROADMAP M1-05).
  * 4 (2026-10-11): adds the dayloop section, HashDayLoop of the player's day (ROADMAP M2-12).
  * 5 (2026-10-17): adds conversations (person ID and canonical module text) and doors (canonical module text).
+ * 6 (2026-10-19): appends journal (count, then day/person/first-met absolute minute).
  */
-constexpr std::uint32_t WorldHashVersion = 5;
+constexpr std::uint32_t WorldHashVersion = 6;
 
 struct WorldSectionHash
 {
@@ -41,7 +42,7 @@ struct WorldSectionHash
     std::uint64_t Hash = 0;
 };
 
-/** Fixed order: meta, clock, flags, gates, rng, dayloop, conversations, doors. */
+/** Fixed order: meta, clock, flags, gates, rng, dayloop, conversations, doors, journal. */
 [[nodiscard]] PERFECTWORLDCORE_API std::vector<WorldSectionHash> HashWorldSections(const WorldState& state);
 
 /** The fingerprint of the whole world. */
@@ -50,8 +51,10 @@ struct WorldSectionHash
 /**
  * HashWorldState with the doors section taken over `doorsText`, the pw.doors text as a save stored it. A save whose door
  * set migrated on load authenticates its original checksum with this; for unmigrated doors it equals HashWorldState.
+ * Pass hashVersion 5 only to authenticate historical v8 saves: that encoding excludes the new journal section.
  */
-[[nodiscard]] PERFECTWORLDCORE_API std::uint64_t HashWorldStateWithDoorsText(const WorldState& state, std::string_view doorsText);
+[[nodiscard]] PERFECTWORLDCORE_API std::uint64_t HashWorldStateWithDoorsText(const WorldState& state, std::string_view doorsText,
+                                                                         std::uint32_t hashVersion = WorldHashVersion);
 
 struct ReplayOptions
 {

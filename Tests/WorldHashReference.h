@@ -104,9 +104,13 @@ std::vector<std::pair<std::string, std::uint64_t>> RefSections(const WorldState&
     }
     RefBytes doors;
     doors.S(SerialiseDoorState(w.Doors));
+    RefBytes R4JJournal;
+    R4JJournal.N(w.Journal.Encounters.size());
+    for (const auto& row : w.Journal.Encounters)
+        R4JJournal.I(row.Day), R4JJournal.S(row.PersonId), R4JJournal.I(row.FirstMetMinute);
     return {{"meta", RefFnv1a(meta.Data)},   {"clock", RefFnv1a(clock.Data)}, {"flags", RefFnv1a(flags.Data)},
             {"gates", RefFnv1a(gates.Data)}, {"rng", RefFnv1a(rng.Data)},     {"dayloop", RefFnv1a(dayloop.Data)},
-            {"conversations", RefFnv1a(conversations.Data)}, {"doors", RefFnv1a(doors.Data)}};
+            {"conversations", RefFnv1a(conversations.Data)}, {"doors", RefFnv1a(doors.Data)}, {"journal", RefFnv1a(R4JJournal.Data)}};
 }
 
 std::uint64_t RefWorld(const WorldState& w)
@@ -207,6 +211,9 @@ WorldState EdgeWorld()
 // R4-01 INTEGRATION REQUIRED: no compiler in the worker sandbox. Run PerfectWorldWorldHashTests with
 // PW_PRINT_GOLDEN=1, confirm RefWorld section agreement, then replace BOTH constants below with that run's output.
 // The only intended change is three appended closed doors (20 -> 23); WorldHashVersion remains 5.
+// R4-04 PENDING RE-PIN: WorldHashVersion 6 appends the journal count/day/person/minute section, even when empty.
+// Retain the old values until the integrator runs PW_PRINT_GOLDEN=1 and confirms independent section agreement.
+// That run must cover both R4-01's 23-door defaults and R4-04's journal. Never substitute guessed values.
 constexpr std::uint64_t GoldenHandBuilt = 0x540ed03f566f3fa5ULL;
 constexpr std::uint64_t GoldenEdge = 0xbdccb8ad9193f219ULL;
 } // namespace

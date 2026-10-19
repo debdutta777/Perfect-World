@@ -162,6 +162,19 @@ std::uint64_t WorldHashDoorsSection(const WorldState& state)
     out.Text(SerialiseDoorState(state.Doors));
     return out.Result();
 }
+
+std::uint64_t R4JHashSection(const WorldState& state)
+{
+    WorldHashWriter out;
+    out.Count(state.Journal.Encounters.size());
+    for (const auto& row : state.Journal.Encounters)
+    {
+        out.Signed(row.Day);
+        out.Text(row.PersonId);
+        out.Signed(row.FirstMetMinute);
+    }
+    return out.Result();
+}
 } // namespace
 
 std::vector<WorldSectionHash> HashWorldSections(const WorldState& state)
@@ -183,6 +196,7 @@ std::vector<WorldSectionHash> HashWorldSections(const WorldState& state)
     WorldHashAddSection(sections, "dayloop", WorldHashDayLoopSection(state));
     WorldHashAddSection(sections, "conversations", WorldHashConversationsSection(state));
     WorldHashAddSection(sections, "doors", WorldHashDoorsSection(state));
+    WorldHashAddSection(sections, "journal", R4JHashSection(state));
     return sections;
 }
 
@@ -198,15 +212,16 @@ std::uint64_t HashWorldState(const WorldState& state)
     return out.Result();
 }
 
-std::uint64_t HashWorldStateWithDoorsText(const WorldState& state, std::string_view doorsText)
+std::uint64_t HashWorldStateWithDoorsText(const WorldState& state, std::string_view doorsText, std::uint32_t hashVersion)
 {
     WorldHashWriter doors;
     doors.Text(std::string(doorsText));
     const std::uint64_t doorsHash = doors.Result();
     WorldHashWriter out;
-    out.Unsigned(WorldHashVersion);
+    out.Unsigned(hashVersion);
     for (const WorldSectionHash& section : HashWorldSections(state))
     {
+        if (hashVersion == 5 && section.Name == "journal") continue;
         out.Text(section.Name);
         out.Unsigned(section.Name == "doors" ? doorsHash : section.Hash);
     }

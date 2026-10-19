@@ -188,6 +188,7 @@ std::optional<Rejection> WorldSim::ApplyLaneCommand(const Command& command, Comm
         const ConversationChooseResult chosen = ChooseConversationChoice(catalogue, conversation, choose->ChoiceId);
         if (!chosen.ChoiceId.empty())
         {
+            RecordLaneJournalEncounter(State_, choose->PersonId);
             result.Events.push_back({0, State_.Clock.Now(),
                                      ConversationChoiceAccepted{choose->PersonId, std::string(chosen.ChoiceId), chosen.Session, chosen.CostMinutes,
                                                                 std::string(chosen.FactSet), std::string(chosen.FactCleared),

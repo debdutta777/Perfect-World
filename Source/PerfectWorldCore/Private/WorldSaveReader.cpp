@@ -352,7 +352,8 @@ WorldSaveResult WorldSaveReadWorld(const JsonValue& value, WorldState& world, st
     const bool withDayLoop = version > WorldSaveLastWithoutDayLoopVersion;
     std::string error;
     const JsonValue* clock = value.IsObject() ? value.Find("clock") : nullptr;
-    const bool keys = version >= 8 ? WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng", "dayloop", "conversations", "doors"})
+    const bool keys = version >= 9 ? WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng", "dayloop", "conversations", "doors", "journal"})
+                     : version >= 8 ? WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng", "dayloop", "conversations", "doors"})
                      : withDayLoop ? WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng", "dayloop"})
                                   : WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng"});
     if (!keys || clock == nullptr || !WorldSaveAsHex(value.Find("seed"), world.WorldSeed) || !WorldSaveAsHex(value.Find("seq"), world.Seq))
@@ -364,6 +365,7 @@ WorldSaveResult WorldSaveReadWorld(const JsonValue& value, WorldState& world, st
         return WorldSaveInvalid(error);
     // Older files contain no evidence of conversations or door mutations.
     world.Conversations.clear();
+    world.Journal = {};
     world.Doors = MakeInitialDoorState();
     return version >= 8 ? WorldSaveReadLane(value, world) : WorldSaveResult{};
 }

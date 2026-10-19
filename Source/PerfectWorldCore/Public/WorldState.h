@@ -4,6 +4,7 @@
 #include "DayLoop.h"
 #include "Doors.h"
 #include "GameClock.h"
+#include "LaneJournal.h"
 #include "RandomStreams.h"
 
 #include <cstdint>
@@ -86,16 +87,17 @@ struct WorldState
      * household, care and Farida content never share facts or session numbers. At most one state is Open in the world
      * (OpenConversationPersonId). An entry exists once its person has been spoken to. Changed only by the conversation.*
      * commands (WorldConversation.cpp), which charge a paid choice's minutes through the world clock in the same command.
-     * PENDING SAVE ORDER (world v8): persist each entry, in key order, as the person id plus its "pw.conversation/2"
-     * text (SerialiseConversationState with the person's catalogue), and hash it; refuse an unknown person id or a state
-     * IsConversationStateValid rejects. An older save starts with no entries. Until then a world save does not carry it
-     * and WorldHash does not cover it.
+     * Since world v8 each entry is saved in key order as the person id plus its "pw.conversation/2" text and hashed.
+     * Unknown people and invalid states are refused. Earlier saves start with no entries. Remembered journal agreements
+     * are projected from these current facts, never persisted as a second copy.
      */
     std::map<std::string, ConversationState, std::less<>> Conversations;
+    /** Dated successful exchanges, pw.lane_journal/1 in world v9. Older saves have no dated evidence. */
+    LaneJournalState Journal;
     /**
      * The lane's doors (Doors.h): one physical entry (open, swing side) per authored door, in table order. Changed
-     * only by the door.set and door.settle commands. PENDING SAVE ORDER (world v8): persist as "pw.doors/2"
-     * (SerialiseDoorState; /1 migrates) and hash it; an older save starts from the authored defaults, as here.
+     * only by the door.set and door.settle commands. Since world v8 persisted as "pw.doors/2" and hashed;
+     * earlier worlds start from the authored defaults, as here. Historical door rosters migrate explicitly.
      */
     DoorState Doors = MakeInitialDoorState();
 };

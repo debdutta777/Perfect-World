@@ -9,7 +9,8 @@ namespace PerfectWorld
 std::string WorldSaveWriteLane(const WorldState& world)
 {
     const std::string doors = SerialiseDoorState(world.Doors);
-    if (doors.empty())
+    const std::string journal = SerialiseLaneJournal(world);
+    if (doors.empty() || journal.empty())
         return {};
     std::string out = ",\n    \"conversations\": {";
     bool first = true;
@@ -29,6 +30,7 @@ std::string WorldSaveWriteLane(const WorldState& world)
     }
     out += first ? "}" : "\n    }";
     out += ",\n    \"doors\": " + WorldSaveQuoted(doors);
+    out += ",\n    \"journal\": " + WorldSaveQuoted(journal);
     return out;
 }
 
@@ -57,6 +59,12 @@ WorldSaveResult WorldSaveReadLane(const JsonValue& value, WorldState& world)
         world.Conversations.emplace(person, std::move(parsed.State));
     }
     world.Doors = std::move(parsedDoors.State);
+    // WorldSaveReadWorld requires this field only for v9; v8 migration leaves the log empty.
+    if (const JsonValue* journal = value.Find("journal"))
+    {
+        if (!journal->IsString() || !DeserialiseLaneJournal(journal->String, world))
+            return WorldSaveInvalid("the journal envelope is invalid.");
+    }
     return {};
 }
 } // namespace PerfectWorld

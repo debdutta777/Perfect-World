@@ -47,7 +47,7 @@ void LaneRoundTripAndReplay()
     WorldSaveData data = SaveOf(live, MakeCreation("parent_household"));
     WorldSaveData loaded;
     const auto result = DeserializeWorldSave(SerializeWorldSave(data), loaded);
-    Check(result.Succeeded() && result.SourceVersion == 8 && result.HashVerified, "v8 mid-session round trip is certified");
+    Check(result.Succeeded() && result.SourceVersion == 9 && result.HashVerified, "v9 mid-session round trip is certified");
     CheckSame(data, loaded, "all persisted fields survive the lane round trip");
     WorldSim resumed(loaded.World);
     for (WorldSim* sim : {&live, &resumed})
@@ -69,8 +69,8 @@ void LaneMigration()
     std::string old = SerializeWorldSave(data);
     const auto begin = old.find(",\n    \"conversations\":");
     old.erase(begin, old.find("\n  }", begin) - begin);
-    old = ReplaceOnce(old, "\"schemaVersion\": 8", "\"schemaVersion\": 7");
-    old = ReplaceOnce(old, "\"hashVersion\": 5", "\"hashVersion\": 4");
+    old = ReplaceOnce(old, "\"schemaVersion\": 9", "\"schemaVersion\": 7");
+    old = ReplaceOnce(old, "\"hashVersion\": 6", "\"hashVersion\": 4");
     // Historical v4 cannot be certified by v5. Use the independently pinned v4 reference value as a stale hash.
     const auto hash = old.find("\"stateHash\": ") + 13;
     old.replace(hash, 20, "\"0x6172068cb2eb0ae3\"");
@@ -81,7 +81,7 @@ void LaneMigration()
     CheckSame(data, loaded, "v7 retains old authority and receives empty conversations and authored doors");
     Check(loaded.World.Conversations.empty() && loaded.World.Doors == MakeInitialDoorState(), "honest lane defaults");
     // Even a relabelled historical record carrying today's hash must not be certified as a v8 snapshot.
-    std::string relabelled = ReplaceOnce(old, "\"hashVersion\": 4", "\"hashVersion\": 5");
+    std::string relabelled = ReplaceOnce(old, "\"hashVersion\": 4", "\"hashVersion\": 6");
     const std::string current = SerializeWorldSave(data);
     const auto currentHash = current.find("\"stateHash\": ") + 13;
     relabelled.replace(relabelled.find("\"stateHash\": ") + 13, 20, current.substr(currentHash, 20));
@@ -269,7 +269,8 @@ std::uint64_t LaneHistoricalHash(const WorldState& world, std::string_view doors
     };
     std::string bytes = "u" + number(5);
     for (const auto& section : HashWorldSections(world))
-        bytes += text(section.Name) + "u" + number(section.Name == "doors" ? fnv(text(doors)) : section.Hash);
+        if (section.Name != "journal")
+            bytes += text(section.Name) + "u" + number(section.Name == "doors" ? fnv(text(doors)) : section.Hash);
     return fnv(bytes);
 }
 
@@ -291,6 +292,10 @@ void LaneTenDoorV8Migration()
     Check(ApplyDoorSettlement(data.World.Doors, "door.nabapara.home_front", true, -1) == DoorResult::Ok,
           "historical fixture has a nondefault negative swing");
     std::string old = ReplaceOnce(SerializeWorldSave(data), LaneQuoted(SerialiseDoorState(data.World.Doors)), LaneQuoted(oldDoors));
+    const auto R4JStart = old.find(",\n    \"journal\":");
+    old.erase(R4JStart, old.find("\n  }", R4JStart) - R4JStart);
+    old = ReplaceOnce(old, "\"schemaVersion\": 9", "\"schemaVersion\": 8");
+    old = ReplaceOnce(old, "\"hashVersion\": 6", "\"hashVersion\": 5");
     const auto hashAt = old.find("\"stateHash\": ") + 13;
     const auto hex = [](std::uint64_t hash) {
         std::string value = "\"0x0000000000000000\"";
@@ -413,8 +418,9 @@ void LaneFrozenDoorFixtures()
         Check(storedParse.Ok() && storedParse.bMigrated && storedParse.State == loaded.World.Doors, "stored roster is historical");
         Check(storedDoors.find("count=" + std::to_string(count) + "\n") != std::string::npos, "fixture holds its roster");
         const std::uint64_t storedHash = std::stoull(text.substr(text.find("\"stateHash\": ") + 14, 18), nullptr, 16);
-        Check(HashWorldStateWithDoorsText(loaded.World, storedDoors) == storedHash && HashWorldState(loaded.World) != storedHash,
+        Check(HashWorldStateWithDoorsText(loaded.World, storedDoors, 5) == storedHash && HashWorldState(loaded.World) != storedHash,
               "the checksum covers the stored door text, not the appended defaults");
+        Check(loaded.World.Journal.Encounters.empty(), "historical v8 retains no invented encounter dates");
         Check(QueryDoorOpen(loaded.World.Doors, "door.nabapara.home_front") == true && loaded.World.Doors.Doors[0].SwingSide == -1 &&
                   loaded.World.Doors.Doors[2].SwingSide == 1 && QueryDoorOpen(loaded.World.Doors, "door.nabapara.care_common") == false,
               "historical physical facts survive");

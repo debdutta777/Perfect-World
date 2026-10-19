@@ -702,3 +702,10 @@ add_test(NAME PerfectWorldProprietorLifeTests COMMAND PerfectWorldProprietorLife
 add_executable(PerfectWorldProprietorConversationTests Tests/ProprietorConversationTests.cpp)
 target_link_libraries(PerfectWorldProprietorConversationTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldProprietorConversationTests COMMAND PerfectWorldProprietorConversationTests)
+
+# R4-04: authoritative dated encounters and current-fact journal projection.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/LaneJournal.cpp)
+add_executable(PerfectWorldLaneJournalTests Tests/LaneJournalTests.cpp)
+target_link_libraries(PerfectWorldLaneJournalTests PRIVATE PerfectWorldCore)
+target_compile_definitions(PerfectWorldLaneJournalTests PRIVATE PW_JOURNAL_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
+add_test(NAME PerfectWorldLaneJournalTests COMMAND PerfectWorldLaneJournalTests)
