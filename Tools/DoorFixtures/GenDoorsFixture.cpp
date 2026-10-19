@@ -59,6 +59,11 @@ int main(int argc, char** argv)
     Submit(sim, CommandSource::Presentation, DoorSettle{"door.nabapara.care_common", false, 0}, "care common closed");
     if (FindDoor("door.nabapara.stationery_front") != nullptr)
         Submit(sim, CommandSource::Presentation, DoorSettle{"door.nabapara.stationery_front", true, -1}, "stationery open");
+    // NL-01 doors (sixteen-door core, ec27cc7): a two-way leaf open outward and a one-way dwelling leaf open inward.
+    if (FindDoor("door.nabapara.tall_flats_front") != nullptr)
+        Submit(sim, CommandSource::Presentation, DoorSettle{"door.nabapara.tall_flats_front", true, -1}, "flats entry open");
+    if (FindDoor("door.nabapara.tea_row_house_front") != nullptr)
+        Submit(sim, CommandSource::Presentation, DoorSettle{"door.nabapara.tea_row_house_front", true, 1}, "row house open");
     Submit(sim, CommandSource::Player, AdvanceTime{37}, "a little later");
 
     data.World = sim.State();

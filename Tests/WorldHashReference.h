@@ -198,6 +198,12 @@ WorldState EdgeWorld()
 // Both change solely because the authored door set gains five closed frontage doors (caretaker_flat_front,
 // tall_flats_front, tall_flats_unit_a, tall_flats_unit_b, tea_row_house_front), so the doors section's default text
 // holds sixteen entries. The encoding is unchanged; ten- and eleven-door v8 saves migrate on load.
-constexpr std::uint64_t GoldenHandBuilt = 0x5521896d0168b7a4ULL;
-constexpr std::uint64_t GoldenEdge = 0x9352f41c5cee3cf8ULL;
+// Re-pinned again 2026-10-19 (doors 20), with PW_PRINT_GOLDEN=1 (RefWorld), WorldHashVersion still 5:
+// HandBuilt: 0x5521896d0168b7a4 -> 0x540ed03f566f3fa5.
+// Edge:      0x9352f41c5cee3cf8 -> 0xbdccb8ad9193f219.
+// Both change solely because the authored door set gains four closed doors (repair_workshop_front,
+// hardware_store_front, old_house_front, tall_flats_upper_a), so the doors section's default text holds twenty
+// entries. The encoding is unchanged; ten-, eleven- and sixteen-door v8 saves migrate on load.
+constexpr std::uint64_t GoldenHandBuilt = 0x540ed03f566f3fa5ULL;
+constexpr std::uint64_t GoldenEdge = 0xbdccb8ad9193f219ULL;
 } // namespace
