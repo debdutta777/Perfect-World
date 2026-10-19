@@ -448,8 +448,8 @@ int main()
         WorldState w;
         w.Gates["gate.t.h"] = GateSiteState{GateRank::C, GateStatus::Contained, 10, 0};
         const std::vector<WorldSectionHash> base = HashWorldSections(w);
-        // Hash v5 adds conversations and doors for eight sections; gates remains at index 3.
-        Check(base.size() == 8 && base[3].Name == "gates", "the hash has a gates section");
+        // Hash v6 has nine sections (v5 added conversations and doors, v6 the journal); gates remains at index 3.
+        Check(base.size() == 9 && base[3].Name == "gates", "the hash has a gates section");
         auto changes = [&](const std::function<void(GateSiteState&)>& edit) {
             WorldState e = w;
             edit(e.Gates["gate.t.h"]);

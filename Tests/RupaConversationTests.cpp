@@ -271,7 +271,7 @@ void RgSaveMidSession()
     WorldSaveData data = SaveOf(live, MakeCreation("parent_household"));
     WorldSaveData loaded;
     const auto result = DeserializeWorldSave(SerializeWorldSave(data), loaded);
-    Check(result.Succeeded() && result.SourceVersion == 8 && result.HashVerified, "v8 mid-session round trip with Rupa is certified");
+    Check(result.Succeeded() && result.SourceVersion == WorldSaveSchemaVersion && result.HashVerified, "current-schema mid-session round trip with Rupa is certified");
     CheckSame(data, loaded, "all persisted fields survive, including her session");
     const ConversationState& restored = loaded.World.Conversations.at(person);
     Check(restored.Open && WasChoiceChargedThisSession(restored, RgSitId) && HasConversationFact(restored, RgFact), "the receipt still guards the charge and the agreement survived");

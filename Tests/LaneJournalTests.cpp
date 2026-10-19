@@ -19,7 +19,9 @@ void R4JExpect(bool condition, const char* message)
 
 void R4JSubmit(WorldSim& sim, CommandPayload payload)
 {
-    R4JExpect(sim.Submit({CommandSource::System, std::move(payload)}).Accepted, "journal command accepted");
+    const CommandResult result = sim.Submit({CommandSource::System, std::move(payload)});
+    if (!result.Accepted) { std::cerr << "refused: " << result.Why.Code << " " << result.Why.Message << '\n'; }
+    R4JExpect(result.Accepted, "journal command accepted");
 }
 
 void R4JOpen(WorldSim& sim, const std::string& person, PersonAvailability availability = PersonAvailability::Awake)
@@ -42,6 +44,12 @@ void R4JTalk(WorldSim& sim, const std::string& person, const std::string& choice
 void R4JAt(WorldSim& sim, GameInstant when)
 {
     R4JSubmit(sim, AdvanceTime{when - sim.State().Clock.Now()});
+}
+
+// The household rota is talked about from 11:00 (node.household_adult.rota_open); a new life starts at breakfast.
+void R4JMidday(WorldSim& sim)
+{
+    R4JAt(sim, GameClock::StartOfDay(sim.State().Clock.Now()) + 720);
 }
 
 WorldSaveData R4JSave(const WorldState& world)
@@ -124,6 +132,7 @@ void R4JReplacedAgreements()
 {
     WorldSim sim(405);
     const std::string parent(HouseholdAdultId);
+    R4JMidday(sim);
     R4JOpen(sim, parent);
     R4JChoose(sim, parent, "choice.household_adult.talk_rota");
     R4JChoose(sim, parent, "choice.household_adult.propose_dishes");
@@ -141,9 +150,10 @@ void R4JReplacedAgreements()
               view.AgreementsRemembered[0].AgreementId == FactRotaAlternateDays &&
               view.AgreementsRemembered[0].ShortTextKey == "journal.agreement.evening_rota_alternate_days",
               "projection reads replacement facts across all days without a duplicate agreement store");
+    R4JAt(sim, GameClock::StartOfDay(sim.State().Clock.Now()) + 960); // 16:00, Farida serving the afternoon.
     R4JTalk(sim, "person.farida_qadri", "choice.farida_qadri.ask_bench");
     R4JExpect(LaneJournalToday(sim.State(), day).AgreementsRemembered.size() == 1, "asked permission is not an agreement");
-    R4JAt(sim, 180); // 09:00, both proprietors' public conversation windows.
+    R4JAt(sim, GameClock::StartOfDay(sim.State().Clock.Now()) + 1440 + 540); // next day 09:00, both proprietors' public windows.
     R4JTalk(sim, "person.mahua_saha", "choice.mahua_saha.promise_sort");
     R4JTalk(sim, "person.debashis_pal", "choice.debashis_pal.promise_bring");
     view = LaneJournalToday(sim.State(), day);
@@ -155,12 +165,15 @@ void R4JReplacedAgreements()
 void R4JRollback()
 {
     WorldSim sim(406, 1);
-    R4JSubmit(sim, ScheduleWorldEvent{1, "test/journal/a"});
-    R4JSubmit(sim, ScheduleWorldEvent{2, "test/journal/b"});
+    R4JMidday(sim);
+    const GameInstant now = sim.State().Clock.Now();
+    R4JSubmit(sim, ScheduleWorldEvent{now + 1, "test/journal/a"});
+    R4JSubmit(sim, ScheduleWorldEvent{now + 2, "test/journal/b"});
     R4JOpen(sim, std::string(HouseholdAdultId));
     const auto before = HashWorldState(sim.State());
     const auto result = sim.Submit({CommandSource::Player, ConversationChoose{std::string(HouseholdAdultId),
         "choice.household_adult.talk_rota", 1}});
+    R4JExpect(result.Why.Code != "conversation.stale_choice", "the paid choice is offered, so only the event cap refuses it");
     R4JExpect(!result.Accepted && sim.State().Journal.Encounters.empty() && HashWorldState(sim.State()) == before,
               "interrupted paid choice rolls back encounter, facts, receipts and clock atomically");
 }
@@ -228,6 +241,7 @@ void R4JMigration()
 {
     WorldSim sim(408);
     const std::string parent(HouseholdAdultId);
+    R4JMidday(sim);
     R4JOpen(sim, parent);
     R4JChoose(sim, parent, "choice.household_adult.talk_rota");
     R4JChoose(sim, parent, "choice.household_adult.propose_dishes");
@@ -249,6 +263,7 @@ void R4JMigration()
               "older save retains agreements derived from facts");
     R4JExpect(DeserializeWorldSave(SerializeWorldSave(loaded), loaded).HashVerified, "migrated world becomes certified on v9 resave");
     WorldSim resumed(loaded.World);
+    R4JAt(resumed, GameClock::StartOfDay(resumed.State().Clock.Now()) + 960); // 16:00, Farida serving the afternoon.
     R4JTalk(resumed, "person.farida_qadri", "choice.farida_qadri.decline_tea");
     R4JExpect(resumed.State().Journal.Encounters.size() == 1, "only subsequent real choices add dates after migration");
     R4JExpect(!DeserializeWorldSave(R4JReplace(old, "\"doors\":", "\"journal\": \"pw.lane_journal/1\\ncount=0\\nend\\n\", \"doors\":"), loaded).Succeeded(),

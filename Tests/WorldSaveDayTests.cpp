@@ -44,8 +44,8 @@ std::string AsVersionSix(std::string text)
     const DayTestSpan span = DayLoopSpan(text);
     const std::size_t end = text.find("\n  }", span.End);
     text.erase(span.Begin, end - span.Begin);
-    text = ReplaceOnce(text, "\"schemaVersion\": 8", "\"schemaVersion\": 6");
-    return ReplaceOnce(text, "\"hashVersion\": 5", "\"hashVersion\": 3");
+    text = ReplaceOnce(text, "\"schemaVersion\": 9", "\"schemaVersion\": 6");
+    return ReplaceOnce(text, "\"hashVersion\": 6", "\"hashVersion\": 3");
 }
 
 void TestOldVersionSix()
@@ -67,11 +67,11 @@ void TestOldVersionSix()
               loaded.World.DayLoop.Attendance == NewDayLoopState(rich.World.Clock.Now()).Attendance && IsWorldDayInStep(loaded.World),
           "the fresh day is awake, unplanned and in step with the clock");
 
-    // Saving it again writes v8, which verifies, and the world is unchanged by the round trip.
+    // Saving it again writes the current schema, which verifies, and the world is unchanged by the round trip.
     WorldSaveData again = Sentinel();
     const WorldSaveResult second = DeserializeWorldSave(SerializeWorldSave(loaded), again);
-    Check(second.Succeeded() && second.SourceVersion == 8 && second.HashVerified && HashWorldState(again.World) == HashWorldState(loaded.World),
-          "what an old save was loaded as is saved as v8 and verifies");
+    Check(second.Succeeded() && second.SourceVersion == WorldSaveSchemaVersion && second.HashVerified && HashWorldState(again.World) == HashWorldState(loaded.World),
+          "what an old save was loaded as is saved as the current schema and verifies");
 
     // v6 is refused as v6 would always have been: truncated, a key renamed, an unexpected day loop key, the wrong version.
     for (std::size_t cut = 0; cut < v6.size(); ++cut)
@@ -85,7 +85,7 @@ void TestOldVersionSix()
     }
     Check(ErrorOf(ReplaceOnce(v6, "\"rng\"", "\"rngX\"")) == WorldSaveError::Malformed, "a renamed member of a v6 record is refused");
     Check(ErrorOf(ReplaceOnce(v6, "\"rng\":", "\"dayloop\": \"\", \"rng\":")) == WorldSaveError::Malformed, "a v6 record may not carry a day loop");
-    Check(ErrorOf(ReplaceOnce(v6, "\"schemaVersion\": 6", "\"schemaVersion\": 9")) == WorldSaveError::UnsupportedVersion, "a version after v8 is unsupported");
+    Check(ErrorOf(ReplaceOnce(v6, "\"schemaVersion\": 6", "\"schemaVersion\": 10")) == WorldSaveError::UnsupportedVersion, "a version after v9 is unsupported");
 
     // A clock the day loop cannot hold (before the campaign, or past its hundred years) is refused rather than given an invalid day.
     for (const GameInstant clock : {GameInstant{-5}, DayLoopMaxInstant + 1})

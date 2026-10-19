@@ -57,7 +57,7 @@ void AnSaveMidSession()
     WorldSaveData data = SaveOf(live, MakeCreation("parent_household"));
     WorldSaveData loaded;
     const auto result = DeserializeWorldSave(SerializeWorldSave(data), loaded);
-    Check(result.Succeeded() && result.SourceVersion == 8 && result.HashVerified, "v8 mid-session round trip with Anindita is certified");
+    Check(result.Succeeded() && result.SourceVersion == WorldSaveSchemaVersion && result.HashVerified, "current-schema mid-session round trip with Anindita is certified");
     CheckSame(data, loaded, "all persisted fields survive, including her session");
     Check(loaded.World.Conversations.at(person).Open && WasChoiceChargedThisSession(loaded.World.Conversations.at(person), AnSaveHelp),
           "the persisted receipt still guards the charge");

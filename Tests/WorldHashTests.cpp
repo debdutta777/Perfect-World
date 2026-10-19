@@ -125,11 +125,11 @@ void TestGolden()
     Check(HashWorldState(hand) == GoldenHandBuilt, "the hand-built world hashes to its pinned value");
     Check(HashWorldState(edge) == GoldenEdge, "the edge-case world hashes to its pinned value");
     const std::vector<WorldSectionHash> sections = HashWorldSections(hand);
-    Check(sections.size() == 8 && sections[0].Name == "meta" && sections[1].Name == "clock" && sections[2].Name == "flags" &&
+    Check(sections.size() == 9 && sections[0].Name == "meta" && sections[1].Name == "clock" && sections[2].Name == "flags" &&
               sections[3].Name == "gates" && sections[4].Name == "rng" && sections[5].Name == "dayloop" &&
-              sections[6].Name == "conversations" && sections[7].Name == "doors",
-          "sections append conversations and doors after the original six");
-    Check(WorldHashVersion == 5, "the hash version is 5 with lane authority");
+              sections[6].Name == "conversations" && sections[7].Name == "doors" && sections[8].Name == "journal",
+          "sections append conversations, doors and the journal after the original six");
+    Check(WorldHashVersion == 6, "the hash version is 6 with the lane journal");
     Check(HashWorldState(hand) == HashWorldState(HandBuiltWorld()), "hashing is repeatable");
     Check(HashWorldState(hand) != HashWorldState(WorldState{}), "different worlds differ");
 }

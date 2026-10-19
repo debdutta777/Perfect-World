@@ -210,7 +210,8 @@ WorldState EdgeWorld()
 // entries. The encoding is unchanged; ten-, eleven- and sixteen-door v8 saves migrate on load.
 // R4-01 re-pin (was 0x540ed03f566f3fa5 and 0xbdccb8ad9193f219): the only change is three appended closed doors
 // (market_stalls_a_front, market_stalls_b_front, end_shop_front), 20 -> 23; WorldHashVersion remains 5.
-// R4-04 PENDING RE-PIN: WorldHashVersion 6 appends the journal section, even when empty.
-constexpr std::uint64_t GoldenHandBuilt = 0xd7bd9e09459dd02fULL;
-constexpr std::uint64_t GoldenEdge = 0x2e57d3e0f62ad53ULL;
+// R4-04 re-pin 2026-10-19 with PW_PRINT_GOLDEN=1 (RefWorld agreed): WorldHashVersion 6 appends the journal section,
+// even when empty. HandBuilt 0xd7bd9e09459dd02f -> 0x9402a4985db02ae2; Edge 0x2e57d3e0f62ad53 -> 0x843e5c4d1eabf786.
+constexpr std::uint64_t GoldenHandBuilt = 0x9402a4985db02ae2ULL;
+constexpr std::uint64_t GoldenEdge = 0x843e5c4d1eabf786ULL;
 } // namespace

@@ -329,7 +329,7 @@ void PcSaveMidSession(const PcCase& c, std::uint64_t seed)
     WorldSaveData data = SaveOf(live, MakeCreation("parent_household"));
     WorldSaveData loaded;
     const auto result = DeserializeWorldSave(SerializeWorldSave(data), loaded);
-    Check(result.Succeeded() && result.SourceVersion == 8 && result.HashVerified, "v8 mid-session round trip is certified");
+    Check(result.Succeeded() && result.SourceVersion == WorldSaveSchemaVersion && result.HashVerified, "current-schema mid-session round trip is certified");
     CheckSame(data, loaded, "all persisted fields survive, including the session");
     const ConversationState& restored = loaded.World.Conversations.at(person);
     Check(restored.Open && WasChoiceChargedThisSession(restored, paid) && HasConversationFact(restored, c.Fact), "the receipt still guards the charge and the agreement survived");
