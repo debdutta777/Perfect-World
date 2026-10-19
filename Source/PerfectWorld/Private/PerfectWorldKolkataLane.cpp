@@ -18,6 +18,7 @@
 #include "PerfectWorldLaneTeaShop.h"
 #include "PerfectWorldNpcCharacter.h"
 #include "PerfectWorldNpcPresenceSubsystem.h"
+#include "PerfectWorldNirmalBindings.h"
 #include "PerfectWorldSubrataBindings.h"
 
 namespace PWLane
@@ -295,6 +296,7 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     FaSpawnFarida(World, Scene);
     PbSpawnAnindita(World, Scene);
     SpawnSubrata(World, Scene);
+    SpawnNirmal(World, Scene);
     if (Scene.bOpeningHomeBuilt)
     {
         SpawnHouseholdAdult(World);

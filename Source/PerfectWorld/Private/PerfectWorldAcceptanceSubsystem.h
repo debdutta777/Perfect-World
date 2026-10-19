@@ -159,6 +159,7 @@ struct FStepDef
 bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps);
 /** stationery_shift (PerfectWorldAcceptanceStationery.cpp). */
 void AppendStationeryShiftSteps(TArray<FStepDef>& OutSteps);
+void AppendSaveRestartSteps(TArray<FStepDef>& OutSteps);
 
 // Step builders shared by scenarios (PerfectWorldAcceptanceLaneScenario.cpp).
 FStepDef MakeWorldReadyStep();

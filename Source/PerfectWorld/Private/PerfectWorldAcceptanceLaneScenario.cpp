@@ -372,6 +372,11 @@ bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps)
         AwAppendBootWalkInteract(OutSteps);
         return true;
     }
+    if (Name == TEXT("save_restart"))
+    {
+        AppendSaveRestartSteps(OutSteps);
+        return true;
+    }
     if (Name == TEXT("stationery_shift"))
     {
         AppendStationeryShiftSteps(OutSteps);
