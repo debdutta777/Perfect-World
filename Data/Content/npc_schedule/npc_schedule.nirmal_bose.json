@@ -27,8 +27,8 @@
     { "id": "route.nirmal.front_to_work", "from": "anchor.nirmal.tall_flats_front", "to": "location.nabapara.nirmal_work", "lengthCm": 2800 }
   ],
   "travel": [
-    { "from": "location.nabapara.tall_flats_unit_a", "to": "anchor.nirmal.tall_flats_front", "minutes": 4, "routes": ["route.nirmal.unit_to_front"] },
     { "from": "anchor.nirmal.tall_flats_front", "to": "location.nabapara.nirmal_work", "minutes": 20, "routes": ["route.nirmal.front_to_work"] },
+    { "from": "location.nabapara.tall_flats_unit_a", "to": "anchor.nirmal.tall_flats_front", "minutes": 4, "routes": ["route.nirmal.unit_to_front"] },
     { "from": "location.nabapara.tall_flats_unit_a", "to": "location.nabapara.nirmal_work", "minutes": 24, "routes": ["route.nirmal.unit_to_front", "route.nirmal.front_to_work"] }
   ]
 }
