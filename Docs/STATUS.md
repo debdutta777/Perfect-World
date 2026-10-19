@@ -1995,3 +1995,32 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 - **Failed:** `walk_to_table_chair`, blocked 160 cm short. The straight-line path runs into the open living-room door leaf, so this is a driver path fix, sent back to AW-01's author.
 - **Your saves:** a private `-UserDir`, with verified backup and restore of the real save slot. "Save restoration verified: True".
 - **Overall:** FAIL (incomplete scenario). **Offscreen capture is proven on this VM.**
+
+## Checkpoint — round 3, batch A: Rupa, Nirmal, person looks and the acceptance scenarios; Rung 1 175/175 and engine 108/108, 2026-10-19
+
+**What merged:**
+- **gpt-6.1-sol, NR-02:**
+  - Nirmal Bose of tall-flats unit A: off-lane work, home and awake through 17:00–20:30 visiting.
+  - His bindings from the unit doorstep.
+  - The `save_restart` scenario.
+- **Claude Sonnet, NR-01:** Rupa Ghosh of the row house (home inside 16:00–19:30 visiting), her bindings, and the `doors_knock` scenario.
+- **Claude Sonnet, NR-04:**
+  - Person looks split into `PerfectWorldNpcLooks` (bespoke figures for Mira, Anindita, Subrata, Rupa, Nirmal and Sahana).
+  - The `anindita_mira` and `origins_seating_cameras` scenarios.
+- **Claude Sonnet, AW-01 path fix:** the chair walk goes around the household adult. Her capsule, not the door leaf, had blocked the spike.
+- **Integrator:**
+  - spawn and scenario hooks;
+  - content pins at 147 files and 183 records;
+  - Nirmal's travel legs re-sorted;
+  - two compile fixes;
+  - roster rows for Nirmal and Rupa;
+  - the NpcLooks fix merged (hair stays inside the authored height).
+
+**Problems found along the way:**
+- **Stale generated headers:** UHT had not regenerated `*.generated.h` after headers changed, because the clock jumped, so the line-keyed `GENERATED_BODY` no longer matched. Deleting `Intermediate/.../UHT` fixed it.
+- **Invalid schedule data:** Nirmal's schedule had unsorted travel legs, written in a sandbox that could not compile. The loader refused the file, which emptied the content database and failed 10 dependent tests.
+
+**Exact checks:**
+- **Rung 1:** at `b44782a`, **175/175**.
+- **Rung 2:** **Succeeded**.
+- **Headless automation:** **108/108 Success** in one run.
