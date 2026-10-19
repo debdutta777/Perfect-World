@@ -31,7 +31,12 @@ constexpr std::string_view CareHome = "location.nabapara.care_home";
 constexpr DoorOpeningWindow CaretakerVisiting[]{{600, 750}, {1050, 1230}};
 constexpr DoorOpeningWindow FlatsVisiting[]{{1020, 1230}};
 constexpr DoorOpeningWindow RowHouseVisiting[]{{960, 1170}};
-constexpr std::array<DoorDef, 16> DoorTable{{
+// NR-05 frontages (repairer's split day, closing 18:30; the hardware store's two sittings) and NR-06's first upper flat.
+// The old house and the upper flat have nobody living there yet: a knock gets NoAnswer, so entry is by invitation only.
+constexpr DoorOpeningWindow DoorsWorkshopHours[]{{480, 720}, {840, 1110}};
+constexpr DoorOpeningWindow DoorsHardwareHours[]{{540, 780}, {900, 1200}};
+constexpr DoorOpeningWindow DoorsOldHouseVisiting[]{{960, 1170}};
+constexpr std::array<DoorDef, 20> DoorTable{{
     {"door.nabapara.home_front", OpeningHome, false, DoorAccess::Private, 0, 0},
     {"door.nabapara.home_living", OpeningHome, true, DoorAccess::Public, 0, 0},
     {"door.nabapara.home_bedroom", OpeningHome, false, DoorAccess::Private, 0, 0},
@@ -48,13 +53,17 @@ constexpr std::array<DoorDef, 16> DoorTable{{
     {"door.nabapara.tall_flats_unit_a", "location.nabapara.tall_flats_unit_a", false, DoorAccess::Private, 0, 0, {}, false, 1, FlatsVisiting},
     {"door.nabapara.tall_flats_unit_b", "location.nabapara.tall_flats_unit_b", false, DoorAccess::Private, 0, 0, {}, false, 1, FlatsVisiting},
     {"door.nabapara.tea_row_house_front", "location.nabapara.tea_row_house", false, DoorAccess::Private, 0, 0, {}, false, 1, RowHouseVisiting},
+    {"door.nabapara.repair_workshop_front", "location.nabapara.repair_workshop", false, DoorAccess::BusinessHours, 0, 0, DoorsWorkshopHours, false, 1},
+    {"door.nabapara.hardware_store_front", "location.nabapara.hardware_store", false, DoorAccess::BusinessHours, 0, 0, DoorsHardwareHours, false, 1},
+    {"door.nabapara.old_house_front", "location.nabapara.old_house", false, DoorAccess::Private, 0, 0, {}, false, 1, DoorsOldHouseVisiting},
+    {"door.nabapara.tall_flats_upper_a", "location.nabapara.tall_flats_upper_a", false, DoorAccess::Private, 0, 0, {}, false, 1},
 }};
 
 // Every roster a save may hold, as a prefix length of DoorTable. /1 wrote five (2026-10-13); its reader also took the
-// full ten- and eleven-door tables of their day. /2 wrote ten (D2), eleven (stationery, LL-02 2a) and sixteen (NL-01).
-// Never add an arbitrary prefix: only a count some writer or reader really used.
-constexpr std::array<DoorRosterEdition, 6> RosterEditions{
-    {{"pw.doors/1", 5}, {"pw.doors/1", 10}, {"pw.doors/1", 11}, {DoorsHeader, 10}, {DoorsHeader, 11}, {DoorsHeader, DoorTable.size()}}};
+// full ten- and eleven-door tables of their day. /2 wrote ten (D2), eleven (stationery, LL-02 2a), sixteen (NL-01) and
+// twenty (NR-05/NR-06). Never add an arbitrary prefix: only a count some writer or reader really used.
+constexpr std::array<DoorRosterEdition, 7> RosterEditions{{{"pw.doors/1", 5}, {"pw.doors/1", 10}, {"pw.doors/1", 11},
+    {DoorsHeader, 10}, {DoorsHeader, 11}, {DoorsHeader, 16}, {DoorsHeader, DoorTable.size()}}};
 static_assert(RosterEditions.back().Count == DoorTable.size(), "today's roster is the last edition");
 
 constexpr std::array<std::string_view, DoorAccessCount> AccessIds{"public", "private", "locked", "business_hours"};
@@ -185,44 +194,24 @@ std::string_view DoorAccessId(DoorAccess access) noexcept
     return index < DoorAccessCount ? AccessIds[index] : std::string_view{};
 }
 
+// Indexed by DoorResult, in enum order (Ok .. Knocked). Ok and Knocked have no reason key.
+constexpr std::array<std::string_view, 12> DoorsResultCodes{"ok", "unknown_door", "locked", "private", "closed_hours", "no_change",
+    "invalid_time", "invalid_definition", "invalid_context", "invalid_state", "not_available", "knocked"};
+constexpr std::array<std::string_view, 12> DoorsReasonKeys{"", "door.reason.unknown", "door.reason.locked", "door.reason.private",
+    "door.reason.closed_hours", "door.reason.no_change", "door.reason.invalid_time", "door.reason.invalid_definition",
+    "door.reason.invalid_context", "door.reason.invalid_state", "door.reason.not_available", ""};
+static_assert(static_cast<std::size_t>(DoorResult::Knocked) + 1 == DoorsResultCodes.size(), "one code per DoorResult");
+
 std::string_view DoorResultCode(DoorResult result) noexcept
 {
-    switch (result)
-    {
-    case DoorResult::Ok: return "ok";
-    case DoorResult::UnknownDoor: return "unknown_door";
-    case DoorResult::Locked: return "locked";
-    case DoorResult::Private: return "private";
-    case DoorResult::Closed: return "closed_hours";
-    case DoorResult::NoChange: return "no_change";
-    case DoorResult::InvalidTime: return "invalid_time";
-    case DoorResult::InvalidDefinition: return "invalid_definition";
-    case DoorResult::InvalidContext: return "invalid_context";
-    case DoorResult::InvalidState: return "invalid_state";
-    case DoorResult::NotAvailable: return "not_available";
-    case DoorResult::Knocked: return "knocked";
-    }
-    return {};
+    const std::size_t index = static_cast<std::size_t>(result);
+    return index < DoorsResultCodes.size() ? DoorsResultCodes[index] : std::string_view{};
 }
 
 std::string_view DoorResultReasonKey(DoorResult result) noexcept
 {
-    switch (result)
-    {
-    case DoorResult::Ok: return {};
-    case DoorResult::UnknownDoor: return "door.reason.unknown";
-    case DoorResult::Locked: return "door.reason.locked";
-    case DoorResult::Private: return "door.reason.private";
-    case DoorResult::Closed: return "door.reason.closed_hours";
-    case DoorResult::NoChange: return "door.reason.no_change";
-    case DoorResult::InvalidTime: return "door.reason.invalid_time";
-    case DoorResult::InvalidDefinition: return "door.reason.invalid_definition";
-    case DoorResult::InvalidContext: return "door.reason.invalid_context";
-    case DoorResult::InvalidState: return "door.reason.invalid_state";
-    case DoorResult::NotAvailable: return "door.reason.not_available";
-    case DoorResult::Knocked: return {};
-    }
-    return {};
+    const std::size_t index = static_cast<std::size_t>(result);
+    return index < DoorsReasonKeys.size() ? DoorsReasonKeys[index] : std::string_view{};
 }
 
 std::int32_t DoorMinuteOfDay(GameInstant instant) noexcept

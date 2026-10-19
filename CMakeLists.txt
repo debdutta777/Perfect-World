@@ -671,3 +671,8 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/LaneTall
 add_executable(PerfectWorldLaneTallFlatsLayoutTests Tests/LaneTallFlatsLayoutTests.cpp)
 target_link_libraries(PerfectWorldLaneTallFlatsLayoutTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldLaneTallFlatsLayoutTests COMMAND PerfectWorldLaneTallFlatsLayoutTests)
+
+# Doors 20: NR-05's three frontage doors and NR-06's upper flat join the roster; pw.doors/2 sixteen-door saves migrate (frozen fixture world_v8_doors_16.json).
+add_executable(PerfectWorldDoorsRoster20Tests Tests/DoorsRoster20Tests.cpp)
+target_link_libraries(PerfectWorldDoorsRoster20Tests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldDoorsRoster20Tests COMMAND PerfectWorldDoorsRoster20Tests)

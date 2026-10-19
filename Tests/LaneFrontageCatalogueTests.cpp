@@ -325,20 +325,21 @@ void F5TestNewRows()
         F5Expect(e != nullptr, "NR-05 stable identity: " + id);
         F5Expect(e->Side == pin.Side && e->RowIndex == pin.Index && e->OriginXCm == pin.X && e->WidthCm == pin.Width && e->DepthCm == pin.Depth &&
                    e->Kind == pin.Kind && e->Furniture == pin.Set && e->EntranceCentreU == 250 && !e->MirrorU, "NR-05 policy pin: " + id);
-        F5Expect(e->EntranceDoorId.empty() && e->PlannedDoorId == std::string("door.nabapara.") + pin.Name + "_front", "planned migration only: " + id);
-        auto in = MakeFrontageInput(*e, 15, 300);
-        // Also exercise the future hung leaf now: the 90 cm sweep must fit without moving the furniture.
-        in.EntranceDoorId = std::string(e->PlannedDoorId);
+        F5Expect(e->PlannedDoorId == std::string("door.nabapara.") + pin.Name + "_front" && e->EntranceDoorId == e->PlannedDoorId &&
+                   PerfectWorld::FindDoor(e->EntranceDoorId) != nullptr, "the 16 -> 20 migration hangs the planned, authored door: " + id);
+        const auto in = MakeFrontageInput(*e, 15, 300);
+        // The hung leaf's 90 cm sweep must fit without moving the furniture.
+        F5Expect(in.EntranceDoorId == e->PlannedDoorId, "the layout input carries the hung door: " + id);
         const auto l = GenerateInteriorLayout(in);
-        F5Expect(l.Ok() && ValidateInteriorLayout(l) == Refusal::None, "future hung leaf preserves furnished circulation: " + id);
+        F5Expect(l.Ok() && ValidateInteriorLayout(l) == Refusal::None, "hung leaf preserves furnished circulation: " + id);
         int sweeps = 0;
         for (const auto& z : l.Zones)
             if (z.Kind == ZoneKind::DoorSweep)
             {
                 ++sweeps;
-                F5Expect(!F5Solid(l, z.Area), "future leaf sweep stays clear: " + id);
+                F5Expect(!F5Solid(l, z.Area), "leaf sweep stays clear: " + id);
             }
-        F5Expect(sweeps >= 1, "future leaf reserves its sweep: " + id);
+        F5Expect(sweeps >= 1, "hung leaf reserves its sweep: " + id);
         const std::string prefix = id + ".anchor.";
         if (pin.Set == FurnitureSet::Workshop)
         {
@@ -391,6 +392,17 @@ void F5TestDoorDrafts()
     for (const auto& door : drafts)
     {
         F5Expect(IsDoorDefinitionValid(door), "migration draft is valid");
+        // The roster authors exactly the NR-05 drafts.
+        const DoorDef* authored = FindDoor(door.Id);
+        F5Expect(authored != nullptr && authored->LocationId == door.LocationId && authored->Access == door.Access && !authored->bInitiallyOpen &&
+                   !authored->bTwoWay && authored->PreferredSwingSide == 1 && authored->OpeningWindows.size() == door.OpeningWindows.size() &&
+                   authored->VisitingWindows.size() == door.VisitingWindows.size(), "the authored door matches its draft");
+        for (std::size_t i = 0; authored != nullptr && i < door.OpeningWindows.size(); ++i)
+            F5Expect(authored->OpeningWindows[i].OpenMinute == door.OpeningWindows[i].OpenMinute &&
+                       authored->OpeningWindows[i].CloseMinute == door.OpeningWindows[i].CloseMinute, "authored business hours match");
+        for (std::size_t i = 0; authored != nullptr && i < door.VisitingWindows.size(); ++i)
+            F5Expect(authored->VisitingWindows[i].OpenMinute == door.VisitingWindows[i].OpenMinute &&
+                       authored->VisitingWindows[i].CloseMinute == door.VisitingWindows[i].CloseMinute, "authored visiting hours match");
         DoorUseContext exit;
         exit.Direction = DoorDirection::Exit;
         F5Expect(EvaluateDoorPassage(door, 0, exit) == DoorResult::Ok, "unrestricted exit at midnight");

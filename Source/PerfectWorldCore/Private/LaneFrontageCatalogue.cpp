@@ -18,13 +18,13 @@ const std::array<FrontageEntry, 6> F5Entries{{
     // +Y, row 4, X 1400 to 2100, east of the tea shop: a compact residence with its entrance on the east side (mirrored).
     {"building.nabapara.tea_row_house", 1, 4, 1400, 520, 700, 800, 120, 4, 2168505253u, Variant::CompactResidence, FurnitureSet::Residence, 450, true,
      "door.nabapara.tea_row_house_front", "door.nabapara.tea_row_house_front"},
-    // NR-05: exact generated pins. TODO(doors): hang these planned leaves only with the 16->19 roster migration.
+    // NR-05: exact generated pins. Their front doors joined the roster in the 16 -> 20 migration, so the leaves hang.
     {"building.nabapara.repair_workshop", -1, 3, 800, 460, 900, 900, 60, 4, 995184645u, Variant::ShopWithStockroom, FurnitureSet::Workshop, 250, false,
-     "", "door.nabapara.repair_workshop_front"},
+     "door.nabapara.repair_workshop_front", "door.nabapara.repair_workshop_front"},
     {"building.nabapara.hardware_store", 1, 8, 5200, 400, 1200, 700, 0, 4, 1125594134u, Variant::ShopWithStockroom, FurnitureSet::GeneralGoods, 250, false,
-     "", "door.nabapara.hardware_store_front"},
+     "door.nabapara.hardware_store_front", "door.nabapara.hardware_store_front"},
     {"building.nabapara.old_house", 1, 7, 4500, 400, 700, 800, 0, 5, 1579248205u, Variant::CompactResidence, FurnitureSet::Residence, 250, false,
-     "", "door.nabapara.old_house_front"},
+     "door.nabapara.old_house_front", "door.nabapara.old_house_front"},
 }};
 
 /** The flat doors of a shared-entry block (NL-01 roster); other kit rows have none. */

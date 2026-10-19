@@ -236,7 +236,7 @@ struct DoorStateParse
 
 /** Strict text form ("pw.doors/2"): door=id,open,side. An invalid state serialises to the empty string. */
 [[nodiscard]] PERFECTWORLDCORE_API std::string SerialiseDoorState(const DoorState& state);
-/** Also reads every historical roster in DoorRosterEditions (/2 with ten or eleven doors; /1 with five, ten or eleven).
+/** Also reads every historical roster in DoorRosterEditions (/2 with ten, eleven or sixteen doors; /1 with five, ten or eleven).
  * Adds authored defaults and, for /1, preferred open sides. Successful migrations set bMigrated.
  * Refuses unknown counts, malformed, inconsistent, out-of-order, duplicate or trailing data.
  */

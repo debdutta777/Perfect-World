@@ -104,7 +104,7 @@ WorldSaveResult WorldSaveReadEnvelope(std::string_view text, const JsonValue& do
     result.SourceVersion = static_cast<std::int32_t>(version);
     if (version == WorldSaveSchemaVersion && hashVersion == static_cast<std::int64_t>(WorldHashVersion))
     {
-        // A historical door roster (DoorRosterEditions: ten or eleven doors in v8) migrates on load, so the world no longer
+        // A historical door roster (DoorRosterEditions: ten, eleven or sixteen doors in v8) migrates on load, so the world no longer
         // hashes as it was saved. Its checksum is authenticated over the door text exactly as stored, so the appended
         // defaults never count towards it; a tampered roster fails here. The changed world loads unverified, and its
         // first save is certified again. Any other roster was already refused by the world reader.
