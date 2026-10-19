@@ -121,7 +121,20 @@ constexpr std::array<ApprovedRoute, 2> NbRoutes{{
 constexpr Spec NirmalSpec{"npc_schedule.nirmal_bose", "person.nirmal_bose", NbHome, NbWork,
     "door.nabapara.tall_flats_unit_a", NbRoutes, NbWork, 480, 960};
 
-constexpr std::array<const Spec*, 5> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec, &SubrataSpec, &NirmalSpec};
+
+// Rupa Ghosh, who keeps the tea row house and works away from the lane. Her home is behind the row house's own front door
+// (door.nabapara.tea_row_house_front is private; its visiting hours, Doors.cpp 16:00-19:30, are answered by her when she is at
+// home); her workplace is an authored off-lane place reached by one visible walk of 1540 cm from the doorstep (11 minutes). She is
+// at work only between 08:00 and 16:00 (minutes of the day, end exclusive).
+constexpr std::string_view RgHome = "location.nabapara.tea_row_house";
+constexpr std::string_view RgWork = "location.nabapara.rupa_work";
+constexpr std::array<ApprovedRoute, 1> RupaRoutes{{
+    {"route.rupa_work.home_to_work", RgHome, RgWork, 1540},
+}};
+constexpr Spec RupaSpec{"npc_schedule.rupa_ghosh", "person.rupa_ghosh", RgHome, RgWork, "door.nabapara.tea_row_house_front",
+                        RupaRoutes, RgWork, 8 * 60, 16 * 60};
+
+constexpr std::array<const Spec*, 6> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec, &SubrataSpec, &NirmalSpec, &RupaSpec};
 
 const Spec* FindSpec(std::string_view personId)
 {

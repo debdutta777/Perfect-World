@@ -155,6 +155,8 @@ struct ConversationCatalogue
 /** Subrata Dey's catalogue (person.subrata_dey, ConversationSubrata.cpp). */
 [[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue SubrataConversationCatalogue() noexcept;
 [[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue NirmalConversationCatalogue() noexcept;
+/** Rupa Ghosh's catalogue (person.rupa_ghosh, ConversationRupa.cpp). */
+[[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue RupaConversationCatalogue() noexcept;
 /** The default catalogue's nodes. */
 [[nodiscard]] PERFECTWORLDCORE_API std::span<const ConversationNodeDef> ConversationNodes() noexcept;
 
