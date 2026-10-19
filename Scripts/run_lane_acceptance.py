@@ -21,6 +21,8 @@ import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
 NAME = re.compile(r'[a-z0-9_]{1,64}\Z')
+# Scenarios that are a fresh-process pair (explicit new, then continue, one shared slot). Each must read its own original save.
+RESTART_PAIR_SCENARIOS = ('save_restart', 'frontages_round4')
 FLAGS = ['-RenderOffScreen', '-unattended', '-nosplash', '-nosound',
          '-windowed', '-ResX=1280', '-ResY=720', '-log']
 
@@ -626,8 +628,9 @@ def main():
         parser.error('--timeout-s must be finite and positive')
     if len(set(args.scenario)) != len(args.scenario) or any(not NAME.fullmatch(s) for s in args.scenario):
         parser.error('Use unique scenario names containing 1-64 lowercase letters, digits or underscores')
-    if args.restart_pair and (args.scenario != ['save_restart'] or args.start != 'auto'):
-        parser.error('--restart-pair requires only --scenario save_restart and default --start auto')
+    if args.restart_pair and (len(args.scenario) != 1 or args.scenario[0] not in RESTART_PAIR_SCENARIOS or args.start != 'auto'):
+        parser.error('--restart-pair requires exactly one of --scenario ' + ' / '.join(RESTART_PAIR_SCENARIOS) +
+                     ' and default --start auto')
     return acceptance(args)
 
 

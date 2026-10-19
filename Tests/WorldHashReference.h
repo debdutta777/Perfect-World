@@ -208,12 +208,9 @@ WorldState EdgeWorld()
 // Both change solely because the authored door set gains four closed doors (repair_workshop_front,
 // hardware_store_front, old_house_front, tall_flats_upper_a), so the doors section's default text holds twenty
 // entries. The encoding is unchanged; ten-, eleven- and sixteen-door v8 saves migrate on load.
-// R4-01 INTEGRATION REQUIRED: no compiler in the worker sandbox. Run PerfectWorldWorldHashTests with
-// PW_PRINT_GOLDEN=1, confirm RefWorld section agreement, then replace BOTH constants below with that run's output.
-// The only intended change is three appended closed doors (20 -> 23); WorldHashVersion remains 5.
-// R4-04 PENDING RE-PIN: WorldHashVersion 6 appends the journal count/day/person/minute section, even when empty.
-// Retain the old values until the integrator runs PW_PRINT_GOLDEN=1 and confirms independent section agreement.
-// That run must cover both R4-01's 23-door defaults and R4-04's journal. Never substitute guessed values.
-constexpr std::uint64_t GoldenHandBuilt = 0x540ed03f566f3fa5ULL;
-constexpr std::uint64_t GoldenEdge = 0xbdccb8ad9193f219ULL;
+// R4-01 re-pin (was 0x540ed03f566f3fa5 and 0xbdccb8ad9193f219): the only change is three appended closed doors
+// (market_stalls_a_front, market_stalls_b_front, end_shop_front), 20 -> 23; WorldHashVersion remains 5.
+// R4-04 PENDING RE-PIN: WorldHashVersion 6 appends the journal section, even when empty.
+constexpr std::uint64_t GoldenHandBuilt = 0xd7bd9e09459dd02fULL;
+constexpr std::uint64_t GoldenEdge = 0x2e57d3e0f62ad53ULL;
 } // namespace
