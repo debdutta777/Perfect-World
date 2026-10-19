@@ -204,6 +204,9 @@ WorldState EdgeWorld()
 // Both change solely because the authored door set gains four closed doors (repair_workshop_front,
 // hardware_store_front, old_house_front, tall_flats_upper_a), so the doors section's default text holds twenty
 // entries. The encoding is unchanged; ten-, eleven- and sixteen-door v8 saves migrate on load.
+// R4-01 INTEGRATION REQUIRED: no compiler in the worker sandbox. Run PerfectWorldWorldHashTests with
+// PW_PRINT_GOLDEN=1, confirm RefWorld section agreement, then replace BOTH constants below with that run's output.
+// The only intended change is three appended closed doors (20 -> 23); WorldHashVersion remains 5.
 constexpr std::uint64_t GoldenHandBuilt = 0x540ed03f566f3fa5ULL;
 constexpr std::uint64_t GoldenEdge = 0xbdccb8ad9193f219ULL;
 } // namespace

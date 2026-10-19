@@ -676,3 +676,8 @@ add_test(NAME PerfectWorldLaneTallFlatsLayoutTests COMMAND PerfectWorldLaneTallF
 add_executable(PerfectWorldDoorsRoster20Tests Tests/DoorsRoster20Tests.cpp)
 target_link_libraries(PerfectWorldDoorsRoster20Tests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldDoorsRoster20Tests COMMAND PerfectWorldDoorsRoster20Tests)
+
+# R4-01: three public browsing frontages and the explicit 20 -> 23 door-roster edition.
+add_executable(PerfectWorldDoorsRoster23Tests Tests/DoorsRoster23Tests.cpp)
+target_link_libraries(PerfectWorldDoorsRoster23Tests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldDoorsRoster23Tests COMMAND PerfectWorldDoorsRoster23Tests)

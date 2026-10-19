@@ -8,7 +8,7 @@ namespace
 {
 // Batch 1 (LL-03 submission 2). NL-01 authored the front doors and their v8 migration; NL-04 hangs them: EntranceDoorId == PlannedDoorId.
 // The tall flats also hang a leaf on each flat (UnitDoors below, applied by MakeFrontageInput).
-const std::array<FrontageEntry, 6> F5Entries{{
+const std::array<FrontageEntry, 9> F5Entries{{
     // -Y, row 5, X 2600 to 3300: the "neighbour / caretaker flat" of LANE_LIFE_PLAN. Compact residence; the stationery footprint on the other side.
     {"building.nabapara.caretaker_flat", -1, 5, 2600, 460, 700, 700, 60, 3, 1965316759u, Variant::CompactResidence, FurnitureSet::Residence, 250, false,
      "door.nabapara.caretaker_flat_front", "door.nabapara.caretaker_flat_front"},
@@ -25,6 +25,13 @@ const std::array<FrontageEntry, 6> F5Entries{{
      "door.nabapara.hardware_store_front", "door.nabapara.hardware_store_front"},
     {"building.nabapara.old_house", 1, 7, 4500, 400, 700, 800, 0, 5, 1579248205u, Variant::CompactResidence, FurnitureSet::Residence, 250, false,
      "door.nabapara.old_house_front", "door.nabapara.old_house_front"},
+    // R4-01: public browsing rooms behind the two stall faces and the end shop. The 20 -> 23 edition hangs all three leaves.
+    {"building.nabapara.market_stalls_a", -1, 4, 1700, 520, 900, 800, 120, 4, 988218345u, Variant::ShopWithStockroom, FurnitureSet::GeneralGoods, 250, false,
+     "door.nabapara.market_stalls_a_front", "door.nabapara.market_stalls_a_front"},
+    {"building.nabapara.market_stalls_b", 1, 6, 3400, 520, 1100, 700, 120, 4, 3123318221u, Variant::ShopWithStockroom, FurnitureSet::GeneralGoods, 250, false,
+     "door.nabapara.market_stalls_b_front", "door.nabapara.market_stalls_b_front"},
+    {"building.nabapara.end_shop", -1, 9, 5700, 520, 700, 900, 120, 4, 1434028398u, Variant::ShopWithStockroom, FurnitureSet::GeneralGoods, 250, false,
+     "door.nabapara.end_shop_front", "door.nabapara.end_shop_front"},
 }};
 
 /** The flat doors of a shared-entry block (NL-01 roster); other kit rows have none. */
