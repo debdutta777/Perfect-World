@@ -216,6 +216,7 @@ int main()
     const auto door = T6TF::PlannedUpperDoor();
     T6Expect(door.Id == T6TF::UpperDoorId && door.LocationId == T6TF::UpperLocationId && !door.bInitiallyOpen &&
              door.Access == PerfectWorld::DoorAccess::Private && door.OpenMinute == 0 && door.CloseMinute == 0 && door.OpeningWindows.empty() &&
-             !door.bTwoWay && door.PreferredSwingSide == 1 && door.VisitingWindows.empty(), "exact unoccupied planned private door definition");
+             !door.bTwoWay && door.PreferredSwingSide == 1 && door.VisitingWindows.size() == 1 && door.VisitingWindows[0].OpenMinute == 960 &&
+             door.VisitingWindows[0].CloseMinute == 1170, "exact planned private door definition, receiving 16:00-19:30 (R5-01)");
     std::cout << "LaneTallFlatsLayout: " << T6Assertions << " assertions passed\n";
 }

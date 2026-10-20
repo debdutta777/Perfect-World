@@ -36,6 +36,8 @@ constexpr DoorOpeningWindow RowHouseVisiting[]{{960, 1170}};
 constexpr DoorOpeningWindow DoorsWorkshopHours[]{{480, 720}, {840, 1110}};
 constexpr DoorOpeningWindow DoorsHardwareHours[]{{540, 780}, {900, 1200}};
 constexpr DoorOpeningWindow DoorsOldHouseVisiting[]{{960, 1170}};
+// R5-01: Ishita Banerjee is home and awake 16:00-19:30 every day; without a window the flat could only ever be entered by invitation.
+constexpr DoorOpeningWindow DoorsUpperAVisiting[]{{960, 1170}};
 // R4-01: browsing hours, not staffed trading hours. No purchase permission follows from entering these rooms.
 constexpr DoorOpeningWindow R1BrowsingHours[]{{540, 780}, {900, 1170}};
 constexpr std::array<DoorDef, 23> DoorTable{{
@@ -58,7 +60,7 @@ constexpr std::array<DoorDef, 23> DoorTable{{
     {"door.nabapara.repair_workshop_front", "location.nabapara.repair_workshop", false, DoorAccess::BusinessHours, 0, 0, DoorsWorkshopHours, false, 1},
     {"door.nabapara.hardware_store_front", "location.nabapara.hardware_store", false, DoorAccess::BusinessHours, 0, 0, DoorsHardwareHours, false, 1},
     {"door.nabapara.old_house_front", "location.nabapara.old_house", false, DoorAccess::Private, 0, 0, {}, false, 1, DoorsOldHouseVisiting},
-    {"door.nabapara.tall_flats_upper_a", "location.nabapara.tall_flats_upper_a", false, DoorAccess::Private, 0, 0, {}, false, 1},
+    {"door.nabapara.tall_flats_upper_a", "location.nabapara.tall_flats_upper_a", false, DoorAccess::Private, 0, 0, {}, false, 1, DoorsUpperAVisiting},
     {"door.nabapara.market_stalls_a_front", "location.nabapara.market_stalls_a", false, DoorAccess::BusinessHours, 0, 0, R1BrowsingHours, false, -1},
     {"door.nabapara.market_stalls_b_front", "location.nabapara.market_stalls_b", false, DoorAccess::BusinessHours, 0, 0, R1BrowsingHours, false, 1},
     {"door.nabapara.end_shop_front", "location.nabapara.end_shop", false, DoorAccess::BusinessHours, 0, 0, R1BrowsingHours, false, -1},

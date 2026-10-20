@@ -9,6 +9,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #ifndef PERFECTWORLDCORE_API
 #define PERFECTWORLDCORE_API
@@ -70,9 +71,11 @@ enum class NpcIntentError : std::uint8_t
     /** A role token that NpcRoles() does not list. */
     UnknownRole,
     /** A conversation was asked for with someone who is Asleep (street talk is unavailable). */
-    ConversationUnavailable
+    ConversationUnavailable,
+    /** Malformed, overlapping, unordered or excessive transient interruption windows. */
+    InvalidInterruption
 };
-/** "none", "invalid_resolution", "unknown_role", "conversation_unavailable". Stable. */
+/** "none", "invalid_resolution", "unknown_role", "conversation_unavailable", "invalid_interruption". Stable. */
 [[nodiscard]] PERFECTWORLDCORE_API std::string_view NpcIntentErrorCode(NpcIntentError error) noexcept;
 
 /** How a role token behaves. WorkAvailability matters only when State is Work. */
@@ -165,4 +168,133 @@ struct NpcIntentResult
 
 /** "" when every routine entry and exception of the person has a known role (Activity entries need only a non-empty ID). */
 [[nodiscard]] PERFECTWORLDCORE_API std::string ValidateNpcSchedule(const PersonSchedule& person);
+
+// R5-04 is opt-in. The legacy intent API above, its fields and its output stay unchanged.
+enum class NpcWorkPhase : std::uint8_t { None, Inspect, Repair, Test, Collect, ToolRestock, Serve, Weigh, StockRestock };
+enum class NpcDecisionReason : std::uint8_t
+{
+    Available, Bench, Tools, Finishing, Counter, Scale, Stock, Meal, Rest, TeaBreak, Closing, Walking, Asleep,
+    PausePending, Chat, Yield
+};
+enum class NpcNeedPriority : std::uint8_t { Routine, Work, Rest, Meal, Sleep };
+[[nodiscard]] PERFECTWORLDCORE_API std::string_view NpcDecisionReasonKey(NpcDecisionReason reason) noexcept;
+
+/** Pilot policy in game minutes, not frame/animation time. No cumulative condition meter. */
+constexpr GameInstant NpcWorkStepMinutes = 3;
+constexpr GameInstant NpcMealBreakMinutes = 20;
+constexpr GameInstant NpcMealPriorityAfterMinutes = 240;
+constexpr GameInstant NpcRestPriorityAfterMinutes = 120;
+constexpr std::size_t NpcMaxInterruptionWindows = 128;
+
+struct NpcScheduleNeeds
+{
+    /** Empty when no realised block exists in the preceding schedule horizon; active blocks give zero. */
+    std::optional<GameInstant> MinutesSinceMeal;
+    std::optional<GameInstant> MinutesSinceRest;
+    NpcNeedPriority Priority = NpcNeedPriority::Routine;
+    /** Which need takes precedence at an optional break: meal before rest, using the ages above. */
+    NpcNeedPriority NextPausePriority = NpcNeedPriority::Rest;
+    NpcDecisionReason Reason = NpcDecisionReason::Available;
+    friend bool operator==(const NpcScheduleNeeds&, const NpcScheduleNeeds&) = default;
+};
+/** Pilot-only interpretation: post-cooking home stays and midday home stays are meals;
+ * midday `break` is a 20-minute meal followed by rest; sleeping/private/resting are rest.
+ * Looks backwards through resolved (winning, travel-adjusted) schedule segments, at most
+ * ScheduleHorizonDays. Exceptions therefore override needs as well as work. Other people return defaults.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API NpcScheduleNeeds ResolveNpcScheduleNeeds(const PersonSchedule& person,
+    const ScheduleTravelTable& travel, GameInstant at);
+
+/** Caller-owned transient input history; never save/hash this. Only Chat or Yield is accepted.
+ * Windows are ordered by RequestedAt, non-overlapping in requested time, with only the last
+ * allowed to have no ReleasedAt. A release before the safe point cancels that request.
+ * Chat wins a simultaneous obstruction: submit one Chat window for that interval.
+ * Keep earlier windows for the current schedule segment when closing/reopening a conversation.
+ */
+struct NpcInterruptionWindow
+{
+    NpcState State = NpcState::Chat;
+    GameInstant RequestedAt = 0;
+    std::optional<GameInstant> ReleasedAt;
+    friend bool operator==(const NpcInterruptionWindow&, const NpcInterruptionWindow&) = default;
+};
+
+struct NpcWorkStep
+{
+    NpcWorkPhase Phase = NpcWorkPhase::None;
+    /** Stable localisation key naming the safe end of this phase's step (tools down, scale cleared, etc.). */
+    std::string_view SafePauseKey;
+    GameInstant BlockStart = 0;
+    GameInstant BlockEnd = 0;
+    /** Zero-based step within this block, after subtracting accepted interruptions. */
+    std::int64_t Ordinal = 0;
+    std::int64_t CompletedSteps = 0;
+    /** Next safe boundary if no further interruption occurs, never more than three minutes away. */
+    GameInstant SafeAt = 0;
+    friend bool operator==(const NpcWorkStep&, const NpcWorkStep&) = default;
+};
+
+struct NpcDecision
+{
+    NpcIntentError Error = NpcIntentError::None;
+    NpcIntent Intent;
+    NpcWorkStep Work;
+    NpcScheduleNeeds Needs;
+    NpcDecisionReason Reason = NpcDecisionReason::Available;
+    /** Present only while the current request awaits its boundary. Keep time advancing until then. */
+    std::optional<GameInstant> DeferredUntil;
+    /** The accepted request's instant. May be earlier than the current schedule segment. */
+    std::optional<GameInstant> AcceptedAt;
+    /** True when an accepted interruption outlived its original resolved schedule segment. */
+    bool ScheduleChanged = false;
+    [[nodiscard]] bool Ok() const noexcept { return Error == NpcIntentError::None; }
+    friend bool operator==(const NpcDecision&, const NpcDecision&) = default;
+};
+
+/** Pure query. Exact pilot identity + role + anchor selects phases; everyone else keeps the
+ * legacy intent (including immediate interruptions). No persistent job progress or RNG.
+ * A pilot's current step finishes before Chat/Yield, with a bounded wait <= 3 game minutes.
+ * Clearing a window resumes the same phase/next unfinished step while its block remains;
+ * a schedule boundary selects the new schedule immediately, even while interrupted.
+ * Paused time earns no steps. At the block end uncompleted work is explicitly abandoned
+ * by NpcWorkEventsBetween, never carried into a different block. These are presentation
+ * step observations, never inventory/jobs/rewards or ScheduleActivityTally completions.
+ * Sleep refuses Chat and ignores Yield. Meal/rest remain the underlying schedule priority.
+ * Accepted pilot work Chat is Awake (available at the safe pause); the legacy API still reports the role's availability.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API NpcDecision ResolveNpcDecisionAt(const PersonSchedule& person,
+    const ScheduleTravelTable& travel, GameInstant at, std::span<const NpcInterruptionWindow> windows = {});
+/** Next work safe point, schedule/need phase boundary or interruption transition, strictly after `after`.
+ * Numeric progress and need ages still derive from the exact query instant. Nothing for invalid input.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API std::optional<GameInstant> NextNpcDecisionBoundary(const PersonSchedule& person,
+    const ScheduleTravelTable& travel, GameInstant after, std::span<const NpcInterruptionWindow> windows = {});
+
+enum class NpcWorkOutcome : std::uint8_t { Completed, Abandoned };
+struct NpcWorkEvent
+{
+    GameInstant At = 0;
+    GameInstant BlockStart = 0;
+    std::string SourceId;
+    NpcWorkPhase Phase = NpcWorkPhase::None;
+    std::int64_t FirstStep = 0;
+    /** Completed events contain one step; Abandoned contains the explicitly unfinished suffix. */
+    std::int64_t Count = 0;
+    NpcWorkOutcome Outcome = NpcWorkOutcome::Completed;
+    friend bool operator==(const NpcWorkEvent&, const NpcWorkEvent&) = default;
+};
+struct NpcWorkEvents
+{
+    NpcIntentError Error = NpcIntentError::None;
+    std::vector<NpcWorkEvent> Events;
+    [[nodiscard]] bool Ok() const noexcept { return Error == NpcIntentError::None; }
+};
+/** Observations in (from,to]. Append disjoint intervals only: split advances equal a single
+ * query, and repeated decisions emit nothing. Identity is (person,BlockStart,SourceId,FirstStep).
+ * A load begins a new transient observation session; do not replay into persistent rewards.
+ * Range limited to MaxSingleAdvanceMinutes, matching the schedule advance contract.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API NpcWorkEvents NpcWorkEventsBetween(const PersonSchedule& person,
+    const ScheduleTravelTable& travel, GameInstant from, GameInstant to,
+    std::span<const NpcInterruptionWindow> windows = {});
 } // namespace PerfectWorld
