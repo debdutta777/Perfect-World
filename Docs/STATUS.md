@@ -2145,3 +2145,29 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 - **Not run:** the editor build (Rung 2), engine automation, and every AW scenario. It is not boot-tested, because the owner's windows were open, so the game was not launched.
 
 **Next:** Round 5. R5-01, R5-04 and R5-06 are on their branches, awaiting integration.
+
+## Checkpoint — v0.3.0-alpha published; owner feedback, Rounds 6 and 7 under way, 2026-10-20
+
+**Released as `v0.3.0-alpha` (prerelease):**
+- Tag on `7b553a3`: https://github.com/debdutta777/Perfect-World/releases/tag/v0.3.0-alpha
+- Asset `PerfectWorld-v0.3.0-alpha-Win64.zip`: 411,785,449 bytes, sha256 `0780e295e348309d34cc97aec02b9e31887e22410a51adbd91f3cc086a171403`.
+- **Verification:**
+  - Rung 1: 187/187.
+  - Game target and editor target compiled.
+  - Package: BuildCookRun exit 0. A host power-off killed the first cook, and the second run succeeded.
+  - Automation, acceptance and a boot test were not run.
+
+**Owner feedback after playing:**
+- a visual pentagon for creation points;
+- a minimap and a full map;
+- a quest window;
+- key mapping in Settings;
+- ring a calling bell before entering homes;
+- the city should look like real Kolkata, with far more people (students), shops, shopkeepers, a proper school and roads.
+- **Orders (Claude Sonnet, branches `ui/f1-pentagon`, `ui/f2-map`, `ui/f3-quests`, `ui/f4-keybinds`, `game/f5-doorbell`):** F1 pentagon, F2 map, F3 quests, F4 keybinds, F5 doorbell.
+- **The city:** `Docs/ROUND7_PLAN_2026-10-20.md` (gpt-6-astra). R7-01, the portable spatial contract, is running (gpt-6.1-sol).
+
+**Round 6:**
+- R6-01 (last three frontages, 29 doors) and R6-02 (slot summary) are implemented and being integrated.
+- R6-03 (scenario repairs) and R5-05 (working-proprietor bridge) are on their branches, waiting for an Unreal compile.
+- R6-06 (tailor) and R6-07 (school arrival) stopped when the ChatGPT account reached its usage limit. Their partial work is kept, and they will be relaunched once.
