@@ -6,31 +6,31 @@ namespace PerfectWorld
 {
 namespace
 {
-using Avail = PersonAvailability;
+using R5BAvail = PersonAvailability;
 
 // Ascending by Role. Idle and Sleep roles carry no work action.
-constexpr std::array<NpcRoleDef, 16> RoleTable{{
-    {"at_home", NpcState::Idle, "", Avail::Awake},
-    {"break", NpcState::Idle, "", Avail::Awake},
-    {"caring", NpcState::Work, "work.care", Avail::Awake},
-    {"cooking", NpcState::Work, "work.cook", Avail::Busy},
-    {"inspecting", NpcState::Work, "work.inspect", Avail::Busy},
-    {"observing", NpcState::Idle, "", Avail::Awake},
-    {"private", NpcState::Sleep, "", Avail::Asleep},
-    {"reading", NpcState::Idle, "", Avail::Awake},
-    {"repairing", NpcState::Work, "work.repair", Avail::Busy},
-    {"resting", NpcState::Idle, "", Avail::Awake},
-    {"serving", NpcState::Work, "work.serve", Avail::Awake},
-    {"sleeping", NpcState::Sleep, "", Avail::Asleep},
-    {"stocking", NpcState::Work, "work.stock", Avail::Busy},
-    {"studying", NpcState::Work, "work.study", Avail::Awake},
-    {"sweeping", NpcState::Work, "work.sweep", Avail::Busy},
-    {"teaching", NpcState::Work, "work.teach", Avail::Busy},
+constexpr std::array<NpcRoleDef, 16> R5BRoleTable{{
+    {"at_home", NpcState::Idle, "", R5BAvail::Awake},
+    {"break", NpcState::Idle, "", R5BAvail::Awake},
+    {"caring", NpcState::Work, "work.care", R5BAvail::Awake},
+    {"cooking", NpcState::Work, "work.cook", R5BAvail::Busy},
+    {"inspecting", NpcState::Work, "work.inspect", R5BAvail::Busy},
+    {"observing", NpcState::Idle, "", R5BAvail::Awake},
+    {"private", NpcState::Sleep, "", R5BAvail::Asleep},
+    {"reading", NpcState::Idle, "", R5BAvail::Awake},
+    {"repairing", NpcState::Work, "work.repair", R5BAvail::Busy},
+    {"resting", NpcState::Idle, "", R5BAvail::Awake},
+    {"serving", NpcState::Work, "work.serve", R5BAvail::Awake},
+    {"sleeping", NpcState::Sleep, "", R5BAvail::Asleep},
+    {"stocking", NpcState::Work, "work.stock", R5BAvail::Busy},
+    {"studying", NpcState::Work, "work.study", R5BAvail::Awake},
+    {"sweeping", NpcState::Work, "work.sweep", R5BAvail::Busy},
+    {"teaching", NpcState::Work, "work.teach", R5BAvail::Busy},
 }};
 
-constexpr std::string_view StateIds[NpcStateCount] = {"work", "travel", "idle", "chat", "sleep", "yield"};
+constexpr std::string_view R5BStateIds[NpcStateCount] = {"work", "travel", "idle", "chat", "sleep", "yield"};
 
-NpcIntentResult Refuse(NpcIntentError error) noexcept
+NpcIntentResult R5BRefuse(NpcIntentError error) noexcept
 {
     NpcIntentResult result;
     result.Error = error;
@@ -38,15 +38,15 @@ NpcIntentResult Refuse(NpcIntentError error) noexcept
 }
 
 /** What a schedule item's Doing means for a person standing (or about to stand) in it. */
-struct Classified
+struct R5BClassified
 {
     NpcState State = NpcState::Idle;
     std::string_view WorkActionId;
-    Avail Availability = Avail::Awake;
+    R5BAvail Availability = R5BAvail::Awake;
 };
 
 /** Error is None on success. */
-NpcIntentError Classify(ScheduleDoingKind kind, const std::string& doing, Classified& out) noexcept
+NpcIntentError R5BClassify(ScheduleDoingKind kind, const std::string& doing, R5BClassified& out) noexcept
 {
     if (doing.empty())
     {
@@ -54,7 +54,7 @@ NpcIntentError Classify(ScheduleDoingKind kind, const std::string& doing, Classi
     }
     if (kind == ScheduleDoingKind::Activity)
     {
-        out = {NpcState::Work, NpcActivityWorkActionId, Avail::Busy};
+        out = {NpcState::Work, NpcActivityWorkActionId, R5BAvail::Busy};
         return NpcIntentError::None;
     }
     const NpcRoleDef* role = FindNpcRole(doing);
@@ -64,12 +64,12 @@ NpcIntentError Classify(ScheduleDoingKind kind, const std::string& doing, Classi
     }
     out.State = role->State;
     out.WorkActionId = role->WorkActionId;
-    out.Availability = role->State == NpcState::Work ? role->WorkAvailability : (role->State == NpcState::Sleep ? Avail::Asleep : Avail::Awake);
+    out.Availability = role->State == NpcState::Work ? role->WorkAvailability : (role->State == NpcState::Sleep ? R5BAvail::Asleep : R5BAvail::Awake);
     return NpcIntentError::None;
 }
 
 /** Fills availability-derived fields and the resume fields of an unsuspended intent. */
-void SetAvailability(NpcIntent& intent, Avail availability, std::string_view reasonKey, bool talkable) noexcept
+void R5BSetAvailability(NpcIntent& intent, R5BAvail availability, std::string_view reasonKey, bool talkable) noexcept
 {
     intent.Availability = availability;
     intent.DeclineReasonKey = reasonKey;
@@ -80,7 +80,7 @@ void SetAvailability(NpcIntent& intent, Avail availability, std::string_view rea
 std::string_view NpcStateId(NpcState state) noexcept
 {
     const auto index = static_cast<std::size_t>(state);
-    return index < NpcStateCount ? StateIds[index] : std::string_view{};
+    return index < NpcStateCount ? R5BStateIds[index] : std::string_view{};
 }
 
 std::string_view NpcIntentErrorCode(NpcIntentError error) noexcept
@@ -91,18 +91,19 @@ std::string_view NpcIntentErrorCode(NpcIntentError error) noexcept
     case NpcIntentError::InvalidResolution: return "invalid_resolution";
     case NpcIntentError::UnknownRole: return "unknown_role";
     case NpcIntentError::ConversationUnavailable: return "conversation_unavailable";
+    case NpcIntentError::InvalidInterruption: return "invalid_interruption";
     }
     return "unknown";
 }
 
 std::span<const NpcRoleDef> NpcRoles() noexcept
 {
-    return RoleTable;
+    return R5BRoleTable;
 }
 
 const NpcRoleDef* FindNpcRole(std::string_view role) noexcept
 {
-    for (const NpcRoleDef& def : RoleTable)
+    for (const NpcRoleDef& def : R5BRoleTable)
     {
         if (def.Role == role)
         {
@@ -114,17 +115,17 @@ const NpcRoleDef* FindNpcRole(std::string_view role) noexcept
 
 bool ValidateNpcRoleTable() noexcept
 {
-    for (std::size_t i = 0; i < RoleTable.size(); ++i)
+    for (std::size_t i = 0; i < R5BRoleTable.size(); ++i)
     {
-        const NpcRoleDef& def = RoleTable[i];
-        if (def.Role.empty() || (i > 0 && !(RoleTable[i - 1].Role < def.Role)))
+        const NpcRoleDef& def = R5BRoleTable[i];
+        if (def.Role.empty() || (i > 0 && !(R5BRoleTable[i - 1].Role < def.Role)))
         {
             return false;
         }
         switch (def.State)
         {
         case NpcState::Work:
-            if (def.WorkActionId.substr(0, 5) != "work." || def.WorkActionId.size() <= 5 || def.WorkAvailability == Avail::Asleep)
+            if (def.WorkActionId.substr(0, 5) != "work." || def.WorkActionId.size() <= 5 || def.WorkAvailability == R5BAvail::Asleep)
             {
                 return false;
             }
@@ -147,7 +148,7 @@ NpcIntentResult ResolveNpcIntent(const ScheduleResolution& resolution, bool conv
 {
     if (!resolution.Valid || resolution.Zone.empty() || resolution.ProgressPermille < 0 || resolution.ProgressPermille > 1000)
     {
-        return Refuse(NpcIntentError::InvalidResolution);
+        return R5BRefuse(NpcIntentError::InvalidResolution);
     }
 
     NpcIntent intent;
@@ -159,49 +160,49 @@ NpcIntentResult ResolveNpcIntent(const ScheduleResolution& resolution, bool conv
     {
     case ScheduleStatus::Stay:
     {
-        Classified role;
-        if (const NpcIntentError error = Classify(resolution.Kind, resolution.Doing, role); error != NpcIntentError::None)
+        R5BClassified role;
+        if (const NpcIntentError error = R5BClassify(resolution.Kind, resolution.Doing, role); error != NpcIntentError::None)
         {
-            return Refuse(error);
+            return R5BRefuse(error);
         }
         intent.State = role.State;
         intent.WorkActionId = role.WorkActionId;
         if (role.State == NpcState::Sleep)
         {
-            SetAvailability(intent, Avail::Asleep, NpcReasonAsleep, false);
+            R5BSetAvailability(intent, R5BAvail::Asleep, NpcReasonAsleep, false);
         }
-        else if (role.State == NpcState::Work && role.Availability == Avail::Busy)
+        else if (role.State == NpcState::Work && role.Availability == R5BAvail::Busy)
         {
-            SetAvailability(intent, Avail::Busy, NpcReasonWorking, true);
+            R5BSetAvailability(intent, R5BAvail::Busy, NpcReasonWorking, true);
         }
         else
         {
-            SetAvailability(intent, Avail::Awake, {}, true);
+            R5BSetAvailability(intent, R5BAvail::Awake, {}, true);
         }
         break;
     }
     case ScheduleStatus::Travel:
     {
-        Classified destination;
+        R5BClassified destination;
         if (resolution.FromZone.empty() || resolution.FromZone == resolution.Zone)
         {
-            return Refuse(NpcIntentError::InvalidResolution);
+            return R5BRefuse(NpcIntentError::InvalidResolution);
         }
-        if (const NpcIntentError error = Classify(resolution.Kind, resolution.Doing, destination); error != NpcIntentError::None)
+        if (const NpcIntentError error = R5BClassify(resolution.Kind, resolution.Doing, destination); error != NpcIntentError::None)
         {
-            return Refuse(error);
+            return R5BRefuse(error);
         }
         intent.State = NpcState::Travel;
         intent.RouteId = "route:" + resolution.FromZone + "->" + resolution.Zone;
-        SetAvailability(intent, Avail::Busy, NpcReasonWalking, true);
+        R5BSetAvailability(intent, R5BAvail::Busy, NpcReasonWalking, true);
         break;
     }
     case ScheduleStatus::Idle:
         intent.State = NpcState::Idle;
-        SetAvailability(intent, Avail::Awake, {}, true);
+        R5BSetAvailability(intent, R5BAvail::Awake, {}, true);
         break;
     default:
-        return Refuse(NpcIntentError::InvalidResolution);
+        return R5BRefuse(NpcIntentError::InvalidResolution);
     }
 
     intent.ResumeState = intent.State;
@@ -209,9 +210,9 @@ NpcIntentResult ResolveNpcIntent(const ScheduleResolution& resolution, bool conv
 
     if (conversationOpen)
     {
-        if (intent.Availability == Avail::Asleep)
+        if (intent.Availability == R5BAvail::Asleep)
         {
-            return Refuse(NpcIntentError::ConversationUnavailable);
+            return R5BRefuse(NpcIntentError::ConversationUnavailable);
         }
         intent.State = NpcState::Chat;
         intent.WorkActionId = {};
@@ -221,7 +222,7 @@ NpcIntentResult ResolveNpcIntent(const ScheduleResolution& resolution, bool conv
     {
         intent.State = NpcState::Yield;
         intent.WorkActionId = {};
-        SetAvailability(intent, Avail::Busy, NpcReasonBlocked, true);
+        R5BSetAvailability(intent, R5BAvail::Busy, NpcReasonBlocked, true);
     }
 
     NpcIntentResult result;
@@ -242,18 +243,18 @@ std::optional<GameInstant> NextNpcIntentBoundary(const PersonSchedule& person, c
 
 std::string ValidateNpcSchedule(const PersonSchedule& person)
 {
-    Classified scratch;
+    R5BClassified scratch;
     for (std::size_t i = 0; i < person.Routine.size(); ++i)
     {
         const ScheduleEntry& entry = person.Routine[i];
-        if (Classify(entry.Kind, entry.Doing, scratch) != NpcIntentError::None)
+        if (R5BClassify(entry.Kind, entry.Doing, scratch) != NpcIntentError::None)
         {
             return "routine entry " + std::to_string(i) + " has an unknown or empty role '" + entry.Doing + "'";
         }
     }
     for (const ScheduleException& exception : person.Exceptions)
     {
-        if (Classify(exception.Kind, exception.Doing, scratch) != NpcIntentError::None)
+        if (R5BClassify(exception.Kind, exception.Doing, scratch) != NpcIntentError::None)
         {
             return "exception " + exception.Id + " has an unknown or empty role '" + exception.Doing + "'";
         }

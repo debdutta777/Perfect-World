@@ -131,12 +131,12 @@ void R20TestAccess()
             R20Expect(EvaluateDoorPassage(*home, minute, {DoorDirection::Exit}) == DoorResult::Ok, "exit is unrestricted");
             R20Expect(EvaluateDoorOffer(*home, false, minute, {}).Action == DoorAction::Knock, "a visitor is offered Knock");
         }
-        // Were somebody home: the old house receives 16:00-19:30; the upper flat has no visiting hours at all.
+        // Were somebody home: both the old house and (since R5-01 gave it a resident) the upper flat receive 16:00-19:30.
         const bool visiting = minute >= 960 && minute < 1170;
         R20Expect(EvaluateDoorKnock(oldHouse, minute, {DoorDirection::Entry, false, false, true}).Answer ==
                       (visiting ? DoorKnockAnswer::Admitted : DoorKnockAnswer::NotReceiving), "old-house visiting hours");
-        R20Expect(EvaluateDoorKnock(upper, minute, {DoorDirection::Entry, false, false, true}) ==
-                      DoorKnockResult{DoorResult::Knocked, DoorEvent::Knock, DoorKnockAnswer::NotReceiving, -1}, "the upper flat is by invitation only");
+        R20Expect(EvaluateDoorKnock(upper, minute, {DoorDirection::Entry, false, false, true}).Answer ==
+                      (visiting ? DoorKnockAnswer::Admitted : DoorKnockAnswer::NotReceiving), "upper-flat visiting hours");
     }
 
     DoorState state = MakeInitialDoorState();

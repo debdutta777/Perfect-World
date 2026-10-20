@@ -17,7 +17,8 @@ constexpr std::pair<std::string_view, std::string_view> R4JPeople[] = {
     {"person.nirmal_bose", "Nirmal Bose"}, {"person.rupa_ghosh", "Rupa Ghosh"},
     {"person.sahana_mitra", "Sahana Mitra"}, {"person.purnima_das", "Purnima Das"},
     {"person.arun_paul", "Arun Paul"}, {"person.rekha_bose", "Rekha Bose"},
-    {"person.debashis_pal", "Debashis Pal"}, {"person.mahua_saha", "Mahua Saha"}};
+    {"person.debashis_pal", "Debashis Pal"}, {"person.mahua_saha", "Mahua Saha"},
+    {"person.prabir_chatterjee", "Prabir Chatterjee"}, {"person.ishita_banerjee", "Ishita Banerjee"}};
 
 // Explicit content mapping: arbitrary remembered facts must never become promises in the journal.
 constexpr std::pair<std::string_view, std::string_view> R4JAgreements[] = {
@@ -33,7 +34,9 @@ constexpr std::pair<std::string_view, std::string_view> R4JAgreements[] = {
     {"person.sahana_mitra", "fact.sahana_mitra.sewing_evening_agreed"},
     {"person.subrata_dey", "fact.subrata_dey.step_promised"},
     {"person.debashis_pal", "fact.debashis_pal.bring_promised"},
-    {"person.mahua_saha", "fact.mahua_saha.sort_promised"}};
+    {"person.mahua_saha", "fact.mahua_saha.sort_promised"},
+    {"person.prabir_chatterjee", "fact.prabir_chatterjee.lane_stories_agreed"},
+    {"person.ishita_banerjee", "fact.ishita_banerjee.quiet_evening_agreed"}};
 
 bool R4JBefore(const LaneJournalEncounter& a, const LaneJournalEncounter& b)
 {

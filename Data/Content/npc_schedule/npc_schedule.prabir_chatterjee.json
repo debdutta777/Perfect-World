@@ -1,0 +1,35 @@
+{
+  "type": "npc_schedule",
+  "id": "npc_schedule.prabir_chatterjee",
+  "note": "Prabir Chatterjee, 72, is a retired postal sorting clerk living alone in the old house. Every day he sleeps 21:30-05:30, washes, cooks breakfast 06:00-06:30 and eats until 07:00. He reads and tends the house until leaving at 08:18 for off-lane errands 08:30-10:00. The authored 1680 cm journey takes 12 minutes at 140 cm/minute; he returns at 10:12. He cooks lunch 11:30-12:00, eats until 12:30, reads, and naps 14:00-14:30. He is awake at home through the entire private door visiting window, 16:00-19:30, every day. Supper preparation starts only at 19:30; he eats 20:00-20:30 and reads until bed. Home remains the exact door location for host admission. R5-02 should bind home to the generated old-house dining/bedside anchors, not another household. Errands are explicitly off-lane; their route length is authored, not a measured built path.",
+  "person": "person.prabir_chatterjee",
+  "home": "location.nabapara.old_house",
+  "workplace": "location.nabapara.prabir_errands",
+  "door": "door.nabapara.old_house_front",
+  "speedCmPerMinute": 140,
+  "routine": [
+    { "days": 127, "start": 0, "end": 330, "zone": "location.nabapara.old_house", "role": "sleeping" },
+    { "days": 127, "start": 330, "end": 360, "zone": "location.nabapara.old_house", "role": "at_home" },
+    { "days": 127, "start": 360, "end": 390, "zone": "location.nabapara.old_house", "role": "cooking" },
+    { "days": 127, "start": 390, "end": 420, "zone": "location.nabapara.old_house", "role": "break" },
+    { "days": 127, "start": 420, "end": 498, "zone": "location.nabapara.old_house", "role": "reading" },
+    { "days": 127, "start": 510, "end": 600, "zone": "location.nabapara.prabir_errands", "role": "inspecting" },
+    { "days": 127, "start": 612, "end": 690, "zone": "location.nabapara.old_house", "role": "at_home" },
+    { "days": 127, "start": 690, "end": 720, "zone": "location.nabapara.old_house", "role": "cooking" },
+    { "days": 127, "start": 720, "end": 750, "zone": "location.nabapara.old_house", "role": "break" },
+    { "days": 127, "start": 750, "end": 840, "zone": "location.nabapara.old_house", "role": "reading" },
+    { "days": 127, "start": 840, "end": 870, "zone": "location.nabapara.old_house", "role": "sleeping" },
+    { "days": 127, "start": 870, "end": 960, "zone": "location.nabapara.old_house", "role": "resting" },
+    { "days": 127, "start": 960, "end": 1170, "zone": "location.nabapara.old_house", "role": "reading" },
+    { "days": 127, "start": 1170, "end": 1200, "zone": "location.nabapara.old_house", "role": "cooking" },
+    { "days": 127, "start": 1200, "end": 1230, "zone": "location.nabapara.old_house", "role": "break" },
+    { "days": 127, "start": 1230, "end": 1290, "zone": "location.nabapara.old_house", "role": "reading" },
+    { "days": 127, "start": 1290, "end": 1440, "zone": "location.nabapara.old_house", "role": "sleeping" }
+  ],
+  "routes": [
+    { "id": "route.prabir.home_to_errands", "from": "location.nabapara.old_house", "to": "location.nabapara.prabir_errands", "lengthCm": 1680 }
+  ],
+  "travel": [
+    { "from": "location.nabapara.old_house", "to": "location.nabapara.prabir_errands", "minutes": 12, "routes": ["route.prabir.home_to_errands"] }
+  ]
+}

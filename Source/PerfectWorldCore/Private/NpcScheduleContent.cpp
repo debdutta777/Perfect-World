@@ -217,8 +217,28 @@ constexpr std::array<ApprovedRoute, 6> MahuaRoutes{{
 constexpr Spec MahuaSpec{"npc_schedule.mahua_saha", "person.mahua_saha", MsHome, "location.nabapara.hardware_store",
                          "door.nabapara.hardware_store_front", MahuaRoutes, "anchor.hardware_store.", 8 * 60 + 20, 20 * 60 + 30};
 
-constexpr std::array<const Spec*, 12> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec, &SubrataSpec, &NirmalSpec, &RupaSpec, &SahanaSpec, &AmpurnimaSpec, &AmarunSpec, &AmrekhaSpec,
-                                               &DebashisSpec, &MahuaSpec};
+// Prabir Chatterjee, retired, the old house (R5-01): morning errands off-lane are his only away block.
+constexpr std::string_view R5RPrabirHome = "location.nabapara.old_house";
+constexpr std::string_view R5RPrabirAway = "location.nabapara.prabir_errands";
+constexpr std::array<ApprovedRoute, 1> R5RPrabirRoutes{{
+    {"route.prabir.home_to_errands", R5RPrabirHome, R5RPrabirAway, 1680},
+}};
+constexpr Spec R5RPrabirSpec{"npc_schedule.prabir_chatterjee", "person.prabir_chatterjee", R5RPrabirHome, R5RPrabirAway,
+                             "door.nabapara.old_house_front", R5RPrabirRoutes, R5RPrabirAway, 510, 600};
+
+// Ishita Banerjee, clinic records assistant, tall-flats upper A (R5-01): upstairs home, the shared front, off-lane work.
+constexpr std::string_view R5RIshitaHome = "location.nabapara.tall_flats_upper_a";
+constexpr std::string_view R5RIshitaFront = "anchor.ishita.tall_flats_front";
+constexpr std::string_view R5RIshitaWork = "location.nabapara.ishita_work";
+constexpr std::array<ApprovedRoute, 2> R5RIshitaRoutes{{
+    {"route.ishita.upper_to_front", R5RIshitaHome, R5RIshitaFront, 1680},
+    {"route.ishita.front_to_work", R5RIshitaFront, R5RIshitaWork, 2520},
+}};
+constexpr Spec R5RIshitaSpec{"npc_schedule.ishita_banerjee", "person.ishita_banerjee", R5RIshitaHome, R5RIshitaWork,
+                             "door.nabapara.tall_flats_upper_a", R5RIshitaRoutes, R5RIshitaWork, 450, 900};
+
+constexpr std::array<const Spec*, 14> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec, &SubrataSpec, &NirmalSpec, &RupaSpec, &SahanaSpec, &AmpurnimaSpec, &AmarunSpec, &AmrekhaSpec,
+                                               &DebashisSpec, &MahuaSpec, &R5RPrabirSpec, &R5RIshitaSpec};
 
 const Spec* FindSpec(std::string_view personId)
 {
