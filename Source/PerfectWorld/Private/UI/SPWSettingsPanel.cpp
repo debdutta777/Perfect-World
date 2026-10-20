@@ -8,6 +8,7 @@
 #include "PerfectWorldPresentationSettings.h"
 #include "UI/PWStyle.h"
 #include "UI/PWWidgets.h"
+#include "UI/SPWControlsSection.h"
 #include "Widgets/Input/SSlider.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SScrollBox.h"
@@ -30,12 +31,16 @@ void SPWSettingsPanel::Construct(const FArguments& InArgs)
 {
     const PWUI::FStyle& Style = PWUI::FStyle::Get();
     OnBack = InArgs._OnBack;
+    ActiveTab = FMath::Clamp(InArgs._InitialTab, 0, 1);
 
     float Stored = 1.0f;
     if (GConfig != nullptr && GConfig->GetFloat(SettingsSection, SensitivityKey, Stored, GGameUserSettingsIni))
     {
         MouseSensitivity = FMath::Clamp(Stored, SensitivityMin, SensitivityMax);
     }
+
+    const TSharedRef<SPWControlsSection> Controls = SNew(SPWControlsSection).Store(InArgs._BindingStore);
+    ControlsSection = Controls;
 
     ChildSlot
     [
@@ -63,116 +68,51 @@ void SPWSettingsPanel::Construct(const FArguments& InArgs)
                 [
                     PWUI::MakeText(LOCTEXT("Title", "Settings"), 36, Style.TextPrimary, true)
                 ]
-                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 24.0f, 0.0f, 0.0f)
-                [
-                    PWUI::MakeText(LOCTEXT("DisplayLabel", "DISPLAY"), 13, Style.Accent, true)
-                ]
-                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 8.0f, 0.0f, 0.0f)
-                [
-                    SNew(SBox)
-                    .HAlign(HAlign_Left)
-                    [
-                        PWUI::MakeButton(
-                            TAttribute<FText>::CreateLambda([]()
-                            {
-                                return IsFullscreen() ? LOCTEXT("Fullscreen", "Fullscreen (click for windowed)")
-                                                      : LOCTEXT("Windowed", "Windowed (click for fullscreen)");
-                            }),
-                            PWUI::EButtonKind::Secondary,
-                            FOnClicked::CreateLambda([this]()
-                            {
-                                ToggleFullscreen();
-                                return FReply::Handled();
-                            }),
-                            true, 20, 360.0f)
-                    ]
-                ]
-                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 28.0f, 0.0f, 0.0f)
-                [
-                    PWUI::MakeButton(
-                        TAttribute<FText>::CreateLambda([]()
-                        {
-                            return PWUI::IsReducedMotion() ? LOCTEXT("ReducedOn", "Reduced motion: On")
-                                                           : LOCTEXT("ReducedOff", "Reduced motion: Off");
-                        }), PWUI::EButtonKind::Chip,
-                        FOnClicked::CreateLambda([]()
-                        {
-                            UPerfectWorldPresentationSettings::Get().SetReducedMotion(!PWUI::IsReducedMotion());
-                            return FReply::Handled();
-                        }), true, 20, 0.0f, TAttribute<bool>::CreateLambda([]() { return PWUI::IsReducedMotion(); }))
-                ]
-                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 8.0f, 0.0f, 0.0f)
-                [
-                    PWUI::MakeText(LOCTEXT("ReducedNote", "Show motion instantly and keep decorative previews and the title camera still."),
-                                   15, Style.TextSecondary, false, true)
-                ]
-                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 28.0f, 0.0f, 0.0f)
-                [
-                    PWUI::MakeText(LOCTEXT("MouseLabel", "MOUSE SENSITIVITY"), 13, Style.Accent, true)
-                ]
-                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 10.0f, 0.0f, 0.0f)
+                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 16.0f, 0.0f, 0.0f)
                 [
                     SNew(SHorizontalBox)
-                    + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
+                    + SHorizontalBox::Slot().AutoWidth()
                     [
-                        PWUI::MakeButton(INVTEXT("-"), PWUI::EButtonKind::Secondary,
-                                         FOnClicked::CreateLambda([this]()
-                                         {
-                                             SetSensitivity(MouseSensitivity - SensitivityStep, true);
-                                             return FReply::Handled();
-                                         }),
-                                         true, 22, 40.0f)
-                    ]
-                    + SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Center).Padding(14.0f, 0.0f)
-                    [
-                        SNew(SBox)
-                        .HeightOverride(44.0f)
+                        SNew(SBox).Tag(PWSettingsUi::GeneralTabTag)
                         [
-                            SNew(SSlider)
-                            .Style(&Style.Slider)
-                            .MinValue(SensitivityMin)
-                            .MaxValue(SensitivityMax)
-                            .StepSize(SensitivityStep)
-                            .MouseUsesStep(true)
-                            .IsFocusable(false)
-                            .Value_Lambda([this]() { return MouseSensitivity; })
-                            .OnValueChanged_Lambda([this](float Value) { SetSensitivity(Value, false); })
-                            .OnMouseCaptureEnd(FSimpleDelegate::CreateLambda([this]() { SetSensitivity(MouseSensitivity, true); }))
+                            PWUI::MakeButton(LOCTEXT("TabGeneral", "General"), PWUI::EButtonKind::Chip,
+                                             FOnClicked::CreateLambda([this]()
+                                             {
+                                                 SetTab(0);
+                                                 return FReply::Handled();
+                                             }),
+                                             true, 18, 120.0f, TAttribute<bool>::CreateLambda([this]() { return ActiveTab == 0; }))
                         ]
                     ]
-                    + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
+                    + SHorizontalBox::Slot().AutoWidth().Padding(8.0f, 0.0f, 0.0f, 0.0f)
                     [
-                        PWUI::MakeButton(INVTEXT("+"), PWUI::EButtonKind::Secondary,
-                                         FOnClicked::CreateLambda([this]()
-                                         {
-                                             SetSensitivity(MouseSensitivity + SensitivityStep, true);
-                                             return FReply::Handled();
-                                         }),
-                                         true, 22, 40.0f)
-                    ]
-                    + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(16.0f, 0.0f, 0.0f, 0.0f)
-                    [
-                        SNew(SBox)
-                        .WidthOverride(70.0f)
+                        SNew(SBox).Tag(PWSettingsUi::ControlsTabTag)
                         [
-                            SNew(STextBlock)
-                            .Text_Lambda([this]()
-                            {
-                                FNumberFormattingOptions Options;
-                                Options.MinimumFractionalDigits = 1;
-                                Options.MaximumFractionalDigits = 1;
-                                return FText::AsNumber(MouseSensitivity, &Options);
-                            })
-                            .Font(PWUI::Font(22, true))
-                            .ColorAndOpacity(FSlateColor(Style.TextPrimary))
+                            PWUI::MakeButton(LOCTEXT("TabControls", "Controls"), PWUI::EButtonKind::Chip,
+                                             FOnClicked::CreateLambda([this]()
+                                             {
+                                                 SetTab(1);
+                                                 return FReply::Handled();
+                                             }),
+                                             true, 18, 120.0f, TAttribute<bool>::CreateLambda([this]() { return ActiveTab == 1; }))
                         ]
                     ]
                 ]
-                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 10.0f, 0.0f, 0.0f)
+                + SVerticalBox::Slot().AutoHeight()
                 [
-                    PWUI::MakeText(LOCTEXT("MouseNote",
-                        "Coming soon: this value is saved now, but the in-world camera does not read it yet."),
-                        15, Style.TextMuted, false, true)
+                    SNew(SBox).Tag(PWSettingsUi::GeneralPageTag)
+                    .Visibility_Lambda([this]() { return ActiveTab == 0 ? EVisibility::Visible : EVisibility::Collapsed; })
+                    [
+                        MakeGeneralTab()
+                    ]
+                ]
+                + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 8.0f, 0.0f, 0.0f)
+                [
+                    SNew(SBox).Tag(PWSettingsUi::ControlsPageTag)
+                    .Visibility_Lambda([this]() { return ActiveTab == 1 ? EVisibility::Visible : EVisibility::Collapsed; })
+                    [
+                        Controls
+                    ]
                 ]
                 + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 30.0f, 0.0f, 0.0f)
                 [
@@ -194,6 +134,138 @@ void SPWSettingsPanel::Construct(const FArguments& InArgs)
     ];
 
     PWUI::FocusWhenReady(AsShared(), AsShared());
+}
+
+TSharedRef<SWidget> SPWSettingsPanel::MakeGeneralTab()
+{
+    const PWUI::FStyle& Style = PWUI::FStyle::Get();
+    return SNew(SVerticalBox)
+        + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 24.0f, 0.0f, 0.0f)
+        [
+            PWUI::MakeText(LOCTEXT("DisplayLabel", "DISPLAY"), 13, Style.Accent, true)
+        ]
+        + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 8.0f, 0.0f, 0.0f)
+        [
+            SNew(SBox)
+            .HAlign(HAlign_Left)
+            [
+                PWUI::MakeButton(
+                    TAttribute<FText>::CreateLambda([]()
+                    {
+                        return IsFullscreen() ? LOCTEXT("Fullscreen", "Fullscreen (click for windowed)")
+                                              : LOCTEXT("Windowed", "Windowed (click for fullscreen)");
+                    }),
+                    PWUI::EButtonKind::Secondary,
+                    FOnClicked::CreateLambda([this]()
+                    {
+                        ToggleFullscreen();
+                        return FReply::Handled();
+                    }),
+                    true, 20, 360.0f)
+            ]
+        ]
+        + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 28.0f, 0.0f, 0.0f)
+        [
+            PWUI::MakeButton(
+                TAttribute<FText>::CreateLambda([]()
+                {
+                    return PWUI::IsReducedMotion() ? LOCTEXT("ReducedOn", "Reduced motion: On")
+                                                   : LOCTEXT("ReducedOff", "Reduced motion: Off");
+                }), PWUI::EButtonKind::Chip,
+                FOnClicked::CreateLambda([]()
+                {
+                    UPerfectWorldPresentationSettings::Get().SetReducedMotion(!PWUI::IsReducedMotion());
+                    return FReply::Handled();
+                }), true, 20, 0.0f, TAttribute<bool>::CreateLambda([]() { return PWUI::IsReducedMotion(); }))
+        ]
+        + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 8.0f, 0.0f, 0.0f)
+        [
+            PWUI::MakeText(LOCTEXT("ReducedNote", "Show motion instantly and keep decorative previews and the title camera still."),
+                           15, Style.TextSecondary, false, true)
+        ]
+        + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 28.0f, 0.0f, 0.0f)
+        [
+            PWUI::MakeText(LOCTEXT("MouseLabel", "MOUSE SENSITIVITY"), 13, Style.Accent, true)
+        ]
+        + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 10.0f, 0.0f, 0.0f)
+        [
+            SNew(SHorizontalBox)
+            + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
+            [
+                PWUI::MakeButton(INVTEXT("-"), PWUI::EButtonKind::Secondary,
+                                 FOnClicked::CreateLambda([this]()
+                                 {
+                                     SetSensitivity(MouseSensitivity - SensitivityStep, true);
+                                     return FReply::Handled();
+                                 }),
+                                 true, 22, 40.0f)
+            ]
+            + SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Center).Padding(14.0f, 0.0f)
+            [
+                SNew(SBox)
+                .HeightOverride(44.0f)
+                [
+                    SNew(SSlider)
+                    .Style(&Style.Slider)
+                    .MinValue(SensitivityMin)
+                    .MaxValue(SensitivityMax)
+                    .StepSize(SensitivityStep)
+                    .MouseUsesStep(true)
+                    .IsFocusable(false)
+                    .Value_Lambda([this]() { return MouseSensitivity; })
+                    .OnValueChanged_Lambda([this](float Value) { SetSensitivity(Value, false); })
+                    .OnMouseCaptureEnd(FSimpleDelegate::CreateLambda([this]() { SetSensitivity(MouseSensitivity, true); }))
+                ]
+            ]
+            + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
+            [
+                PWUI::MakeButton(INVTEXT("+"), PWUI::EButtonKind::Secondary,
+                                 FOnClicked::CreateLambda([this]()
+                                 {
+                                     SetSensitivity(MouseSensitivity + SensitivityStep, true);
+                                     return FReply::Handled();
+                                 }),
+                                 true, 22, 40.0f)
+            ]
+            + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(16.0f, 0.0f, 0.0f, 0.0f)
+            [
+                SNew(SBox)
+                .WidthOverride(70.0f)
+                [
+                    SNew(STextBlock)
+                    .Text_Lambda([this]()
+                    {
+                        FNumberFormattingOptions Options;
+                        Options.MinimumFractionalDigits = 1;
+                        Options.MaximumFractionalDigits = 1;
+                        return FText::AsNumber(MouseSensitivity, &Options);
+                    })
+                    .Font(PWUI::Font(22, true))
+                    .ColorAndOpacity(FSlateColor(Style.TextPrimary))
+                ]
+            ]
+        ]
+        + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 10.0f, 0.0f, 0.0f)
+        [
+            PWUI::MakeText(LOCTEXT("MouseNote",
+                "Coming soon: this value is saved now, but the in-world camera does not read it yet."),
+                15, Style.TextMuted, false, true)
+        ];
+}
+
+void SPWSettingsPanel::SetTab(int32 Tab)
+{
+    const int32 Next = FMath::Clamp(Tab, 0, 1);
+    if (Next == ActiveTab)
+    {
+        return;
+    }
+    ActiveTab = Next;
+    // A half-finished rebinding belongs to the Controls page; leave nothing open behind it. Focus stays on the tab so it can be switched back.
+    if (const TSharedPtr<SPWControlsSection> Controls = ControlsSection.Pin())
+    {
+        Controls->CancelPrompt();
+    }
 }
 
 bool SPWSettingsPanel::IsFullscreen()
@@ -234,6 +306,12 @@ FReply SPWSettingsPanel::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent&
     if (InKeyEvent.GetKey() == EKeys::Escape || InKeyEvent.GetKey() == EKeys::Gamepad_FaceButton_Right)
     {
         OnBack.ExecuteIfBound();
+        return FReply::Handled();
+    }
+    // The shoulder buttons step between the tabs, as on a controller there is no pointer to click them with.
+    if (InKeyEvent.GetKey() == EKeys::Gamepad_LeftShoulder || InKeyEvent.GetKey() == EKeys::Gamepad_RightShoulder)
+    {
+        SetTab(InKeyEvent.GetKey() == EKeys::Gamepad_LeftShoulder ? 0 : 1);
         return FReply::Handled();
     }
     return SCompoundWidget::OnKeyDown(MyGeometry, InKeyEvent);

@@ -14,6 +14,8 @@
 #include "InputMappingContext.h"
 #include "InputModifiers.h"
 #include "PerfectWorldInteractionComponent.h"
+#include "PerfectWorldKeyBindings.h"
+#include "PerfectWorldKeyBindingsContext.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPWPlayerInput, Log, All);
 
@@ -70,51 +72,43 @@ void APerfectWorldPlayerCharacter::BuildInputAssets()
 
     WalkingContext = NewObject<UInputMappingContext>(this, TEXT("IMC_Walking"));
 
-    auto Swizzle = [this]() -> UInputModifier* { return NewObject<UInputModifierSwizzleAxis>(this); }; // X into Y
-    auto Negate = [this]() -> UInputModifier* { return NewObject<UInputModifierNegate>(this); };
-    auto StickDeadZone = [this]() -> UInputModifier*
+    // The keys come from the player's key bindings (PerfectWorldKeyBindings.h): the defaults are the keys this code was once written
+    // with, and the Controls settings tab changes them. A new action takes its keys from the store the same way: create it above, set
+    // its field in MakeKbActions, bind its handler in BindEnhancedInput.
+    const auto MakeKbActions = [this]()
     {
-        UInputModifierDeadZone* Zone = NewObject<UInputModifierDeadZone>(this);
-        Zone->LowerThreshold = 0.2f;
-        Zone->UpperThreshold = 1.0f;
-        Zone->Type = EDeadZoneType::Radial;
-        return Zone;
+        FKbContextActions Actions;
+        Actions.Move = MoveAction.Get();
+        Actions.Look = LookAction.Get();
+        Actions.LookStick = LookStickAction.Get();
+        Actions.Run = RunAction.Get();
+        Actions.Jump = JumpAction.Get();
+        Actions.ToggleCamera = ToggleCameraAction.Get();
+        Actions.ZoomWheel = ZoomWheelAction.Get();
+        Actions.ZoomHeld = ZoomHeldAction.Get();
+        Actions.Interact = InteractAction.Get();
+        Actions.CycleTarget = CycleTargetAction.Get();
+        return Actions;
     };
+    KbPopulateWalkingContext(*WalkingContext, MakeKbActions(), *this, FKbBindingStore::Get().Current());
 
-    // Move: a key gives 1 on X (right) or Y (forward); swizzle moves X into Y, negate flips the sign.
-    WalkingContext->MapKey(MoveAction, EKeys::W).Modifiers.Add(Swizzle());
-    FEnhancedActionKeyMapping& Back = WalkingContext->MapKey(MoveAction, EKeys::S);
-    Back.Modifiers.Add(Swizzle());
-    Back.Modifiers.Add(Negate());
-    WalkingContext->MapKey(MoveAction, EKeys::A).Modifiers.Add(Negate());
-    WalkingContext->MapKey(MoveAction, EKeys::D);
-    WalkingContext->MapKey(MoveAction, EKeys::Gamepad_Left2D).Modifiers.Add(StickDeadZone());
-
-    // Look: the mouse delta, and the right stick as a rate (handled in OnLookStick).
-    WalkingContext->MapKey(LookAction, EKeys::Mouse2D);
-    WalkingContext->MapKey(LookStickAction, EKeys::Gamepad_Right2D).Modifiers.Add(StickDeadZone());
-
-    WalkingContext->MapKey(RunAction, EKeys::LeftShift);
-    WalkingContext->MapKey(RunAction, EKeys::Gamepad_LeftThumbstick);
-
-    WalkingContext->MapKey(JumpAction, EKeys::SpaceBar);
-    WalkingContext->MapKey(JumpAction, EKeys::Gamepad_FaceButton_Bottom);
-
-    WalkingContext->MapKey(ToggleCameraAction, EKeys::V);
-    WalkingContext->MapKey(ToggleCameraAction, EKeys::Gamepad_FaceButton_Top);
-
-    // Third-person distance: wheel notches, or the D-pad held.
-    WalkingContext->MapKey(ZoomWheelAction, EKeys::MouseWheelAxis);
-    WalkingContext->MapKey(ZoomHeldAction, EKeys::Gamepad_DPad_Up);
-    WalkingContext->MapKey(ZoomHeldAction, EKeys::Gamepad_DPad_Down).Modifiers.Add(Negate());
-
-    // Interaction: E or X acts on the target; Tab or the right shoulder button picks the next one. Neither key is used above
-    // (A jumps, Y switches camera, the D-pad zooms, L3 runs, the menu button belongs to the front end HUD). B is left free
-    // because the conversation panel uses it to leave.
-    WalkingContext->MapKey(InteractAction, EKeys::E);
-    WalkingContext->MapKey(InteractAction, EKeys::Gamepad_FaceButton_Left);
-    WalkingContext->MapKey(CycleTargetAction, EKeys::Tab);
-    WalkingContext->MapKey(CycleTargetAction, EKeys::Gamepad_RightShoulder);
+    // Rebuild the mappings in place whenever the player changes a binding, so a new key works at once.
+    FKbBindingStore::Get().OnChanged.AddWeakLambda(this, [this, MakeKbActions]()
+    {
+        if (WalkingContext == nullptr)
+        {
+            return;
+        }
+        KbPopulateWalkingContext(*WalkingContext, MakeKbActions(), *this, FKbBindingStore::Get().Current());
+        const APlayerController* PlayerController = Cast<APlayerController>(GetController());
+        ULocalPlayer* LocalPlayer = PlayerController != nullptr ? PlayerController->GetLocalPlayer() : nullptr;
+        if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
+        {
+            FModifyContextOptions Options;
+            Options.bForceImmediately = true;
+            Subsystem->RequestRebuildControlMappings(Options);
+        }
+    });
 }
 
 void APerfectWorldPlayerCharacter::BindEnhancedInput(UEnhancedInputComponent& Input)
@@ -286,10 +280,20 @@ void APerfectWorldPlayerCharacter::BindLegacyInput(UInputComponent& Input)
     {
         Input.BindAxisKey(Key).AxisDelegate.GetDelegateForManualSet().BindUObject(this, &APerfectWorldPlayerCharacter::OnLegacyAxis, Which);
     };
-    BindAxis(EKeys::W, LegacyForwardKey);
-    BindAxis(EKeys::S, LegacyBackKey);
-    BindAxis(EKeys::D, LegacyRightKey);
-    BindAxis(EKeys::A, LegacyLeftKey);
+    // The same key bindings as the Enhanced Input path, read once here; this fallback does not follow later changes.
+    const FKbBindingSet& Keys = FKbBindingStore::Get().Current();
+    const auto KeyOf = [&Keys](EKbAction Action, EKbDevice Device) { return Keys.Get(Action, Device); };
+    const auto BindKeyAxis = [&BindAxis](const FKey& Key, int32 Which)
+    {
+        if (Key.IsValid())
+        {
+            BindAxis(Key, Which);
+        }
+    };
+    BindKeyAxis(KeyOf(EKbAction::MoveForward, EKbDevice::Keyboard), LegacyForwardKey);
+    BindKeyAxis(KeyOf(EKbAction::MoveBack, EKbDevice::Keyboard), LegacyBackKey);
+    BindKeyAxis(KeyOf(EKbAction::MoveRight, EKbDevice::Keyboard), LegacyRightKey);
+    BindKeyAxis(KeyOf(EKbAction::MoveLeft, EKbDevice::Keyboard), LegacyLeftKey);
     BindAxis(EKeys::Gamepad_LeftX, LegacyPadMoveX);
     BindAxis(EKeys::Gamepad_LeftY, LegacyPadMoveY);
     BindAxis(EKeys::MouseX, LegacyMouseX);
@@ -298,30 +302,50 @@ void APerfectWorldPlayerCharacter::BindLegacyInput(UInputComponent& Input)
     BindAxis(EKeys::Gamepad_RightY, LegacyPadLookY);
     BindAxis(EKeys::MouseWheelAxis, LegacyWheel);
 
-    for (const FKey& Key : {EKeys::SpaceBar, EKeys::Gamepad_FaceButton_Bottom})
+    // Both of an action's keys, skipping one that is unbound.
+    const auto KeysOf = [&KeyOf](EKbAction Action)
+    {
+        TArray<FKey, TInlineAllocator<2>> Found;
+        for (const EKbDevice Device : {EKbDevice::Keyboard, EKbDevice::Gamepad})
+        {
+            const FKey Key = KeyOf(Action, Device);
+            if (Key.IsValid() && !KbIsWheelKey(Key))
+            {
+                Found.Add(Key);
+            }
+        }
+        return Found;
+    };
+    for (const FKey& Key : KeysOf(EKbAction::Jump))
     {
         Input.BindKey(Key, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnJumpStarted);
         Input.BindKey(Key, IE_Released, this, &APerfectWorldPlayerCharacter::OnJumpCompleted);
     }
-    for (const FKey& Key : {EKeys::LeftShift, EKeys::Gamepad_LeftThumbstick})
+    for (const FKey& Key : KeysOf(EKbAction::Run))
     {
         Input.BindKey(Key, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnLegacyRunPressed);
         Input.BindKey(Key, IE_Released, this, &APerfectWorldPlayerCharacter::OnLegacyRunReleased);
     }
-    for (const FKey& Key : {EKeys::V, EKeys::Gamepad_FaceButton_Top})
+    for (const FKey& Key : KeysOf(EKbAction::ToggleCamera))
     {
         Input.BindKey(Key, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnToggleCamera);
     }
-    for (const FKey& Key : {EKeys::E, EKeys::Gamepad_FaceButton_Left})
+    for (const FKey& Key : KeysOf(EKbAction::Interact))
     {
         Input.BindKey(Key, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnInteractStarted); // IE_Pressed ignores repeats
     }
-    for (const FKey& Key : {EKeys::Tab, EKeys::Gamepad_RightShoulder})
+    for (const FKey& Key : KeysOf(EKbAction::CycleTarget))
     {
         Input.BindKey(Key, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnCycleTargetStarted);
     }
-    Input.BindKey(EKeys::Gamepad_DPad_Up, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnLegacyZoomIn);
-    Input.BindKey(EKeys::Gamepad_DPad_Down, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnLegacyZoomOut);
+    for (const FKey& Key : KeysOf(EKbAction::ZoomIn))
+    {
+        Input.BindKey(Key, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnLegacyZoomIn);
+    }
+    for (const FKey& Key : KeysOf(EKbAction::ZoomOut))
+    {
+        Input.BindKey(Key, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnLegacyZoomOut);
+    }
 }
 
 void APerfectWorldPlayerCharacter::OnLegacyAxis(float Value, int32 Which)
