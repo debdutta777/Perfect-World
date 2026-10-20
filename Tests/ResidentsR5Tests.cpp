@@ -18,12 +18,6 @@
 #include <iterator>
 #include <set>
 
-// Until the integrator adds these identical declarations to Conversation.h.
-namespace PerfectWorld
-{
-[[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue PrabirConversationCatalogue() noexcept;
-[[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue IshitaConversationCatalogue() noexcept;
-}
 
 using namespace PerfectWorld;
 namespace
