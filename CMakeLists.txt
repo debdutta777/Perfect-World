@@ -741,3 +741,8 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/SaveSlot
 add_executable(PerfectWorldSaveSlotSummaryTests Tests/SaveSlotSummaryTests.cpp)
 target_link_libraries(PerfectWorldSaveSlotSummaryTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldSaveSlotSummaryTests COMMAND PerfectWorldSaveSlotSummaryTests)
+
+# R61: the last three side frontages and explicit 26 -> 29 door migration.
+add_executable(PerfectWorldDoorsRoster29Tests Tests/DoorsRoster29Tests.cpp)
+target_link_libraries(PerfectWorldDoorsRoster29Tests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldDoorsRoster29Tests COMMAND PerfectWorldDoorsRoster29Tests)

@@ -163,7 +163,7 @@ void F5TestCatalogueShape()
         F5Expect(e.PlannedDoorId.empty() || (e.PlannedDoorId.rfind("door.nabapara.", 0) == 0 && planned.insert(std::string(e.PlannedDoorId)).second),
                "planned door id is namespaced and unique: " + id);
     }
-    F5Expect(KitFrontageEntries().size() == 12, "four batches of three frontages");
+    F5Expect(KitFrontageEntries().size() == 15, "five batches of three frontages");
     F5Expect(sides[0] >= 1 && sides[1] >= 1, "at least one frontage on each side of the lane");
     F5Expect(compact >= 1 && shared >= 1, "at least one compact residence and one shared entry");
 
@@ -323,7 +323,10 @@ void F5TestNewRows()
         {"end_shop", -1, 9, 5700, 700, 900, Variant::ShopWithStockroom, FurnitureSet::GeneralGoods},
         {"cloth_merchant", -1, 0, -2400, 1000, 800, Variant::ShopWithStockroom, FurnitureSet::GeneralGoods},
         {"narrow_shop", -1, 6, 3300, 600, 700, Variant::ShopWithStockroom, FurnitureSet::GeneralGoods},
-        {"tailor_shop", 1, 5, 2100, 700, 900, Variant::ShopWithStockroom, FurnitureSet::Workshop}};
+        {"tailor_shop", 1, 5, 2100, 700, 900, Variant::ShopWithStockroom, FurnitureSet::Workshop},
+        {"alley_house", -1, 7, 3900, 400, 900, Variant::CompactResidence, FurnitureSet::Residence},
+        {"stair_flats", -1, 8, 4900, 800, 800, Variant::CompactResidence, FurnitureSet::Residence},
+        {"corner_stalls", 1, 0, -2400, 1100, 900, Variant::ShopWithStockroom, FurnitureSet::GeneralGoods}};
     for (const auto& pin : pins)
     {
         const std::string id = std::string("building.nabapara.") + pin.Name;
@@ -457,22 +460,22 @@ void R1FrontageSwingSides()
         }
     }
 }
-void R53FrontageSwingSides()
+void R61FrontageSwingSides()
 {
-    for (const char* R53Name : {"cloth_merchant", "narrow_shop", "tailor_shop"})
+    for (const char* R61Name : {"cloth_merchant", "narrow_shop", "tailor_shop", "alley_house", "stair_flats", "corner_stalls"})
     {
-        const auto* R53Row = FindFrontageById(std::string("building.nabapara.") + R53Name);
-        F5Expect(R53Row != nullptr, "round5 row exists");
-        const auto R53Layout = GenerateInteriorLayout(MakeFrontageInput(*R53Row, 15, 300));
-        const auto* R53Door = PerfectWorld::FindDoor(R53Row->EntranceDoorId);
-        F5Expect(R53Layout.Ok() && R53Door != nullptr, "round5 layout and door exist");
-        for (const auto& R53Opening : R53Layout.Openings)
+        const auto* R61Row = FindFrontageById(std::string("building.nabapara.") + R61Name);
+        F5Expect(R61Row != nullptr, "round5/R61 row exists");
+        const auto R61Layout = GenerateInteriorLayout(MakeFrontageInput(*R61Row, 15, 300));
+        const auto* R61Door = PerfectWorld::FindDoor(R61Row->EntranceDoorId);
+        F5Expect(R61Layout.Ok() && R61Door != nullptr, "round5/R61 layout and door exist");
+        for (const auto& R61Opening : R61Layout.Openings)
         {
-            if (R53Opening.DoorId != R53Row->EntranceDoorId) continue;
-            F5Expect(R53Opening.HingeU == R53Opening.Plan.U0 && R53Opening.SweepSign == 1 && !R53Row->MirrorU,
-                     "round5 low-U hinge swings into +V");
-            F5Expect(R53Door->PreferredSwingSide == R53Row->Side && !R53Door->bTwoWay,
-                     "round5 physical side matches the kit on both lane orientations");
+            if (R61Opening.DoorId != R61Row->EntranceDoorId) continue;
+            F5Expect(R61Opening.HingeU == R61Opening.Plan.U0 && R61Opening.SweepSign == 1 && !R61Row->MirrorU,
+                     "round5/R61 low-U hinge swings into +V");
+            F5Expect(R61Door->PreferredSwingSide == R61Row->Side && !R61Door->bTwoWay,
+                     "round5/R61 physical side matches the kit on both lane orientations");
         }
     }
 }
@@ -486,7 +489,7 @@ int main()
     F5TestLayouts();
     F5TestNewRows();
     F5TestDoorDrafts();
-    R53FrontageSwingSides();
+    R61FrontageSwingSides();
     R1FrontageSwingSides();
     std::cout << "LaneFrontageCatalogueTests: " << F5Assertions << " assertions passed\n";
     return 0;
