@@ -718,3 +718,15 @@ target_link_libraries(PerfectWorldResidentsR5Tests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldResidentsR5Tests COMMAND PerfectWorldResidentsR5Tests
     ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.prabir_chatterjee.json
     ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.ishita_banerjee.json)
+
+# R5-04: opt-in, transient work/needs decisions; legacy behaviour regression for every authored person.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/NpcBehaviourWork.cpp)
+add_executable(PerfectWorldNpcBehaviourWorkTests Tests/NpcBehaviourWorkTests.cpp)
+target_link_libraries(PerfectWorldNpcBehaviourWorkTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldNpcBehaviourWorkTests COMMAND PerfectWorldNpcBehaviourWorkTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.debashis_pal.json
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.mahua_saha.json)
+add_executable(PerfectWorldNpcBehaviourRegressionTests Tests/NpcBehaviourRegressionTests.cpp)
+target_link_libraries(PerfectWorldNpcBehaviourRegressionTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldNpcBehaviourRegressionTests COMMAND PerfectWorldNpcBehaviourRegressionTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule)
