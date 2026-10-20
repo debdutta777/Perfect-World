@@ -8,7 +8,7 @@ namespace
 {
 // Batch 1 (LL-03 submission 2). NL-01 authored the front doors and their v8 migration; NL-04 hangs them: EntranceDoorId == PlannedDoorId.
 // The tall flats also hang a leaf on each flat (UnitDoors below, applied by MakeFrontageInput).
-const std::array<FrontageEntry, 9> F5Entries{{
+const std::array<FrontageEntry, 12> F5Entries{{
     // -Y, row 5, X 2600 to 3300: the "neighbour / caretaker flat" of LANE_LIFE_PLAN. Compact residence; the stationery footprint on the other side.
     {"building.nabapara.caretaker_flat", -1, 5, 2600, 460, 700, 700, 60, 3, 1965316759u, Variant::CompactResidence, FurnitureSet::Residence, 250, false,
      "door.nabapara.caretaker_flat_front", "door.nabapara.caretaker_flat_front"},
@@ -32,6 +32,13 @@ const std::array<FrontageEntry, 9> F5Entries{{
      "door.nabapara.market_stalls_b_front", "door.nabapara.market_stalls_b_front"},
     {"building.nabapara.end_shop", -1, 9, 5700, 520, 700, 900, 120, 4, 1434028398u, Variant::ShopWithStockroom, FurnitureSet::GeneralGoods, 250, false,
      "door.nabapara.end_shop_front", "door.nabapara.end_shop_front"},
+    // R53: cloth retail reuses shelves/counter/stock storage; the tailor reuses the workshop's finishing table and cloth bolts.
+    {"building.nabapara.cloth_merchant", -1, 0, -2400, 400, 1000, 800, 0, 3, 3665884474u, Variant::ShopWithStockroom, FurnitureSet::GeneralGoods, 250, false,
+     "door.nabapara.cloth_merchant_front", "door.nabapara.cloth_merchant_front"},
+    {"building.nabapara.narrow_shop", -1, 6, 3300, 400, 600, 700, 0, 4, 3169186110u, Variant::ShopWithStockroom, FurnitureSet::GeneralGoods, 250, false,
+     "door.nabapara.narrow_shop_front", "door.nabapara.narrow_shop_front"},
+    {"building.nabapara.tailor_shop", 1, 5, 2100, 460, 700, 900, 60, 3, 3475610266u, Variant::ShopWithStockroom, FurnitureSet::Workshop, 250, false,
+     "door.nabapara.tailor_shop_front", "door.nabapara.tailor_shop_front"},
 }};
 
 /** The flat doors of a shared-entry block (NL-01 roster); other kit rows have none. */

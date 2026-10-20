@@ -709,3 +709,8 @@ add_executable(PerfectWorldLaneJournalTests Tests/LaneJournalTests.cpp)
 target_link_libraries(PerfectWorldLaneJournalTests PRIVATE PerfectWorldCore)
 target_compile_definitions(PerfectWorldLaneJournalTests PRIVATE PW_JOURNAL_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
 add_test(NAME PerfectWorldLaneJournalTests COMMAND PerfectWorldLaneJournalTests)
+
+# R53: explicit 23 -> 26 roster migration and three more unstaffed frontages.
+add_executable(PerfectWorldDoorsRoster26Tests Tests/DoorsRoster26Tests.cpp)
+target_link_libraries(PerfectWorldDoorsRoster26Tests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldDoorsRoster26Tests COMMAND PerfectWorldDoorsRoster26Tests)

@@ -19,7 +19,8 @@ inline constexpr double StCapsuleWidth = 68.0;
 inline constexpr double StWalkBand = 185.0; // the walking height band above the finished floor
 
 inline const TCHAR* const StShops[] = {TEXT("building.nabapara.market_stalls_a"), TEXT("building.nabapara.market_stalls_b"),
-                                TEXT("building.nabapara.end_shop")};
+                                TEXT("building.nabapara.end_shop"), TEXT("building.nabapara.cloth_merchant"),
+                                TEXT("building.nabapara.narrow_shop"), TEXT("building.nabapara.tailor_shop")};
 
 struct FStWorld
 {
@@ -79,9 +80,9 @@ inline FString StExpectedHours(const PerfectWorld::DoorDef& Door)
     return Text;
 }
 
-inline bool StHasEveryRequiredPhrase(const FString& Text)
+inline bool StHasEveryRequiredPhrase(const FString& Text, const PerfectWorld::DoorDef& Door)
 {
-    return Text.Contains(TEXT("09:00-13:00")) && Text.Contains(TEXT("15:00-19:30")) && Text.Contains(TEXT("Unstaffed")) &&
+    return Text.Contains(StExpectedHours(Door)) && Text.Contains(TEXT("Unstaffed")) &&
            Text.Contains(TEXT("Purchasing unavailable"));
 }
 

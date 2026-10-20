@@ -33,7 +33,7 @@ constexpr std::string_view CareFront = "door.nabapara.care_front";
 void TestTable()
 {
     Expect(ValidateDoorTable(), "the authored door table is well formed");
-    Expect(AuthoredDoors().size() == 23, "home, shutter, care, stationery, frontage, upper-flat and R4-01 browsing doors are authored");
+    Expect(AuthoredDoors().size() == 26, "home, shutter, care, stationery, frontage, upper-flat and R4/R5 browsing doors are authored");
     for (const std::string_view id : {Front, Living, Bedroom, Kitchen, Washroom})
     {
         const DoorDef* door = FindDoor(id);
@@ -334,7 +334,7 @@ void TestRoundTrip()
     DoorState state = MakeInitialDoorState();
     Play(state);
     const std::string text = SerialiseDoorState(state);
-    Expect(text.starts_with("pw.doors/2\ncount=23\n"), "the text opens with its version and count");
+    Expect(text.starts_with("pw.doors/2\ncount=26\n"), "the text opens with its version and count");
     const DoorStateParse parsed = DeserialiseDoorState(text);
     Expect(parsed.Ok() && !parsed.bMigrated && parsed.State == state, "the state and swing sides round trip without migration");
     Expect(SerialiseDoorState(parsed.State) == text, "and re-serialises identically");
@@ -362,8 +362,8 @@ void TestRefusedText()
     Expect(!DeserialiseDoorState(text + "x").Ok(), "trailing data is refused");
     Expect(!DeserialiseDoorState(text + "\n").Ok(), "a trailing blank line is refused");
     Expect(!DeserialiseDoorState(Replace(text, "pw.doors/2", "pw.doors/3")).Ok(), "a wrong header is refused");
-    Expect(!DeserialiseDoorState(Replace(text, "count=23", "count=9")).Ok(), "a wrong count is refused");
-    Expect(!DeserialiseDoorState(Replace(text, "count=23", "count=023")).Ok(), "a non-canonical count is refused");
+    Expect(!DeserialiseDoorState(Replace(text, "count=26", "count=9")).Ok(), "a wrong count is refused");
+    Expect(!DeserialiseDoorState(Replace(text, "count=26", "count=026")).Ok(), "a non-canonical count is refused");
     Expect(!DeserialiseDoorState(Replace(text, "home_front,0", "home_front,2")).Ok(), "a bad flag is refused");
     Expect(!DeserialiseDoorState(Replace(text, "home_front,0", "home_front")).Ok(), "a missing flag is refused");
     Expect(!DeserialiseDoorState(Replace(text, "home_front,0", "home_nowhere,0")).Ok(), "an unknown door is refused");

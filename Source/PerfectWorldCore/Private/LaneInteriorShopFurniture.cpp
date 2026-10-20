@@ -242,6 +242,12 @@ bool FurnishWorkshop(Builder& b, const ShopFrame& f)
     }
     SfFrontDoorAnchor(b);
     const Rect floorArea{in.U0, in.U1, f.Pv1, in.V1 - SfRackDepth};
+    // R53: customers browse samples from the existing counter anchor, without entering the work floor.
+    if (!b.AddRoute("door_to_customer_counter", "front_door", "customer_counter",
+                    {{b.In.EntranceCentreU, -45}, {b.In.EntranceCentreU, f.Cv1 - SfStand / 2}, {cu, f.Cv1 - SfStand / 2}}))
+    {
+        return false;
+    }
     // Dressing: a short display of samples by the entrance side wall, cloth bolts and an offcut bin on the work floor.
     SfDress(b, f.Sales, Rect{in.U0, in.U1, in.V0, f.Cv1}, false,
             SfItem("display_samples", "asset.lane.furniture.display_table", "wood_light", FurnitureKind::Display, 80, 50, 0, 70), in.U0 + 60, in.V0 + 60);

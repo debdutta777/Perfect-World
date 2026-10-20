@@ -10,7 +10,7 @@ namespace PWLane
 {
 const LI::Anchor* FindKitBrowseAnchor(const LI::InteriorLayout& Layout)
 {
-    for (const char* Suffix : {"browse_shelf", "browse_bins"})
+    for (const char* Suffix : {"browse_shelf", "browse_bins", "customer_counter"})
     {
         if (const LI::Anchor* Anchor = LI::FindAnchor(Layout, Layout.BuildingId + ".anchor." + Suffix))
         {

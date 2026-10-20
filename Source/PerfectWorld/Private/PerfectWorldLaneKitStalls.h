@@ -11,8 +11,8 @@ struct DoorDef;
 namespace PWLane
 {
 /**
- * R4-01 production face of the three unstaffed browsing shops (market_stalls_a, market_stalls_b, end_shop): the kit's furnished
- * GeneralGoods interior (PerfectWorldLaneKitFrontages.h) plus the two things the catalogue row alone does not give them.
+ * R4-01/R53 production face of the six unstaffed browsing shops: the kit's furnished
+ * GeneralGoods/Workshop interior (PerfectWorldLaneKitFrontages.h) plus the two things the catalogue row alone does not give them.
  *
  *  1. The open stalls of the generic ground floor (BuildLaneGroundFloor, PerfectWorldLaneShops.cpp). The kit replaces that ground floor
  *     with a 25 cm wall, windows and a doorway, so a niche cannot be cut into the wall (the sales room is behind it). Each stall the
@@ -63,7 +63,7 @@ inline constexpr const TCHAR* UnstaffedPhrase = TEXT("Unstaffed. Purchasing unav
 inline constexpr const TCHAR* BrowseVerb = TEXT("Browse goods");
 } // namespace KitPublic
 
-/** The three catalogue buildings this applies to, in a stable order. The staffed hardware store and workshop are NOT among them. */
+/** The six catalogue buildings this applies to, in stable order. The staffed hardware store and repair workshop are excluded. */
 TArray<FName> UnstaffedBrowseShopIds();
 bool IsUnstaffedBrowseShop(FName BuildingId);
 

@@ -38,7 +38,11 @@ constexpr DoorOpeningWindow DoorsHardwareHours[]{{540, 780}, {900, 1200}};
 constexpr DoorOpeningWindow DoorsOldHouseVisiting[]{{960, 1170}};
 // R4-01: browsing hours, not staffed trading hours. No purchase permission follows from entering these rooms.
 constexpr DoorOpeningWindow R1BrowsingHours[]{{540, 780}, {900, 1170}};
-constexpr std::array<DoorDef, 23> DoorTable{{
+// R53: split-day cloth retail, small general shop and tailoring/sample browsing respectively. All remain unstaffed.
+constexpr DoorOpeningWindow R53ClothHours[]{{600, 780}, {900, 1200}};
+constexpr DoorOpeningWindow R53NarrowHours[]{{540, 780}, {900, 1170}};
+constexpr DoorOpeningWindow R53TailorHours[]{{600, 780}, {900, 1170}};
+constexpr std::array<DoorDef, 26> DoorTable{{
     {"door.nabapara.home_front", OpeningHome, false, DoorAccess::Private, 0, 0},
     {"door.nabapara.home_living", OpeningHome, true, DoorAccess::Public, 0, 0},
     {"door.nabapara.home_bedroom", OpeningHome, false, DoorAccess::Private, 0, 0},
@@ -62,13 +66,16 @@ constexpr std::array<DoorDef, 23> DoorTable{{
     {"door.nabapara.market_stalls_a_front", "location.nabapara.market_stalls_a", false, DoorAccess::BusinessHours, 0, 0, R1BrowsingHours, false, -1},
     {"door.nabapara.market_stalls_b_front", "location.nabapara.market_stalls_b", false, DoorAccess::BusinessHours, 0, 0, R1BrowsingHours, false, 1},
     {"door.nabapara.end_shop_front", "location.nabapara.end_shop", false, DoorAccess::BusinessHours, 0, 0, R1BrowsingHours, false, -1},
+    {"door.nabapara.cloth_merchant_front", "location.nabapara.cloth_merchant", false, DoorAccess::BusinessHours, 0, 0, R53ClothHours, false, -1},
+    {"door.nabapara.narrow_shop_front", "location.nabapara.narrow_shop", false, DoorAccess::BusinessHours, 0, 0, R53NarrowHours, false, -1},
+    {"door.nabapara.tailor_shop_front", "location.nabapara.tailor_shop", false, DoorAccess::BusinessHours, 0, 0, R53TailorHours, false, 1},
 }};
 
 // Every roster a save may hold, as a prefix length of DoorTable. /1 wrote five (2026-10-13); its reader also took the
 // full ten- and eleven-door tables of their day. /2 wrote ten (D2), eleven (stationery, LL-02 2a), sixteen (NL-01) and
-// twenty (NR-05/NR-06), then twenty-three (R4-01). Never add an arbitrary prefix: only a real edition.
-constexpr std::array<DoorRosterEdition, 8> RosterEditions{{{"pw.doors/1", 5}, {"pw.doors/1", 10}, {"pw.doors/1", 11},
-    {DoorsHeader, 10}, {DoorsHeader, 11}, {DoorsHeader, 16}, {DoorsHeader, 20}, {DoorsHeader, DoorTable.size()}}};
+// twenty (NR-05/NR-06), twenty-three (R4-01), then twenty-six (R53). Never add an arbitrary prefix: only a real edition.
+constexpr std::array<DoorRosterEdition, 9> RosterEditions{{{"pw.doors/1", 5}, {"pw.doors/1", 10}, {"pw.doors/1", 11},
+    {DoorsHeader, 10}, {DoorsHeader, 11}, {DoorsHeader, 16}, {DoorsHeader, 20}, {DoorsHeader, 23}, {DoorsHeader, DoorTable.size()}}};
 static_assert(RosterEditions.back().Count == DoorTable.size(), "today's roster is the last edition");
 
 constexpr std::array<std::string_view, DoorAccessCount> AccessIds{"public", "private", "locked", "business_hours"};

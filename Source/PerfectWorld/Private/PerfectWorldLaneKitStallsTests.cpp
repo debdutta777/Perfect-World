@@ -16,7 +16,7 @@ bool FPWKitStallsPostedHoursTest::RunTest(const FString& Parameters)
 {
     using namespace PWKitStallTest;
     const TArray<FName> Ids = UnstaffedBrowseShopIds();
-    TestEqual(TEXT("three unstaffed browsing shops"), Ids.Num(), 3);
+    TestEqual(TEXT("six unstaffed browsing shops"), Ids.Num(), 6);
     TestFalse(TEXT("the staffed hardware store is not one of them"), IsUnstaffedBrowseShop(FName(TEXT("building.nabapara.hardware_store"))));
     TestFalse(TEXT("the staffed repair workshop is not one of them"), IsUnstaffedBrowseShop(FName(TEXT("building.nabapara.repair_workshop"))));
 
@@ -35,7 +35,9 @@ bool FPWKitStallsPostedHoursTest::RunTest(const FString& Parameters)
 
         const FString Hours = PostedHoursText(*Door);
         TestEqual(*FString::Printf(TEXT("%s: the posted hours are the door's windows"), *Name), Hours, StExpectedHours(*Door));
-        TestEqual(*FString::Printf(TEXT("%s: the policy is 09:00-13:00 and 15:00-19:30"), *Name), Hours, FString(TEXT("09:00-13:00 and 15:00-19:30")));
+        const FString R53Expected = Name.EndsWith(TEXT("cloth_merchant")) ? TEXT("10:00-13:00 and 15:00-20:00")
+            : Name.EndsWith(TEXT("tailor_shop")) ? TEXT("10:00-13:00 and 15:00-19:30") : TEXT("09:00-13:00 and 15:00-19:30");
+        TestEqual(*FString::Printf(TEXT("%s: trade hours"), *Name), Hours, R53Expected);
 
         const FString Sign = PostedSignText(*Door);
         TArray<FString> Lines;
@@ -47,9 +49,9 @@ bool FPWKitStallsPostedHoursTest::RunTest(const FString& Parameters)
             TestEqual(*FString::Printf(TEXT("%s: the unstaffed line is exactly the phrase"), *Name), Lines[2],
                       FString(TEXT("Unstaffed. Purchasing unavailable.")));
         }
-        TestTrue(*FString::Printf(TEXT("%s: the board carries every required phrase"), *Name), StHasEveryRequiredPhrase(Sign));
+        TestTrue(*FString::Printf(TEXT("%s: the board carries every required phrase"), *Name), StHasEveryRequiredPhrase(Sign, *Door));
         const FString Notice = BrowseNoticeText(*Door);
-        TestTrue(*FString::Printf(TEXT("%s: the browse notice carries every required phrase"), *Name), StHasEveryRequiredPhrase(Notice));
+        TestTrue(*FString::Printf(TEXT("%s: the browse notice carries every required phrase"), *Name), StHasEveryRequiredPhrase(Notice, *Door));
         TestFalse(*FString::Printf(TEXT("%s: the board implies no buying or paying"), *Name), StImpliesCommerce(Sign));
         TestFalse(*FString::Printf(TEXT("%s: the notice implies no buying or paying"), *Name), StImpliesCommerce(Notice));
     }
@@ -153,7 +155,7 @@ bool FPWKitStallsPlanTest::RunTest(const FString& Parameters)
         }
         else
         {
-            TestTrue(TEXT("end_shop: shutter bays, no stalls to keep"), Generic.IsEmpty() && Plan.IsEmpty());
+            TestTrue(TEXT("shutter bays: no stalls to keep"), Generic.IsEmpty() && Plan.IsEmpty());
         }
     }
     return true;
