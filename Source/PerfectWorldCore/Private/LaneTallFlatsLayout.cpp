@@ -59,6 +59,10 @@ T6LI::InteriorLayout T6Dwelling()
     entrance.HingeU = 627;
     entrance.HingeV = 668;
     entrance.SweepSign = 1;
+    entrance.Kind = T6LI::OpeningKind::Door;
+    entrance.DoorId = UpperDoorId;
+    l.Zones.push_back({in.BuildingId + ".zone.upper_door_sweep", T6LI::ZoneKind::DoorSweep,
+                       sleepingId, {640, 730, 668, 762}, entrance.Id});
     for (auto& c : l.Connections) if (c.OpeningId == entrance.Id) c.RoomB = sleepingId;
 
     // Split the west wall around the new 94 x 212 rough opening (90 x 210 clear).

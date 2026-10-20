@@ -26,6 +26,8 @@ const FCastRow NlCast[] = {
     {TEXT("person.purnima_das"), 155.0, ELook::Purnima},      // R4-06: travelling vendor; saffron head-wrap, green shawl, money pouch
     {TEXT("person.arun_paul"), 176.0, ELook::Arun},           // R4-06: passer-by; side parting, blue office shirt, messenger bag
     {TEXT("person.rekha_bose"), 161.0, ELook::Rekha},         // R4-06: passer-by; long plait, rose saree, furled umbrella
+    {TEXT("person.prabir_chatterjee"), 169.0, ELook::Prabir}, // R52: narrow, silver thinning hair, slate short kurta, glasses
+    {TEXT("person.ishita_banerjee"), 165.0, ELook::Ishita},    // R52: short curls, teal kurta, canvas shoulder bag
 };
 
 void NlLegacyHouseholdAdult(const double H, TArray<FPWNpcBlock>& Out)
@@ -107,6 +109,8 @@ FSilhouette NlSilhouetteOfLook(const ELook Look, const EPWNpcOutfit Outfit)
     case ELook::Purnima: return {EHair::HeadWrap, EGarment::ShawlWrap, EAccessory::MoneyPouch, EBuild::Broad};
     case ELook::Arun: return {EHair::SidePart, EGarment::OfficeShirt, EAccessory::MessengerBag, EBuild::Medium};
     case ELook::Rekha: return {EHair::LongPlait, EGarment::Saree, EAccessory::Umbrella, EBuild::Slight};
+    case ELook::Prabir: return {EHair::Thinning, EGarment::Kurta, EAccessory::Glasses, EBuild::Slight};
+    case ELook::Ishita: return {EHair::ShortCurls, EGarment::Kurta, EAccessory::ClothBag, EBuild::Medium};
     default: break;
     }
     switch (Outfit)

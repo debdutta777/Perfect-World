@@ -62,6 +62,8 @@ const FRosterPerson RosterPeople[] = {
     {TEXT("person.rekha_bose"), TEXT("Rekha Bose"), 161.0, EPWNpcOutfit::HouseholdAdult, false, true, true, TEXT(""), 0},
     {TEXT("person.debashis_pal"), TEXT("Debashis"), 171.0, EPWNpcOutfit::ShopProprietor, false, true, true, TEXT(""), 0},
     {TEXT("person.mahua_saha"), TEXT("Mahua"), 162.0, EPWNpcOutfit::ShopProprietor, false, true, true, TEXT(""), 0},
+    {TEXT("person.prabir_chatterjee"), TEXT("Prabir Chatterjee"), 169.0, EPWNpcOutfit::HouseholdAdult, false, true, true, TEXT(""), 0},
+    {TEXT("person.ishita_banerjee"), TEXT("Ishita Banerjee"), 165.0, EPWNpcOutfit::ParentHousehold, false, true, true, TEXT(""), 0},
 };
 
 constexpr double PlayerCapsuleHalf = 82.5; // SCALE_AUDIT: the walking player is 165 cm tall and 68 cm wide
