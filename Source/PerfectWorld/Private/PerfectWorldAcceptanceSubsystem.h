@@ -172,6 +172,8 @@ void AppendJournalStateSteps(TArray<FStepDef>& OutSteps);
 void AppendJournalTodaySteps(TArray<FStepDef>& OutSteps);
 /** R5-02: real home visits in both cameras and a fresh-process agreement Continue pair. */
 void AppendHomesRound5Steps(TArray<FStepDef>& OutSteps);
+/** R5-03: the next three browsing frontages; fresh-process restart pair (PerfectWorldAcceptanceFrontagesR5.cpp). */
+void AppendFrontagesRound5Steps(TArray<FStepDef>& OutSteps);
 /** R4-01: the three unstaffed browsing frontages (market_stalls_a, market_stalls_b, end_shop); a fresh-process pair (PerfectWorldAcceptanceFrontagesR4.cpp). */
 void AppendFrontagesRound4Steps(TArray<FStepDef>& OutSteps);
 

@@ -503,6 +503,11 @@ bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps)
         AppendHomesRound5Steps(OutSteps);
         return true;
     }
+    if (Name == TEXT("frontages_round5"))
+    {
+        AppendFrontagesRound5Steps(OutSteps);
+        return true;
+    }
     if (Name == TEXT("stationery_shift"))
     {
         AppendStationeryShiftSteps(OutSteps);

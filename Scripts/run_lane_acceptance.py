@@ -22,7 +22,7 @@ import zlib
 ROOT = Path(__file__).resolve().parents[1]
 NAME = re.compile(r'[a-z0-9_]{1,64}\Z')
 # Scenarios that are a fresh-process pair (explicit new, then continue, one shared slot). Each must read its own original save.
-RESTART_PAIR_SCENARIOS = ('save_restart', 'frontages_round4', 'journal_state', 'journal_today', 'homes_round5')
+RESTART_PAIR_SCENARIOS = ('save_restart', 'frontages_round4', 'journal_state', 'journal_today', 'homes_round5', 'frontages_round5')
 FLAGS = ['-RenderOffScreen', '-unattended', '-nosplash', '-nosound',
          '-windowed', '-ResX=1280', '-ResY=720', '-log']
 
