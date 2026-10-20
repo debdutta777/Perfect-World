@@ -4,6 +4,8 @@
 // the collision boxes; the last test spawns the actors in a throw-away world (play never begins).
 // Run in the editor under "PerfectWorld.KitStalls" (Session Frontend, or the Unreal MCP AutomationTestToolset).
 
+#include "PerfectWorldLaneKitStalls.h"
+
 #include "Misc/AutomationTest.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -133,6 +135,9 @@ bool FPWKitStallsBrowseTest::RunTest(const FString& Parameters)
                   FName(*(FString(TEXT("interaction.nabapara.")) + R53Name + TEXT(".browse"))));
     }
     TestEqual(TEXT("tag, end_shop"), BrowseActorTag(FName(TEXT("building.nabapara.end_shop"))), FName(TEXT("interaction.nabapara.end_shop.browse")));
+    TestEqual(TEXT("R61 corner browse tag"), BrowseActorTag(FName(TEXT("building.nabapara.corner_stalls"))), FName(TEXT("interaction.nabapara.corner_stalls.browse")));
+    for (const TCHAR* R61Home : {TEXT("building.nabapara.alley_house"), TEXT("building.nabapara.stair_flats")})
+        TestFalse(TEXT("R61 homes receive no displays"), IsUnstaffedBrowseShop(FName(R61Home)));
     TestTrue(TEXT("an id that is not a building has no tag"), BrowseActorTag(FName(TEXT("door.nabapara.end_shop_front"))).IsNone());
 
     // The scenario is registered and well formed.
@@ -168,20 +173,20 @@ bool FPWKitStallsBrowseTest::RunTest(const FString& Parameters)
         AddError(TEXT("no test world"));
         return false;
     }
-    TestEqual(TEXT("all six shops are served"), SpawnKitShopDisplays(*Holder.World, Scene), 6);
+    TestEqual(TEXT("all seven shops are served"), SpawnKitShopDisplays(*Holder.World, Scene), 7);
 
     int32 BrowseActors = 0;
     for (TActorIterator<APWShopBrowseActor> It(Holder.World); It; ++It)
     {
         ++BrowseActors;
     }
-    TestEqual(TEXT("exactly six browse actors (the staffed shops get none)"), BrowseActors, 6);
+    TestEqual(TEXT("exactly seven browse actors (the staffed shops get none)"), BrowseActors, 7);
     int32 SignActors = 0;
     for (TActorIterator<APWShopHoursSignActor> It(Holder.World); It; ++It)
     {
         ++SignActors;
     }
-    TestEqual(TEXT("exactly six hours signs"), SignActors, 6);
+    TestEqual(TEXT("exactly seven hours signs"), SignActors, 7);
 
     FActorSpawnParameters Spawn;
     Spawn.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;

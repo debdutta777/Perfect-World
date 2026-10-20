@@ -735,3 +735,8 @@ add_executable(PerfectWorldNpcBehaviourRegressionTests Tests/NpcBehaviourRegress
 target_link_libraries(PerfectWorldNpcBehaviourRegressionTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldNpcBehaviourRegressionTests COMMAND PerfectWorldNpcBehaviourRegressionTests
     ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule)
+
+# R61: the last three side frontages and explicit 26 -> 29 door migration.
+add_executable(PerfectWorldDoorsRoster29Tests Tests/DoorsRoster29Tests.cpp)
+target_link_libraries(PerfectWorldDoorsRoster29Tests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldDoorsRoster29Tests COMMAND PerfectWorldDoorsRoster29Tests)

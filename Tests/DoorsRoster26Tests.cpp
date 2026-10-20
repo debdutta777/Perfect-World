@@ -43,7 +43,7 @@ std::string R53Text(const DoorState& state, std::size_t count)
 void R53DefinitionsAndAccess()
 {
     const auto doors = AuthoredDoors();
-    R53Expect(doors.size() == 26 && ValidateDoorTable(), "twenty-six valid doors");
+    R53Expect(doors.size() == 29 && ValidateDoorTable(), "twenty-six-door prefix in the current valid roster");
     for (std::size_t i = 0; i < R53FrozenIds.size(); ++i)
         R53Expect(doors[i].Id == R53FrozenIds[i], "the frozen twenty-three-door prefix and append order");
     const std::array<std::string_view, 3> locations{
@@ -101,7 +101,7 @@ void R53Migration()
     for (std::size_t count = 0; count <= 27; ++count)
     {
         const auto result = DeserialiseDoorState(R53Text(played, count));
-        const bool realEdition = count == 10 || count == 11 || count == 16 || count == 20 || count == 23 || count == 26;
+        const bool realEdition = count == 10 || count == 11 || count == 16 || count == 20 || count == 23 || count == 26 || count == 29;
         R53Expect(result.Ok() == realEdition, "only real /2 roster editions accepted");
         if (!realEdition) R53Expect(result.State == DoorState{} && !result.bMigrated, "invalid roster publishes no state");
     }

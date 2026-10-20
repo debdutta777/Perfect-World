@@ -8,7 +8,7 @@ class UWorld;
 namespace PWLane
 {
 /**
- * Spawns the production actors of the six unstaffed browsing shops (R4-01/R53), once the lane is committed: for each shop whose kit front
+ * Spawns the production actors of the seven unstaffed browsing shops (R4-01/R53/R61), once the lane is committed: for each shop whose kit front
  * door was built into the scene, an APWShopBrowseActor at the interaction point of its browse anchor (tag
  * "interaction.nabapara.<name>.browse", verb "Browse goods", notice from the front door's core hours) and an APWShopHoursSignActor with
  * the same hours on the board over the door. Every position comes from the portable layout through the building's frame. A shop whose
