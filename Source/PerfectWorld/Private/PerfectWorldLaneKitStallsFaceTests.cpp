@@ -127,6 +127,11 @@ bool FPWKitStallsBrowseTest::RunTest(const FString& Parameters)
     // The acceptance binding contract, spelled out.
     TestEqual(TEXT("tag, market_stalls_a"), BrowseActorTag(FName(TEXT("building.nabapara.market_stalls_a"))), FName(TEXT("interaction.nabapara.market_stalls_a.browse")));
     TestEqual(TEXT("tag, market_stalls_b"), BrowseActorTag(FName(TEXT("building.nabapara.market_stalls_b"))), FName(TEXT("interaction.nabapara.market_stalls_b.browse")));
+    for (const TCHAR* R53Name : {TEXT("cloth_merchant"), TEXT("narrow_shop"), TEXT("tailor_shop")})
+    {
+        TestEqual(TEXT("round5 browse tag"), BrowseActorTag(FName(*(FString(TEXT("building.nabapara.")) + R53Name))),
+                  FName(*(FString(TEXT("interaction.nabapara.")) + R53Name + TEXT(".browse"))));
+    }
     TestEqual(TEXT("tag, end_shop"), BrowseActorTag(FName(TEXT("building.nabapara.end_shop"))), FName(TEXT("interaction.nabapara.end_shop.browse")));
     TestTrue(TEXT("an id that is not a building has no tag"), BrowseActorTag(FName(TEXT("door.nabapara.end_shop_front"))).IsNone());
 
@@ -163,20 +168,20 @@ bool FPWKitStallsBrowseTest::RunTest(const FString& Parameters)
         AddError(TEXT("no test world"));
         return false;
     }
-    TestEqual(TEXT("all three shops are served"), SpawnKitShopDisplays(*Holder.World, Scene), 3);
+    TestEqual(TEXT("all six shops are served"), SpawnKitShopDisplays(*Holder.World, Scene), 6);
 
     int32 BrowseActors = 0;
     for (TActorIterator<APWShopBrowseActor> It(Holder.World); It; ++It)
     {
         ++BrowseActors;
     }
-    TestEqual(TEXT("exactly three browse actors (the staffed shops get none)"), BrowseActors, 3);
+    TestEqual(TEXT("exactly six browse actors (the staffed shops get none)"), BrowseActors, 6);
     int32 SignActors = 0;
     for (TActorIterator<APWShopHoursSignActor> It(Holder.World); It; ++It)
     {
         ++SignActors;
     }
-    TestEqual(TEXT("exactly three hours signs"), SignActors, 3);
+    TestEqual(TEXT("exactly six hours signs"), SignActors, 6);
 
     FActorSpawnParameters Spawn;
     Spawn.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -200,6 +205,12 @@ bool FPWKitStallsBrowseTest::RunTest(const FString& Parameters)
         if (Anchor == nullptr || Entrance == nullptr)
         {
             AddError(FString::Printf(TEXT("%s: no browse anchor or entrance in the layout"), *Name));
+            continue;
+        }
+        const PerfectWorld::DoorDef* R53Door = PerfectWorld::FindDoor(Kit.Entry->EntranceDoorId);
+        if (R53Door == nullptr)
+        {
+            AddError(FString::Printf(TEXT("%s: no front door definition"), *Name));
             continue;
         }
         const FName Tag = BrowseActorTag(FName(Shop));
@@ -246,7 +257,7 @@ bool FPWKitStallsBrowseTest::RunTest(const FString& Parameters)
         {
             Found->Interact(Player);
             const FString Notice = Interaction->GetNotice().ToString();
-            TestTrue(*FString::Printf(TEXT("%s: Interact shows a notice with the hours, Unstaffed and Purchasing unavailable"), *Name), StHasEveryRequiredPhrase(Notice));
+            TestTrue(*FString::Printf(TEXT("%s: Interact shows a notice with the hours, Unstaffed and Purchasing unavailable"), *Name), StHasEveryRequiredPhrase(Notice, *R53Door));
             TestFalse(*FString::Printf(TEXT("%s: the notice implies no buying or paying"), *Name), StImpliesCommerce(Notice));
         }
 
@@ -264,8 +275,7 @@ bool FPWKitStallsBrowseTest::RunTest(const FString& Parameters)
             AddError(FString::Printf(TEXT("%s: no hours sign"), *Name));
             continue;
         }
-        const PerfectWorld::DoorDef* Door = PerfectWorld::FindDoor(Kit.Entry->EntranceDoorId);
-        TestTrue(*FString::Printf(TEXT("%s: the sign's text is the door's board text"), *Name), Door != nullptr && Sign->GetPostedText() == PostedSignText(*Door));
+        TestTrue(*FString::Printf(TEXT("%s: the sign's text is the door's board text"), *Name), Sign->GetPostedText() == PostedSignText(*R53Door));
         TestTrue(*FString::Printf(TEXT("%s: the sign faces the footpath"), *Name), FVector::DotProduct(Sign->GetActorForwardVector(), -B.Frame.V) > 0.99);
         const double DoorU = 0.5 * (Entrance->Plan.U0 + Entrance->Plan.U1);
         TestTrue(*FString::Printf(TEXT("%s: the sign is over the door"), *Name), Sign->GetActorLocation().Equals(KitSignLocation(B, DoorU), 0.1));

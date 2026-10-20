@@ -59,6 +59,10 @@ T6LI::InteriorLayout T6Dwelling()
     entrance.HingeU = 627;
     entrance.HingeV = 668;
     entrance.SweepSign = 1;
+    entrance.Kind = T6LI::OpeningKind::Door;
+    entrance.DoorId = UpperDoorId;
+    l.Zones.push_back({in.BuildingId + ".zone.upper_door_sweep", T6LI::ZoneKind::DoorSweep,
+                       sleepingId, {640, 730, 668, 762}, entrance.Id});
     for (auto& c : l.Connections) if (c.OpeningId == entrance.Id) c.RoomB = sleepingId;
 
     // Split the west wall around the new 94 x 212 rough opening (90 x 210 clear).
@@ -123,8 +127,11 @@ Layout GenerateLayout()
     return out;
 }
 
+// R5-01: the resident, Ishita Banerjee, receives visitors 16:00-19:30, as the old house does.
+constexpr DoorOpeningWindow T6UpperVisiting[]{{960, 1170}};
+
 DoorDef PlannedUpperDoor() noexcept
 {
-    return {UpperDoorId, UpperLocationId, false, DoorAccess::Private, 0, 0, {}, false, 1, {}};
+    return {UpperDoorId, UpperLocationId, false, DoorAccess::Private, 0, 0, {}, false, 1, T6UpperVisiting};
 }
 } // namespace PerfectWorld::LaneTallFlats

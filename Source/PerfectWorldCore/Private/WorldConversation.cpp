@@ -65,11 +65,12 @@ std::optional<ConversationCatalogue> ConversationCatalogueForPerson(std::string_
 {
     if (personId.empty())
         return std::nullopt;
-    const std::array<ConversationCatalogue, 12> catalogues = {HouseholdConversationCatalogue(), CareConversationCatalogue(),
+    const std::array<ConversationCatalogue, 14> catalogues = {HouseholdConversationCatalogue(), CareConversationCatalogue(),
                                                              FaridaConversationCatalogue(), AninditaConversationCatalogue(),
                                                              MiraConversationCatalogue(), SubrataConversationCatalogue(), NirmalConversationCatalogue(),
                                                              RupaConversationCatalogue(), SahanaConversationCatalogue(), AmbientConversationCatalogue(),
-                                                             DebashisConversationCatalogue(), MahuaConversationCatalogue()};
+                                                             DebashisConversationCatalogue(), MahuaConversationCatalogue(),
+                                                             PrabirConversationCatalogue(), IshitaConversationCatalogue()};
     for (const ConversationCatalogue& catalogue : catalogues)
     {
         const bool speaks = std::any_of(catalogue.Nodes.begin(), catalogue.Nodes.end(),

@@ -65,8 +65,8 @@ FStepDef HmHostTruthStep(const FString& Name, const bool bExpectA, const bool bE
         Presence->Reconcile(Life->GetNow());
         const bool bSchedA = HmAnyHomeBySchedule(World, *A, Life->GetNow());
         const bool bSchedB = HmAnyHomeBySchedule(World, *B, Life->GetNow());
-        const bool bLiveA = Life->IsHostHome(*A);
-        const bool bLiveB = Life->IsHostHome(*B);
+        const bool bLiveA = Life->IsHostHomeForAcceptance(*A);
+        const bool bLiveB = Life->IsHostHomeForAcceptance(*B);
         const FString Text = FString::Printf(TEXT("%s: unit A host home %d (schedule %d), unit B host home %d (schedule %d)"), *Life->GetClockText().ToString(), bLiveA, bSchedA, bLiveB, bSchedB);
         if (bSchedA != bExpectA || bSchedB != bExpectB || bLiveA != bSchedA || bLiveB != bSchedB) { return FStepOutcome::Fail(Text + TEXT("; expected A ") + FString::FromInt(bExpectA) + TEXT(", B ") + FString::FromInt(bExpectB)); }
         return FStepOutcome::Pass(Text);

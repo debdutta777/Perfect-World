@@ -164,6 +164,9 @@ struct ConversationCatalogue
 [[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue DebashisConversationCatalogue() noexcept;
 /** Mahua Saha's catalogue (person.mahua_saha, ConversationMahua.cpp). */
 [[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue MahuaConversationCatalogue() noexcept;
+/** Prabir Chatterjee's and Ishita Banerjee's catalogues (R5-01, ConversationResidentsR5.cpp). */
+[[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue PrabirConversationCatalogue() noexcept;
+[[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue IshitaConversationCatalogue() noexcept;
 /** The default catalogue's nodes. */
 [[nodiscard]] PERFECTWORLDCORE_API std::span<const ConversationNodeDef> ConversationNodes() noexcept;
 

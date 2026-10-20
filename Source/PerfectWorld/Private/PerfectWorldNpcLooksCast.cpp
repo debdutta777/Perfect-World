@@ -369,6 +369,46 @@ void NlR4Rekha(const double H, TArray<FPWNpcBlock>& Out)
     PutBlock(Out, FVector(0.0, -31.5, 0.24 * H - 2.0), FVector(1.6, 1.6, 4.0), Metal, EPWNpcPartGroup::ArmLeft, Shoulder);  // and a metal tip
     AppendFace(H, 0.0, Out);
 }
+void R52PrabirLook(const double H, TArray<FPWNpcBlock>& Out)
+{
+    FNlFigure F;
+    F.Skin = F.Forearm = FColor(172, 126, 94);
+    F.Legs = FColor(226, 216, 187); F.Top = F.Sleeves = FColor(82, 105, 134);
+    F.LegW = 12.5; F.LegOff = 8; F.TorsoX = 18; F.TorsoY = 36; F.ArmOff = 23; F.ArmT = 10;
+    NlAddFigure(F, H, Out);
+    const FColor Slate(82, 105, 134), Silver(202, 199, 194), Frame(70, 60, 50);
+    PutBlock(Out, FVector(0, 0, 0.50 * H), FVector(21, 37, 0.20 * H), Slate); // short kurta hem
+    PutBlock(Out, FVector(10, 0, 0.73 * H), FVector(2, 3, 0.12 * H), FColor(214, 210, 197));
+    // Receding crown: silver side strips, no solid cap covering the forehead.
+    for (const double Side : {-1.0, 1.0})
+    {
+        PutBlock(Out, FVector(-2, Side * 10, H - 7), FVector(18, 3, 12), Silver);
+        PutBlock(Out, FVector(11, Side * 5, H - 0.075 * H), FVector(1.5, 8, 6), Frame);
+    }
+    PutBlock(Out, FVector(-10, 0, H - 5), FVector(3, 19, 8), Silver);
+    PutBlock(Out, FVector(11, 0, H - 0.075 * H), FVector(1.5, 3, 1.5), Frame);
+    AppendFace(H, 0, Out);
+}
+
+void R52IshitaLook(const double H, TArray<FPWNpcBlock>& Out)
+{
+    FNlFigure F;
+    F.Skin = F.Forearm = FColor(191, 143, 105);
+    F.Legs = FColor(52, 55, 61); F.Top = F.Sleeves = FColor(46, 119, 116);
+    F.TorsoY = 41; F.ArmOff = 26; F.ArmT = 11;
+    NlAddFigure(F, H, Out);
+    const FColor Teal(46, 119, 116), Hair(38, 30, 32), Canvas(182, 166, 125);
+    PutBlock(Out, FVector(0, 0, 0.48 * H), FVector(24, 42, 0.30 * H), Teal);
+    // Small staggered blocks read as short curls; their upper edges stay below the authored crown.
+    for (const double X : {-7.0, 0.0, 7.0})
+        for (const double Y : {-8.0, 0.0, 8.0})
+            PutBlock(Out, FVector(X, Y, H - 3.5 - (X == 0 ? 0 : 1)), FVector(8, 9, 7), Hair);
+    PutBlock(Out, FVector(-9, 0, H - 11), FVector(6, 23, 16), Hair);
+    PutBlock(Out, FVector(-2, 29, 0.40 * H), FVector(11, 8, 24), Canvas);
+    PutBlock(Out, FVector(11, 12, 0.64 * H), FVector(1.5, 4, 0.34 * H), Canvas);
+    PutBlock(Out, FVector(-11, 12, 0.64 * H), FVector(1.5, 4, 0.34 * H), Canvas);
+    AppendFace(H, 0, Out);
+}
 } // namespace
 
 bool AppendCastLook(const ELook Look, const double H, TArray<FPWNpcBlock>& Out)
@@ -386,6 +426,8 @@ bool AppendCastLook(const ELook Look, const double H, TArray<FPWNpcBlock>& Out)
     case ELook::Purnima: NlR4Purnima(H, Out); return true;
     case ELook::Arun: NlR4Arun(H, Out); return true;
     case ELook::Rekha: NlR4Rekha(H, Out); return true;
+    case ELook::Prabir: R52PrabirLook(H, Out); return true;
+    case ELook::Ishita: R52IshitaLook(H, Out); return true;
     default: return false;
     }
 }

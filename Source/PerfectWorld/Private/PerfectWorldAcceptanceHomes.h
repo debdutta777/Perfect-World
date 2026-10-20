@@ -2,9 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "PerfectWorldAcceptanceSubsystem.h"
+#include "NpcScheduleContent.h"
 #include "WorldState.h"
 
-namespace PerfectWorld { class ContentDb; struct DoorDef; struct NpcSchedule; }
+namespace PerfectWorld { class ContentDb; struct DoorDef; }
 class APWDoorActor;
 
 // Shared pieces of the resident_homes scenario (NR-03): the door and clock steps live in PerfectWorldAcceptanceHomesDoors.cpp, the

@@ -3,6 +3,7 @@
 #include "LaneFrontageCatalogue.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <iostream>
 
@@ -45,7 +46,10 @@ bool T6BodyClearsSlab(const T6TF::Layout& l)
 // cannot detect an opening moved away from its partition or a furnishing across the walking line.
 bool T6UpperWalkClear(const T6TF::Layout& l)
 {
-    const std::vector<T6LI::RoutePoint> path{{550, 715}, {715, 715}, {715, 500}, {965, 500}, {965, 300}};
+    const auto* R52Bed = T6LI::FindAnchor(l.Upper, l.Upper.BuildingId + ".anchor.bed_side");
+    if (!R52Bed) return false;
+    const std::vector<T6LI::RoutePoint> path{{550, 715}, {715, 715}, {715, 500},
+        {R52Bed->U, 500}, {R52Bed->U, R52Bed->V}, {R52Bed->U, 500}, {965, 500}, {965, 300}};
     const int radius = l.Stair.Scale.CapsuleRadiusCm;
     for (size_t i = 1; i < path.size(); ++i)
     {
@@ -92,6 +96,47 @@ int main()
     T6Expect(T6LI::ValidateInteriorLayout(l.Ground) == T6LI::Refusal::None, "ground circulation and both unit connections");
     T6Expect(T6LI::ValidateInteriorLayout(l.Upper) == T6LI::Refusal::None, "upper room graph, furniture, anchors and circulation");
     T6Expect(l.Upper.Rooms.size() == 2 && !l.Upper.Pieces.empty() && l.Upper.Lights.size() >= 2, "furnished two-room Residence with lights");
+    for (const auto& R52Anchor : l.Upper.Anchors)
+        std::cout << "R52 upper anchor " << R52Anchor.Id << " U" << R52Anchor.U << " V" << R52Anchor.V << '\n';
+    const auto* R52Bed = T6LI::FindAnchor(l.Upper, l.Upper.BuildingId + ".anchor.bed_side");
+    T6Expect(R52Bed != nullptr, "R52 real resident standing anchor");
+    double R52Length = std::abs(R52Bed->V - 500) + std::abs(R52Bed->U - 715) + 215 + 165 + 60;
+    double R52V = 655, R52Z = l.Stair.UpperFloorCm;
+    for (auto R52It = l.Stair.Steps.rbegin(); R52It != l.Stair.Steps.rend(); ++R52It)
+    {
+        const double R52NextZ = l.Stair.LowerFloorCm + R52It->TopMm * 0.1;
+        R52Length += std::hypot(R52V - R52It->Plan.V0, R52Z - R52NextZ);
+        R52V = R52It->Plan.V0; R52Z = R52NextZ;
+    }
+    R52Length += std::hypot(R52V - 195, R52Z - l.Stair.LowerFloorCm) + 240;
+    std::cout << "R52 upper-to-front polyline " << R52Length << " cm; allowance 1680 cm\n";
+    T6Expect(R52Length <= 1680 && std::abs(R52Length - 1639.14153793) < 1,
+        "R52 complete bed-side, side-opening, landing, nosings and shared-front route fits allowance");
+    const auto* R52OldRow = T6LI::FindFrontageById("building.nabapara.old_house");
+    T6Expect(R52OldRow != nullptr, "R52 old-house catalogue row");
+    const auto R52Old = T6LI::GenerateInteriorLayout(T6LI::MakeFrontageInput(*R52OldRow, 15, 300));
+    const auto* R52OldBed = T6LI::FindAnchor(R52Old, R52Old.BuildingId + ".anchor.bed_side");
+    T6Expect(R52Old.Ok() && R52OldBed != nullptr, "R52 Prabir real standing anchor");
+    const std::vector<T6LI::RoutePoint> R52OldPath{{R52OldBed->U, R52OldBed->V}, {250, R52OldBed->V}, {250, 365}, {250, -45}};
+    int R52OldLength = 0;
+    for (size_t R52Index = 1; R52Index < R52OldPath.size(); ++R52Index)
+    {
+        const auto R52From = R52OldPath[R52Index - 1], R52To = R52OldPath[R52Index];
+        const int R52Span = std::abs(R52To.U - R52From.U) + std::abs(R52To.V - R52From.V);
+        R52OldLength += R52Span;
+        for (int R52Along = 0; R52Along <= R52Span; ++R52Along)
+        {
+            const int R52U = R52From.U + (R52To.U - R52From.U) * R52Along / std::max(1, R52Span);
+            const int R52Depth = R52From.V + (R52To.V - R52From.V) * R52Along / std::max(1, R52Span);
+            const T6LI::Rect R52Body{R52U - 34, R52U + 34, R52Depth - 34, R52Depth + 34};
+            for (const auto& R52Wall : R52Old.Walls)
+                T6Expect(R52Wall.W0 >= 169 || !R52Wall.Plan.Overlaps(R52Body), "R52 Prabir route clears real walls and head");
+            for (const auto& R52Piece : R52Old.Pieces)
+                T6Expect(!R52Piece.Solid || !R52Piece.Footprint.Overlaps(R52Body), "R52 Prabir route clears solid furniture");
+        }
+    }
+    std::cout << "R52 old-house bed U" << R52OldBed->U << " V" << R52OldBed->V << "; visible route " << R52OldLength
+              << " cm; authored errand allowance 1680 cm\n";
     T6Expect(T6UpperWalkClear(l), "both upper rooms physically reachable from the supported landing with a full capsule");
     auto obstructed = l;
     obstructed.Upper.Walls.push_back({"t6.block", "t6.partition", {640, 660, 668, 762}, 0, 210});
@@ -133,7 +178,25 @@ int main()
         if (z.Kind == T6LI::ZoneKind::Circulation) T6Expect(std::min(z.Area.Width(), z.Area.Depth()) >= 120, "upper circulation 120 minimum");
     for (const auto& o : l.Upper.Openings)
         if (o.Kind != T6LI::OpeningKind::Window)
-            T6Expect(o.ClearWidthCm >= 90 && o.W1 - o.W0 >= 210 && o.DoorId.empty(), "90 by 210 clear doorways remain unhung");
+        {
+            T6Expect(o.ClearWidthCm >= 90 && o.W1 - o.W0 >= 210, "90 by 210 clear doorways");
+            if (o.RoomA == "outside")
+                T6Expect(o.Kind == T6LI::OpeningKind::Door && o.DoorId == T6TF::UpperDoorId &&
+                         o.Plan == T6LI::Rect{615, 640, 668, 762} && o.HingeU == 627 && o.HingeV == 668 &&
+                         o.SweepSign == 1, "R52 existing upper door hangs on real side opening into sleeping room");
+            else T6Expect(o.DoorId.empty(), "R52 internal doorway remains unhung");
+        }
+    T6Expect(std::count_if(l.Upper.Openings.begin(), l.Upper.Openings.end(), [](const auto& o) {
+        return o.DoorId == T6TF::UpperDoorId;
+    }) == 1, "R52 exactly one upper door");
+    T6Expect(std::any_of(l.Upper.Zones.begin(), l.Upper.Zones.end(), [](const auto& z) {
+        return z.Kind == T6LI::ZoneKind::DoorSweep && z.Area == T6LI::Rect{640, 730, 668, 762};
+    }), "R52 side-door sweep reserved inside dwelling");
+    auto R52BlockedSweep = l.Upper;
+    R52BlockedSweep.Pieces.push_back({"r52.obstruction", "asset.lane.furniture.trunk", "wood_light",
+        "building.nabapara.tall_flats.upper_a.room.sleeping", T6LI::FurnitureKind::Trunk,
+        {650, 680, 690, 720}, 0, 80, true});
+    T6Expect(T6LI::ValidateInteriorLayout(R52BlockedSweep) != T6LI::Refusal::None, "R52 furniture cannot occupy side-door sweep");
     T6LS::StairInput in;
     in.StairId = "stair.t6.limit";
     in.Footprint = {485, 615, 176, 775};
@@ -153,6 +216,7 @@ int main()
     const auto door = T6TF::PlannedUpperDoor();
     T6Expect(door.Id == T6TF::UpperDoorId && door.LocationId == T6TF::UpperLocationId && !door.bInitiallyOpen &&
              door.Access == PerfectWorld::DoorAccess::Private && door.OpenMinute == 0 && door.CloseMinute == 0 && door.OpeningWindows.empty() &&
-             !door.bTwoWay && door.PreferredSwingSide == 1 && door.VisitingWindows.empty(), "exact unoccupied planned private door definition");
+             !door.bTwoWay && door.PreferredSwingSide == 1 && door.VisitingWindows.size() == 1 && door.VisitingWindows[0].OpenMinute == 960 &&
+             door.VisitingWindows[0].CloseMinute == 1170, "exact planned private door definition, receiving 16:00-19:30 (R5-01)");
     std::cout << "LaneTallFlatsLayout: " << T6Assertions << " assertions passed\n";
 }

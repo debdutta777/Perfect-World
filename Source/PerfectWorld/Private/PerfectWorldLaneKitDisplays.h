@@ -8,7 +8,7 @@ class UWorld;
 namespace PWLane
 {
 /**
- * Spawns the production actors of the three unstaffed browsing shops (R4-01), once the lane is committed: for each shop whose kit front
+ * Spawns the production actors of the six unstaffed browsing shops (R4-01/R53), once the lane is committed: for each shop whose kit front
  * door was built into the scene, an APWShopBrowseActor at the interaction point of its browse anchor (tag
  * "interaction.nabapara.<name>.browse", verb "Browse goods", notice from the front door's core hours) and an APWShopHoursSignActor with
  * the same hours on the board over the door. Every position comes from the portable layout through the building's frame. A shop whose
@@ -19,7 +19,7 @@ namespace PWLane
  */
 int32 SpawnKitShopDisplays(UWorld& World, const FLaneScene& Scene);
 
-/** The anchor a customer browses from: browse_shelf, else browse_bins (the order the core furnishes them and the scenario looks for them); nullptr when neither. */
+/** Customer browse anchor: browse_shelf, browse_bins, then the Workshop customer_counter (R53). Null when none resolves. */
 const LI::Anchor* FindKitBrowseAnchor(const LI::InteriorLayout& Layout);
 
 /** World point of the browse interaction: KitPublic::BrowseReachCm from the stand anchor toward what it faces, KitPublic::BrowseHeightCm above the floor. */

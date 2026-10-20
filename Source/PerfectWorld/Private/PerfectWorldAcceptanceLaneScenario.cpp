@@ -493,6 +493,21 @@ bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps)
         AppendJournalStateSteps(OutSteps);
         return true;
     }
+    if (Name == TEXT("journal_today"))
+    {
+        AppendJournalTodaySteps(OutSteps);
+        return true;
+    }
+    if (Name == TEXT("homes_round5"))
+    {
+        AppendHomesRound5Steps(OutSteps);
+        return true;
+    }
+    if (Name == TEXT("frontages_round5"))
+    {
+        AppendFrontagesRound5Steps(OutSteps);
+        return true;
+    }
     if (Name == TEXT("stationery_shift"))
     {
         AppendStationeryShiftSteps(OutSteps);

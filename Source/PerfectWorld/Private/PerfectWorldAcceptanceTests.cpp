@@ -9,6 +9,9 @@
 
 #include "Engine/GameInstance.h"
 #include "HAL/FileManager.h"
+// The core's JSON reader. A bare "Json.h" can resolve to the engine's Json module header in a unity blob; ContentRegistry.h
+// includes the core one from its own directory, so this always reaches PerfectWorld::ParseJson.
+#include "ContentRegistry.h"
 #include "Json.h"
 #include "Misc/CommandLine.h"
 #include "Misc/FileHelper.h"

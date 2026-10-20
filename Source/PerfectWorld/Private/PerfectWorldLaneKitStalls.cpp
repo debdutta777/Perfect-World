@@ -23,7 +23,8 @@ constexpr int32 KsShelfRows = 3;
 constexpr TCHAR KsBuildingPrefix[] = TEXT("building.nabapara.");
 
 const TCHAR* const KsShopIds[] = {TEXT("building.nabapara.market_stalls_a"), TEXT("building.nabapara.market_stalls_b"),
-                                  TEXT("building.nabapara.end_shop")};
+                                  TEXT("building.nabapara.end_shop"), TEXT("building.nabapara.cloth_merchant"),
+                                  TEXT("building.nabapara.narrow_shop"), TEXT("building.nabapara.tailor_shop")};
 
 ELaneColour KsGoodsColour(uint32 R)
 {
@@ -318,7 +319,12 @@ FString BrowseNoticeText(const PerfectWorld::DoorDef& Door)
     {
         return FString();
     }
-    return FString(TEXT("Everyday goods on the shelves and in the bins.\nBrowsing hours ")) + Hours + TEXT(".\n") + KitPublic::UnstaffedPhrase;
+    const TCHAR* R53Description = Door.Id == "door.nabapara.tailor_shop_front"
+        ? TEXT("Tailoring samples at the counter; work and finishing tables behind it.")
+        : Door.Id == "door.nabapara.cloth_merchant_front"
+        ? TEXT("Cloth merchant: browse the shelf display.")
+        : TEXT("Everyday goods on the shelves and in the bins.");
+    return FString(R53Description) + TEXT("\nBrowsing hours ") + Hours + TEXT(".\n") + KitPublic::UnstaffedPhrase;
 }
 
 FName BrowseActorTag(FName BuildingId)
