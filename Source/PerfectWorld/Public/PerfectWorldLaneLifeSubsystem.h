@@ -87,6 +87,9 @@ public:
     /** The subsystem of the world that WorldContext lives in, or null. */
     static UPWLaneLifeSubsystem* Get(const UObject* WorldContext);
 
+    /** Acceptance read of the knock's host truth (IsHostHome): a resident of this door is registered and at home now. */
+    bool IsHostHomeForAcceptance(const PerfectWorld::DoorDef& Door) { return IsHostHome(Door); }
+
     virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
     virtual void Deinitialize() override;

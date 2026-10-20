@@ -168,6 +168,8 @@ void AppendResidentHomesSteps(TArray<FStepDef>& OutSteps);
 void AppendProprietorsWorkdaySteps(TArray<FStepDef>& OutSteps);
 /** R4-04: dated encounters and remembered agreements survive a fresh-process Continue (PerfectWorldAcceptanceJournalState.cpp). */
 void AppendJournalStateSteps(TArray<FStepDef>& OutSteps);
+/** R4-05: real conversations, then pause > Today shows core truth before and after Continue (PerfectWorldAcceptanceJournalUI.cpp). */
+void AppendJournalTodaySteps(TArray<FStepDef>& OutSteps);
 /** R4-01: the three unstaffed browsing frontages (market_stalls_a, market_stalls_b, end_shop); a fresh-process pair (PerfectWorldAcceptanceFrontagesR4.cpp). */
 void AppendFrontagesRound4Steps(TArray<FStepDef>& OutSteps);
 

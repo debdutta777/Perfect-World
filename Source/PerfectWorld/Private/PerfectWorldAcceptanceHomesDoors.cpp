@@ -281,7 +281,7 @@ FStepDef HmKnockStep(const FString& Name, const TCHAR* DoorId, const bool bFirst
                     : (PerfectWorld::DoorMinutesUntilVisiting(*Def, Minute) == 0 ? EHmAnswer::Admitted : EHmAnswer::NotReceiving);
                 Ledger.LastObserved = Observed;
                 ++Ledger.Probes;
-                const bool bMatch = Observed == Expected && Life->IsHostHome(*Def) == bHome;
+                const bool bMatch = Observed == Expected && Life->IsHostHomeForAcceptance(*Def) == bHome;
                 Detail = FString::Printf(TEXT("%s at %02d:%02d: host home by schedule %d, expected %s, observed %s%s"), *Id.ToString(), Minute / 60,
                                          Minute % 60, bHome, HmAnswerText(Expected), HmAnswerText(Observed), bMatch ? TEXT("") : TEXT(" MISMATCH"));
                 if (!bMatch) { Ledger.Mismatches.Add(Detail); }
