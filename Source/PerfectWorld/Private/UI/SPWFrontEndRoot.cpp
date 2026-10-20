@@ -130,6 +130,12 @@ void SPWFrontEndRoot::ShowTitle()
                   return Target != nullptr ? Target->ContinueLatest() : FText::GetEmpty();
               }))
               .OnLoad(FSimpleDelegate::CreateSP(this, &SPWFrontEndRoot::ShowLoad))
+              // R5-06: the title's own saved-lives view loads a chosen slot exactly as the load panel does.
+              .OnLoadSlot(FPWSlotDelegate::CreateSPLambda(this, [this](int32 Slot)
+              {
+                  APerfectWorldFrontEndHUD* Target = Hud.Get();
+                  return Target != nullptr ? Target->LoadSlot(Slot) : FText::GetEmpty();
+              }))
               .OnSettings(FSimpleDelegate::CreateSP(this, &SPWFrontEndRoot::ShowSettings))
               .OnQuit(FSimpleDelegate::CreateSPLambda(this, [this]()
               {
