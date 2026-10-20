@@ -212,6 +212,9 @@ WorldState EdgeWorld()
 // (market_stalls_a_front, market_stalls_b_front, end_shop_front), 20 -> 23; WorldHashVersion remains 5.
 // R4-04 re-pin 2026-10-19 with PW_PRINT_GOLDEN=1 (RefWorld agreed): WorldHashVersion 6 appends the journal section,
 // even when empty. HandBuilt 0xd7bd9e09459dd02f -> 0x9402a4985db02ae2; Edge 0x2e57d3e0f62ad53 -> 0x843e5c4d1eabf786.
-constexpr std::uint64_t GoldenHandBuilt = 0x9402a4985db02ae2ULL;
-constexpr std::uint64_t GoldenEdge = 0x843e5c4d1eabf786ULL;
+// R5-03 re-pin 2026-10-20 with PW_PRINT_GOLDEN=1 (RefWorld agreed): only three appended closed doors (cloth_merchant_front,
+// narrow_shop_front, tailor_shop_front), 23 -> 26; hash v6, schema 9. HandBuilt 0x9402a4985db02ae2 -> 0x832d0686a39d0654;
+// Edge 0x843e5c4d1eabf786 -> 0x978f919032309840.
+constexpr std::uint64_t GoldenHandBuilt = 0x832d0686a39d0654ULL;
+constexpr std::uint64_t GoldenEdge = 0x978f919032309840ULL;
 } // namespace
