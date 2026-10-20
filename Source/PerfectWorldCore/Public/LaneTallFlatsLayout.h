@@ -20,6 +20,7 @@ struct Layout
 
 /** Production footprint only. Ground comes directly from the frozen frontage catalogue, without edits. */
 [[nodiscard]] PERFECTWORLDCORE_API Layout GenerateLayout();
-/** Supplied for the integrator's 19->20 migration; does not register or hang a leaf. No resident yet. */
+/** The registered door definition of the upper dwelling's side entrance (its resident is Ishita Banerjee). This function does not register
+ * or hang a leaf: GenerateLayout populates the side opening with UpperDoorId and the presenter hangs it. */
 [[nodiscard]] PERFECTWORLDCORE_API DoorDef PlannedUpperDoor() noexcept;
 } // namespace PerfectWorld::LaneTallFlats
