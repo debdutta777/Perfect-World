@@ -709,3 +709,15 @@ add_executable(PerfectWorldLaneJournalTests Tests/LaneJournalTests.cpp)
 target_link_libraries(PerfectWorldLaneJournalTests PRIVATE PerfectWorldCore)
 target_compile_definitions(PerfectWorldLaneJournalTests PRIVATE PW_JOURNAL_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
 add_test(NAME PerfectWorldLaneJournalTests COMMAND PerfectWorldLaneJournalTests)
+
+# R5-04: opt-in, transient work/needs decisions; legacy behaviour regression for every authored person.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/NpcBehaviourWork.cpp)
+add_executable(PerfectWorldNpcBehaviourWorkTests Tests/NpcBehaviourWorkTests.cpp)
+target_link_libraries(PerfectWorldNpcBehaviourWorkTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldNpcBehaviourWorkTests COMMAND PerfectWorldNpcBehaviourWorkTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.debashis_pal.json
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.mahua_saha.json)
+add_executable(PerfectWorldNpcBehaviourRegressionTests Tests/NpcBehaviourRegressionTests.cpp)
+target_link_libraries(PerfectWorldNpcBehaviourRegressionTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldNpcBehaviourRegressionTests COMMAND PerfectWorldNpcBehaviourRegressionTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule)
