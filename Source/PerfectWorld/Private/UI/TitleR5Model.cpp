@@ -1,21 +1,17 @@
 #include "UI/TitleR5Model.h"
 
-#include "CharacterCreation.h"
 #include "GameClock.h"
 #include "HAL/FileManager.h"
 #include "Misc/Paths.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "PerfectWorldLaneLifePersistence.h"
 #include "SaveStore.h"
+#include "SaveSlotSummary.h"
 
 #define LOCTEXT_NAMESPACE "PerfectWorldTitleR5"
 
 namespace
 {
-// The one zone every lane-life save names (PerfectWorldCharacterCreatorSubsystemEntry.cpp). Only the lane and the opening
-// homes are built, so those are the only zones with an authored name; any other id has no place line rather than a guess.
-const char* const Tr5LaneZoneId = "zone.street.nabapara_lane";
-
 const TCHAR* const Tr5ShortMonths[12] = {TEXT("Jan"), TEXT("Feb"), TEXT("Mar"), TEXT("Apr"), TEXT("May"), TEXT("Jun"),
                                          TEXT("Jul"), TEXT("Aug"), TEXT("Sep"), TEXT("Oct"), TEXT("Nov"), TEXT("Dec")};
 const TCHAR* const Tr5LongMonths[12] = {TEXT("January"), TEXT("February"), TEXT("March"),     TEXT("April"),
@@ -32,35 +28,10 @@ FText Tr5SlotLabel(const int32 Slot)
     return FText::Format(LOCTEXT("SlotLabel", "Slot {0}"), FText::AsNumber(Slot + 1));
 }
 
-/** The opening home's own name for a "zone.home.<kit>" id, or empty when the id names none. */
-FString Tr5HomeName(const std::string& ZoneId)
+FText R62PlaceText(const PerfectWorld::WorldSlotSummary& Facts)
 {
-    if (ZoneId == PerfectWorld::OriginHomeZoneId(PerfectWorld::InstitutionalHomeKitId))
-    {
-        return Tr5FromUtf8(std::string(PerfectWorld::InstitutionalHomeKitName));
-    }
-    for (const PerfectWorld::HouseholdDefinition& Household : PerfectWorld::CharacterCreator::HouseholdDefinitions())
-    {
-        if (ZoneId == PerfectWorld::OriginHomeZoneId(Household.HomeKitId))
-        {
-            return Tr5FromUtf8(std::string(Household.HomeKitName));
-        }
-    }
-    return FString();
-}
-
-FText Tr5PlaceText(const std::string& ZoneId, const std::string& HomeCity)
-{
-    FString Zone;
-    if (ZoneId == Tr5LaneZoneId)
-    {
-        Zone = TEXT("Nabapara Lane");
-    }
-    else
-    {
-        Zone = Tr5HomeName(ZoneId);
-    }
-    const FString City = Tr5FromUtf8(HomeCity);
+    const FString Zone = Tr5FromUtf8(Facts.ZoneDisplayName);
+    const FString City = Tr5FromUtf8(Facts.HomeCity);
     if (Zone.IsEmpty())
     {
         return FText::FromString(City);
@@ -68,15 +39,13 @@ FText Tr5PlaceText(const std::string& ZoneId, const std::string& HomeCity)
     return FText::FromString(City.IsEmpty() ? Zone : Zone + TEXT(", ") + City);
 }
 
-FText Tr5NameText(const PerfectWorld::IdentityProfile& Identity)
+FText R62CalendarText(const PerfectWorld::CalendarTime& Calendar)
 {
-    FString Name = Tr5FromUtf8(Identity.GivenName);
-    const FString Family = Tr5FromUtf8(Identity.FamilyName);
-    if (!Family.IsEmpty())
-    {
-        Name = Name.IsEmpty() ? Family : Name + TEXT(" ") + Family;
-    }
-    return Name.IsEmpty() ? LOCTEXT("Unnamed", "Unnamed") : FText::FromString(Name);
+    const int32 Month = FMath::Clamp(Calendar.Month, 1, 12) - 1;
+    const std::string_view Weekday = PerfectWorld::WeekdayName(Calendar.DayOfWeek);
+    return FText::FromString(FString::Printf(TEXT("%s %d %s %d, %02d:%02d"), *Tr5FromUtf8(std::string(Weekday)),
+                                             Calendar.Day, Tr5LongMonths[Month], Calendar.Year, Calendar.Hour,
+                                             Calendar.Minute));
 }
 
 FDateTime Tr5ToLocal(const FDateTime& Utc)
@@ -134,25 +103,21 @@ FText FormatSavedAt(const FDateTime& Local)
 
 FText FormatGameTime(const int64 GameInstantMinutes)
 {
-    const PerfectWorld::CalendarTime Calendar = PerfectWorld::GameClock::ToCalendar(GameInstantMinutes);
-    const int32 Month = FMath::Clamp(Calendar.Month, 1, 12) - 1;
-    const std::string_view Weekday = PerfectWorld::WeekdayName(Calendar.DayOfWeek);
-    return FText::FromString(FString::Printf(TEXT("%s %d %s %d, %02d:%02d"), *Tr5FromUtf8(std::string(Weekday)),
-                                             Calendar.Day, Tr5LongMonths[Month], Calendar.Year, Calendar.Hour,
-                                             Calendar.Minute));
+    return R62CalendarText(PerfectWorld::GameClock::ToCalendar(GameInstantMinutes));
 }
 
 FSlotSummary SummariseWorldSave(const int32 Slot, const PerfectWorld::WorldSaveData& Data, const FDateTime& WrittenUtc,
                                 const bool bRecoveredFromBackup, const FString& Notice)
 {
+    const PerfectWorld::WorldSlotSummary Facts = PerfectWorld::MakeWorldSlotSummary(Data);
     FSlotSummary Summary;
     Summary.Slot = Slot;
     Summary.SlotLabel = Tr5SlotLabel(Slot);
     Summary.WrittenUtc = WrittenUtc;
-    Summary.Name = Tr5NameText(Data.Creation.Identity);
-    Summary.Age = FText::Format(LOCTEXT("AgeAtStart", "Age {0} at the start of this life"), FText::AsNumber(Data.Creation.Age));
+    Summary.Name = Facts.Name.empty() ? LOCTEXT("Unnamed", "Unnamed") : FText::FromString(Tr5FromUtf8(Facts.Name));
+    Summary.Age = FText::Format(LOCTEXT("R62CurrentAge", "Age {0}"), FText::AsNumber(Facts.CurrentAge));
     Summary.SavedAt = FormatSavedAt(Tr5ToLocal(WrittenUtc));
-    if (!Data.Creation.HasStarted)
+    if (Facts.Draft)
     {
         // A draft has no world to describe: its clock and zone are the fresh-world defaults, so they are not shown.
         Summary.State = ESlotState::Draft;
@@ -160,8 +125,8 @@ FSlotSummary SummariseWorldSave(const int32 Slot, const PerfectWorld::WorldSaveD
         return Summary;
     }
     Summary.State = bRecoveredFromBackup ? ESlotState::Recovered : ESlotState::Ready;
-    Summary.GameTime = FormatGameTime(Data.World.Clock.Now());
-    Summary.Place = Tr5PlaceText(Data.Player.ZoneId, Data.Creation.Identity.HomeCity);
+    Summary.GameTime = R62CalendarText(Facts.Calendar);
+    Summary.Place = R62PlaceText(Facts);
     if (bRecoveredFromBackup)
     {
         Summary.Note = Notice.IsEmpty() ? LOCTEXT("RecoveredNote", "Recovered from the backup copy of this save.")

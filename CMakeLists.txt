@@ -735,3 +735,9 @@ add_executable(PerfectWorldNpcBehaviourRegressionTests Tests/NpcBehaviourRegress
 target_link_libraries(PerfectWorldNpcBehaviourRegressionTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldNpcBehaviourRegressionTests COMMAND PerfectWorldNpcBehaviourRegressionTests
     ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule)
+
+# R62: shared, read-only save-slot facts for title and load presentations.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/SaveSlotSummary.cpp)
+add_executable(PerfectWorldSaveSlotSummaryTests Tests/SaveSlotSummaryTests.cpp)
+target_link_libraries(PerfectWorldSaveSlotSummaryTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSaveSlotSummaryTests COMMAND PerfectWorldSaveSlotSummaryTests)

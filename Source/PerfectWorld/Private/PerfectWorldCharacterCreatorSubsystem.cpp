@@ -6,6 +6,7 @@
 #include "HAL/FileManager.h"
 #include "Misc/Paths.h"
 #include "SaveStore.h"
+#include "UI/TitleR5Model.h"
 
 namespace
 {
@@ -333,31 +334,16 @@ bool UPerfectWorldCharacterCreatorSubsystem::IsSaveSlotOccupied(int32 SlotIndex)
 
 FText UPerfectWorldCharacterCreatorSubsystem::DescribeSaveSlot(int32 SlotIndex) const
 {
-    const FString Path = GetSaveSlotPath(SlotIndex);
-    if (Path.IsEmpty())
+    if (GetSaveSlotPath(SlotIndex).IsEmpty())
     {
         return FText::FromString(TEXT("No such slot"));
     }
-    const auto Read = PWLaneLifePersistence::ReadWorldSlot(ToSlotPathUtf8(Path));
-    if (Read.Status == PerfectWorld::SaveReadStatus::Missing)
+    const PWTitleR5::FSlotSummary Summary = PWTitleR5::ReadSlot(SlotIndex);
+    if (Summary.State == PWTitleR5::ESlotState::Empty)
     {
         return FText::FromString(TEXT("Empty"));
     }
-
-    // Describe without disturbing the draft: parse into a scratch record only.
-    if (!Read.Succeeded())
-    {
-        return FText::FromString(TEXT("Unreadable file"));
-    }
-    const auto& Parsed = Read.Data->Creation;
-    const PerfectWorld::HouseholdDefinition* Household =
-        PerfectWorld::CharacterCreator::FindHousehold(Parsed.HouseholdTemplateId);
-    const FString HouseholdName =
-        Household != nullptr ? ToFString(Household->DisplayName) : TEXT("Unknown household");
-    const FString Name = Parsed.Identity.GivenName.empty() ? TEXT("Unnamed")
-                                                           : ToFString(Parsed.Identity.GivenName);
-    return FText::FromString(FString::Printf(TEXT("%s | %s | %s"), *Name, *HouseholdName,
-                                             Parsed.HasStarted ? TEXT("Origin confirmed") : TEXT("Draft")));
+    return Summary.Compose();
 }
 
 bool UPerfectWorldCharacterCreatorSubsystem::DeleteSaveSlot(int32 SlotIndex)
