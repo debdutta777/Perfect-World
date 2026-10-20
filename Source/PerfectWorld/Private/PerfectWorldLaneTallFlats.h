@@ -8,7 +8,7 @@ namespace PWLane
 /** Exact catalogue match; the integrator calls this before the generic kit frontage branch. */
 bool IsTallFlatsUpstairs(const FLaneBuilding& Building);
 /** Replaces BuildKitFrontage: ground stays furnished, ceiling is the holed slab, one upper home is furnished.
- * Higher storeys and the unused west half of the first floor remain sealed. No upper door is emitted. */
+ * Higher storeys and the unused west half of the first floor remain sealed. The existing upper door is emitted from the side opening populated by the portable layout. */
 void BuildTallFlatsUpstairs(FLaneScene& Scene, const FLaneBuilding& Building);
 }
 
