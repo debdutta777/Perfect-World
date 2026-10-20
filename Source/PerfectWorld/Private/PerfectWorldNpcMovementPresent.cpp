@@ -98,7 +98,8 @@ void UPWNpcMovementComponent::Decide(const double DecisionSeconds)
         Blocker.Reset();
     }
     bLocallyYielding = BlockedSeconds >= PWNpcMove::YieldAfterSeconds;
-    if (BlockedSeconds >= PWNpcMove::PersistentBlockSeconds && !bPersistentlyBlocked)
+    const double R55ReportAfter = bR55CoreInterruptions ? PWNpcMove::YieldAfterSeconds : PWNpcMove::PersistentBlockSeconds;
+    if (BlockedSeconds >= R55ReportAfter && !bPersistentlyBlocked)
     {
         SetBlockedState(true);
     }
@@ -250,6 +251,7 @@ void UPWNpcMovementComponent::FaceYaw(const double TargetYaw, const double Degre
 void UPWNpcMovementComponent::UpdateMotion(const float Dt)
 {
     bMovedThisTick = false;
+    if (R55PresentCoreInterruption(Dt)) { return; }
     SteerDirection = FVector::ZeroVector; // set again below when steering; Decide sweeps along it
     const EPWNpcState Presented = GetPresentedState();
     if (!bHasIntent || Presented == EPWNpcState::Chat)
@@ -277,6 +279,10 @@ void UPWNpcMovementComponent::Hold(const float Dt, const EPWNpcState Presented)
     if (Owner == nullptr)
     {
         return;
+    }
+    if (bR55CoreInterruptions && (Presented == EPWNpcState::Yield || Presented == EPWNpcState::Chat))
+    {
+        if (const auto* R55Character = Cast<ACharacter>(Owner)) { R55Character->GetCharacterMovement()->StopMovementImmediately(); }
     }
     const APawn* Player = LocalPlayer();
     const FVector Here = Owner->GetActorLocation();
@@ -324,8 +330,11 @@ void UPWNpcMovementComponent::ApplySteering(const FVector& Direction, const doub
     {
         return;
     }
-    if (bLocallyYielding)
+    AActor* R55Hit = nullptr;
+    const bool bR55PlayerAhead = bR55CoreInterruptions && SweepBlocked(Direction, R55Hit) && R55Hit == LocalPlayer();
+    if (bLocallyYielding || (bR55CoreInterruptions && (bBlockedAhead || bR55PlayerAhead)))
     {
+        if (bR55CoreInterruptions) { Character->GetCharacterMovement()->StopMovementImmediately(); }
         Hold(Dt, EPWNpcState::Yield); // stopped for someone in the way: visibly waiting, facing the player if it is them
         return;
     }

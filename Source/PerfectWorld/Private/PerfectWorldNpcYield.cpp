@@ -5,6 +5,7 @@
 #include "GameFramework/PlayerController.h"
 #include "PerfectWorldNpcPresenceInternal.h"
 #include "PerfectWorldNpcPresenceSubsystem.h"
+#include "PerfectWorldNpcPilotBridge.h"
 
 namespace
 {
@@ -75,7 +76,8 @@ void UPWNpcPresenceSubsystem::UpdateYield(const FName PersonId, FNpPresenceRecor
     if (Actor == nullptr) { return; }
     UPWNpcMovementComponent* Movement = Actor->GetNpcMovement();
     // Conversations hold the current physical point; preserve the detour until the panel closes.
-    if (Movement->GetPresentedState() == EPWNpcState::Chat) { return; }
+    const bool bR55Pilot = R55IsWorkPilot(PersonId);
+    if (!bR55Pilot && Movement->GetPresentedState() == EPWNpcState::Chat) { return; }
     const UCapsuleComponent* Capsule = Actor->GetCapsuleComponent();
     const double Half = Capsule->GetScaledCapsuleHalfHeight();
     const double Radius = Capsule->GetScaledCapsuleRadius();
@@ -85,8 +87,10 @@ void UPWNpcPresenceSubsystem::UpdateYield(const FName PersonId, FNpPresenceRecor
     FVector PlayerFeet = Player != nullptr ? Player->GetActorLocation() : FVector::ZeroVector;
     const auto* PlayerCapsule = Player != nullptr ? Player->FindComponentByClass<UCapsuleComponent>() : nullptr;
     if (PlayerCapsule != nullptr) { PlayerFeet.Z -= PlayerCapsule->GetScaledCapsuleHalfHeight(); }
+    const auto R55Under = bR55Pilot && (Record.Intent.State == PerfectWorld::NpcState::Chat || Record.Intent.State == PerfectWorld::NpcState::Yield)
+        ? Record.Intent.ResumeState : Record.Intent.State;
     const bool bEligible = Record.Binding.Kind == ENpBindingKind::Local && Record.bIntentValid
-        && (Record.Intent.State == PerfectWorld::NpcState::Work || Record.Intent.State == PerfectWorld::NpcState::Idle);
+        && (R55Under == PerfectWorld::NpcState::Work || R55Under == PerfectWorld::NpcState::Idle);
     const TArray<FNpDoorwayZone> Doors = Bindings().Doorways();
     const bool bWasActive = Record.Yield.IsActive();
     const auto NpPointAllowed = [this, Actor, Feet, Half, Radius, Player](const FVector& Point)
@@ -105,6 +109,13 @@ void UPWNpcPresenceSubsystem::UpdateYield(const FName PersonId, FNpPresenceRecor
     };
     NpYield::Update(Record.Yield, Doors, Feet, Radius, Half, Player != nullptr ? &PlayerFeet : nullptr,
                     bEligible, Dt, NpPointAllowed);
+    if (bR55Pilot)
+    {
+        // The core owns the task and safe-pause timing. Clearance only supplies a swept physical waiting target.
+        Movement->SetCoreDoorwayWait(Record.Yield.IsActive(), Record.Yield.WaitingFeet);
+        ReportPilotObstruction(PersonId, Record.Yield.IsActive(), true);
+        return;
+    }
     if (Record.Yield.IsActive())
     {
         if (!bWasActive)

@@ -1,6 +1,9 @@
 #include "PerfectWorldLaneLifeConversation.h"
 
 #include "PerfectWorldLaneLifeSubsystem.h"
+#include "Engine/World.h"
+#include "PerfectWorldNpcPresenceSubsystem.h"
+#include "PerfectWorldNpcPilotBridge.h"
 #include "WorldReducer.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPWLaneLifeTalk, Log, All);
@@ -74,6 +77,14 @@ void FPWCoreConversationSession::Choose(const FName ChoiceId)
     if (Outcome.bAccepted)
     {
         RefusalNote = FText::GetEmpty();
+        if (R55IsWorkPilot(PersonId) && IsFinished())
+        {
+            if (auto* Presence = Life->GetWorld()->GetSubsystem<UPWNpcPresenceSubsystem>())
+            {
+                Presence->Reconcile(Life->GetNow());
+                Presence->ReleasePilotChat(PersonId);
+            }
+        }
         return;
     }
     // A refusal changed nothing in the world. A stale or already-taken choice has no words (the panel's refreshed list drops it);
@@ -97,5 +108,13 @@ void FPWCoreConversationSession::Leave()
     if (Life != nullptr && FindOpenState() != nullptr)
     {
         Life->LeaveConversation(PersonId);
+    }
+    if (Life != nullptr && R55IsWorkPilot(PersonId))
+    {
+        if (auto* Presence = Life->GetWorld()->GetSubsystem<UPWNpcPresenceSubsystem>())
+        {
+            Presence->Reconcile(Life->GetNow());
+            Presence->ReleasePilotChat(PersonId);
+        }
     }
 }

@@ -2,6 +2,7 @@
 
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "NpcBehaviour.h"
 #include "PerfectWorldConversationPresenter.h"
@@ -267,6 +268,7 @@ FVector UPWNpcMovementComponent::GetTravelTarget() const
 
 void UPWNpcMovementComponent::SetLocalConversationActive(const bool bActive)
 {
+    if (bR55CoreInterruptions && bActive && (!bHasIntent || Intent.State != EPWNpcState::Chat)) { return; }
     if (bLocalChat == bActive)
     {
         return;
@@ -286,10 +288,42 @@ void UPWNpcMovementComponent::SetLocalConversationActive(const bool bActive)
     SetTickRate();
 }
 
+void UPWNpcMovementComponent::SetCoreInterruptions(const bool bEnabled)
+{
+    bR55CoreInterruptions = bEnabled;
+    if (bEnabled)
+    {
+        if (const auto* R55Character = Cast<ACharacter>(GetOwner()))
+        {
+            auto* R55Movement = R55Character->GetCharacterMovement();
+            R55Movement->bEnablePhysicsInteraction = false;
+            R55Movement->RepulsionForce = 0.0f;
+        }
+    }
+}
+
+bool UPWNpcMovementComponent::R55PresentCoreInterruption(const float Dt)
+{
+    if (!bR55CoreInterruptions || (Intent.State != EPWNpcState::Yield && Intent.State != EPWNpcState::Chat)) { return false; }
+    // Retain the blocked heading for clearance probes while logically held; a hold must not clear itself.
+    if (Intent.State == EPWNpcState::Yield && bR55DoorwayWait)
+    {
+        const FVector R55Delta = R55WaitingFeet - FeetLocation();
+        if (R55Delta.Size2D() > PWNpcMove::ArrivalToleranceCm)
+        {
+            SteerDirection = R55Delta.GetSafeNormal2D();
+            ApplySteering(SteerDirection, PWNpcMove::WalkSpeedCmPerSec, Dt);
+            return true;
+        }
+    }
+    Hold(Dt, Intent.State);
+    return true;
+}
+
 void UPWNpcMovementComponent::BeginChatSettle(const FName WorkAction)
 {
     ChatSettleRemaining = 0.0;
-    if (bReduced || WorkAction.IsNone() || !bArrived)
+    if (bR55CoreInterruptions || bReduced || WorkAction.IsNone() || !bArrived)
     {
         return;
     }
@@ -299,7 +333,7 @@ void UPWNpcMovementComponent::BeginChatSettle(const FName WorkAction)
 
 EPWNpcState UPWNpcMovementComponent::GetPresentedState() const
 {
-    if (bLocalChat)
+    if (bLocalChat && !bR55CoreInterruptions)
     {
         return EPWNpcState::Chat;
     }
@@ -307,11 +341,11 @@ EPWNpcState UPWNpcMovementComponent::GetPresentedState() const
     {
         return EPWNpcState::Idle;
     }
-    if (bLocallyYielding && (Intent.State == EPWNpcState::Travel || Intent.State == EPWNpcState::Work || Intent.State == EPWNpcState::Idle))
+    if (!bR55CoreInterruptions && bLocallyYielding && (Intent.State == EPWNpcState::Travel || Intent.State == EPWNpcState::Work || Intent.State == EPWNpcState::Idle))
     {
         return EPWNpcState::Yield;
     }
-    if (Intent.State == EPWNpcState::Yield && Intent.ResumeState == EPWNpcState::Travel && !bLocallyYielding)
+    if (!bR55CoreInterruptions && Intent.State == EPWNpcState::Yield && Intent.ResumeState == EPWNpcState::Travel && !bLocallyYielding)
     {
         return EPWNpcState::Travel; // the core has not yet heard the way is clear again; walk on
     }
