@@ -170,6 +170,8 @@ void AppendProprietorsWorkdaySteps(TArray<FStepDef>& OutSteps);
 void AppendJournalStateSteps(TArray<FStepDef>& OutSteps);
 /** R4-05: real conversations, then pause > Today shows core truth before and after Continue (PerfectWorldAcceptanceJournalUI.cpp). */
 void AppendJournalTodaySteps(TArray<FStepDef>& OutSteps);
+/** R5-02: real home visits in both cameras and a fresh-process agreement Continue pair. */
+void AppendHomesRound5Steps(TArray<FStepDef>& OutSteps);
 /** R4-01: the three unstaffed browsing frontages (market_stalls_a, market_stalls_b, end_shop); a fresh-process pair (PerfectWorldAcceptanceFrontagesR4.cpp). */
 void AppendFrontagesRound4Steps(TArray<FStepDef>& OutSteps);
 
