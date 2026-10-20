@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerController.h"
 #include "PerfectWorldContentSubsystem.h"
 #include "PerfectWorldNpcPresenceInternal.h"
+#include "PerfectWorldNpcPilotBridge.h"
 
 DEFINE_LOG_CATEGORY_STATIC(UaPresenceLog, Log, All);
 
@@ -206,6 +207,14 @@ void UPWNpcPresenceSubsystem::ResetPresentation(const PerfectWorld::GameInstant 
         UaDestroyActor(*Pair.Value);
         Pair.Value->DeparturePoints.Reset();
         Pair.Value->DepartureAnchor = NAME_None;
+        Pair.Value->R55Windows.clear();
+        Pair.Value->R55Decision = {};
+        Pair.Value->bR55ChatRequested = false;
+        Pair.Value->bR55RouteBlocked = false;
+        Pair.Value->bR55DoorBlocked = false;
+        Pair.Value->bR55TalkPending = false;
+        Pair.Value->bR55PanelSeen = false;
+        Pair.Value->R55TalkPawn.Reset();
     }
     Reconcile(GameInstantNow);
 }
@@ -229,8 +238,16 @@ void UPWNpcPresenceSubsystem::Reconcile(const PerfectWorld::GameInstant GameInst
     for (auto& Pair : People)
     {
         FNpPresenceRecord& Record = *Pair.Value;
-        // Local Chat is held by the existing movement component; paid time still resolves the underlying schedule.
-        const auto Resolved = PerfectWorld::ResolveNpcIntentAt(Record.Schedule.Person, Record.Schedule.Travel, Now, false, false);
+        PerfectWorld::NpcIntentResult Resolved;
+        if (R55IsWorkPilot(Pair.Key))
+        {
+            R55ResolvePilot(Record, Now);
+            Resolved = {Record.R55Decision.Error, Record.R55Decision.Intent};
+        }
+        else
+        {
+            Resolved = PerfectWorld::ResolveNpcIntentAt(Record.Schedule.Person, Record.Schedule.Travel, Now, false, false);
+        }
         Record.bIntentValid = Resolved.Ok();
         if (!Resolved.Ok())
         {
@@ -303,7 +320,17 @@ void UPWNpcPresenceSubsystem::Present(const FName PersonId, FNpPresenceRecord& R
             FVector::Dist2D(Feet, UaThreshold->Feet.GetLocation()) <= PWNpcMove::ArrivalToleranceCm &&
             FMath::Abs(Feet.Z - UaThreshold->Feet.GetLocation().Z) <= PWNpcMove::ArrivalToleranceCm;
         if ((Record.Binding.Kind == ENpBindingKind::Missing || UaAtExit) &&
-            !Actor->WasRecentlyRendered(0.3f) && !IsPointVisible(Feet)) { UaDestroyActor(Record); return; }
+            !Actor->WasRecentlyRendered(0.3f) && !IsPointVisible(Feet))
+        {
+            if (R55IsWorkPilot(PersonId))
+            {
+                Record.bR55RouteBlocked = false;
+                Record.bR55DoorBlocked = false;
+                if (R55ResolvePilot(Record, Now)) { Record.Intent = Record.R55Decision.Intent; }
+            }
+            UaDestroyActor(Record);
+            return;
+        }
         Record.Yield = {};
         if (Record.Binding.Kind == ENpBindingKind::Missing)
         {
@@ -318,6 +345,11 @@ void UPWNpcPresenceSubsystem::Present(const FName PersonId, FNpPresenceRecord& R
         {
             FPWNpcIntentView Exit;
             Exit.State = EPWNpcState::Travel;
+            if (R55IsWorkPilot(PersonId) && Record.Intent.State == PerfectWorld::NpcState::Yield)
+            {
+                Exit.State = EPWNpcState::Yield;
+                Exit.ResumeState = EPWNpcState::Travel;
+            }
             Exit.RouteId = UaDepartureRoute;
             Exit.ProgressPermille = 1000;
             UaApplyMovement(Record, Exit, Record.DeparturePoints);
@@ -352,6 +384,7 @@ void UPWNpcPresenceSubsystem::Present(const FName PersonId, FNpPresenceRecord& R
         Actor = APWNpcCharacter::SpawnAt(*GetWorld(), UaSpawnFeet, PersonId, Record.DisplayName, Record.Outfit);
         if (Actor == nullptr) { return; }
         Record.Actor = Actor;
+        Actor->GetNpcMovement()->SetCoreInterruptions(R55IsWorkPilot(PersonId));
         Record.LastDiagnostic.Reset();
         const TWeakObjectPtr<UPWNpcPresenceSubsystem> Weak(this);
         Actor->GetNpcMovement()->SetAnchorResolver([Weak, PersonId](const FName Id, FTransform& Out)
@@ -364,6 +397,13 @@ void UPWNpcPresenceSubsystem::Present(const FName PersonId, FNpPresenceRecord& R
             const auto* Presence = Weak.Get();
             return Presence != nullptr && Presence->ResolveActorRoute(PersonId, Id, Out);
         });
+        if (R55IsWorkPilot(PersonId))
+        {
+            Actor->GetNpcMovement()->OnBlockChanged.AddWeakLambda(this, [Weak, PersonId](bool bBlocked, FName)
+            {
+                if (auto* Presence = Weak.Get()) { Presence->ReportPilotObstruction(PersonId, bBlocked); }
+            });
+        }
         if (!Record.UaArrivalPoints.IsEmpty() && Record.Intent.State != PerfectWorld::NpcState::Travel)
         {
             FPWNpcIntentView UaArrival = MakeNpcIntentView(Record.Intent);
@@ -374,7 +414,7 @@ void UPWNpcPresenceSubsystem::Present(const FName PersonId, FNpPresenceRecord& R
             // The work intent below hands this polyline to the mover's existing FinishRoute.
         }
     }
-    if (Record.Yield.IsActive()) { return; } // Yield owns its temporary walking target until released.
+    if (Record.Yield.IsActive() && !R55IsWorkPilot(PersonId)) { return; }
     FPWNpcIntentView View = MakeNpcIntentView(Record.Intent, Record.Binding.bPreferSit);
     if (Record.Intent.State == PerfectWorld::NpcState::Travel)
     {
@@ -421,5 +461,6 @@ void UPWNpcPresenceSubsystem::Tick(const float DeltaTime)
         }
         Present(Pair.Key, *Pair.Value);
         UpdateYield(Pair.Key, *Pair.Value, DeltaTime);
+        if (R55IsWorkPilot(Pair.Key)) { TickPilotTalk(Pair.Key, *Pair.Value); }
     }
 }
