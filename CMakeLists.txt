@@ -709,3 +709,12 @@ add_executable(PerfectWorldLaneJournalTests Tests/LaneJournalTests.cpp)
 target_link_libraries(PerfectWorldLaneJournalTests PRIVATE PerfectWorldCore)
 target_compile_definitions(PerfectWorldLaneJournalTests PRIVATE PW_JOURNAL_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
 add_test(NAME PerfectWorldLaneJournalTests COMMAND PerfectWorldLaneJournalTests)
+
+# R5-01: old-house and upper-flat residents; shared registration snippets are in R5-01_notes.md.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationResidentsR5.cpp)
+add_executable(PerfectWorldResidentsR5Tests Tests/ResidentsR5Tests.cpp)
+target_include_directories(PerfectWorldResidentsR5Tests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldResidentsR5Tests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldResidentsR5Tests COMMAND PerfectWorldResidentsR5Tests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.prabir_chatterjee.json
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.ishita_banerjee.json)
