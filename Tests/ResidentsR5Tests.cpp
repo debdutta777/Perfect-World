@@ -122,10 +122,8 @@ void R5RWeek(const R5RResident& resident, const NpcSchedule& schedule)
     const auto* door = FindDoor(resident.Door);
     R5RRequire(door && door->Access == DoorAccess::Private && door->LocationId == resident.Home, "exact private home and door");
     const bool oldHouse = resident.Suffix == "prabir_chatterjee";
-    if (oldHouse)
-        R5RRequire(door->VisitingWindows.size() == 1 && door->VisitingWindows[0].OpenMinute == 960 &&
-            door->VisitingWindows[0].CloseMinute == 1170, "old-house visiting hours 16:00-19:30");
-    else R5RRequire(door->VisitingWindows.empty(), "upper flat retains existing no-posted-hours policy");
+    R5RRequire(door->VisitingWindows.size() == 1 && door->VisitingWindows[0].OpenMinute == 960 &&
+        door->VisitingWindows[0].CloseMinute == 1170, oldHouse ? "old-house visiting hours 16:00-19:30" : "upper-flat visiting hours 16:00-19:30");
 
     for (int day = 0; day < 8; ++day)
     {
@@ -148,6 +146,10 @@ void R5RWeek(const R5RResident& resident, const NpcSchedule& schedule)
                 R5RRequire(knock.Answer == DoorKnockAnswer::NoAnswer, "away, travelling and sleeping hosts cannot admit");
             if (minute >= 960 && minute < 1170)
             {
+                if (!(home && result.Intent.Availability == PersonAvailability::Awake && result.Intent.bTalkable && knock.Answer == DoorKnockAnswer::Admitted))
+                    std::cerr << resident.Suffix << " day " << day << " minute " << minute << " home " << home << " avail "
+                              << static_cast<int>(result.Intent.Availability) << " talkable " << result.Intent.bTalkable << " knock "
+                              << static_cast<int>(knock.Answer) << " zone " << resolved.Zone << " doing " << resolved.Doing << '\n';
                 R5RRequire(home && result.Intent.Availability == PersonAvailability::Awake && result.Intent.bTalkable &&
                     knock.Answer == DoorKnockAnswer::Admitted, "awake host available throughout afternoon visiting period");
                 context.HasKnocked = true;

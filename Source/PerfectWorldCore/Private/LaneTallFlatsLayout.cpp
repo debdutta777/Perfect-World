@@ -123,8 +123,11 @@ Layout GenerateLayout()
     return out;
 }
 
+// R5-01: the resident, Ishita Banerjee, receives visitors 16:00-19:30, as the old house does.
+constexpr DoorOpeningWindow T6UpperVisiting[]{{960, 1170}};
+
 DoorDef PlannedUpperDoor() noexcept
 {
-    return {UpperDoorId, UpperLocationId, false, DoorAccess::Private, 0, 0, {}, false, 1, {}};
+    return {UpperDoorId, UpperLocationId, false, DoorAccess::Private, 0, 0, {}, false, 1, T6UpperVisiting};
 }
 } // namespace PerfectWorld::LaneTallFlats
