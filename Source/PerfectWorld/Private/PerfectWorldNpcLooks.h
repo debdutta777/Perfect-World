@@ -29,7 +29,7 @@ enum class EHair : uint8
 {
     SilverStreaked, FullDark, TiedBackBun, Bob, ShortWavy, Thinning, LowBun, FlatCap, Ponytail,
     /** Round 4 (R4-06), appended: close-cropped grey, pinned grey coil, saffron head-wrap, neat side parting, long plait. */
-    CloseCrop, PinnedCoil, HeadWrap, SidePart, LongPlait
+    CloseCrop, PinnedCoil, HeadWrap, SidePart, LongPlait, ShortCurls
 };
 enum class EGarment : uint8
 {
@@ -64,7 +64,7 @@ enum class ELook : uint8
 {
     Outfit, Mira, Anindita, Subrata, Rupa, Nirmal, Sahana,
     /** Round 4 (R4-06): the two proprietors, the vendor and the two passers-by. */
-    Debashis, Mahua, Purnima, Arun, Rekha
+    Debashis, Mahua, Purnima, Arun, Rekha, Prabir, Ishita
 };
 
 /** One row of the cast table: the stable person id, the standing height (LANE_LIFE_PLAN section B) and the look. */

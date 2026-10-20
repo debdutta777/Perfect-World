@@ -36,6 +36,8 @@ const FNlPerson NlPeople[] = {
     {TEXT("person.purnima_das"), 155.0, EPWNpcOutfit::ShopProprietor, true},
     {TEXT("person.arun_paul"), 176.0, EPWNpcOutfit::ParentHousehold, true},
     {TEXT("person.rekha_bose"), 161.0, EPWNpcOutfit::ParentHousehold, true},
+    {TEXT("person.prabir_chatterjee"), 169.0, EPWNpcOutfit::HouseholdAdult, true},
+    {TEXT("person.ishita_banerjee"), 165.0, EPWNpcOutfit::ParentHousehold, true},
 };
 
 constexpr double NlCapsuleRadius = 34.0;
@@ -375,6 +377,28 @@ bool FPWNpcLooksRoundFourEnvelopeTest::RunTest(const FString& Parameters)
         TestTrue(*(FString(Id) + TEXT(": the eyes of a 145 cm and a 195 cm player (0.939 of height) are each within 55 cm of theirs")),
                  FMath::Abs(EyeZ - 145.0 * 0.939) < 55.0 && FMath::Abs(EyeZ - 195.0 * 0.939) < 55.0);
     }
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FR52LooksFeaturesTest, "PerfectWorld.NpcLooks.ResidentsR5Features",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FR52LooksFeaturesTest::RunTest(const FString& Parameters)
+{
+    using namespace PWNpcLooksTest;
+    const auto R52PrabirBlocks = NlBlocks({TEXT("person.prabir_chatterjee"), 169, EPWNpcOutfit::HouseholdAdult, true});
+    const auto R52IshitaBlocks = NlBlocks({TEXT("person.ishita_banerjee"), 165, EPWNpcOutfit::ParentHousehold, true});
+    TestTrue(TEXT("R52 Prabir: narrow slate short kurta"), NlHasBlock(R52PrabirBlocks, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(82, 105, 134) && B.Size.Y == 37 && B.Centre.Z < 100; }));
+    TestTrue(TEXT("R52 Prabir: thinning silver side hair under height"), NlHasBlock(R52PrabirBlocks, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(202, 199, 194) && FMath::Abs(B.Centre.Y) == 10 && B.Centre.Z + B.Size.Z * 0.5 <= 169; }));
+    TestTrue(TEXT("R52 Prabir: reading glasses"), NlHasBlock(R52PrabirBlocks, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(70, 60, 50) && B.Centre.X == 11 && B.Size.Z == 6; }));
+    TestTrue(TEXT("R52 Ishita: teal kurta"), NlHasBlock(R52IshitaBlocks, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(46, 119, 116) && B.Size.Y == 42; }));
+    TestTrue(TEXT("R52 Ishita: short curls under height"), NlHasBlock(R52IshitaBlocks, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(38, 30, 32) && B.Size.X == 8 && B.Centre.Z + B.Size.Z * 0.5 <= 165; }));
+    TestTrue(TEXT("R52 Ishita: canvas shoulder bag"), NlHasBlock(R52IshitaBlocks, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(182, 166, 125) && B.Centre.Y == 29 && B.Size.Z == 24; }));
     return true;
 }
 

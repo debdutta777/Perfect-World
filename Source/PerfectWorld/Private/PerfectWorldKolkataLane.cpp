@@ -24,6 +24,7 @@
 #include "PerfectWorldSahanaBindings.h"
 #include "PerfectWorldAmbientBindings.h"
 #include "PerfectWorldProprietorBindings.h"
+#include "PerfectWorldResidentsR5Bindings.h"
 #include "PerfectWorldSubrataBindings.h"
 
 namespace PWLane
@@ -304,6 +305,10 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     SpawnNirmal(World, Scene);
     SpawnRupa(World, Scene);
     SpawnSahana(World, Scene);
+    if (!SpawnResidentsR5(World, Scene))
+    {
+        UE_LOG(LogTemp, Error, TEXT("R52 resident bindings/registration failed; homes_round5 cannot pass."));
+    }
     SpawnAmbientLife(World);
     SpawnDebashis(World, Scene);
     SpawnMahua(World, Scene);
