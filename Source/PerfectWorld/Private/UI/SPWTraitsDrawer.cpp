@@ -7,6 +7,7 @@
 #include "UI/PWCreationModel.h"
 #include "UI/PWStyle.h"
 #include "UI/PWWidgets.h"
+#include "UI/SPWAttributeRadar.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SWrapBox.h"
@@ -115,6 +116,8 @@ void SPWTraitsPage::ApplyDrawer()
     if (!bApplied) { RefreshDrawer(); return; }
     if (Operation == 0) for (const auto& Entry : Model->Presets) if (Entry.Id == Preset)
         Model->Message = FText::Format(LOCTEXT("Applied", "{0} applied. You can undo this change."), Entry.DisplayName);
+    // A chosen background, a clear or a reset is a new starting point for the radar's faint comparison outline.
+    if (Radar.IsValid()) { Radar->Sync(); Radar->CaptureReference(); }
     DiscardProposal();
     CloseDrawer();
 }

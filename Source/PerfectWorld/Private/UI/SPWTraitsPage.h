@@ -7,6 +7,7 @@
 
 class FPWCreationModel;
 class SBox;
+class SPWAttributeRadar;
 class SComboButton;
 DECLARE_DELEGATE_TwoParams(FPWCreationModalDelegate, TSharedRef<SWidget>, TSharedPtr<SWidget>);
 DECLARE_DELEGATE_OneParam(FPWCreationRevealDelegate, TSharedPtr<SWidget>);
@@ -36,6 +37,8 @@ private:
     TSharedRef<SWidget> BuildNavigator();
     TSharedRef<SWidget> BuildRow(int32 Index);
     TSharedRef<SWidget> BuildInspector();
+    TSharedRef<SWidget> BuildRadar();
+    void TickRadar(float PageWidthNow);
     TSharedRef<SWidget> BuildRank(const FPWTraitRankView& Rank, const FText& Label);
     void Reflow();
     void RefreshInspector();
@@ -50,7 +53,8 @@ private:
     void ApplyDrawer();
 
     TSharedPtr<FPWCreationModel> Model;
-    TSharedPtr<SBox> Body, Inspector, DrawerPreview;
+    TSharedPtr<SBox> Body, Inspector, DrawerPreview, BudgetBox;
+    TSharedPtr<SPWAttributeRadar> Radar;
     TSharedPtr<SWidget> Toolbar, Navigator, LadderToggle;
     TSharedPtr<SComboButton> MoreMenu;
     TArray<TSharedPtr<SWidget>> Selectors, Rows;
@@ -64,6 +68,7 @@ private:
     FPWCreationRevealDelegate OnRevealInspector;
     FName Group, DrawerPreset;
     int32 SelectedIndex = 0, DrawerOperation = 0, Region = 0;
+    float PageWidth = 0.0f, LastShake = 0.0f;
     bool bNarrow = false, bShowRanks = false;
     bool bAnalogHorizontalHeld = false, bAnalogVerticalHeld = false;
     TAttribute<bool> NarrowLayout;
