@@ -215,6 +215,9 @@ WorldState EdgeWorld()
 // R5-03 re-pin 2026-10-20 with PW_PRINT_GOLDEN=1 (RefWorld agreed): only three appended closed doors (cloth_merchant_front,
 // narrow_shop_front, tailor_shop_front), 23 -> 26; hash v6, schema 9. HandBuilt 0x9402a4985db02ae2 -> 0x832d0686a39d0654;
 // Edge 0x843e5c4d1eabf786 -> 0x978f919032309840.
-constexpr std::uint64_t GoldenHandBuilt = 0x832d0686a39d0654ULL;
-constexpr std::uint64_t GoldenEdge = 0x978f919032309840ULL;
+// R6-01 re-pin 2026-10-20 with PW_PRINT_GOLDEN=1 (RefWorld agreed): only three appended closed doors (alley_house_front,
+// stair_flats_front, corner_stalls_front), 26 -> 29; hash v6, schema 9. HandBuilt 0x832d0686a39d0654 -> 0x31c97d2112adf354;
+// Edge 0x978f919032309840 -> 0xbf05781049342e08.
+constexpr std::uint64_t GoldenHandBuilt = 0x31c97d2112adf354ULL;
+constexpr std::uint64_t GoldenEdge = 0xbf05781049342e08ULL;
 } // namespace
