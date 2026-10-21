@@ -7,6 +7,7 @@
 #include <string>
 #include <string_view>
 #include <variant>
+#include <vector>
 
 namespace PerfectWorld
 {
@@ -161,8 +162,27 @@ struct DoorSettle
     std::int8_t SwingSide = 0;
 };
 
+/** Free morning intentions, validated by DayLoop against the reducer's borrowed activity catalogue. */
+struct SchoolPlanDay
+{
+    static constexpr std::string_view TypeId = "school.plan_day";
+    std::vector<DayPlanItem> Plan;
+};
+
+/**
+ * Record arrival at the current world instant through DayLoop's ArriveSchool, assuming a stay until dismissal.
+ * The school gate submits this after physical approach; placement is presentation context, as for lane commands.
+ * Requires a morning plan and the reducer's matching bell schedule/calendar. No time or learning is charged.
+ * Forecast period credit is the existing attendance contract; this does not complete classroom activities.
+ */
+struct SchoolArrive
+{
+    static constexpr std::string_view TypeId = "school.arrive";
+};
+
 using CommandPayload = std::variant<AdvanceTime, ScheduleWorldEvent, SetWorldFlag, GateRegister, GateScheduleOnset, GateContain, GateSeal,
-                                    SettleDueEvents, ConversationOpen, ConversationChoose, ConversationLeave, DoorSet, DoorSettle>;
+                                    SettleDueEvents, ConversationOpen, ConversationChoose, ConversationLeave, DoorSet, DoorSettle,
+                                    SchoolPlanDay, SchoolArrive>;
 
 struct Command
 {
