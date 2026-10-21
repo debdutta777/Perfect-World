@@ -59,9 +59,9 @@ void DbTableIsClassified()
         DbExpect(FindDoor(id) != nullptr, "every entrance id is an authored door");
     for (const std::string_view id : DoorPrivateRoomIds)
         DbExpect(FindDoor(id) != nullptr, "every room id is an authored door");
-    DbExpect(DoorBellEntranceIds.size() == 8, "eight dwelling entrances: two home fronts, the caretaker, four flats and houses");
+    DbExpect(DoorBellEntranceIds.size() == 10, "ten dwelling entrances: two home fronts, the caretaker, five flats and houses, and R6-01's two residences");
     // No roster change: this feature adds no door and no save field.
-    DbExpect(AuthoredDoors().size() == 26 && ValidateDoorTable(), "the twenty-six-door roster is untouched");
+    DbExpect(AuthoredDoors().size() == 29 && ValidateDoorTable(), "the twenty-nine-door roster is untouched");
     // Public, business-hours and locked doors never have a bell.
     DbExpect(!DoorHasBell(DbDoor("door.nabapara.tall_flats_front")), "the shared flats entry is public and has no bell");
     DbExpect(!DoorHasBell(DbDoor("door.nabapara.stationery_front")), "a shop has no bell");

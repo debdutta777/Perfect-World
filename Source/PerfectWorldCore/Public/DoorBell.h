@@ -23,10 +23,12 @@ namespace PerfectWorld
  * bell; DoorPrivateRoomIds names them, and the tests refuse a new Private door that is in neither list, so a future door
  * forces a decision.
  */
-inline constexpr std::array<std::string_view, 8> DoorBellEntranceIds{{
+inline constexpr std::array<std::string_view, 10> DoorBellEntranceIds{{
     "door.nabapara.home_front", "door.nabapara.care_front", "door.nabapara.caretaker_flat_front",
     "door.nabapara.tall_flats_unit_a", "door.nabapara.tall_flats_unit_b", "door.nabapara.tea_row_house_front",
-    "door.nabapara.old_house_front", "door.nabapara.tall_flats_upper_a"}};
+    "door.nabapara.old_house_front", "door.nabapara.tall_flats_upper_a",
+    // R6-01: the two residences opened last (no residents yet, so a ring is never answered).
+    "door.nabapara.alley_house_front", "door.nabapara.stair_flats_front"}};
 
 inline constexpr std::array<std::string_view, 2> DoorPrivateRoomIds{{"door.nabapara.home_bedroom", "door.nabapara.care_dormitory"}};
 
