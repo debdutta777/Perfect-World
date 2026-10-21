@@ -174,6 +174,8 @@ void AppendJournalTodaySteps(TArray<FStepDef>& OutSteps);
 void AppendHomesRound5Steps(TArray<FStepDef>& OutSteps);
 /** R5-03: the next three browsing frontages; fresh-process restart pair (PerfectWorldAcceptanceFrontagesR5.cpp). */
 void AppendFrontagesRound5Steps(TArray<FStepDef>& OutSteps);
+/** R5-05: independent physical visit to Mahua and her working day (PerfectWorldAcceptanceMahua.cpp). */
+void AppendMahuaWorkdaySteps(TArray<FStepDef>& OutSteps);
 /** R4-01: the three unstaffed browsing frontages (market_stalls_a, market_stalls_b, end_shop); a fresh-process pair (PerfectWorldAcceptanceFrontagesR4.cpp). */
 void AppendFrontagesRound4Steps(TArray<FStepDef>& OutSteps);
 

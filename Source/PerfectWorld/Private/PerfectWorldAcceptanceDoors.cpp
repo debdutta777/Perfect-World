@@ -9,6 +9,7 @@
 #include "NpcBehaviour.h"
 #include "NpcScheduleContent.h"
 #include "PerfectWorldContentSubsystem.h"
+#include "PerfectWorldAcceptanceDoorBell.h"
 #include "PerfectWorldDoorActor.h"
 #include "PerfectWorldLaneInteriorKit.h"
 #include "PerfectWorldInteractionComponent.h"
@@ -18,8 +19,9 @@
 #include "PerfectWorldPlayerCharacter.h"
 #include "PerfectWorldSubrataBindings.h"
 
-// doors_knock (NR-01): the four private dwelling doors of the lane, knocked at through the REAL interaction path (the E key's
-// TryInteract on the door actor) at chosen instants, with the answers recorded and entry checked against what the SCHEDULES say.
+// doors_knock (NR-01, F5): the four private dwelling doors of the lane, rung at through the REAL interaction path (the E key's
+// TryInteract on the door's calling BELL, F5; it was the door itself before the bell) at chosen instants, with the answers recorded and
+// entry checked against what the SCHEDULES say.
 //
 // The doors: the tea row house (Rupa Ghosh), the two flats of the tall flats (unit A, unit B; reached through the public shared entry
 // and passage) and the caretaker's flat (Subrata Dey). For each probe the expected answer is derived from the core, not from the
@@ -29,8 +31,9 @@
 // resident registered yet). The observed answer is the player-facing notice the knock produced. A mismatch is recorded in the ledger
 // and the script goes on, so every door is observed; the last step, verdict, fails when the ledger holds any mismatch.
 //
-// Each probe: the clock is moved forward at the door (the stationery scenario's AdoptSavedWorld method), the player knocks (E on the
-// closed door), and presses E again: an admitted knock opens the door (entry), any other answer leaves it shut. The tea row house's
+// Each probe: the clock is moved forward at the door (the stationery scenario's AdoptSavedWorld method), the player rings (E on the
+// bell) and rings or presses again: an admitted ring unlatches the door and E on the door opens it (entry), any other answer leaves it
+// shut (the second ring gets the same answer). The tea row house's
 // admitted probe goes on to walk in, close the door from inside, then open it from inside with no knock held (unrestricted exit:
 // the core's Exit direction is always Ok) and walk out. The one declared start is outside the row house door; every later move is
 // walked (the footpath line Y 340 and the road crossing at the caretaker's flat; the tall flats' public front door is opened by E).
@@ -64,7 +67,7 @@ const TCHAR* DkAnswerText(const EDkAnswer Answer)
 EDkAnswer DkClassify(const FText& Notice)
 {
     const FString Text = Notice.ToString();
-    if (Text.Contains(TEXT("Someone answers"))) { return EDkAnswer::Admitted; }
+    if (PWAcceptance::DoorBell::IsAnsweredNotice(Text)) { return EDkAnswer::Admitted; } // F5: "Someone is coming..." (the ring's answer)
     if (Text.Contains(TEXT("Nobody answers"))) { return EDkAnswer::NoAnswer; }
     if (Text.Contains(TEXT("receiving visitors"))) { return EDkAnswer::NotReceiving; }
     return EDkAnswer::None;
@@ -285,11 +288,19 @@ FStepDef DkWaitStep(const FString& Name, const double Seconds, TFunction<bool()>
     return Def;
 }
 
-/** E on the door. bFirst: the knock (records and judges the answer); otherwise the second press (entry, or no entry). */
+/**
+ * E on the BELL (F5). bFirst: the ring (records and judges the answer); otherwise the second press: an admitted visitor presses the DOOR
+ * (the bell has nothing more to say to someone already let in; entry), anyone else rings again and gets the same answer (no entry).
+ */
 FStepDef DkKnockStep(const FString& Name, const FDkDoorRef Door, const bool bFirst)
 {
     const FName Id(Door.DoorId);
-    return PWAcceptance::MakeInteractStep(Name, [Id](UPWAcceptanceSubsystem& Sub) -> AActor* { return DkFindDoor(Sub.GetPlayWorld(), Id); },
+    return PWAcceptance::MakeInteractStep(Name,
+        [Id, bFirst](UPWAcceptanceSubsystem& Sub) -> AActor*
+        {
+            if (!bFirst && DkLedger().LastObserved == EDkAnswer::Admitted) { return DkFindDoor(Sub.GetPlayWorld(), Id); }
+            return PWAcceptance::DoorBell::FindBell(Sub.GetPlayWorld(), Id);
+        },
         [Id, bFirst](UPWAcceptanceSubsystem& Sub, FString& Detail)
         {
             FDkLedger& Ledger = DkLedger();

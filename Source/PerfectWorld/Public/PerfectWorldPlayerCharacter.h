@@ -240,6 +240,9 @@ protected:
     TObjectPtr<UInputAction> InteractAction;
     UPROPERTY()
     TObjectPtr<UInputAction> CycleTargetAction;
+    /** F3: opens the quest window (J and D-pad Right by default; the key bindings store owns the keys). */
+    UPROPERTY()
+    TObjectPtr<UInputAction> QuestsAction;
 
 private:
     // Movement and look, shared by both input paths.

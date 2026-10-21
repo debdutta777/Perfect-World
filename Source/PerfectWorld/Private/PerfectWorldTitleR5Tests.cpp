@@ -15,6 +15,7 @@
 #include "UI/PWWidgets.h"
 #include "UI/SPWTitleScreen.h"
 #include "UI/TitleR5Model.h"
+#include "UObject/UObjectGlobals.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
@@ -183,7 +184,7 @@ bool FTr5SummaryTextTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("a started life is Ready and can load"), Ready.State == PWTitleR5::ESlotState::Ready && Ready.CanLoad());
     TestEqual(TEXT("the slot is numbered from one"), Ready.SlotLabel.ToString(), FString(TEXT("Slot 2")));
     TestEqual(TEXT("name"), Ready.Name.ToString(), FString(TEXT("Anika Sen")));
-    TestEqual(TEXT("age is the saved age, said as the age the life began at"), Ready.Age.ToString(), FString(TEXT("Age 16 at the start of this life")));
+    TestEqual(TEXT("age is the current age from the portable summary"), Ready.Age.ToString(), FString(TEXT("Age 16")));
     TestEqual(TEXT("the in-game date and time of day come from the core calendar"), Ready.GameTime.ToString(), FString(TEXT("Tuesday 3 June 2042, 14:30")));
     TestEqual(TEXT("the lane zone is named with the home city"), Ready.Place.ToString(), FString(TEXT("Nabapara Lane, Kolkata")));
     TestTrue(TEXT("the real timestamp says Saved, its month and its year"), Ready.SavedAt.ToString().StartsWith(TEXT("Saved ")) && Ready.SavedAt.ToString().Contains(TEXT("Oct 2026")));
@@ -200,6 +201,23 @@ bool FTr5SummaryTextTest::RunTest(const FString& Parameters)
     const PWTitleR5::FSlotSummary Elsewhere = PWTitleR5::SummariseWorldSave(0, Unknown, Tr5Written(1, 1), false, FString());
     TestEqual(TEXT("an unnamed life says so"), Elsewhere.Name.ToString(), FString(TEXT("Unnamed")));
     TestEqual(TEXT("an unbuilt zone is not guessed: only the city is shown"), Elsewhere.Place.ToString(), FString(TEXT("Kolkata")));
+
+    PerfectWorld::WorldSaveData R62Birthday = Tr5MakeSave("Anika", "Sen", true, 2, 23, 59);
+    R62Birthday.Creation.Identity.Birth = {2025, 6, 3};
+    TestEqual(TEXT("age just before birthday"), PWTitleR5::SummariseWorldSave(0, R62Birthday, Tr5Written(1, 1), false, FString()).Age.ToString(), FString(TEXT("Age 16")));
+    (void)R62Birthday.World.Clock.AdvanceTo(PerfectWorld::GameClock::FromCalendar(2042, 6, 3, 0, 0));
+    TestEqual(TEXT("age on birthday, although creation Age stays 16"), PWTitleR5::SummariseWorldSave(0, R62Birthday, Tr5Written(1, 1), false, FString()).Age.ToString(), FString(TEXT("Age 17")));
+    (void)R62Birthday.World.Clock.AdvanceTo(PerfectWorld::GameClock::FromCalendar(2043, 6, 3, 0, 0));
+    TestEqual(TEXT("age in a later saved year"), PWTitleR5::SummariseWorldSave(0, R62Birthday, Tr5Written(1, 1), false, FString()).Age.ToString(), FString(TEXT("Age 18")));
+    for (const PerfectWorld::HouseholdDefinition& R62Household : PerfectWorld::CharacterCreator::HouseholdDefinitions())
+    {
+        R62Birthday.Player.ZoneId = PerfectWorld::OriginHomeZoneId(R62Household.HomeKitId);
+        const PWTitleR5::FSlotSummary R62Home = PWTitleR5::SummariseWorldSave(0, R62Birthday, Tr5Written(1, 1), false, FString());
+        const FString R62KitName(UTF8_TO_TCHAR(std::string(R62Household.HomeKitName).c_str()));
+        TestEqual(TEXT("every household zone uses its authored name"), R62Home.Place.ToString(), R62KitName + TEXT(", Kolkata"));
+    }
+    Unknown.Creation.Identity.HomeCity.clear();
+    TestTrue(TEXT("unknown zone without home city has no invented place"), PWTitleR5::SummariseWorldSave(0, Unknown, Tr5Written(1, 1), false, FString()).Place.IsEmpty());
 
     const PWTitleR5::FSlotSummary Backup = PWTitleR5::SummariseWorldSave(0, Tr5MakeSave("Anika", "Sen", true, 3, 14, 30), Tr5Written(19, 12), true, FString());
     TestTrue(TEXT("a save read from its backup says so"), Backup.State == PWTitleR5::ESlotState::Recovered && Backup.CanLoad() && !Backup.Note.IsEmpty());
@@ -422,11 +440,15 @@ bool FTr5DiskReadTest::RunTest(const FString& Parameters)
 {
     // Read-only: whatever the save folder holds, the title's view of it must agree with the creator's own slot rules.
     const PWTitleR5::FTitleSaves Saves = PWTitleR5::ReadTitleSaves();
+    const UPerfectWorldCharacterCreatorSubsystem* R62Creator = GetDefault<UPerfectWorldCharacterCreatorSubsystem>();
+    TestEqual(TEXT("out-of-range slot description remains explicit"), R62Creator->DescribeSaveSlot(-1).ToString(), FString(TEXT("No such slot")));
     TestEqual(TEXT("Continue is the creator's most recent slot"), Saves.ContinueSlot, UPerfectWorldCharacterCreatorSubsystem::FindMostRecentSaveSlot());
     for (const PWTitleR5::FSlotSummary& Summary : Saves.Slots)
     {
         TestTrue(TEXT("a listed slot is an occupied slot"), Summary.State != PWTitleR5::ESlotState::Empty && UPerfectWorldCharacterCreatorSubsystem::IsSaveSlotOccupied(Summary.Slot));
         TestFalse(TEXT("and has a note or readable details"), Summary.Name.IsEmpty() && Summary.Note.IsEmpty());
+        TestEqual(TEXT("DescribeSaveSlot and the load panel use the title's composed summary"),
+                  R62Creator->DescribeSaveSlot(Summary.Slot).ToString(), Summary.Compose().ToString());
     }
     if (Saves.Slots.Num() > 0)
     {

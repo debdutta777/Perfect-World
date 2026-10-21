@@ -5,6 +5,7 @@
 #include "PerfectWorldFrontEndHUD.generated.h"
 
 class SPWFrontEndRoot;
+class SPWQuestTracker;
 class SWeakWidget;
 class UPerfectWorldCharacterCreatorSubsystem;
 
@@ -33,6 +34,9 @@ public:
 
     /** Escape or the controller menu button while playing: opens the pause menu, or closes it. */
     void ToggleInWorldMenu();
+
+    /** F3: the quests key while playing pauses straight onto the quest window. */
+    void OpenQuestWindow();
 
     /** Resets the creator to a fresh draft and opens the first creation page. */
     void BeginNewCreation();
@@ -79,6 +83,9 @@ private:
 
     TSharedPtr<SPWFrontEndRoot> Root;
     TSharedPtr<SWeakWidget> ViewportHolder;
+    /** F3: the tracked objective's line, drawn under the clock while playing. */
+    TSharedPtr<SPWQuestTracker> QuestTracker;
+    TSharedPtr<SWeakWidget> QuestTrackerHolder;
     EFrontEndMode Mode = EFrontEndMode::Title;
 
     /** The slot the running life saves to, or -1 when it has none yet. */

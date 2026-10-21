@@ -127,6 +127,7 @@ void UPWLaneLifeSubsystem::BuildWorld()
 void UPWLaneLifeSubsystem::ResetWorld()
 {
     BuildWorld();
+    KnockedDoors.Reset(); // F5: an answered ring belongs to one visit; a fresh world remembers none
     for (const TWeakObjectPtr<APWDoorActor>& Weak : RegisteredDoors)
     {
         APWDoorActor* Door = Weak.Get();
@@ -203,6 +204,7 @@ void UPWLaneLifeSubsystem::AdoptSavedWorld(TUniquePtr<PerfectWorld::WorldSim> Pr
     LastBroadcastInstant = GetNow();
     ClockHold = EPWClockHold::Menu;
     ResolveOriginResidency();
+    KnockedDoors.Reset(); // F5: a load never carries an answered ring over (it is not saved; this also covers a load beside the same door)
     for (const auto& Weak : RegisteredDoors)
     {
         if (auto* Door = Weak.Get())

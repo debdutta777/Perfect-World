@@ -1,4 +1,5 @@
-#include "PerfectWorldAcceptanceSubsystem.h"
+#include "PerfectWorldAcceptanceProprietors.h"
+#include "PerfectWorldAcceptanceProprietorWork.h"
 
 #include "Engine/World.h"
 #include "EngineUtils.h"
@@ -21,15 +22,14 @@
 // Start=new, then a FRESH process with Start=continue); each process lists the same planned steps and the steps of the other phase pass
 // as "belongs to the other phase".
 //
-// New-life phase, at the repair workshop (Debashis Pal): the clock moves to 07:50 through the core's time commands and he is at the
+// New-life phase, at the repair workshop (Debashis Pal): the clock moves to 07:42 through the core's time commands and he is at the
 // workbench preparing; at 08:00 he is at the staff counter (the door's opening); the player walks in through the real door, Talks,
 // agrees to bring something in (a free choice, no time passes), Leaves, and the agreement is SAVED. He resumes the counter. The player
 // then stands in the staff gap on his route to the workbench: he is held back (yield) and never walks through the player; when the
 // player steps aside he completes the walk and is working at the workbench (blocked-route recovery). The player leaves the threshold
 // clear, the clock moves to 11:55, he is at the counter and at 12:00 he is SEEN walking out and leaving the lane. At 12:30 the hardware
-// store's Mahua Saha is observed at her counter and at 13:15 in the stock room at her meal, while Debashis is off the lane for the
-// closure. Mahua is observed through the presence subsystem only (the lane's two shops are about five kilometres apart and the
-// scenario has one declared start), so her step proves position, not a visit.
+// worker's meal/rest and evening closing decisions are exposed by presence. Mahua now has an independent declared-start physical
+// visit, mahua_workday (PerfectWorldAcceptanceMahua.cpp); presence-only observation is not counted as a visit.
 // Continue phase: the saved agreement and its (zero) receipts survive unchanged, he is back at the counter in the fresh process, the
 // conversation remembers the agreement, the one paid choice charges ten minutes once and a duplicate costs nothing.
 //
@@ -43,7 +43,6 @@ using PWAcceptance::FStepOutcome;
 using PWAcceptance::FStepRuntime;
 
 const FName PwDebashis(PWLane::DebashisPersonId);
-const FName PwMahua(PWLane::MahuaPersonId);
 constexpr const TCHAR* PwFact = TEXT("fact.debashis_pal.bring_promised");
 constexpr const TCHAR* PwPromise = TEXT("choice.debashis_pal.promise_bring");
 constexpr const TCHAR* PwPaid = TEXT("choice.debashis_pal.hold_lamp");
@@ -284,16 +283,19 @@ FStepDef PwResume(const TCHAR* Name, TFunction<FVector(const FPwPlan&)> Pick)
         const double Away = FVector::Dist2D(Npc->GetActorLocation(), Pick(Plan));
         const EPWNpcState State = Npc->GetNpcMovement()->GetPresentedState();
         Rt.Note = FString::Printf(TEXT("Debashis %.0f cm from the anchor, state %d; %s"), Away, static_cast<int32>(State), *PwClock(Sub));
-        if (Away > PwAtAnchorCm || State == EPWNpcState::Chat) { Rt.Phase = 0; return FStepOutcome::Wait(); }
+        const auto* Presence = Sub.GetPlayWorld()->GetSubsystem<UPWNpcPresenceSubsystem>();
+        const auto* Decision = Presence != nullptr ? Presence->FindPilotDecision(PwDebashis) : nullptr;
+        if (Away > PwAtAnchorCm || State != EPWNpcState::Work || Decision == nullptr ||
+            Decision->Intent.State != PerfectWorld::NpcState::Work) { Rt.Phase = 0; return FStepOutcome::Wait(); }
         if (Rt.Phase == 0) { Rt.NextPhase(); return FStepOutcome::Wait(); }
         return Rt.InPhase() >= 2.0 ? FStepOutcome::Pass(Rt.Note) : FStepOutcome::Wait();
     }, 90.0);
 }
 
 /** At closing he is seen at least 150 cm from the counter and within 250 cm of the threshold, then gone from the lane: walked out, not removed. */
-FStepDef PwDeparture()
+FStepDef PwDeparture(const TCHAR* Name = TEXT("debashis_walks_out_at_closing"))
 {
-    return PwAction(TEXT("debashis_walks_out_at_closing"), [](UPWAcceptanceSubsystem& Sub, FStepRuntime& Rt) -> FStepOutcome
+    return PwAction(Name, [](UPWAcceptanceSubsystem& Sub, FStepRuntime& Rt) -> FStepOutcome
     {
         FPwPlan Plan;
         FString Why;
@@ -355,11 +357,12 @@ void AppendProprietorsWorkdaySteps(TArray<FStepDef>& Out)
     Out.Add(PwPhase(PwAction(TEXT("continued_agreement_history"), [State](UPWAcceptanceSubsystem& Sub, FStepRuntime&) { return PwHistory(Sub, *State); }), State, true));
     Out.Add(PwPhase(PwObserve(TEXT("continued_debashis_at_counter"), PwDebashis,
         [](FVector& P) { FPwPlan Plan; FString Why; if (!PwMakePlan(Plan, Why)) { return false; } P = Plan.Counter; return true; }, -1, 60.0), State, true));
+    Out.Add(PwPhase(R55SafeTalkStep(TEXT("continued_safe_pause_talk"), PwDebashis), State, true));
     Out.Add(PwPhase(PwAction(TEXT("remembered_agreement_and_one_charge"), [State](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
     {
         auto* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
         auto* Talk = UPWConversationPresenter::Get(Sub.GetPlayWorld());
-        if (Life == nullptr || Talk == nullptr || !Talk->BeginConversationWith(PwDebashis, FText::FromString(TEXT("Debashis")))) { return FStepOutcome::Fail(TEXT("Debashis's conversation was refused")); }
+        if (Life == nullptr || Talk == nullptr || !PwConversationIs(Sub, PwDebashis)) { return FStepOutcome::Fail(TEXT("Debashis's conversation was refused")); }
         const auto* Open = Life->FindConversation(PwDebashis);
         if (Open == nullptr || !Open->Open || FString(UTF8_TO_TCHAR(Open->NodeId.c_str())).Contains(TEXT("remembered")) == false)
         {
@@ -392,13 +395,13 @@ void AppendProprietorsWorkdaySteps(TArray<FStepDef>& Out)
             const FVector Start = Plan.Door + Plan.Out * 150.0 + FVector(0.0, 0.0, PWPlayer::CapsuleHalfHeight + 5.0);
             Pawn->TeleportTo(Start, FRotator::ZeroRotator); // the scenario's one teleport
             Pawn->GetCharacterMovement()->Velocity = FVector::ZeroVector;
-            Sub.FaceWorldPoint(Plan.Door);
+            Sub.FaceWorldPoint(Plan.Door + Plan.Out * 1000.0); // Let the scheduled ingress appear out of view.
             Rt.NextPhase();
             return FStepOutcome::Wait();
         }
         return Rt.InPhase() < 0.8 || !Pawn->GetCharacterMovement()->IsMovingOnGround() ? FStepOutcome::Wait() : FStepOutcome::Pass(TEXT("declared start 150 cm in front of the workshop threshold"));
     }), State, false));
-    Out.Add(PwPhase(PwJumpClock(TEXT("clock_to_monday_0750"), 7, 50), State, false));
+    Out.Add(PwPhase(PwJumpClock(TEXT("clock_to_monday_0742"), 7, 42), State, false));
     Out.Add(PwPhase(PwObserve(TEXT("debashis_prepares_at_workbench"), PwDebashis,
         [](FVector& P) { FPwPlan Plan; FString Why; if (!PwMakePlan(Plan, Why)) { return false; } P = Plan.Workbench; return true; }, -1, 60.0), State, false));
     Out.Add(PwPhase(PwObserve(TEXT("debashis_at_counter_when_open"), PwDebashis,
@@ -424,14 +427,7 @@ void AppendProprietorsWorkdaySteps(TArray<FStepDef>& Out)
         return FStepOutcome::Pass(TEXT("the view is turned to the staff counter"));
     }), State, false));
     Out.Add(PwPhase(MakeShotStep(TEXT("shot_debashis_at_counter")), State, false));
-    Out.Add(PwPhase(PWAcceptance::MakeInteractStep(TEXT("talk_to_debashis"),
-        [](UPWAcceptanceSubsystem& Sub) -> AActor* { return PwFind(Sub, PwDebashis); },
-        [](UPWAcceptanceSubsystem& Sub, FString& Detail)
-        {
-            if (!PwConversationIs(Sub, PwDebashis)) { return false; }
-            Detail = TEXT("the conversation panel is open and the core's open conversation is Debashis");
-            return true;
-        }, nullptr, 20.0), State, false));
+    Out.Add(PwPhase(R55SafeTalkStep(TEXT("talk_to_debashis_at_safe_pause"), PwDebashis), State, false));
     Out.Add(PwPhase(PwAction(TEXT("agree_to_bring_something_in"), [](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
     {
         auto* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
@@ -445,20 +441,7 @@ void AppendProprietorsWorkdaySteps(TArray<FStepDef>& Out)
         return FStepOutcome::Pass(TEXT("the agreement is remembered; no receipt and no time passed"));
     }), State, false));
     Out.Add(PwPhase(MakeShotStep(TEXT("shot_debashis_conversation")), State, false));
-    Out.Add(PwPhase(PwAction(TEXT("leave_debashis"), [](UPWAcceptanceSubsystem& Sub, FStepRuntime& Rt) -> FStepOutcome
-    {
-        UPWConversationPresenter* Talk = UPWConversationPresenter::Get(Sub.GetPlayWorld());
-        const UPWLaneLifeSubsystem* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
-        if (Talk == nullptr || Life == nullptr) { return FStepOutcome::Fail(TEXT("no conversation presenter")); }
-        if (Rt.Phase == 0)
-        {
-            if (!PwConversationIs(Sub, PwDebashis)) { return FStepOutcome::Fail(TEXT("no open conversation to leave")); }
-            Talk->LeaveConversation();
-            Rt.NextPhase();
-            return FStepOutcome::Wait();
-        }
-        return Talk->IsOpen() || !PerfectWorld::OpenConversationPersonId(Life->GetWorldState()).empty() ? FStepOutcome::Wait() : FStepOutcome::Pass(TEXT("Leave used; the core has no open conversation"));
-    }), State, false));
+    Out.Add(PwPhase(R55LeaveResumeStep(TEXT("leave_debashis_and_resume_unfinished_step"), PwDebashis), State, false));
     Out.Add(PwPhase(PwAction(TEXT("save_agreement"), [State](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
     {
         bool bSaved = false;
@@ -471,6 +454,7 @@ void AppendProprietorsWorkdaySteps(TArray<FStepDef>& Out)
     Out.Add(PwPhase(PwWalkTo(TEXT("walk_to_staff_gap"), [](const FPwPlan& Plan) { return Plan.Beyond; }, 40.0, 30.0), State, false));
     Out.Add(PwPhase(PwWalkTo(TEXT("stand_in_staff_gap"), [](const FPwPlan& Plan) { return Plan.Junction; }, 30.0, 20.0), State, false));
     Out.Add(PwPhase(PwYieldStep(), State, false));
+    Out.Add(PwPhase(R55ObstructionStep(TEXT("debashis_core_yield_without_push"), PwDebashis), State, false));
     Out.Add(PwPhase(MakeShotStep(TEXT("shot_gap_yield")), State, false));
     Out.Add(PwPhase(PwWalkTo(TEXT("step_aside_up_the_gap"), [](const FPwPlan& Plan) { return Plan.Beyond; }, 40.0, 20.0), State, false));
     Out.Add(PwPhase(PwResume(TEXT("debashis_recovers_to_workbench"), [](const FPwPlan& Plan) { return Plan.Workbench; }), State, false));
@@ -481,11 +465,21 @@ void AppendProprietorsWorkdaySteps(TArray<FStepDef>& Out)
         [](FVector& P) { FPwPlan Plan; FString Why; if (!PwMakePlan(Plan, Why)) { return false; } P = Plan.Counter; return true; }, -1, 60.0), State, false));
     Out.Add(PwPhase(PwDeparture(), State, false));
     Out.Add(PwPhase(PwJumpClock(TEXT("clock_to_monday_1230"), 12, 30), State, false));
-    Out.Add(PwPhase(PwObserve(TEXT("mahua_at_counter_in_open_hours"), PwMahua,
-        [](FVector& P) { return PwMahuaPoint(PWLane::MahuaAnchorCounter, P); }, -1, 60.0), State, false));
-    Out.Add(PwPhase(PwJumpClock(TEXT("clock_to_monday_1315"), 13, 15), State, false));
-    Out.Add(PwPhase(PwObserve(TEXT("mahua_in_stock_room_at_meal"), PwMahua,
-        [](FVector& P) { return PwMahuaPoint(PWLane::MahuaAnchorStockRoom, P); }, -1, 60.0), State, false));
+    Out.Add(PwPhase(R55DecisionStep(TEXT("debashis_midday_meal"), PwDebashis, PerfectWorld::NpcDecisionReason::Meal), State, false));
     Out.Add(PwPhase(PwAbsent(TEXT("debashis_off_lane_during_closure"), PwDebashis), State, false));
+    Out.Add(PwPhase(R55PilotTimeStep(TEXT("clock_to_rest_1312"), 13, 12), State, false));
+    Out.Add(PwPhase(R55DecisionStep(TEXT("debashis_midday_rest"), PwDebashis, PerfectWorld::NpcDecisionReason::Rest), State, false));
+    Out.Add(PwPhase(R55PilotTimeStep(TEXT("clock_to_bench_test_1701"), 17, 1), State, false));
+    Out.Add(PwPhase(PwObserve(TEXT("debashis_tests_at_bench"), PwDebashis,
+        [](FVector& P) { FPwPlan Plan; FString Why; if (!PwMakePlan(Plan, Why)) { return false; } P = Plan.Workbench; return true; }, -1, 60.0), State, false));
+    Out.Add(PwPhase(PwAction(TEXT("debashis_presents_test_action"), [](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
+    {
+        const auto* Npc = PwFind(Sub, PwDebashis);
+        return Npc != nullptr && Npc->GetNpcMovement()->GetIntent().WorkActionId == FName(TEXT("work.test")) ?
+            FStepOutcome::Pass(TEXT("bench test has its own work.test presentation")) : FStepOutcome::Fail(TEXT("bench test action was not presented"));
+    }), State, false));
+    Out.Add(PwPhase(R55PilotTimeStep(TEXT("clock_to_evening_close_1840"), 18, 40), State, false));
+    Out.Add(PwPhase(R55DecisionStep(TEXT("debashis_closing_up"), PwDebashis, PerfectWorld::NpcDecisionReason::Closing), State, false));
+    Out.Add(PwPhase(PwDeparture(TEXT("debashis_walks_home_after_evening_close")), State, false));
 }
 } // namespace PWAcceptance

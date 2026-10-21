@@ -121,7 +121,7 @@ TSharedRef<SWidget> SPWTraitsPage::BuildBudget()
             if (Proposal.Refund > 0) return FText::Format(LOCTEXT("StickyRefund", "Returns {0} points"), FText::AsNumber(Proposal.Refund));
             return LOCTEXT("StickyNoChange", "No change");
         }), 14, Style.TextSecondary, false, true)]];
-    return SNew(SBox).MinDesiredHeight(56)[PWUI::MakePanel(Row, FMargin(16, 8))];
+    return SAssignNew(BudgetBox, SBox).MinDesiredHeight(56)[PWUI::MakePanel(Row, FMargin(16, 8))];
 }
 
 #undef LOCTEXT_NAMESPACE

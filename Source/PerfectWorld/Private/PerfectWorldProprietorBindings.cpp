@@ -5,6 +5,7 @@
 #include "PerfectWorldLaneLifeSubsystem.h"
 #include "PerfectWorldNpcCharacter.h"
 #include "PerfectWorldNpcPresenceSubsystem.h"
+#include "PerfectWorldNpcPilotBridge.h"
 
 namespace PWLane
 {
@@ -226,6 +227,9 @@ const FPrShop PrStore{TEXT("building.nabapara.hardware_store"), TEXT("location.n
 bool PrSpawn(UWorld& World, const FLaneScene& Scene, const FPrShop& Shop, const TCHAR* DoorId, const TCHAR* PersonId, const FText& Name,
              FNpBindingProvider (*Bind)(const FLaneBuilding&), const TCHAR* Label)
 {
+    // Registration opts exactly these identities into the presence-owned R5-04 decision bridge.
+    // Presence installs their route block/clear subscription when the physical actor appears.
+    if (!R55IsWorkPilot(FName(PersonId))) { return false; }
     if (!HasKitDoor(Scene, DoorId))
     {
         UE_LOG(LogTemp, Warning, TEXT("%s: the shop's door was not built; the proprietor is not placed."), Label);

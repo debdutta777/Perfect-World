@@ -6,11 +6,13 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "LaneFrontageCatalogue.h"
 #include "Misc/FileHelper.h"
+#include "PerfectWorldAcceptanceHomes.h"
 #include "PerfectWorldAcceptanceStationery.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "PerfectWorldDoorActor.h"
 #include "PerfectWorldFrontEndHUD.h"
 #include "PerfectWorldInteractionComponent.h"
+#include "PerfectWorldLaneBlocks.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
 #include "PerfectWorldLaneKitStalls.h"
 #include "PerfectWorldPlayerCharacter.h"
@@ -38,7 +40,8 @@ const R53LI::FrontageEntry* R53Row(const FString& Name)
 
 FVector R53Point(const R53LI::FrontageEntry& Row, double U, double V)
 {
-    return FVector(Row.OriginXCm + U, Row.Side * (Row.FrontAbsYCm + V), 15);
+    // World Z of the finished ground floor: the road top (PWLane::GroundZ, -200) plus the 15 cm floor. A bare 15 would drop the declared start 3 m.
+    return FVector(Row.OriginXCm + U, Row.Side * (Row.FrontAbsYCm + V), PWLane::GroundZ + 15);
 }
 
 APWDoorActor* R53Door(UPWAcceptanceSubsystem& Sub, const FString& Name)
@@ -228,6 +231,12 @@ void AppendFrontagesRound5Steps(TArray<FStepDef>& Out)
             continue;
         }
         const double X = Row->OriginXCm + Row->EntranceCentreU;
+        // The lane clock runs one game minute per real second and the player walks 1.4 m/s, so the three shops cannot all be finished
+        // inside the 10:30-13:00 morning window that the first jump gives (the last leaf re-open would fall after 13:00, when all three
+        // doors are closed to visitors). Re-declare the same Tuesday at 15:30, inside every afternoon window (15:00-19:30 at least),
+        // once the first shop is done and the world is at rest; the leaves keep their authored state across the jump.
+        if (Name == TEXT("narrow_shop"))
+            Out.Add(R53Phase(PWAcceptance::Homes::HmClockStep(TEXT("round5_browsing_1530"), 1, 15, 30), State, false));
         // Keep clear of the kerb poles/trunks even on the same side; no direct diagonal through another frontage.
         Out.Add(R53Phase(R53Walk(Name + TEXT("_road_edge"), FVector(PreviousX, PreviousSide * 340, 15)), State, false));
         if (PreviousSide != Row->Side)

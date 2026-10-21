@@ -6,7 +6,7 @@
 #include "PerfectWorldNpcCharacter.h"
 #include "PerfectWorldNpcPresenceSubsystem.generated.h"
 
-namespace PerfectWorld { class ContentDb; struct NpcIntent; }
+namespace PerfectWorld { class ContentDb; struct NpcIntent; struct NpcDecision; }
 class FNpLaneNpcBindings;
 struct FNpPresenceRecord;
 
@@ -33,6 +33,12 @@ public:
     void ResetPresentation(PerfectWorld::GameInstant GameInstantNow);
     APWNpcCharacter* FindPerson(FName PersonId) const;
     const PerfectWorld::NpcIntent* FindIntent(FName PersonId) const;
+    const PerfectWorld::NpcDecision* FindPilotDecision(FName PersonId) const;
+    /** Only the two work pilots use this transient interruption bridge. */
+    bool RequestPilotChat(FName PersonId);
+    bool RequestPilotTalk(FName PersonId, APawn* By);
+    void ReleasePilotChat(FName PersonId);
+    void ReportPilotObstruction(FName PersonId, bool bBlocked, bool bDoorway = false);
     int32 RegisteredPersonCount() const { return People.Num(); }
     bool IsRegistered(FName PersonId) const { return People.Contains(PersonId); }
     FNpLaneNpcBindings& Bindings();
@@ -40,6 +46,7 @@ public:
 private:
     void Present(FName PersonId, FNpPresenceRecord& Record);
     void UpdateYield(FName PersonId, FNpPresenceRecord& Record, float Dt);
+    void TickPilotTalk(FName PersonId, FNpPresenceRecord& Record);
     bool ResolveActorAnchor(FName PersonId, FName AnchorId, FTransform& Out) const;
     bool ResolveActorRoute(FName PersonId, FName RouteId, TArray<FVector>& Out) const;
     bool IsPointVisible(const FVector& Feet) const;
