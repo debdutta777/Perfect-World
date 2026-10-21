@@ -757,3 +757,15 @@ add_test(NAME PerfectWorldQuestLogTests COMMAND PerfectWorldQuestLogTests ${CMAK
 add_executable(PerfectWorldDoorBellTests Tests/DoorBellTests.cpp)
 target_link_libraries(PerfectWorldDoorBellTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldDoorBellTests COMMAND PerfectWorldDoorBellTests)
+
+# F2: the lane map projection and map view arithmetic behind the minimap and the full-screen map (portable; Unreal draws what these return).
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/LaneMap.cpp
+    Source/PerfectWorldCore/Private/LaneMapQuery.cpp
+    Source/PerfectWorldCore/Private/LaneMapView.cpp)
+add_executable(PerfectWorldLaneMapTests Tests/LaneMapTests.cpp)
+target_link_libraries(PerfectWorldLaneMapTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneMapTests COMMAND PerfectWorldLaneMapTests)
+add_executable(PerfectWorldLaneMapViewTests Tests/LaneMapViewTests.cpp)
+target_link_libraries(PerfectWorldLaneMapViewTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneMapViewTests COMMAND PerfectWorldLaneMapViewTests)
