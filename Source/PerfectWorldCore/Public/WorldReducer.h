@@ -39,6 +39,29 @@ struct CommandResult
 /** Scheduled events one advance may fire before it stops and reports Partial. */
 constexpr std::size_t MaxEventsPerAdvance = 10'000;
 
+/** Presentation-free school gate projection. All minute fields are local minutes of today's day. */
+struct SchoolArrivalView
+{
+    SchoolDayKind DayKind = SchoolDayKind::OutsideYear;
+    bool HasSchool = false;
+    bool CanArrive = false;
+    std::int32_t GatesOpenMinute = 0;
+    /** Inclusive on-time window: GatesOpenMinute through FirstBellMinute. */
+    std::int32_t FirstBellMinute = 0;
+    std::int32_t DismissalMinute = 0;
+    /** Holiday/break ID when present. No translated presentation text. */
+    std::string ClosureId;
+    /** Forecast assumes staying until dismissal. Recorded is read solely from DayLoop.Attendance. */
+    std::optional<AttendanceForecast> Forecast;
+    std::optional<AttendanceDay> Recorded;
+    std::string ReasonTextKey;
+    Rejection Refusal;
+};
+
+/** Pure; requires matching validated bell/calendar content, never falls back to weekdays for missing content. */
+[[nodiscard]] PERFECTWORLDCORE_API SchoolArrivalView QuerySchoolArrival(const WorldState& state,
+                                                                        const DayLoopCatalogues& school);
+
 /**
  * The command reducer (SYSTEMS.md §2.2, ROADMAP M1-01). Submit is the only
  * mutation entry point: validate (pure; a rejection changes nothing), apply,
@@ -48,13 +71,17 @@ constexpr std::size_t MaxEventsPerAdvance = 10'000;
 class PERFECTWORLDCORE_API WorldSim
 {
 public:
-    /** `eventCap` exists for tests; the game always uses MaxEventsPerAdvance. */
-    explicit WorldSim(std::uint64_t worldSeed, std::size_t eventCap = MaxEventsPerAdvance);
+    /**
+     * `eventCap` exists for tests; the game always uses MaxEventsPerAdvance.
+     * School catalogues are borrowed, immutable and must outlive the sim; bind the same content on load/replay.
+     */
+    explicit WorldSim(std::uint64_t worldSeed, std::size_t eventCap = MaxEventsPerAdvance,
+                      DayLoopCatalogues school = {});
     /**
      * Continue a loaded world (DeserializeWorldSave's World). The state must be in step
      * (IsWorldDayInStep); the command log starts empty, so it holds the commands since the load.
      */
-    explicit WorldSim(WorldState state, std::size_t eventCap = MaxEventsPerAdvance);
+    explicit WorldSim(WorldState state, std::size_t eventCap = MaxEventsPerAdvance, DayLoopCatalogues school = {});
 
     /**
      * The only mutation entry point. Atomic: a rejected command, including a paid conversation choice whose charge
@@ -64,12 +91,13 @@ public:
     const WorldState& State() const noexcept { return State_; }
     /** Accepted commands in order: the replay log (ROADMAP M1-03). */
     const std::vector<Command>& Log() const noexcept { return Log_; }
+    [[nodiscard]] SchoolArrivalView SchoolArrivalToday() const { return QuerySchoolArrival(State_, School_); }
 
 private:
     std::optional<Rejection> Validate(const Command& command) const;
     /**
-     * A rejection here (only a paid conversation choice whose charge the event cap stopped short) makes Submit restore
-     * the snapshot it took before applying (NeedsRollbackSnapshot).
+     * A paid conversation choice whose charge the event cap stopped short restores its rollback snapshot.
+     * Free school commands stage their day-loop copy before replacing state, so their refusals need no snapshot.
      */
     std::optional<Rejection> Apply(const Command& command, CommandResult& result);
     bool NeedsRollbackSnapshot(const Command& command) const;
@@ -87,10 +115,14 @@ private:
     // Conversation and door commands, in WorldConversation.cpp.
     std::optional<Rejection> ValidateLaneCommand(const Command& command) const;
     std::optional<Rejection> ApplyLaneCommand(const Command& command, CommandResult& result);
+    // Free planning and arrival only, in WorldSchoolDay.cpp; application commits a successful day-loop copy.
+    std::optional<Rejection> ValidateSchoolCommand(const Command& command) const;
+    std::optional<Rejection> ApplySchoolCommand(const Command& command, CommandResult& result);
 
     WorldState State_;
     std::vector<Command> Log_;
     std::size_t EventCap_ = MaxEventsPerAdvance;
+    DayLoopCatalogues School_;
 };
 
 /** True for the conversation.* and door.* commands (WorldConversation.cpp). */

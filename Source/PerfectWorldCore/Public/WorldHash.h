@@ -64,6 +64,8 @@ struct ReplayOptions
     std::size_t CheckpointEvery = 0;
     /** Keep every command's result (events included); off by default to save memory. */
     bool KeepResults = false;
+    /** Borrowed immutable content binding; use the same school catalogues that produced school.* commands. */
+    DayLoopCatalogues School{};
 };
 
 struct ReplayCheckpoint

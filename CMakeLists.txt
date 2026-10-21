@@ -736,6 +736,12 @@ target_link_libraries(PerfectWorldNpcBehaviourRegressionTests PRIVATE PerfectWor
 add_test(NAME PerfectWorldNpcBehaviourRegressionTests COMMAND PerfectWorldNpcBehaviourRegressionTests
     ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule)
 
+# R6-07: school planning/arrival through the world reducer; existing attendance/day-loop persistence.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldSchoolDay.cpp)
+add_executable(PerfectWorldWorldSchoolDayTests Tests/WorldSchoolDayTests.cpp)
+target_link_libraries(PerfectWorldWorldSchoolDayTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldSchoolDayTests COMMAND PerfectWorldWorldSchoolDayTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
 # R62: shared, read-only save-slot facts for title and load presentations.
 target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/SaveSlotSummary.cpp)
 add_executable(PerfectWorldSaveSlotSummaryTests Tests/SaveSlotSummaryTests.cpp)
