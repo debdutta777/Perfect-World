@@ -14,7 +14,7 @@ bool FQwWordsTest::RunTest(const FString& Parameters)
     using namespace QwTests;
     using namespace PerfectWorld;
     // Every item the fullest world can project, plus the generic household agreement, reads as real sentences.
-    QuestLogView Generic = MakeQuestLog([] { WorldState World = MakeWorldState(78); QwSay(World, "person.household_adult", {"fact.evening_rota_agreed"}); return World; }(), QwAt(2, 19, 0));
+    const QuestLogView Generic = MakeQuestLog([] { WorldState World = MakeWorldState(78); QwSay(World, "person.household_adult", {"fact.evening_rota_agreed"}); return World; }(), QwAt(2, 19, 0));
     TSet<FString> Whats;
     int32 Checked = 0;
     const QuestLogView Rich = QwRichLog();

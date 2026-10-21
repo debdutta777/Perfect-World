@@ -145,7 +145,8 @@ bool FQwTrackedLineTest::RunTest(const FString& Parameters)
     PWQuest::SetTrackedId(TEXT("quest.nothing"));
     Tracker->Refresh();
     TestFalse(TEXT("a tracked id that is gone leaves the line"), Tracker->GetLine().bVisible);
-    TestFalse(TEXT("and with no world the widget shows nothing"), SNew(SPWQuestTracker).WorldContext(TWeakObjectPtr<const UObject>()).ShowTracker(true)->GetLine().bVisible);
+    const TSharedRef<SPWQuestTracker> Worldless = SNew(SPWQuestTracker).WorldContext(TWeakObjectPtr<const UObject>()).ShowTracker(true);
+    TestFalse(TEXT("and with no world the widget shows nothing"), Worldless->GetLine().bVisible);
     return true;
 }
 

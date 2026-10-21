@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "PerfectWorldCreationViews.h"
 
 class FPWCreationModel;

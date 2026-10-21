@@ -12,6 +12,7 @@
 #include "PerfectWorldFurnitureActor.h"
 #include "PerfectWorldInteractionComponent.h"
 #include "PerfectWorldLaneLifeConversation.h"
+#include "NpcBehaviour.h"
 #include "PerfectWorldNpcPresenceSubsystem.h"
 #include "PerfectWorldReadingPresenter.h"
 
