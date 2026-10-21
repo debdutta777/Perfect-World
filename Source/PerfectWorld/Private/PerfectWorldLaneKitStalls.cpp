@@ -309,7 +309,8 @@ FString PostedSignText(const PerfectWorld::DoorDef& Door)
     {
         return FString();
     }
-    return FString(TEXT("Browsing hours\n")) + Hours + TEXT("\n") + KitPublic::UnstaffedPhrase;
+    const TCHAR* R66Phrase = Door.Id == "door.nabapara.tailor_shop_front" ? KitPublic::R66TailorStaffedPhrase : KitPublic::UnstaffedPhrase;
+    return FString(TEXT("Browsing hours\n")) + Hours + TEXT("\n") + R66Phrase;
 }
 
 FString BrowseNoticeText(const PerfectWorld::DoorDef& Door)
@@ -324,7 +325,8 @@ FString BrowseNoticeText(const PerfectWorld::DoorDef& Door)
         : Door.Id == "door.nabapara.cloth_merchant_front"
         ? TEXT("Cloth merchant: browse the shelf display.")
         : TEXT("Everyday goods on the shelves and in the bins.");
-    return FString(R53Description) + TEXT("\nBrowsing hours ") + Hours + TEXT(".\n") + KitPublic::UnstaffedPhrase;
+    const TCHAR* R66Phrase = Door.Id == "door.nabapara.tailor_shop_front" ? KitPublic::R66TailorStaffedPhrase : KitPublic::UnstaffedPhrase;
+    return FString(R53Description) + TEXT("\nBrowsing hours ") + Hours + TEXT(".\n") + R66Phrase;
 }
 
 FName BrowseActorTag(FName BuildingId)

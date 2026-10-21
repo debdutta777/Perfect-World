@@ -82,7 +82,8 @@ inline FString StExpectedHours(const PerfectWorld::DoorDef& Door)
 
 inline bool StHasEveryRequiredPhrase(const FString& Text, const PerfectWorld::DoorDef& Door)
 {
-    return Text.Contains(StExpectedHours(Door)) && Text.Contains(TEXT("Unstaffed")) &&
+    const TCHAR* R66StaffWord = Door.Id == "door.nabapara.tailor_shop_front" ? TEXT("Staffed.") : TEXT("Unstaffed.");
+    return Text.Contains(StExpectedHours(Door)) && Text.Contains(R66StaffWord) &&
            Text.Contains(TEXT("Purchasing unavailable"));
 }
 

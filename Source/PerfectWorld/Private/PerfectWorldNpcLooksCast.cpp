@@ -428,6 +428,7 @@ bool AppendCastLook(const ELook Look, const double H, TArray<FPWNpcBlock>& Out)
     case ELook::Rekha: NlR4Rekha(H, Out); return true;
     case ELook::Prabir: R52PrabirLook(H, Out); return true;
     case ELook::Ishita: R52IshitaLook(H, Out); return true;
+    case ELook::Satyajit: R66AppendTailorLook(H, Out); return true;
     default: return false;
     }
 }

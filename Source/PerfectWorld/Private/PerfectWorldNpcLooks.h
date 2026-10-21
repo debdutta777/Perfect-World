@@ -41,7 +41,7 @@ enum class EAccessory : uint8
 {
     None, KeyPouch, Satchel, Clipboard, ClothBag, Glasses,
     /** Round 4 (R4-06), appended: head loupe and sleeve garters, tape measure and ledger, waist money pouch, messenger bag, furled umbrella. */
-    LoupeGarters, TapeAndLedger, MoneyPouch, MessengerBag, Umbrella
+    LoupeGarters, TapeAndLedger, MoneyPouch, MessengerBag, Umbrella, TapeAndChalk
 };
 enum class EBuild : uint8
 {
@@ -64,7 +64,7 @@ enum class ELook : uint8
 {
     Outfit, Mira, Anindita, Subrata, Rupa, Nirmal, Sahana,
     /** Round 4 (R4-06): the two proprietors, the vendor and the two passers-by. */
-    Debashis, Mahua, Purnima, Arun, Rekha, Prabir, Ishita
+    Debashis, Mahua, Purnima, Arun, Rekha, Prabir, Ishita, Satyajit
 };
 
 /** One row of the cast table: the stable person id, the standing height (LANE_LIFE_PLAN section B) and the look. */
@@ -90,6 +90,7 @@ void BuildBlocks(FName PersonId, EPWNpcOutfit Outfit, double H, TArray<FPWNpcBlo
 
 /** The blocks of a bespoke look (PerfectWorldNpcLooksCast.cpp). False for ELook::Outfit. */
 bool AppendCastLook(ELook Look, double H, TArray<FPWNpcBlock>& Out);
+void R66AppendTailorLook(double H, TArray<FPWNpcBlock>& Out);
 
 /** The face every body shares: eyes, brows and a nose on the +X side. HeadForwardCm shifts it with a stooped head. */
 void AppendFace(double H, double HeadForwardCm, TArray<FPWNpcBlock>& Out);
