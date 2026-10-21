@@ -3,6 +3,7 @@
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
+#include "DoorBell.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "LaneOrigin.h"
@@ -11,6 +12,7 @@
 #include "PerfectWorldFurnitureActor.h"
 #include "PerfectWorldInteractionComponent.h"
 #include "PerfectWorldLaneLifeConversation.h"
+#include "NpcBehaviour.h"
 #include "PerfectWorldNpcPresenceSubsystem.h"
 #include "PerfectWorldReadingPresenter.h"
 
@@ -150,6 +152,9 @@ void UPWLaneLifeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     Collection.InitializeDependency<UPWReadingPresenter>();
     APWReadableActor::GlobalReadRequested().RemoveAll(this);
     APWReadableActor::GlobalReadRequested().AddUObject(this, &UPWLaneLifeSubsystem::HandleReadRequested);
+
+    // F5: the household closes an open dwelling leaf behind a visitor who has gone (PerfectWorldLaneLifeKnock.cpp).
+    StartDoorKeeper();
 }
 
 void UPWLaneLifeSubsystem::Deinitialize()
@@ -159,6 +164,7 @@ void UPWLaneLifeSubsystem::Deinitialize()
     KnockedDoors.Reset();
     FTSTicker::GetCoreTicker().RemoveTicker(KnockTicker);
     KnockTicker.Reset();
+    CancelRings();
     OnClockChanged.Clear();
     APWReadableActor::GlobalReadRequested().RemoveAll(this);
     if (UPWConversationPresenter* Presenter = UPWConversationPresenter::Get(this))
@@ -194,7 +200,18 @@ bool UPWLaneLifeSubsystem::IsResidentOf(const PerfectWorld::DoorDef& Door) const
     const UGameInstance* GameInstance = World != nullptr ? World->GetGameInstance() : nullptr;
     const UPerfectWorldCharacterCreatorSubsystem* Creator =
         GameInstance != nullptr ? GameInstance->GetSubsystem<UPerfectWorldCharacterCreatorSubsystem>() : nullptr;
-    return Creator != nullptr && Creator->HasLaneOriginResidency(PWLaneLife::ToName(Door.LocationId));
+    if (Creator == nullptr)
+    {
+        return false;
+    }
+    if (Creator->HasLaneOriginResidency(PWLaneLife::ToName(Door.LocationId)))
+    {
+        return true;
+    }
+    // F5: every family origin starts in the one built opening-home shell, whose residency the origin table does not list for them
+    // (DoorBell.h IsFamilyStartShell); a care origin is not a resident of it.
+    const FPWLaneOriginView Origin = Creator->GetLaneOrigin();
+    return Origin.bResolved && PerfectWorld::IsFamilyStartShell(Origin.bGrewUpInCare, Door.LocationId);
 }
 
 void UPWLaneLifeSubsystem::RegisterDoor(APWDoorActor& Door)
@@ -292,7 +309,11 @@ void UPWLaneLifeSubsystem::RequestDoorToggle(APWDoorActor& Door, APawn* By)
         const PerfectWorld::DoorResult Why = BrDoorResultFromCode(PWLaneLife::ToFString(Result.Why.Code));
         if (Why == PerfectWorld::DoorResult::Private && Set.Open && Set.Context.Direction == PerfectWorld::DoorDirection::Entry)
         {
-            HandleDoorKnock(Door, *Def, Set.Context, By); // entry to someone's home without permission becomes a knock
+            // F5: the leaf is never knocked on. Whoever has not been let in rings the bell (a room door has none: it is just private).
+            ShowPlayerNotice(IsRingPending(Door.GetDoorId()) ? LOCTEXT("WaitForAnswer", "Someone may be coming. Wait a moment.")
+                             : PerfectWorld::DoorHasBell(*Def) ? LOCTEXT("RingFirst", "Ring the bell first.")
+                                                                : LOCTEXT("PrivateRoom", "That room is private."),
+                             By);
             return;
         }
         ShowDoorRefusal(By, Why, Def);
@@ -339,7 +360,7 @@ void UPWLaneLifeSubsystem::ShowDoorRefusal(const APawn* By, const PerfectWorld::
     FText Message;
     if (Key == "door.reason.private")
     {
-        Message = LOCTEXT("ReasonPrivate", "It's someone's home. Knock first.");
+        Message = LOCTEXT("ReasonPrivate", "It's someone's home. Ring the bell first.");
     }
     else if (Key == "door.reason.locked")
     {

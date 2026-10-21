@@ -12,12 +12,15 @@
 #include "PerfectWorldBlockTestGameMode.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
+#include "PerfectWorldMapSubsystem.h"
 #include "PerfectWorldLaneLifePersistence.h"
 #include "PerfectWorldPresentationSettings.h"
 #include "PerfectWorldTitleView.h"
 #include "UI/PWDelegates.h"
 #include "UI/PWStartAcknowledgement.h"
+#include "UI/PWQuestText.h"
 #include "UI/SPWFrontEndRoot.h"
+#include "UI/SPWQuestTracker.h"
 #include "Widgets/SWeakWidget.h"
 
 #define LOCTEXT_NAMESPACE "PerfectWorldFrontEndHUD"
@@ -51,6 +54,17 @@ void APerfectWorldFrontEndHUD::BeginPlay()
     ViewportHolder = SNew(SWeakWidget).PossiblyNullContent(Root);
     GEngine->GameViewport->AddViewportWidgetContent(ViewportHolder.ToSharedRef(), EnFrontEndZOrder);
 
+    // F3: the quests key reaches the quest window through this HUD; the tracked objective's line sits under the clock.
+    const TWeakObjectPtr<APerfectWorldFrontEndHUD> Weak(this);
+    PWQuest::SetToggleHandler([Weak]() { if (APerfectWorldFrontEndHUD* Self = Weak.Get()) { Self->OpenQuestWindow(); } });
+    QuestTracker = SNew(SPWQuestTracker)
+        .WorldContext(TWeakObjectPtr<const UObject>(this))
+        .ShowTracker(TAttribute<bool>::CreateLambda([Weak]() { const APerfectWorldFrontEndHUD* Self = Weak.Get(); return Self != nullptr && !Self->IsMenuOpen(); }))
+        .TopOffset(76.0f);
+    QuestTrackerHolder = SNew(SWeakWidget).PossiblyNullContent(QuestTracker);
+    QuestTrackerHolder->SetVisibility(EVisibility::HitTestInvisible);
+    GEngine->GameViewport->AddViewportWidgetContent(QuestTrackerHolder.ToSharedRef(), EnFrontEndZOrder - 1);
+
     // In the world (game-only input) Escape or the controller's menu button opens the pause menu. While a menu is up
     // the keyboard belongs to Slate, and SPWFrontEndRoot routes Escape back here to resume.
     EnableInput(PlayerOwner);
@@ -75,6 +89,13 @@ void APerfectWorldFrontEndHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
     {
         GEngine->GameViewport->RemoveViewportWidgetContent(ViewportHolder.ToSharedRef());
     }
+    if (GEngine != nullptr && GEngine->GameViewport != nullptr && QuestTrackerHolder.IsValid())
+    {
+        GEngine->GameViewport->RemoveViewportWidgetContent(QuestTrackerHolder.ToSharedRef());
+    }
+    PWQuest::SetToggleHandler(nullptr);
+    QuestTrackerHolder.Reset();
+    QuestTracker.Reset();
     ViewportHolder.Reset();
     Root.Reset();
     Super::EndPlay(EndPlayReason);
@@ -102,11 +123,25 @@ UPerfectWorldCharacterCreatorSubsystem* APerfectWorldFrontEndHUD::GetCreator() c
     return Instance != nullptr ? Instance->GetSubsystem<UPerfectWorldCharacterCreatorSubsystem>() : nullptr;
 }
 
+void APerfectWorldFrontEndHUD::OpenQuestWindow()
+{
+    if (Mode != EFrontEndMode::Playing)
+    {
+        return;
+    }
+    PWQuest::SetOpenOnNextPause(true);
+    ToggleInWorldMenu(); // pauses exactly as Escape does; the pause menu opens straight onto Quests
+}
+
 void APerfectWorldFrontEndHUD::ToggleInWorldMenu()
 {
     if (!Root.IsValid())
     {
         return;
+    }
+    if (UPWMapSubsystem* Map = UPWMapSubsystem::Get(this))
+    {
+        Map->CloseWorldMap(); // F2: a menu never opens over the full map
     }
     if (Mode == EFrontEndMode::Playing)
     {

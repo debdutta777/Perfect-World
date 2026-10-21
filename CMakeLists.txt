@@ -742,3 +742,43 @@ add_executable(PerfectWorldTailorLifeTests Tests/TailorLifeTests.cpp)
 target_link_libraries(PerfectWorldTailorLifeTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldTailorLifeTests COMMAND PerfectWorldTailorLifeTests
     ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.satyajit_dutta.json)
+
+# R6-07: school planning/arrival through the world reducer; existing attendance/day-loop persistence.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldSchoolDay.cpp)
+add_executable(PerfectWorldWorldSchoolDayTests Tests/WorldSchoolDayTests.cpp)
+target_link_libraries(PerfectWorldWorldSchoolDayTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldSchoolDayTests COMMAND PerfectWorldWorldSchoolDayTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# R62: shared, read-only save-slot facts for title and load presentations.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/SaveSlotSummary.cpp)
+add_executable(PerfectWorldSaveSlotSummaryTests Tests/SaveSlotSummaryTests.cpp)
+target_link_libraries(PerfectWorldSaveSlotSummaryTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSaveSlotSummaryTests COMMAND PerfectWorldSaveSlotSummaryTests)
+
+# R61: the last three side frontages and explicit 26 -> 29 door migration.
+add_executable(PerfectWorldDoorsRoster29Tests Tests/DoorsRoster29Tests.cpp)
+target_link_libraries(PerfectWorldDoorsRoster29Tests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldDoorsRoster29Tests COMMAND PerfectWorldDoorsRoster29Tests)
+
+# F3: quest log projection (Today, Promises, Discoveries), derived from authoritative state; no new persisted state.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/QuestLog.cpp)
+add_executable(PerfectWorldQuestLogTests Tests/QuestLogTests.cpp)
+target_link_libraries(PerfectWorldQuestLogTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldQuestLogTests COMMAND PerfectWorldQuestLogTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# F5: the calling bell. Header-only portable rules (DoorBell.h) over the core's own knock and passage; no roster or save change.
+add_executable(PerfectWorldDoorBellTests Tests/DoorBellTests.cpp)
+target_link_libraries(PerfectWorldDoorBellTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldDoorBellTests COMMAND PerfectWorldDoorBellTests)
+
+# F2: the lane map projection and map view arithmetic behind the minimap and the full-screen map (portable; Unreal draws what these return).
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/LaneMap.cpp
+    Source/PerfectWorldCore/Private/LaneMapQuery.cpp
+    Source/PerfectWorldCore/Private/LaneMapView.cpp)
+add_executable(PerfectWorldLaneMapTests Tests/LaneMapTests.cpp)
+target_link_libraries(PerfectWorldLaneMapTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneMapTests COMMAND PerfectWorldLaneMapTests)
+add_executable(PerfectWorldLaneMapViewTests Tests/LaneMapViewTests.cpp)
+target_link_libraries(PerfectWorldLaneMapViewTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneMapViewTests COMMAND PerfectWorldLaneMapViewTests)

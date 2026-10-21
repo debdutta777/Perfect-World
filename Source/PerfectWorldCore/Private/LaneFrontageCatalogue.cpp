@@ -8,7 +8,7 @@ namespace
 {
 // Batch 1 (LL-03 submission 2). NL-01 authored the front doors and their v8 migration; NL-04 hangs them: EntranceDoorId == PlannedDoorId.
 // The tall flats also hang a leaf on each flat (UnitDoors below, applied by MakeFrontageInput).
-const std::array<FrontageEntry, 12> F5Entries{{
+const std::array<FrontageEntry, 15> F5Entries{{
     // -Y, row 5, X 2600 to 3300: the "neighbour / caretaker flat" of LANE_LIFE_PLAN. Compact residence; the stationery footprint on the other side.
     {"building.nabapara.caretaker_flat", -1, 5, 2600, 460, 700, 700, 60, 3, 1965316759u, Variant::CompactResidence, FurnitureSet::Residence, 250, false,
      "door.nabapara.caretaker_flat_front", "door.nabapara.caretaker_flat_front"},
@@ -39,6 +39,13 @@ const std::array<FrontageEntry, 12> F5Entries{{
      "door.nabapara.narrow_shop_front", "door.nabapara.narrow_shop_front"},
     {"building.nabapara.tailor_shop", 1, 5, 2100, 460, 700, 900, 60, 3, 3475610266u, Variant::ShopWithStockroom, FurnitureSet::Workshop, 250, false,
      "door.nabapara.tailor_shop_front", "door.nabapara.tailor_shop_front"},
+    // R61: the last three side frontages. Two unoccupied ground-floor homes; a browsing room behind the corner stalls.
+    {"building.nabapara.alley_house", -1, 7, 3900, 520, 400, 900, 120, 3, 390057225u, Variant::CompactResidence, FurnitureSet::Residence, 250, false,
+     "door.nabapara.alley_house_front", "door.nabapara.alley_house_front"},
+    {"building.nabapara.stair_flats", -1, 8, 4900, 400, 800, 800, 0, 5, 2907140990u, Variant::CompactResidence, FurnitureSet::Residence, 250, false,
+     "door.nabapara.stair_flats_front", "door.nabapara.stair_flats_front"},
+    {"building.nabapara.corner_stalls", 1, 0, -2400, 460, 1100, 900, 60, 5, 4199128247u, Variant::ShopWithStockroom, FurnitureSet::GeneralGoods, 250, false,
+     "door.nabapara.corner_stalls_front", "door.nabapara.corner_stalls_front"},
 }};
 
 /** The flat doors of a shared-entry block (NL-01 roster); other kit rows have none. */

@@ -240,6 +240,12 @@ protected:
     TObjectPtr<UInputAction> InteractAction;
     UPROPERTY()
     TObjectPtr<UInputAction> CycleTargetAction;
+    /** F3: opens the quest window (J and D-pad Right by default; the key bindings store owns the keys). */
+    UPROPERTY()
+    TObjectPtr<UInputAction> QuestsAction;
+    /** F2: opens and closes the full world map (M and D-pad Left by default; the key bindings store owns the keys). */
+    UPROPERTY()
+    TObjectPtr<UInputAction> MapAction;
 
 private:
     // Movement and look, shared by both input paths.
@@ -262,6 +268,9 @@ private:
     void OnZoomHeld(const FInputActionValue& Value);
     void OnInteractStarted();
     void OnCycleTargetStarted();
+    void OnToggleMapStarted();
+    /** Tells the world map which keys close it from inside Slate: the player's own map keys. */
+    void PushMapCloseKeys() const;
     bool WantsEnhancedInput() const;
     void AddWalkingContext();
     void RemoveWalkingContext(AController* FromController);

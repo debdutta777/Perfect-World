@@ -23,6 +23,7 @@ void SPWLoadPanel::Construct(const FArguments& InArgs, UPerfectWorldCharacterCre
     {
         const bool bOccupied = UPerfectWorldCharacterCreatorSubsystem::IsSaveSlotOccupied(Slot);
         Occupied.Add(bOccupied);
+        // R62: DescribeSaveSlot composes the title model's summary, including age, calendar and authored zone name.
         Descriptions.Add(InCreator != nullptr ? InCreator->DescribeSaveSlot(Slot) : LOCTEXT("NoCreator", "Unavailable"));
 
         const TSharedRef<SWidget> Content =

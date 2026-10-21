@@ -24,7 +24,7 @@ constexpr TCHAR KsBuildingPrefix[] = TEXT("building.nabapara.");
 
 const TCHAR* const KsShopIds[] = {TEXT("building.nabapara.market_stalls_a"), TEXT("building.nabapara.market_stalls_b"),
                                   TEXT("building.nabapara.end_shop"), TEXT("building.nabapara.cloth_merchant"),
-                                  TEXT("building.nabapara.narrow_shop"), TEXT("building.nabapara.tailor_shop")};
+                                  TEXT("building.nabapara.narrow_shop"), TEXT("building.nabapara.tailor_shop"), TEXT("building.nabapara.corner_stalls")};
 
 ELaneColour KsGoodsColour(uint32 R)
 {
@@ -91,8 +91,11 @@ void KsAddStall(FLaneScene& S, const FLaneBuilding& B, const FKitStallBay& Bay, 
     const double Mid = 0.5 * (U0 + U1);
     const uint32 R = Bay.Seed;
     constexpr double Rd = KsDepth;
+    // R61: corner_stalls has only 60 cm setback. Its 210 cm footpath needs 120 cm clear: compress the 92 cm face to 90.
+    const double R61DepthScale = FMath::Min(1.0, (FootpathOuter + B.Setback - RoadHalfWidth - MinFootpathRoute) / (KsDepth - 8.0));
+    const auto R61V = [R61DepthScale](double V) { return (V - KsDepth) * R61DepthScale; };
     const auto Put = [&](ELaneColour Colour, double A0, double A1, double V0, double V1, double Z0, double Z1)
-    { F.Add(K, Colour, A0, A1, V0 - KsDepth, V1 - KsDepth, Z0, Z1); };
+    { F.Add(K, Colour, A0, A1, R61V(V0), R61V(V1), Z0, Z1); };
 
     const double SlotWidth = (U1 - U0 - 24.0) / KsSlots;
     for (int32 Slot = 0; Slot < KsSlots; ++Slot)
@@ -120,7 +123,7 @@ void KsAddStall(FLaneScene& S, const FLaneBuilding& B, const FKitStallBay& Bay, 
     // The counter, its cloth and its crates: the only solid parts, standing 37 to 92 cm out from the wall.
     Put(ELaneColour::WoodLight, U0 + 10.0, U1 - 10.0, 12.0, 59.0, KsFoot, KsCounterTop - 5.0);
     Put(ELaneColour::TrimLight, U0 + 6.0, U1 - 6.0, 8.0, 63.0, KsCounterTop - 5.0, KsCounterTop);
-    K.PropCollision(F.Pt(U0 + 6.0, 8.0 - KsDepth, KsFoot), F.Pt(U1 - 6.0, 63.0 - KsDepth, KsCounterTop));
+    K.PropCollision(F.Pt(U0 + 6.0, R61V(8.0), KsFoot), F.Pt(U1 - 6.0, R61V(63.0), KsCounterTop));
     const int32 Crates = KsCrateCount(U0, U1);
     const double CrateWidth = (U1 - U0 - 20.0) / Crates;
     for (int32 I = 0; I < Crates; ++I)
@@ -129,7 +132,7 @@ void KsAddStall(FLaneScene& S, const FLaneBuilding& B, const FKitStallBay& Bay, 
         const double A = U0 + 10.0 + I * CrateWidth;
         const double Top = KsCounterTop + 20.0 + static_cast<double>((G >> 5) % 14u);
         Put(KsGoodsColour(G), A + 3.0, A + CrateWidth - 3.0, 15.0, 53.0, KsCounterTop, Top);
-        K.PropCollision(F.Pt(A + 3.0, 15.0 - KsDepth, KsCounterTop), F.Pt(A + CrateWidth - 3.0, 53.0 - KsDepth, Top));
+        K.PropCollision(F.Pt(A + 3.0, R61V(15.0), KsCounterTop), F.Pt(A + CrateWidth - 3.0, R61V(53.0), Top));
     }
 
     // A bare bulb (the mesh only: the lane's few real stall lights stay with the stalls that still stand in a niche).

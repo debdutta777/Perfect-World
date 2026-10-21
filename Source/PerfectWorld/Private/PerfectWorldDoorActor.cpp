@@ -7,6 +7,7 @@
 #include "GameFramework/Pawn.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
+#include "PerfectWorldDoorBell.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -30,6 +31,8 @@ APWDoorActor::APWDoorActor()
     PrimaryActorTick.bCanEverTick = true;
     PrimaryActorTick.bStartWithTickEnabled = false;
     PrimaryActorTick.TickGroup = TG_PostPhysics; // after the pawns have moved this frame, so the swing check sees where they are
+
+    Guard = CreateDefaultSubobject<UPWDoorGuardComponent>(TEXT("Guard"));
 
     HingeRoot = CreateDefaultSubobject<USceneComponent>(TEXT("HingeRoot"));
     HingeRoot->SetMobility(EComponentMobility::Movable);
@@ -201,6 +204,17 @@ void APWDoorActor::BeginPlay()
     {
         Life->RegisterDoor(*this);
     }
+    // F5: a private dwelling's door hangs its calling bell beside the frame (any other door: nothing).
+    PWDoorBell::SpawnBellFor(*this);
+}
+
+void APWDoorActor::Destroyed()
+{
+    if (AActor* Bell = BellActor.Get())
+    {
+        Bell->Destroy();
+    }
+    Super::Destroyed();
 }
 
 FText APWDoorActor::GetInteractionVerb(const APawn* By) const
@@ -213,6 +227,10 @@ FText APWDoorActor::GetInteractionVerb(const APawn* By) const
     bool bCoreOpen = bOpen;
     if (const UPWLaneLifeSubsystem* Life = UPWLaneLifeSubsystem::Get(this))
     {
+        if (Life->IsRingPending(DoorId))
+        {
+            return FText::GetEmpty(); // someone is answering the bell: the leaf is theirs for a moment, and a stray press must not shut it again
+        }
         bCoreOpen = Life->IsDoorOpen(DoorId, bOpen);
     }
     return bCoreOpen ? NSLOCTEXT("PerfectWorldDoor", "Close", "Close") : NSLOCTEXT("PerfectWorldDoor", "Open", "Open");

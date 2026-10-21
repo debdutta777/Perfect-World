@@ -9,6 +9,7 @@ class UMaterialInterface;
 class UMaterialInstanceDynamic;
 class USceneComponent;
 class UStaticMeshComponent;
+class UPWDoorGuardComponent;
 
 /** Fixed numbers for a hinged door leaf, centimetres and seconds (ASSET_PIPELINE.md: doors 90 x 210). */
 namespace PWDoor
@@ -64,6 +65,10 @@ DECLARE_MULTICAST_DELEGATE_FourParams(FPWDoorSettled, FName /*DoorId*/, bool /*b
  * (Doors.h); only when the core allows it does the subsystem call TryMoveTo, and it records the new state only if the leaf
  * could really move. The animation is presentation only. At BeginPlay the door registers with the subsystem, which sets its
  * start state from the core. When motion ends, OnSettled tells the subsystem the real outcome so the core can be reconciled.
+ *
+ * F5, the calling bell: a private dwelling's door hangs a bell beside it at BeginPlay (APWDoorBellActor), and carries a threshold
+ * guard (UPWDoorGuardComponent). The door itself never rings: the interact key on a leaf that is not open to this visitor says
+ * "Ring the bell first." and does not open it.
  */
 UCLASS()
 class PERFECTWORLD_API APWDoorActor : public AActor, public IPWInteractable
@@ -77,6 +82,13 @@ public:
     void Configure(FName InDoorId, float InPreferredSwing, bool bInTwoWay);
 
     FName GetDoorId() const { return DoorId; }
+
+    /** +1 or -1: the side (local +Y or -Y) the leaf swings to by default; a dwelling leaf swings into the dwelling. */
+    float GetPreferredSwing() const { return PreferredSwing; }
+
+    /** The calling bell hung beside this door (F5, PerfectWorldDoorBell.h); null for a door that has none. */
+    AActor* GetBellActor() const { return BellActor.Get(); }
+    void SetBellActor(AActor* InBell) { BellActor = InBell; }
 
     /** The state being moved to (or held): true if open. */
     bool IsOpen() const { return bOpen; }
@@ -120,6 +132,7 @@ public:
 
     virtual void PostInitializeComponents() override;
     virtual void BeginPlay() override;
+    virtual void Destroyed() override;
     virtual void Tick(float DeltaSeconds) override;
 
 private:
@@ -157,6 +170,11 @@ private:
     TObjectPtr<UMaterialInstanceDynamic> LeafPaint;
     UPROPERTY()
     TObjectPtr<UMaterialInstanceDynamic> HandlePaint;
+    /** F5: stops an un-admitted player crossing a private threshold (an open leaf alone never grants entry). */
+    UPROPERTY()
+    TObjectPtr<UPWDoorGuardComponent> Guard;
+    /** F5: the bell beside a private dwelling's door, spawned at BeginPlay. */
+    TWeakObjectPtr<AActor> BellActor;
 
     FName DoorId;
     float PreferredSwing = 1.0f;

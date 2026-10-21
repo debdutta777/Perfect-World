@@ -25,6 +25,7 @@
 #include "PerfectWorldAmbientBindings.h"
 #include "PerfectWorldProprietorBindings.h"
 #include "PerfectWorldResidentsR5Bindings.h"
+#include "PerfectWorldTailorBindings.h"
 #include "PerfectWorldSubrataBindings.h"
 
 namespace PWLane
@@ -312,6 +313,7 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     SpawnAmbientLife(World);
     SpawnDebashis(World, Scene);
     SpawnMahua(World, Scene);
+    R66SpawnTailor(World, Scene);
     SpawnKitShopDisplays(World, Scene); // R4-01: the browse actors and posted hours of market_stalls_a, market_stalls_b and end_shop
     if (Scene.bOpeningHomeBuilt)
     {

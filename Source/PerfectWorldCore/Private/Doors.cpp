@@ -13,21 +13,12 @@ constexpr std::string_view DoorsEnd = "end";
 
 constexpr std::string_view OpeningHome = "location.nabapara.opening_home";
 
-/**
- * The opening home (LANE_LIFE_PLAN section C: entry/utility space, living/eating room, sleeping/study room, kitchen,
- * washroom). The front door and the bedroom door are private; the others are ordinary household doors. Each id is
- * named for the room it enters. Keep these five entries first for historical /1 saves.
- */
+// Opening-home front and bedroom doors are private; keep these five room IDs first for historical /1 saves.
 constexpr DoorOpeningWindow ChaiHours[]{{360, 690}, {930, 1140}};
 constexpr DoorOpeningWindow DoorsStationeryHours[]{{480, 780}, {900, 1170}};
 constexpr std::string_view CareHome = "location.nabapara.care_home";
-/**
- * NL-01: the kit frontages (LANE_BUILDING_INVENTORY section 4) and the two dwellings inside tall_flats, whose ids follow
- * the kit's rooms unit_a and unit_b. Each dwelling is its own household (its own location id, so residency is per flat);
- * the stair passage behind tall_flats_front is common to both and public. Dwelling leaves are one-way and open inward.
- * Visiting hours: the caretaker (Subrata Dey, LANE_LIFE_PLAN) receives late morning and evening, around his midday
- * rest; the flats and the row house receive in the evening.
- */
+// NL-01: each tall_flats dwelling has its own household/location; the common stair passage is public.
+// The caretaker receives late morning and evening; the flats and row house receive in the evening.
 constexpr DoorOpeningWindow CaretakerVisiting[]{{600, 750}, {1050, 1230}};
 constexpr DoorOpeningWindow FlatsVisiting[]{{1020, 1230}};
 constexpr DoorOpeningWindow RowHouseVisiting[]{{960, 1170}};
@@ -44,7 +35,9 @@ constexpr DoorOpeningWindow R1BrowsingHours[]{{540, 780}, {900, 1170}};
 constexpr DoorOpeningWindow R53ClothHours[]{{600, 780}, {900, 1200}};
 constexpr DoorOpeningWindow R53NarrowHours[]{{540, 780}, {900, 1170}};
 constexpr DoorOpeningWindow R53TailorHours[]{{600, 780}, {900, 1170}};
-constexpr std::array<DoorDef, 26> DoorTable{{
+// R61: no visiting windows on the two homes until residents exist; the corner room offers browsing only.
+constexpr DoorOpeningWindow R61CornerHours[]{{540, 780}, {900, 1170}};
+constexpr std::array<DoorDef, 29> DoorTable{{
     {"door.nabapara.home_front", OpeningHome, false, DoorAccess::Private, 0, 0},
     {"door.nabapara.home_living", OpeningHome, true, DoorAccess::Public, 0, 0},
     {"door.nabapara.home_bedroom", OpeningHome, false, DoorAccess::Private, 0, 0},
@@ -71,13 +64,16 @@ constexpr std::array<DoorDef, 26> DoorTable{{
     {"door.nabapara.cloth_merchant_front", "location.nabapara.cloth_merchant", false, DoorAccess::BusinessHours, 0, 0, R53ClothHours, false, -1},
     {"door.nabapara.narrow_shop_front", "location.nabapara.narrow_shop", false, DoorAccess::BusinessHours, 0, 0, R53NarrowHours, false, -1},
     {"door.nabapara.tailor_shop_front", "location.nabapara.tailor_shop", false, DoorAccess::BusinessHours, 0, 0, R53TailorHours, false, 1},
+    {"door.nabapara.alley_house_front", "location.nabapara.alley_house", false, DoorAccess::Private, 0, 0, {}, false, -1},
+    {"door.nabapara.stair_flats_front", "location.nabapara.stair_flats", false, DoorAccess::Private, 0, 0, {}, false, -1},
+    {"door.nabapara.corner_stalls_front", "location.nabapara.corner_stalls", false, DoorAccess::BusinessHours, 0, 0, R61CornerHours, false, 1},
 }};
 
 // Every roster a save may hold, as a prefix length of DoorTable. /1 wrote five (2026-10-13); its reader also took the
 // full ten- and eleven-door tables of their day. /2 wrote ten (D2), eleven (stationery, LL-02 2a), sixteen (NL-01) and
-// twenty (NR-05/NR-06), twenty-three (R4-01), then twenty-six (R53). Never add an arbitrary prefix: only a real edition.
-constexpr std::array<DoorRosterEdition, 9> RosterEditions{{{"pw.doors/1", 5}, {"pw.doors/1", 10}, {"pw.doors/1", 11},
-    {DoorsHeader, 10}, {DoorsHeader, 11}, {DoorsHeader, 16}, {DoorsHeader, 20}, {DoorsHeader, 23}, {DoorsHeader, DoorTable.size()}}};
+// twenty (NR-05/NR-06), twenty-three (R4-01), twenty-six (R53), then twenty-nine (R61). Only real editions belong here.
+constexpr std::array<DoorRosterEdition, 10> RosterEditions{{{"pw.doors/1", 5}, {"pw.doors/1", 10}, {"pw.doors/1", 11},
+    {DoorsHeader, 10}, {DoorsHeader, 11}, {DoorsHeader, 16}, {DoorsHeader, 20}, {DoorsHeader, 23}, {DoorsHeader, 26}, {DoorsHeader, DoorTable.size()}}};
 static_assert(RosterEditions.back().Count == DoorTable.size(), "today's roster is the last edition");
 
 constexpr std::array<std::string_view, DoorAccessCount> AccessIds{"public", "private", "locked", "business_hours"};

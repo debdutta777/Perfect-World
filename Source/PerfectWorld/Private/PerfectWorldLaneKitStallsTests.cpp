@@ -18,7 +18,7 @@ bool FPWKitStallsPostedHoursTest::RunTest(const FString& Parameters)
 {
     using namespace PWKitStallTest;
     const TArray<FName> Ids = UnstaffedBrowseShopIds();
-    TestEqual(TEXT("six unstaffed browsing shops"), Ids.Num(), 6);
+    TestEqual(TEXT("seven unstaffed browsing shops"), Ids.Num(), 7);
     TestFalse(TEXT("the staffed hardware store is not one of them"), IsUnstaffedBrowseShop(FName(TEXT("building.nabapara.hardware_store"))));
     TestFalse(TEXT("the staffed repair workshop is not one of them"), IsUnstaffedBrowseShop(FName(TEXT("building.nabapara.repair_workshop"))));
 
@@ -153,6 +153,18 @@ bool FPWKitStallsPlanTest::RunTest(const FString& Parameters)
             else
             {
                 AddError(FString::Printf(TEXT("market_stalls_b: %d stalls planned, expected 1"), Plan.Num()));
+            }
+        }
+        else if (Name.EndsWith(TEXT("corner_stalls")))
+        {
+            TestEqual(TEXT("R61: two corner stalls generic"), Generic.Num(), 2);
+            TestEqual(TEXT("R61: both corner stall faces remain"), Plan.Num(), 2);
+            if (Generic.Num() == 2 && Plan.Num() == 2)
+            {
+                TestTrue(TEXT("R61: first stall shifts whole east of the doorway"), Plan[0].bMoved && Plan[0].Seed == Generic[0].Seed &&
+                         FMath::IsNearlyEqual(Plan[0].U0, 340.0, 0.01) && FMath::IsNearlyEqual(Plan[0].U1, 340.0 + 940.0 / 3.0, 0.01));
+                TestTrue(TEXT("R61: second stall keeps its span and goods"), !Plan[1].bMoved && Plan[1].Seed == Generic[1].Seed &&
+                         FMath::IsNearlyEqual(Plan[1].U0, 40.0 + 2.0 * (940.0 / 3.0 + 40.0), 0.01) && FMath::IsNearlyEqual(Plan[1].U1, 1060.0, 0.01));
             }
         }
         else

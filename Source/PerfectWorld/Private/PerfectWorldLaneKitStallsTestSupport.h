@@ -20,7 +20,7 @@ inline constexpr double StWalkBand = 185.0; // the walking height band above the
 
 inline const TCHAR* const StShops[] = {TEXT("building.nabapara.market_stalls_a"), TEXT("building.nabapara.market_stalls_b"),
                                 TEXT("building.nabapara.end_shop"), TEXT("building.nabapara.cloth_merchant"),
-                                TEXT("building.nabapara.narrow_shop"), TEXT("building.nabapara.tailor_shop")};
+                                TEXT("building.nabapara.narrow_shop"), TEXT("building.nabapara.tailor_shop"), TEXT("building.nabapara.corner_stalls")};
 
 struct FStWorld
 {

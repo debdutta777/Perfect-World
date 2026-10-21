@@ -1,4 +1,5 @@
 #include "PerfectWorldAcceptanceSubsystem.h"
+#include "PerfectWorldAcceptanceDoorBell.h"
 
 #include "Components/BoxComponent.h"
 #include "Engine/World.h"
@@ -84,20 +85,21 @@ FStepDef NbLeaf(const TCHAR* Name, const TCHAR* Id, bool bOpen)
         }, nullptr, 15);
 }
 
-// First use must knock and leave the closed leaf unchanged; the next use can open it. This exercises the bridge's
-// transient approach permission, not an invented DoorUseContext. In phase 2 this distinguishes a fresh process from stale admission.
+// F5: the first use is a RING of the calling bell beside unit A's door (E on the bell); it leaves the closed leaf unchanged and unlatches the
+// door for this visit; the next use of the DOOR can open it. This exercises the bridge's transient approach permission, not an invented
+// DoorUseContext. In phase 2 this distinguishes a fresh process from stale admission.
 FStepDef NbKnock(const TCHAR* Name)
 {
     return PWAcceptance::MakeInteractStep(Name,
-        [](UPWAcceptanceSubsystem& Sub) -> AActor* { return NbDoor(Sub, PWLane::NirmalDoorId); },
+        [](UPWAcceptanceSubsystem& Sub) -> AActor* { return PWAcceptance::DoorBell::FindBell(Sub.GetPlayWorld(), FName(PWLane::NirmalDoorId)); },
         [](UPWAcceptanceSubsystem& Sub, FString& Detail)
         {
             const auto* Door = NbDoor(Sub, PWLane::NirmalDoorId);
             const auto* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
             const auto* Interaction = Sub.GetInteraction();
             if (!Door || !Life || !Interaction || Door->IsMoving() || Life->IsDoorOpen(FName(PWLane::NirmalDoorId), true) ||
-                !Interaction->GetNotice().ToString().Contains(TEXT("Someone answers. You may come in."))) { return false; }
-            Detail = TEXT("admitted knock, leaf still closed; opening requires a second use");
+                !Interaction->GetNotice().ToString().Contains(TEXT("Someone is coming"))) { return false; }
+            Detail = TEXT("admitted ring, leaf still closed; opening requires a second use of the door");
             return true;
         }, nullptr, 10);
 }

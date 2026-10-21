@@ -223,22 +223,30 @@ void R1FrontageDoorRestart()
     WorldSim live(401);
     Check(live.Submit({CommandSource::Player, AdvanceTime{270}}).Accepted, "reach 10:30 browsing hours");
     const std::string ids[]{"door.nabapara.market_stalls_a_front", "door.nabapara.market_stalls_b_front", "door.nabapara.end_shop_front",
-        "door.nabapara.cloth_merchant_front", "door.nabapara.narrow_shop_front", "door.nabapara.tailor_shop_front"};
+        "door.nabapara.cloth_merchant_front", "door.nabapara.narrow_shop_front", "door.nabapara.tailor_shop_front", "door.nabapara.corner_stalls_front"};
     for (const auto& id : ids)
         Check(live.Submit({CommandSource::Player, DoorSet{id, true, {DoorDirection::Entry}}}).Accepted, "each browsing door opens");
     Check(live.Submit({CommandSource::Player, DoorSet{ids[1], false, {DoorDirection::Exit}}}).Accepted, "mixed open and closed leaves");
     Check(live.Submit({CommandSource::Player, DoorSet{ids[4], false, {DoorDirection::Exit}}}).Accepted, "R53 mixed leaves");
     const auto data = SaveOf(live, MakeCreation("parent_household"));
     WorldSaveData loaded;
-    Check(DeserializeWorldSave(SerializeWorldSave(data), loaded).HashVerified, "current 26-door save authenticates");
+    Check(DeserializeWorldSave(SerializeWorldSave(data), loaded).HashVerified, "current 29-door save authenticates");
     CheckSame(data, loaded, "restart retains all world and door facts");
     WorldSim resumed(loaded.World);
     Check(resumed.State().Doors.Doors[20].SwingSide == -1 && resumed.State().Doors.Doors[21].SwingSide == 0 &&
         resumed.State().Doors.Doors[22].SwingSide == -1, "both lane orientations retain their physical inward sides");
     Check(resumed.State().Doors.Doors[23].SwingSide == -1 && resumed.State().Doors.Doors[24].SwingSide == 0 &&
         resumed.State().Doors.Doors[25].SwingSide == 1, "R53 inward sides and closed narrow-shop leaf survive restart");
+    Check(resumed.State().Doors.Doors[26].Open == false && resumed.State().Doors.Doors[27].Open == false &&
+        resumed.State().Doors.Doors[28].SwingSide == 1, "R61 unoccupied homes stay closed; corner browse leaf retains its inward side");
     for (WorldSim* sim : {&live, &resumed})
     {
+        for (const char* R61Home : {"door.nabapara.alley_house_front", "door.nabapara.stair_flats_front"})
+        {
+            const auto R61Before = HashWorldState(sim->State());
+            const auto R61Refused = sim->Submit({CommandSource::Player, DoorSet{R61Home, true, {DoorDirection::Entry}}});
+            Check(!R61Refused.Accepted && R61Refused.Why.Code == "door.private" && HashWorldState(sim->State()) == R61Before, "unoccupied home refuses entry after restart");
+        }
         Check(sim->Submit({CommandSource::Player, AdvanceTime{570}}).Accepted, "reach 20:00 after restart");
         for (const auto& id : ids)
         {
@@ -324,8 +332,6 @@ void LaneTenDoorV8Migration()
           "migration authenticates the rest of the historical world too");
 }
 
-// NL-01: the reader takes exactly the rosters some writer produced. Every other prefix, a duplicate, an unknown door or
-// a gap is refused; a historical roster keeps its facts and gains the authored defaults.
 std::string LaneDoorText(std::string_view header, const DoorState& state, std::size_t count, bool sides)
 {
     std::string text = std::string(header) + "\ncount=" + std::to_string(count) + "\n";
@@ -344,7 +350,7 @@ void LaneDoorRosters()
               ApplyDoorSettlement(played, "door.nabapara.stationery_front", true, -1) == DoorResult::Ok &&
               ApplyDoorSettlement(played, "door.nabapara.care_common", false, 0) == DoorResult::Ok, "played roster");
     const auto editions = DoorRosterEditions();
-    Check(editions.size() == 9 && editions.back().Header == "pw.doors/2" && editions.back().Count == 26, "nine editions end at today's twenty-six");
+    Check(editions.size() == 10 && editions.back().Header == "pw.doors/2" && editions.back().Count == 29, "ten editions end at today's twenty-nine");
     const DoorState initial = MakeInitialDoorState();
     for (std::size_t count = 0; count <= AuthoredDoors().size() + 1; ++count)
     {
@@ -355,14 +361,14 @@ void LaneDoorRosters()
             if (count != lines)
                 text = ReplaceOnce(text, "count=" + std::to_string(lines), "count=" + std::to_string(count));
             const auto parsed = DeserialiseDoorState(text);
-            const bool known = legacy ? (count == 5 || count == 10 || count == 11) : (count == 10 || count == 11 || count == 16 || count == 20 || count == 23 || count == 26);
+            const bool known = legacy ? (count == 5 || count == 10 || count == 11) : (count == 10 || count == 11 || count == 16 || count == 20 || count == 23 || count == 26 || count == 29);
             Check(parsed.Ok() == known, "only the historical roster lengths are accepted");
             if (!known)
             {
                 Check(parsed.State == DoorState{} && !parsed.bMigrated, "a refused roster publishes nothing");
                 continue;
             }
-            Check(parsed.bMigrated == (legacy || count != 26) && IsDoorStateValid(parsed.State), "historical rosters migrate");
+            Check(parsed.bMigrated == (legacy || count != 29) && IsDoorStateValid(parsed.State), "historical rosters migrate");
             for (std::size_t i = 0; i < parsed.State.Doors.size(); ++i)
             {
                 const DoorEntry& expected = i < count ? played.Doors[i] : initial.Doors[i];
@@ -380,7 +386,7 @@ void LaneDoorRosters()
           "sixteen is a historical roster; a later door in its place is refused");
     const std::string twenty = LaneDoorText("pw.doors/2", played, 20, true);
     Check(DeserialiseDoorState(twenty).State == played && DeserialiseDoorState(twenty).bMigrated, "twenty migrates with new defaults");
-    const std::string current = LaneDoorText("pw.doors/2", played, 26, true);
+    const std::string current = LaneDoorText("pw.doors/2", played, 29, true);
     Check(DeserialiseDoorState(current).State == played && !DeserialiseDoorState(current).bMigrated, "today's roster round trips");
     Check(!DeserialiseDoorState(ReplaceOnce(twenty, "tall_flats_unit_a", "tall_flats_unit_b")).Ok(), "duplicate unit door refused");
 }
@@ -393,20 +399,15 @@ std::string LaneFixture(const char* name)
     return {std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
 }
 
-/**
- * Frozen v8 saves written by the real historical writers (Tests/Fixtures/world_v8_doors_*.json): the ten-door file by the
- * core at a902a39, the eleven-door file by the core at 8bdd8b6, the sixteen-door file by the core at ec27cc7,
- * the twenty-door file by the core at 843f73e, and R53's v9 twenty-three-door file by parent 38bd7bd, all from
- * one generator program (Tools/DoorFixtures: Start Life, evening talk, door settlements with both swing signs; world seed
- * 0x4e4c3031). They must authenticate over their stored door text before any default is appended, and refuse every
- * tampering.
- */
+// Frozen historical writers: v8 at a902a39/8bdd8b6/ec27cc7/843f73e; v9 at 38bd7bd (23) and 7b553a3 (26).
+// Unchanged Tools/DoorFixtures generator; authenticate stored text before padding, never today's writer.
 void LaneFrozenDoorFixtures()
 {
     for (const auto& [name, count, R53Schema] : {
         std::tuple{"world_v8_doors_10.json", std::size_t{10}, 8u}, std::tuple{"world_v8_doors_11.json", std::size_t{11}, 8u},
         std::tuple{"world_v8_doors_16.json", std::size_t{16}, 8u}, std::tuple{"world_v8_doors_20.json", std::size_t{20}, 8u},
-        std::tuple{"world_v9_doors_23.json", std::size_t{23}, 9u}})
+        std::tuple{"world_v9_doors_23.json", std::size_t{23}, 9u},
+        std::tuple{"world_v9_doors_26.json", std::size_t{26}, 9u}})
     {
         const std::string text = LaneFixture(name);
         WorldSaveData loaded;
@@ -446,15 +447,14 @@ void LaneFrozenDoorFixtures()
               "the rest of the historical world is authenticated too");
         Check(ErrorOf(ReplaceOnce(text, "care_washroom,0,0", "care_common,0,0")) == WorldSaveError::InvalidWorld, "duplicate door refused");
         Check(ErrorOf(ReplaceOnce(text, "care_washroom,0,0", "care_laundry,0,0")) == WorldSaveError::InvalidWorld, "unknown door refused");
-        // Drop the last door: ten from eleven is a known roster that fails the stored checksum; nine and fifteen are no roster.
-        const std::string lastDoor = count == 23 ? "\\ndoor=door.nabapara.end_shop_front,0,0"
+        const std::string lastDoor = count == 26 ? "\\ndoor=door.nabapara.tailor_shop_front,0,0"
+                                     : count == 23 ? "\\ndoor=door.nabapara.end_shop_front,0,0"
                                      : count == 20 ? "\\ndoor=door.nabapara.tall_flats_upper_a,0,0"
                                      : count == 16 ? "\\ndoor=door.nabapara.tea_row_house_front,1,1"
                                      : count == 11 ? "\\ndoor=door.nabapara.stationery_front,1,-1" : "\\ndoor=door.nabapara.care_washroom,0,0";
         const std::string shortened =
             ReplaceOnce(ReplaceOnce(text, "pw.doors/2\\ncount=" + std::to_string(count), "pw.doors/2\\ncount=" + std::to_string(count - 1)), lastDoor, "");
         Check(ErrorOf(shortened) == (count == 11 ? WorldSaveError::HashMismatch : WorldSaveError::InvalidWorld), "a shortened roster is refused");
-        // Padding a roster without the historical writer's checksum always fails, including the former 16->20 regression.
         if (count == 16)
             Check(ErrorOf(ReplaceOnce(ReplaceOnce(text, "count=16", "count=20"), lastDoor, lastDoor +
                       "\\ndoor=door.nabapara.repair_workshop_front,0,0\\ndoor=door.nabapara.hardware_store_front,0,0"
@@ -470,6 +470,11 @@ void LaneFrozenDoorFixtures()
                       "\\ndoor=door.nabapara.cloth_merchant_front,0,0\\ndoor=door.nabapara.narrow_shop_front,0,0"
                       "\\ndoor=door.nabapara.tailor_shop_front,0,0")) == WorldSaveError::HashMismatch,
                   "a twenty-three-door save padded to twenty-six cannot authenticate");
+        if (count == 26)
+            Check(ErrorOf(ReplaceOnce(ReplaceOnce(text, "count=26", "count=29"), lastDoor, lastDoor +
+                      "\\ndoor=door.nabapara.alley_house_front,0,0\\ndoor=door.nabapara.stair_flats_front,0,0"
+                      "\\ndoor=door.nabapara.corner_stalls_front,0,0")) == WorldSaveError::HashMismatch,
+                  "a 26-door save padded to 29 cannot authenticate");
     }
 }
 #endif
