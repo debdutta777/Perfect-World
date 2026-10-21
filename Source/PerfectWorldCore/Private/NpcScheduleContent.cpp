@@ -237,8 +237,19 @@ constexpr std::array<ApprovedRoute, 2> R5RIshitaRoutes{{
 constexpr Spec R5RIshitaSpec{"npc_schedule.ishita_banerjee", "person.ishita_banerjee", R5RIshitaHome, R5RIshitaWork,
                              "door.nabapara.tall_flats_upper_a", R5RIshitaRoutes, R5RIshitaWork, 450, 900};
 
-constexpr std::array<const Spec*, 14> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec, &SubrataSpec, &NirmalSpec, &RupaSpec, &SahanaSpec, &AmpurnimaSpec, &AmarunSpec, &AmrekhaSpec,
-                                               &DebashisSpec, &MahuaSpec, &R5RPrabirSpec, &R5RIshitaSpec};
+// Satyajit Dutta, tailor (R6-06): the shop's Workshop anchors and an off-lane home.
+constexpr std::array<ApprovedRoute, 5> R66TailorRoutes{{
+    {"route.tailor_shop.counter_to_door", "anchor.tailor_shop.staff_counter", "anchor.tailor_shop.front_door", 1182},
+    {"route.tailor_shop.counter_to_workbench", "anchor.tailor_shop.staff_counter", "anchor.tailor_shop.workbench", 747},
+    {"route.tailor_shop.counter_to_finishing_table", "anchor.tailor_shop.staff_counter", "anchor.tailor_shop.finishing_table", 1137},
+    {"route.tailor_shop.workbench_to_finishing_table", "anchor.tailor_shop.workbench", "anchor.tailor_shop.finishing_table", 390},
+    {"route.dutta_home.footpath_to_home", "anchor.tailor_shop.front_door", "location.nabapara.dutta_home", 1680},
+}};
+constexpr Spec R66TailorSpec{"npc_schedule.satyajit_dutta", "person.satyajit_dutta", "location.nabapara.dutta_home",
+    "location.nabapara.tailor_shop", "door.nabapara.tailor_shop_front", R66TailorRoutes, "anchor.tailor_shop.", 600, 1170};
+
+constexpr std::array<const Spec*, 15> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec, &SubrataSpec, &NirmalSpec, &RupaSpec, &SahanaSpec, &AmpurnimaSpec, &AmarunSpec, &AmrekhaSpec,
+                                               &DebashisSpec, &MahuaSpec, &R5RPrabirSpec, &R5RIshitaSpec, &R66TailorSpec};
 
 const Spec* FindSpec(std::string_view personId)
 {

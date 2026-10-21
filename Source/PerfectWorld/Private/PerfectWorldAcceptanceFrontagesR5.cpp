@@ -161,7 +161,7 @@ FStepDef R53Browse(const FString& Name, const FString& Suffix)
             const auto* Row = R53Row(Name);
             const auto* Door = Row ? PerfectWorld::FindDoor(Row->EntranceDoorId) : nullptr;
             return Door && Notice.Contains(PWLane::PostedHoursText(*Door)) &&
-                Notice.Contains(PWLane::KitPublic::UnstaffedPhrase);
+                Notice.Contains(Name == TEXT("tailor_shop") ? PWLane::KitPublic::R66TailorStaffedPhrase : PWLane::KitPublic::UnstaffedPhrase);
         }, nullptr, 12);
 }
 
