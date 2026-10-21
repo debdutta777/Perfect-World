@@ -735,3 +735,15 @@ add_executable(PerfectWorldNpcBehaviourRegressionTests Tests/NpcBehaviourRegress
 target_link_libraries(PerfectWorldNpcBehaviourRegressionTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldNpcBehaviourRegressionTests COMMAND PerfectWorldNpcBehaviourRegressionTests
     ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule)
+
+# F2: the lane map projection and map view arithmetic behind the minimap and the full-screen map (portable; Unreal draws what these return).
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/LaneMap.cpp
+    Source/PerfectWorldCore/Private/LaneMapQuery.cpp
+    Source/PerfectWorldCore/Private/LaneMapView.cpp)
+add_executable(PerfectWorldLaneMapTests Tests/LaneMapTests.cpp)
+target_link_libraries(PerfectWorldLaneMapTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneMapTests COMMAND PerfectWorldLaneMapTests)
+add_executable(PerfectWorldLaneMapViewTests Tests/LaneMapViewTests.cpp)
+target_link_libraries(PerfectWorldLaneMapViewTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneMapViewTests COMMAND PerfectWorldLaneMapViewTests)
