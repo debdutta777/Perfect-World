@@ -165,6 +165,9 @@ inline constexpr FGesture Table[] = {
     {TEXT("work.study"), 5.0f, 50.0f, 3.0f, 50.0f, 0.0f, 8.0f, 1.0f, 0.0f, 0.0f},     // holds a book
     {TEXT("work.inspect"), 3.0f, 50.0f, 10.0f, 20.0f, 0.0f, 10.0f, 3.0f, 0.0f, 0.0f},
     {TEXT("work.repair"), 1.2f, 50.0f, 28.0f, 30.0f, -10.0f, 8.0f, 3.0f, 0.0f, 0.3f},
+    {TEXT("work.test"), 2.5f, 38.0f, 8.0f, 42.0f, -5.0f, 12.0f, 2.0f, 0.0f, 0.0f},
+    {TEXT("work.collect"), 3.0f, 60.0f, 20.0f, 35.0f, 12.0f, 2.0f, 1.0f, 0.0f, 0.0f},
+    {TEXT("work.weigh"), 4.0f, 42.0f, 12.0f, 55.0f, -8.0f, 7.0f, 2.0f, 0.0f, 0.0f},
 };
 inline constexpr FGesture Generic = {TEXT("work.activity"), 3.5f, 35.0f, 14.0f, 8.0f, 0.0f, 3.0f, 0.0f, 0.0f, 0.0f};
 inline constexpr double TwoPi = 6.283185307179586;
@@ -376,6 +379,8 @@ public:
     void SetRouteResolver(FPWNpcRouteResolver Resolver) { RouteResolver = MoveTemp(Resolver); }
     /** The player is being spoken to by this person (set by Interact, cleared when the panel closes by itself). */
     void SetLocalConversationActive(bool bActive);
+    void SetCoreInterruptions(bool bEnabled);
+    void SetCoreDoorwayWait(bool bActive, const FVector& Feet) { bR55DoorwayWait = bActive; R55WaitingFeet = Feet; }
     /**
      * Places the person at the intent's target at once: for a load or a first spawn the integrator has decided, never for
      * ordinary play. Does nothing when the destination overlaps a pawn.
@@ -428,9 +433,13 @@ private:
     APawn* LocalPlayer() const;
     void SetTickRate();
     void SetBlockedState(bool bPersistent);
+    bool R55PresentCoreInterruption(float Dt);
 
     FPWNpcIntentView Intent;
     bool bHasIntent = false;
+    bool bR55CoreInterruptions = false;
+    bool bR55DoorwayWait = false;
+    FVector R55WaitingFeet = FVector::ZeroVector;
     FPWNpcAnchorResolver AnchorResolver;
     FPWNpcRouteResolver RouteResolver;
 

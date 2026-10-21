@@ -11,7 +11,7 @@ struct DoorDef;
 namespace PWLane
 {
 /**
- * R4-01/R53 production face of the six unstaffed browsing shops: the kit's furnished
+ * R4-01/R53/R61 production face of the seven unstaffed browsing shops: the kit's furnished
  * GeneralGoods/Workshop interior (PerfectWorldLaneKitFrontages.h) plus the two things the catalogue row alone does not give them.
  *
  *  1. The open stalls of the generic ground floor (BuildLaneGroundFloor, PerfectWorldLaneShops.cpp). The kit replaces that ground floor
@@ -19,7 +19,8 @@ namespace PWLane
  *     generic builder would have drawn open is therefore brought FORWARD by StallRecessDepth onto the footpath: the same shelves, goods,
  *     cloth-topped counter, crates, bulb and striped awning, with the same numbers and the same hashes, but the back of the stall is
  *     the building's front face instead of a niche back. The awning is held by stay rods, never poles (poles would leave less than
- *     120 cm between them and the kerb). A stall that would cover the entrance approach (the doorway's centre +- ApproachHalfCm) is
+ *     120 cm between them and the kerb). R61 scales the corner's 92 cm stall projection to 90 cm for its 60 cm setback,
+ *     in visuals and collision. A stall that would cover the entrance approach (the doorway's centre +- ApproachHalfCm) is
  *     shifted to a side where it fits, or trimmed to the side remnant of at least StallMinWidthCm, or dropped: PlanKitStalls.
  *     Counters and crates carry collision of exactly their size; nothing else of the stall does (the shelves are out of reach behind
  *     the counter). Nothing is added inside the wall line, so no stall piece can meet the interior furniture or seal the doorway.
@@ -63,7 +64,7 @@ inline constexpr const TCHAR* UnstaffedPhrase = TEXT("Unstaffed. Purchasing unav
 inline constexpr const TCHAR* BrowseVerb = TEXT("Browse goods");
 } // namespace KitPublic
 
-/** The six catalogue buildings this applies to, in stable order. The staffed hardware store and repair workshop are excluded. */
+/** The seven catalogue buildings this applies to, in stable order. The staffed hardware store and repair workshop are excluded. */
 TArray<FName> UnstaffedBrowseShopIds();
 bool IsUnstaffedBrowseShop(FName BuildingId);
 

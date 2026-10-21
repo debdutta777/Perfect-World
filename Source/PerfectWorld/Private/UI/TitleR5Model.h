@@ -8,8 +8,8 @@
  * What the title screen says about saved lives (R5-06). One summary per occupied slot, read through the same
  * PWLaneLifePersistence::ReadWorldSlot that UPerfectWorldCharacterCreatorSubsystem::DescribeSaveSlot uses, and the
  * continue target is the creator's own FindMostRecentSaveSlot, so this is a presentation of the existing projection and
- * not a second source of truth. Nothing here changes a save or the live creator. No game rule is computed: the date is the
- * core clock's own calendar, the name and age are saved fields, and the place is a name for the zone the save records.
+ * not a second source of truth. Nothing here changes a save or the live creator. MakeWorldSlotSummary supplies the
+ * portable facts (including age at the saved instant); this layer only formats them for display.
  */
 namespace PWTitleR5
 {
@@ -35,11 +35,11 @@ struct FSlotSummary
     /** "Slot 2". */
     FText SlotLabel;
     FText Name;
-    /** The saved age. The core records it as the age the life began at; see the report on AgeOnInstant. */
+    /** Current age at the saved instant, projected by the core. */
     FText Age;
     /** The in-game date and time of day from the saved world clock: "Tuesday 3 June 2042, 14:30". */
     FText GameTime;
-    /** The saved zone's name, with the home city; empty when the zone has no authored name. */
+    /** The authored zone name with the saved home city; city alone for an unknown zone, empty if both are absent. */
     FText Place;
     /** The file's real timestamp in local time: "Saved 19 Oct 2026, 14:05". */
     FText SavedAt;

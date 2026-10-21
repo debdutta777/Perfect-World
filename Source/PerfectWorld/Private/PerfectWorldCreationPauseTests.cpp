@@ -415,7 +415,7 @@ bool FCpFocusOrderTest::RunTest(const FString& Parameters)
             PauseOrder.Add(CpShownTexts(Widget).Num() > 0 ? CpShownTexts(Widget)[0] : FString());
         }
     });
-    TestEqual(TEXT("pause focus order"), FString::Join(PauseOrder, TEXT("|")), FString(TEXT("Resume|Today|Save|Return to Title|Quit")));
+    TestEqual(TEXT("pause focus order"), FString::Join(PauseOrder, TEXT("|")), FString(TEXT("Resume|Today|Quests|Settings|Save|Return to Title|Quit")));
     PWCreationPause::SetPauseSaveHookForTest([](bool& bOk) { bOk = false; return FText::FromString(TEXT("No.")); });
     CpClick(Menu, TEXT("Save"));
     PauseOrder.Reset();
@@ -423,7 +423,7 @@ bool FCpFocusOrderTest::RunTest(const FString& Parameters)
     {
         if (bShown && Widget->SupportsKeyboardFocus() && Widget->GetTypeAsString() == TEXT("SButton")) PauseOrder.Add(TEXT("b"));
     });
-    TestEqual(TEXT("showing feedback adds no focus stop"), PauseOrder.Num(), 5);
+    TestEqual(TEXT("showing feedback adds no focus stop"), PauseOrder.Num(), 7);
     return true;
 }
 

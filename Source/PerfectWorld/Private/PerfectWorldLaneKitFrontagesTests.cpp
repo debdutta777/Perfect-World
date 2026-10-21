@@ -4,13 +4,14 @@
 // scenes and read back the collision boxes; no world is needed.
 // Run in the editor under "PerfectWorld.KitFrontages" (Session Frontend, or the Unreal MCP AutomationTestToolset).
 
+#include "PerfectWorldLaneKitFrontages.h"
+
 #include "Misc/AutomationTest.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "PerfectWorldLaneCareInterior.h"
 #include "PerfectWorldLaneInteriors.h"
-#include "PerfectWorldLaneKitFrontages.h"
 #include "PerfectWorldLaneProps.h"
 #include "PerfectWorldLaneStationeryShop.h"
 #include "PerfectWorldLaneTeaShop.h"
@@ -130,7 +131,7 @@ bool FPWKitFrontagesRecognitionTest::RunTest(const FString& Parameters)
         TestFalse(*FString::Printf(TEXT("the %s is not a kit frontage"), Item.Name), IsKitFrontage(B, Out));
     }
 
-    TestEqual(TEXT("the catalogue has twelve kit frontages (batch 1, NR-05, R4-01 and R53)"), static_cast<int32>(LI::KitFrontageEntries().size()), 12);
+    TestEqual(TEXT("the catalogue has fifteen kit frontages (batch 1, NR-05, R4-01, R53 and R61)"), static_cast<int32>(LI::KitFrontageEntries().size()), 15);
     int32 SideCount[2] = {0, 0};
     for (const LI::FrontageEntry& Row : LI::KitFrontageEntries())
     {

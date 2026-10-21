@@ -231,7 +231,7 @@ std::uint64_t HashWorldStateWithDoorsText(const WorldState& state, std::string_v
 ReplayResult ReplayCommandLog(std::uint64_t worldSeed, const std::vector<Command>& log, const ReplayOptions& options)
 {
     ReplayResult replay;
-    WorldSim sim(worldSeed, options.EventCap);
+    WorldSim sim(worldSeed, options.EventCap, options.School);
     replay.Complete = true;
     for (const Command& command : log)
     {

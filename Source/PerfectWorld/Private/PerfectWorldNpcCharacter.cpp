@@ -10,6 +10,8 @@
 #include "PerfectWorldConversationPresenter.h"
 #include "PerfectWorldInteractionComponent.h"
 #include "PerfectWorldNpcLooks.h"
+#include "PerfectWorldNpcPilotBridge.h"
+#include "PerfectWorldNpcPresenceSubsystem.h"
 #include "UObject/ConstructorHelpers.h"
 
 #define LOCTEXT_NAMESPACE "PerfectWorldNpcCharacter"
@@ -154,6 +156,13 @@ FText APWNpcCharacter::GetInteractionVerb(const APawn* By) const
     {
         return FText::GetEmpty(); // someone is already being talked to
     }
+    const auto* R55Presence = GetWorld() != nullptr ? GetWorld()->GetSubsystem<UPWNpcPresenceSubsystem>() : nullptr;
+    if (const auto* Presence = R55Presence)
+    {
+        const auto* Decision = Presence->FindPilotDecision(PersonId);
+        if (Decision != nullptr && Decision->DeferredUntil)
+            return R55NpcReasonText(FName(UTF8_TO_TCHAR(std::string(PerfectWorld::NpcDecisionReasonKey(Decision->Reason)).c_str())));
+    }
     if (DisplayName.IsEmpty())
     {
         return LOCTEXT("TalkUnnamed", "Talk");
@@ -173,6 +182,12 @@ int32 APWNpcCharacter::GetInteractionPriority() const
 
 FText APWNpcCharacter::GetDeclineText() const
 {
+    const auto* R55Presence = GetWorld() != nullptr ? GetWorld()->GetSubsystem<UPWNpcPresenceSubsystem>() : nullptr;
+    if (const auto* Presence = R55Presence)
+    {
+        if (const auto* Decision = Presence->FindPilotDecision(PersonId))
+            return R55NpcReasonText(FName(UTF8_TO_TCHAR(std::string(PerfectWorld::NpcDecisionReasonKey(Decision->Reason)).c_str())));
+    }
     const FName Key = NpcMovement->GetDeclineReasonKey();
     if (Key.IsNone() && NpcMovement->IsTalkable())
     {
@@ -200,6 +215,11 @@ FText APWNpcCharacter::GetDeclineText() const
 
 void APWNpcCharacter::Interact(APawn* By)
 {
+    auto* R55Presence = GetWorld() != nullptr ? GetWorld()->GetSubsystem<UPWNpcPresenceSubsystem>() : nullptr;
+    if (auto* Presence = R55Presence)
+    {
+        if (Presence->RequestPilotTalk(PersonId, By)) { return; }
+    }
     if (!NpcMovement->IsTalkable())
     {
         // Sleeping, occupied or off duty: no conversation opens; a polite notice says why.

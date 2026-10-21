@@ -6,6 +6,7 @@
 #include "UI/PWCreationModel.h"
 #include "UI/PWStyle.h"
 #include "UI/PWWidgets.h"
+#include "UI/SPWAttributeRadar.h"
 #include "UI/SPWRankSelector.h"
 #include "Widgets/Input/SComboButton.h"
 #include "Widgets/Layout/SBox.h"
@@ -28,6 +29,7 @@ void SPWTraitsPage::Construct(const FArguments& InArgs, const TSharedRef<FPWCrea
     if (!Model->Traits.IsEmpty()) Group = Model->Traits[0].Group;
     Inspector = SNew(SBox);
     Body = SNew(SBox);
+    Radar = StaticCastSharedRef<SPWAttributeRadar>(BuildRadar());
     Selectors.SetNum(Model->Traits.Num());
     for (int32 Index = 0; Index < Model->Traits.Num(); ++Index) Rows.Add(BuildRow(Index));
     Toolbar = BuildToolbar();
@@ -55,6 +57,7 @@ void SPWTraitsPage::Tick(const FGeometry& Geometry, double Time, float Delta)
         if (Selectors[Index].IsValid() && (Selectors[Index]->HasKeyboardFocus() || Selectors[Index]->HasFocusedDescendants()))
         { SelectTrait(Index); break; }
     Inspector->SetRenderOpacity(PWUI::MotionLerp(InspectorReveal.GetLerp()));
+    TickRadar(static_cast<float>(Geometry.GetLocalSize().X));
     const bool bNewNarrow = NarrowLayout.Get(Geometry.GetLocalSize().X < 1280.0f);
     if (bNewNarrow != bNarrow)
     {
@@ -167,13 +170,48 @@ void SPWTraitsPage::Reflow()
         List->AddSlot().AutoHeight().Padding(0, 0, 0, 8)[Rows[Index].ToSharedRef()];
         if (bNarrow && Index == SelectedIndex) List->AddSlot().AutoHeight().Padding(0, 0, 0, 16)[Inspector.ToSharedRef()];
     }
+    // The chart is display only. Wide: it tops the left column over the group list. Narrow: a centred row above the selector.
     if (bNarrow) Body->SetContent(SNew(SVerticalBox)
+        + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center).Padding(0, 0, 0, 12)[Radar.ToSharedRef()]
         + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 16)[Navigator.ToSharedRef()]
         + SVerticalBox::Slot().AutoHeight()[List]);
     else Body->SetContent(SNew(SHorizontalBox)
-        + SHorizontalBox::Slot().FillWidth(.18f).Padding(0, 0, 24, 0)[Navigator.ToSharedRef()]
-        + SHorizontalBox::Slot().FillWidth(.47f).Padding(0, 0, 24, 0)[List]
-        + SHorizontalBox::Slot().FillWidth(.35f)[Inspector.ToSharedRef()]);
+        + SHorizontalBox::Slot().FillWidth(.30f).Padding(0, 0, 24, 0)
+        [SNew(SVerticalBox)
+            + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center).Padding(0, 0, 0, 16)[Radar.ToSharedRef()]
+            + SVerticalBox::Slot().AutoHeight()[Navigator.ToSharedRef()]]
+        + SHorizontalBox::Slot().FillWidth(.41f).Padding(0, 0, 24, 0)[List]
+        + SHorizontalBox::Slot().FillWidth(.29f)[Inspector.ToSharedRef()]);
+}
+
+TSharedRef<SWidget> SPWTraitsPage::BuildRadar()
+{
+    return SNew(SPWAttributeRadar, Model.ToSharedRef())
+        .AvailableWidth_Lambda([this]() { return PWRadar::PageSlot(PageWidth > 0.0f ? PageWidth : 800.0f, bNarrow).AvailableWidth; })
+        .MaxRadius_Lambda([this]() { return PWRadar::PageSlot(PageWidth > 0.0f ? PageWidth : 800.0f, bNarrow).MaxRadius; })
+        .Compact_Lambda([this]() { return bNarrow; })
+        .Preview_Lambda([this]()
+        {
+            // A proposal the core allows is drawn as an outline before it is applied; one it refuses is not drawn.
+            FPWRadarPreview Trial;
+            if (Proposal.bCanApply && Model->Traits.IsValidIndex(SelectedIndex) && Model->Traits[SelectedIndex].Id == Proposal.TraitId)
+            {
+                Trial.Group = Model->Traits[SelectedIndex].Group;
+                Trial.Delta = Proposal.Charge - Proposal.Refund;
+            }
+            return Trial;
+        });
+}
+
+void SPWTraitsPage::TickRadar(float PageWidthNow)
+{
+    PageWidth = PageWidthNow;
+    if (!BudgetBox.IsValid() || !Radar.IsValid()) return;
+    // A refused edit also shakes the budget bar, which is always on screen; under reduced motion the offset is 0.
+    const float Shake = Radar->GetShakeOffset();
+    if (FMath::IsNearlyEqual(Shake, LastShake, 0.05f)) return;
+    LastShake = Shake;
+    BudgetBox->SetRenderTransform(TOptional<FSlateRenderTransform>(FSlateRenderTransform(FVector2D(Shake, 0.0))));
 }
 
 TSharedRef<SWidget> SPWTraitsPage::BuildRow(int32 Index)
@@ -256,14 +294,16 @@ bool SPWTraitsPage::CancelPendingProposal()
 
 void SPWTraitsPage::ApplyRank()
 {
-    if (!Proposal.bCanApply || Proposal.CurrentRank == Proposal.ProposedRank) return;
+    if (Proposal.CurrentRank == Proposal.ProposedRank) return;
+    // The core said no: the budget shakes instead of anything moving.
+    if (!Proposal.bCanApply) { Model->NoteRejection(); return; }
     const FName Id = Model->Traits[SelectedIndex].Id;
     const int32 Rank = Proposal.ProposedRank;
     if (const auto* Creator = Model->GetSubsystem())
     {
         const auto Fresh = Creator->PreviewTraitRank(Id, Rank);
         if (Fresh.SourceDraftSnapshot != Proposal.SourceDraftSnapshot) { Proposal = Fresh; RefreshInspector(); return; }
-        if (!Fresh.bCanApply) { Proposal = Fresh; RefreshInspector(); return; }
+        if (!Fresh.bCanApply) { Proposal = Fresh; Model->NoteRejection(); RefreshInspector(); return; }
     }
     Model->Edit([Id, Rank](UPerfectWorldCharacterCreatorSubsystem& Creator) { return Creator.SetTraitRank(Id, Rank); });
     DiscardProposal();

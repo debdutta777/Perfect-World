@@ -152,6 +152,27 @@ public:
     /** The player used a door: door.set through the core, swing the leaf if allowed, show the reason if refused. */
     void RequestDoorToggle(APWDoorActor& Door, APawn* By);
 
+    // ---- The calling bell (F5; PerfectWorldLaneLifeKnock.cpp) ----
+
+    /**
+     * The visitor presses a dwelling's bell: "You ring the bell.", then, a moment later, the core's own knock answer for this door
+     * (DoorBell.h over EvaluateDoorKnock). A resident home in visiting hours is "Someone is coming..." and the door is unlatched for this visit;
+     * nobody home is "Nobody answers."; outside visiting hours is the resident's refusal. Ignored while an earlier ring is unanswered.
+     * Nothing is saved: an answered ring is the same transient HasKnocked fact a knock was.
+     */
+    void RingDoorBell(FName DoorId, APawn* By);
+    /** True from the ring until the resident's answer has been presented. */
+    bool IsRingPending(FName DoorId) const { return RingTimers.Contains(DoorId); }
+    /** True when this player needs no bell here: a resident of the dwelling, or already let in on this approach. Cheap; no presence query. */
+    bool IsBellUnneeded(FName DoorId) const;
+    /** The authored inside half-plane of the closed frame, +1 or -1; 0 when none is registered (so direction cannot be told). */
+    double GetDoorInsideSide(FName DoorId) const;
+    /**
+     * The threshold guard's question: may the player come in through this private door now, whatever the leaf is doing? The core's
+     * EvaluateDoorPassage with direction Entry (the guard never asks about going out). False fills OutWhy with a polite notice.
+     */
+    bool MayEnterThroughDoor(FName DoorId, FText& OutWhy);
+
     // ---- Conversation ----
 
     /** Builds a session over the core for a person (conversation.open), or null when the core refuses. */
@@ -197,6 +218,16 @@ private:
     /** Forgets admitted knocks once the visitor is more than 3 m from the door (a ticker that runs only while knocks are held). */
     bool TickKnocks(float DeltaTime);
     void ShowDoorRefusal(const APawn* By, PerfectWorld::DoorResult Result, const PerfectWorld::DoorDef* Def) const;
+    /** F5: the Entry-direction facts the core asks of the caller for the player at this door. */
+    PerfectWorld::DoorUseContext MakeEntryContext(const PerfectWorld::DoorDef& Def, FName DoorId);
+    APWDoorActor* FindRegisteredDoor(FName DoorId) const;
+    /** F5: the answer to a ring, a moment after it; an admitted visitor is then told the door is unlatched. */
+    void AnswerBell(FName DoorId, TWeakObjectPtr<APawn> By);
+    /** F5: the household closes an open dwelling leaf behind a visitor who has gone (twice a second, always on). */
+    bool TickDoorKeeper(float DeltaTime);
+    void CloseDoorByHost(APWDoorActor& Door);
+    void StartDoorKeeper();
+    void CancelRings();
     /** APWDoorActor::OnSettled: the leaf's real outcome, reported to the core with door.settle. */
     void HandleDoorSettled(FName DoorId, bool bReachedTarget, bool bIsOpenNow, int8 SwingSide);
     /** APWReadableActor::GlobalReadRequested: open the text in this world's reading presenter. */
@@ -222,6 +253,9 @@ private:
     /** Doors whose knock was answered on the visitor's current approach (HasKnocked); cleared on leaving or when the door closes. */
     TMap<FName, TWeakObjectPtr<APWDoorActor>> KnockedDoors;
     FTSTicker::FDelegateHandle KnockTicker;
+    /** F5: a ring awaiting its answer; one ticker per door. */
+    TMap<FName, FTSTicker::FDelegateHandle> RingTimers;
+    FTSTicker::FDelegateHandle KeeperTicker;
     /** Schedule home zone -> the people who live there (from the validated content, built on first use). */
     TMap<FName, TArray<FName>> ResidentsByHome;
     bool bResidentsByHomeBuilt = false;

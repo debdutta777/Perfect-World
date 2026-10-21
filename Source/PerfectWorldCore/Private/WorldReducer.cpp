@@ -50,13 +50,14 @@ Rejection Reject(std::string code, std::string message)
 }
 } // namespace
 
-WorldSim::WorldSim(std::uint64_t worldSeed, std::size_t eventCap) : EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap)
+WorldSim::WorldSim(std::uint64_t worldSeed, std::size_t eventCap, DayLoopCatalogues school)
+    : EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap), School_(school)
 {
     State_ = MakeWorldState(worldSeed);
 }
 
-WorldSim::WorldSim(WorldState state, std::size_t eventCap)
-    : State_(std::move(state)), EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap)
+WorldSim::WorldSim(WorldState state, std::size_t eventCap, DayLoopCatalogues school)
+    : State_(std::move(state)), EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap), School_(school)
 {
 }
 
@@ -114,6 +115,8 @@ std::optional<Rejection> WorldSim::Validate(const Command& command) const
         return ValidateGateCommand(State_, command);
     if (IsLaneCommand(command.Payload))
         return ValidateLaneCommand(command);
+    if (std::holds_alternative<SchoolPlanDay>(command.Payload) || std::holds_alternative<SchoolArrive>(command.Payload))
+        return ValidateSchoolCommand(command);
     return Reject("command.unknown", "Unknown command.");
 }
 
@@ -226,6 +229,10 @@ std::optional<Rejection> WorldSim::Apply(const Command& command, CommandResult& 
     else if (IsLaneCommand(command.Payload))
     {
         return ApplyLaneCommand(command, result);
+    }
+    else if (std::holds_alternative<SchoolPlanDay>(command.Payload) || std::holds_alternative<SchoolArrive>(command.Payload))
+    {
+        return ApplySchoolCommand(command, result);
     }
     return std::nullopt;
 }

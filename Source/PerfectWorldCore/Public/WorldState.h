@@ -234,9 +234,10 @@ struct DoorChanged
     bool Settlement = false;
 };
 
+/** Free school commands forward the existing Planned/ArrivedAtSchool DayLoopEvent, stamped with world sequence. */
 using EventPayload = std::variant<TimeAdvanced, DayStarted, ScheduledEventFired, WorldFlagChanged, GateRegistered, GateOnset,
                                   GateOnsetHeld, GateContained, GateSealed, ConversationOpened, ConversationChoiceAccepted,
-                                  ConversationEnded, DoorChanged>;
+                                  ConversationEnded, DoorChanged, DayLoopEvent>;
 
 struct DomainEvent
 {

@@ -42,7 +42,7 @@ std::string R1Text(const DoorState& state, std::size_t count)
 void R1DefinitionsAndAccess()
 {
     const auto doors = AuthoredDoors();
-    R1Expect(doors.size() == 26 && ValidateDoorTable(), "twenty-three-door prefix in the current valid roster");
+    R1Expect(doors.size() == 29 && ValidateDoorTable(), "twenty-three-door prefix in the current valid roster");
     for (std::size_t i = 0; i < R1FrozenIds.size(); ++i)
         R1Expect(doors[i].Id == R1FrozenIds[i], "the frozen twenty-door prefix and append order");
     const std::array<std::string_view, 3> locations{
@@ -100,7 +100,7 @@ void R1Migration()
     for (std::size_t count = 0; count <= 24; ++count)
     {
         const auto result = DeserialiseDoorState(R1Text(played, count));
-        const bool realEdition = count == 10 || count == 11 || count == 16 || count == 20 || count == 23 || count == 26;
+        const bool realEdition = count == 10 || count == 11 || count == 16 || count == 20 || count == 23 || count == 26 || count == 29;
         R1Expect(result.Ok() == realEdition, "only real /2 roster editions accepted");
         if (!realEdition) R1Expect(result.State == DoorState{} && !result.bMigrated, "invalid roster publishes no state");
     }
