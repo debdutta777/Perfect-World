@@ -9,6 +9,9 @@
 #include "UI/PWWidgets.h"
 #include "UI/SPWAwakeningSigil.h"
 #include "UI/SPWJournalPanel.h"
+#include "UI/PWQuestText.h"
+#include "UI/SPWQuestPanel.h"
+#include "UI/SPWSettingsPanel.h"
 #include "Widgets/Images/SImage.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
@@ -170,6 +173,15 @@ void SPWPauseMenu::Construct(const FArguments& InArgs)
     ];
 
     PWUI::FocusWhenReady(AsShared(), ContentHolder);
+    if (PWQuest::ConsumeOpenOnNextPause())
+    {
+        OpenQuests(true);
+    }
+}
+
+FVector2D SPWPauseMenu::PauseSpaceOf(const TWeakPtr<SWidget>& Self)
+{
+    return CpPauseSpace(Self);
 }
 
 TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
@@ -208,6 +220,22 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
         FOnClicked::CreateSPLambda(this, [this]()
         {
             OpenToday();
+            return FReply::Handled();
+        }));
+
+    QuestsButton = CpPauseButton(
+        LOCTEXT("Quests", "Quests"), PWUI::EButtonKind::Secondary,
+        FOnClicked::CreateSPLambda(this, [this]()
+        {
+            OpenQuests(false);
+            return FReply::Handled();
+        }));
+
+    SettingsButton = CpPauseButton(
+        LOCTEXT("Settings", "Settings"), PWUI::EButtonKind::Secondary,
+        FOnClicked::CreateSPLambda(this, [this]()
+        {
+            OpenSettings();
             return FReply::Handled();
         }));
 
@@ -350,6 +378,8 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
             SNew(SVerticalBox)
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[ResumeButton]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[TodayButton.ToSharedRef()]
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[QuestsButton.ToSharedRef()]
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[SettingsButton.ToSharedRef()]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[SaveButton]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[SaveFeedback]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[ReturnToTitleButton.ToSharedRef()]
@@ -395,31 +425,6 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
         ];
 }
 
-void SPWPauseMenu::OpenToday()
-{
-    if (bTodayOpen || PendingExit != EPendingExit::None)
-    {
-        return;
-    }
-    PWUI::CancelPendingFocus(AsShared());
-    bTodayOpen = true;
-    const TWeakPtr<SWidget> Self = AsShared();
-    // The journal reads the one authoritative world through the lane-life subsystem (the same path as the clock above); time is already held.
-    ContentHolder->SetContent(
-        SNew(SPWJournalPanel)
-        .Model(PWJournal::ReadModel(Hud.Get()))
-        .Space_Lambda([Self]() { return CpPauseSpace(Self); })
-        .OnClose(FSimpleDelegate::CreateSPLambda(this, [this]() { CloseToday(); })));
-}
-
-void SPWPauseMenu::CloseToday()
-{
-    PWUI::CancelPendingFocus(AsShared());
-    bTodayOpen = false;
-    ContentHolder->SetContent(MenuContent.ToSharedRef());
-    PWUI::FocusWhenReady(AsShared(), TodayButton);
-}
-
 FReply SPWPauseMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent)
 {
     // A held key auto-repeats; menus react to the first press only.
@@ -437,6 +442,17 @@ FReply SPWPauseMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InK
     if (bTodayOpen && (Key == EKeys::Escape || Key == EKeys::Gamepad_FaceButton_Right || Key == EKeys::Gamepad_Special_Right))
     {
         CloseToday();
+        return FReply::Handled();
+    }
+    if (bQuestsOpen && (Key == EKeys::Escape || Key == EKeys::J || Key == EKeys::Gamepad_FaceButton_Right || Key == EKeys::Gamepad_Special_Right))
+    {
+        CloseQuests();
+        return FReply::Handled();
+    }
+    // The settings panel handles its own keys (a key capture swallows Esc); an unhandled Esc or B closes it.
+    if (bSettingsOpen && (Key == EKeys::Escape || Key == EKeys::Gamepad_FaceButton_Right || Key == EKeys::Gamepad_Special_Right))
+    {
+        CloseSettings();
         return FReply::Handled();
     }
     if (Key == EKeys::Escape || Key == EKeys::Gamepad_Special_Right)
