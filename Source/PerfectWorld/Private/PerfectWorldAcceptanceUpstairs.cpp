@@ -4,6 +4,7 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "PerfectWorldAcceptanceHomes.h"
+#include "PerfectWorldAcceptanceDoorBell.h"
 #include "PerfectWorldAcceptanceSubsystem.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "PerfectWorldDoorActor.h"
@@ -105,8 +106,9 @@ T6StepDef T6NewPhaseOnly(T6StepDef Def, TSharedRef<T6Restart> State)
 // "Nobody answers" otherwise. The core's own host truth must agree with the words and the leaf must still be shut either way.
 T6StepDef T6Knock(const FString& Name, bool bAnswered)
 {
+    // F5: a visitor rings the bell beside the leaf; pressing the leaf itself only says "Ring the bell first."
     return PWAcceptance::MakeInteractStep(Name,
-        [](UPWAcceptanceSubsystem& Sub) -> AActor* { return T6FindUpperDoor(Sub.GetPlayWorld()); },
+        [](UPWAcceptanceSubsystem& Sub) -> AActor* { return PWAcceptance::DoorBell::FindBell(Sub.GetPlayWorld(), FName(PWLane::R52UpperDoor)); },
         [bAnswered](UPWAcceptanceSubsystem& Sub, FString& Detail)
         {
             auto* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
@@ -115,7 +117,7 @@ T6StepDef T6Knock(const FString& Name, bool bAnswered)
             if (!Life || !Door || !Def || !Sub.GetInteraction()) return false;
             Detail = Sub.GetInteraction()->GetNotice().ToString();
             return !Door->IsOpen() && Life->IsHostHomeForAcceptance(*Def) == bAnswered &&
-                Detail.Contains(bAnswered ? TEXT("Someone answers") : TEXT("Nobody answers"));
+                (bAnswered ? PWAcceptance::DoorBell::IsAnsweredNotice(Detail) : Detail.Contains(TEXT("Nobody answers")));
         }, nullptr, 15);
 }
 

@@ -752,3 +752,8 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/QuestLog
 add_executable(PerfectWorldQuestLogTests Tests/QuestLogTests.cpp)
 target_link_libraries(PerfectWorldQuestLogTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldQuestLogTests COMMAND PerfectWorldQuestLogTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# F5: the calling bell. Header-only portable rules (DoorBell.h) over the core's own knock and passage; no roster or save change.
+add_executable(PerfectWorldDoorBellTests Tests/DoorBellTests.cpp)
+target_link_libraries(PerfectWorldDoorBellTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldDoorBellTests COMMAND PerfectWorldDoorBellTests)
