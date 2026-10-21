@@ -100,11 +100,11 @@ void MpTestMapShape()
     MpExpect(map.Buildings.size() == 21, "nineteen frontages and two end masses");
     std::size_t byKind[Lm::BuildingKindCount] = {};
     for (const Lm::Building& b : map.Buildings) ++byKind[static_cast<std::size_t>(b.Kind)];
-    MpExpect(byKind[static_cast<std::size_t>(Lm::BuildingKind::Home)] == 6, "six homes (care home, opening home, caretaker flat, tall flats, row house, old house)");
-    MpExpect(byKind[static_cast<std::size_t>(Lm::BuildingKind::Shop)] == 8, "eight shops");
+    MpExpect(byKind[static_cast<std::size_t>(Lm::BuildingKind::Home)] == 8, "eight homes (care home, opening home, caretaker flat, tall flats, row house, old house, alley house, stair flats)");
+    MpExpect(byKind[static_cast<std::size_t>(Lm::BuildingKind::Shop)] == 9, "nine shops (R6-01 opened the corner stalls)");
     MpExpect(byKind[static_cast<std::size_t>(Lm::BuildingKind::Workshop)] == 2, "two workshops (repair, tailor)");
     MpExpect(byKind[static_cast<std::size_t>(Lm::BuildingKind::School)] == 0, "no school on the lane yet");
-    MpExpect(byKind[static_cast<std::size_t>(Lm::BuildingKind::Sealed)] == 5, "three sealed frontages and two end masses");
+    MpExpect(byKind[static_cast<std::size_t>(Lm::BuildingKind::Sealed)] == 2, "only the two end masses stay sealed (R6-01 opened the last three side frontages)");
 
     std::size_t roads = 0, alleys = 0, footpaths = 0;
     for (const Lm::Surface& s : map.Surfaces)
@@ -167,7 +167,7 @@ void MpTestBuildings()
     const Lm::Building& row = MpBuilding(map, "building.nabapara.tea_row_house");
     MpExpect(row.Entrance == Lm::Point{1850.0, 520.0}, "the mirrored row house has its door at U 450 from the frontage's low-X corner");
 
-    // Sealed ground floors: three frontages (generic ids) and the two end masses.
+    // Sealed ground floors: only the two end masses remain.
     std::set<std::string> sealed;
     for (const Lm::Building& b : map.Buildings)
     {
@@ -175,10 +175,8 @@ void MpTestBuildings()
         sealed.insert(b.Id);
         MpExpect(!b.bEnterable && !b.bHasEntrance && b.Label.empty() && b.LabelKey.empty(), "sealed buildings have no door and no label: " + b.Id);
     }
-    MpExpect(sealed.count("building.nabapara.sealed_minus_7") == 1 && sealed.count("building.nabapara.sealed_minus_8") == 1 &&
-                 sealed.count("building.nabapara.sealed_plus_0") == 1 && sealed.count("building.nabapara.west_end_block") == 1 &&
-                 sealed.count("building.nabapara.east_end_block") == 1,
-             "the sealed set is the three inventory frontages and the two end masses");
+    MpExpect(sealed.size() == 2 && sealed.count("building.nabapara.west_end_block") == 1 && sealed.count("building.nabapara.east_end_block") == 1,
+             "the sealed set is the two end masses");
     const Lm::Building& west = MpBuilding(map, "building.nabapara.west_end_block");
     MpExpect(west.Side == 0 && west.Footprint[0] == Lm::Point{-3300.0, -1300.0} && west.Footprint[2] == Lm::Point{-2400.0, 1300.0}, "the west end mass closes the lane");
 
@@ -194,7 +192,7 @@ void MpTestBuildings()
 void MpTestDoorsAndPois()
 {
     const Lm::Map map = Lm::BuildLaneMap();
-    MpExpect(map.Doors.size() == 16, "sixteen exterior front doors");
+    MpExpect(map.Doors.size() == 19, "nineteen exterior front doors");
     for (const Lm::MapDoor& d : map.Doors)
     {
         const DoorDef* authored = FindDoor(d.Id);
@@ -208,7 +206,7 @@ void MpTestDoorsAndPois()
     MpExpect(Lm::FindMapDoor(map, "door.nabapara.tall_flats_front")->Access == DoorAccess::Public, "the tall flats' stair passage is public");
     MpExpect(Lm::FindMapDoor(map, "door.nabapara.tall_flats_unit_a") == nullptr, "interior doors are not on the map");
 
-    MpExpect(map.Pois.size() == 20, "a point of interest per named building (16) plus two alleys and two lane ends");
+    MpExpect(map.Pois.size() == 23, "a point of interest per named building (19) plus two alleys and two lane ends");
     std::size_t homes = 0, shops = 0, workshops = 0, alleys = 0, ends = 0;
     for (const Lm::PointOfInterest& p : map.Pois)
     {
@@ -219,7 +217,7 @@ void MpTestDoorsAndPois()
         ends += p.Kind == Lm::PoiKind::LaneEnd;
         MpExpect(p.LabelKey.starts_with("map."), "poi label key: " + p.Id);
     }
-    MpExpect(homes == 6 && shops == 8 && workshops == 2 && alleys == 2 && ends == 2, "poi kinds follow the buildings");
+    MpExpect(homes == 8 && shops == 9 && workshops == 2 && alleys == 2 && ends == 2, "poi kinds follow the buildings");
 }
 
 void MpTestDoorStatus()
@@ -290,7 +288,7 @@ void MpTestExtraBuilding()
     MpExpect(map.BoundsMax.X == 8200.0, "the bounds grow to hold it");
     MpExpect(std::any_of(map.Pois.begin(), map.Pois.end(), [](const Lm::PointOfInterest& p) { return p.Kind == Lm::PoiKind::School && p.BuildingId == "building.nabapara.school"; }),
              "and it gets its point of interest");
-    MpExpect(map.Buildings.size() == 22 && map.Doors.size() == 16, "one building more; no door was authored for it");
+    MpExpect(map.Buildings.size() == 22 && map.Doors.size() == 19, "one building more; no door was authored for it");
 
     // A building placed on top of another is refused by the validity check.
     const Lm::ExtraBuilding clash[] = {{"building.nabapara.clash", "Clash", "map.building.clash", Lm::BuildingKind::School, -200.0, 500.0, 300.0, 900.0, 1, false, 0.0, 0.0, {}}};

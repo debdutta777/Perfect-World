@@ -23,7 +23,7 @@ struct MpName
     std::string_view Label;
 };
 
-constexpr std::array<MpName, 16> MpNames{{
+constexpr std::array<MpName, 19> MpNames{{
     {"building.nabapara.care_home", "Children's home"},
     {"building.nabapara.opening_home", "Family flat"},
     {"building.nabapara.stationery", "Stationery shop"},
@@ -40,6 +40,9 @@ constexpr std::array<MpName, 16> MpNames{{
     {"building.nabapara.cloth_merchant", "Cloth merchant"},
     {"building.nabapara.narrow_shop", "Narrow shop"},
     {"building.nabapara.tailor_shop", "Tailor"},
+    {"building.nabapara.alley_house", "Alley house"},
+    {"building.nabapara.stair_flats", "Stair flats"},
+    {"building.nabapara.corner_stalls", "Corner stalls"},
 }};
 
 /** The four ground floors built by their own code: the entrance centre along the frontage (each file's published constant) and the front door id. */
