@@ -735,3 +735,9 @@ add_executable(PerfectWorldNpcBehaviourRegressionTests Tests/NpcBehaviourRegress
 target_link_libraries(PerfectWorldNpcBehaviourRegressionTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldNpcBehaviourRegressionTests COMMAND PerfectWorldNpcBehaviourRegressionTests
     ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule)
+
+# R71: deterministic authored neighbourhood overlay; no content registry, save or hash changes.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/NeighbourhoodPlan.cpp)
+add_executable(PerfectWorldNeighbourhoodPlanTests Tests/NeighbourhoodPlanTests.cpp)
+target_link_libraries(PerfectWorldNeighbourhoodPlanTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldNeighbourhoodPlanTests COMMAND PerfectWorldNeighbourhoodPlanTests)
