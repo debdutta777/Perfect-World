@@ -14,6 +14,8 @@
 #include "InputMappingContext.h"
 #include "InputModifiers.h"
 #include "PerfectWorldInteractionComponent.h"
+#include "PerfectWorldReadingPresenter.h"
+#include "UI/PWQuestText.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPWPlayerInput, Log, All);
 
@@ -36,6 +38,18 @@ enum ELegacyAxis : int32
 };
 
 constexpr float PlayLookPitchLimit = 80.0f; // degrees up and down; keeps the horizon stable and the view from flipping
+
+/** J or the left shoulder button asks the front end HUD to open the quest window; ignored while a menu or a conversation is up. */
+void QwRequestQuests(const TWeakObjectPtr<const APawn>& Pawn)
+{
+    const APawn* Owner = Pawn.Get();
+    // A reading panel is not a menu (it does not block the world), but it owns the shoulder buttons while it is open.
+    const UPWReadingPresenter* Reading = UPWReadingPresenter::Get(Owner);
+    if (Owner != nullptr && !UPWInteractionComponent::IsWorldInputBlocked(Owner) && (Reading == nullptr || !Reading->IsOpen()))
+    {
+        PWQuest::RequestToggle();
+    }
+}
 } // namespace
 
 bool APerfectWorldPlayerCharacter::WantsEnhancedInput() const
@@ -113,6 +127,11 @@ void APerfectWorldPlayerCharacter::BuildInputAssets()
     // because the conversation panel uses it to leave.
     WalkingContext->MapKey(InteractAction, EKeys::E);
     WalkingContext->MapKey(InteractAction, EKeys::Gamepad_FaceButton_Left);
+    // Quests: J or the left shoulder button (LB / L1) opens the quest window. The action has no member of its own; the mapping context
+    // keeps it, and BindEnhancedInput finds it by name.
+    UInputAction* QuestsAction = MakeAction(TEXT("IA_Quests"), EInputActionValueType::Boolean);
+    WalkingContext->MapKey(QuestsAction, EKeys::J);
+    WalkingContext->MapKey(QuestsAction, EKeys::Gamepad_LeftShoulder);
     WalkingContext->MapKey(CycleTargetAction, EKeys::Tab);
     WalkingContext->MapKey(CycleTargetAction, EKeys::Gamepad_RightShoulder);
 }
@@ -130,6 +149,16 @@ void APerfectWorldPlayerCharacter::BindEnhancedInput(UEnhancedInputComponent& In
     Input.BindAction(ZoomHeldAction, ETriggerEvent::Triggered, this, &APerfectWorldPlayerCharacter::OnZoomHeld);
     // Started fires once per press; holding the key never repeats the action.
     Input.BindAction(InteractAction, ETriggerEvent::Started, this, &APerfectWorldPlayerCharacter::OnInteractStarted);
+    // Quests (J, LB): found through the mapping context, so the character header gains no member.
+    for (const FEnhancedActionKeyMapping& Mapping : WalkingContext->GetMappings())
+    {
+        if (Mapping.Action != nullptr && Mapping.Action->GetFName() == FName(TEXT("IA_Quests")))
+        {
+            Input.BindActionInstanceLambda(Mapping.Action, ETriggerEvent::Started,
+                [Pawn = TWeakObjectPtr<const APawn>(this)](const FInputActionInstance&) { QwRequestQuests(Pawn); });
+            break;
+        }
+    }
     Input.BindAction(CycleTargetAction, ETriggerEvent::Started, this, &APerfectWorldPlayerCharacter::OnCycleTargetStarted);
 }
 
@@ -315,6 +344,12 @@ void APerfectWorldPlayerCharacter::BindLegacyInput(UInputComponent& Input)
     for (const FKey& Key : {EKeys::E, EKeys::Gamepad_FaceButton_Left})
     {
         Input.BindKey(Key, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnInteractStarted); // IE_Pressed ignores repeats
+    }
+    for (const FKey& Key : {EKeys::J, EKeys::Gamepad_LeftShoulder}) // quests
+    {
+        FInputKeyBinding Binding(FInputChord(Key), IE_Pressed);
+        Binding.KeyDelegate.GetDelegateForManualSet().BindLambda([Pawn = TWeakObjectPtr<const APawn>(this)]() { QwRequestQuests(Pawn); });
+        Input.KeyBindings.Emplace(MoveTemp(Binding));
     }
     for (const FKey& Key : {EKeys::Tab, EKeys::Gamepad_RightShoulder})
     {

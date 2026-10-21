@@ -735,3 +735,9 @@ add_executable(PerfectWorldNpcBehaviourRegressionTests Tests/NpcBehaviourRegress
 target_link_libraries(PerfectWorldNpcBehaviourRegressionTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldNpcBehaviourRegressionTests COMMAND PerfectWorldNpcBehaviourRegressionTests
     ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule)
+
+# F3: quest log projection (Today, Promises, Discoveries), derived from authoritative state; no new persisted state.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/QuestLog.cpp)
+add_executable(PerfectWorldQuestLogTests Tests/QuestLogTests.cpp)
+target_link_libraries(PerfectWorldQuestLogTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldQuestLogTests COMMAND PerfectWorldQuestLogTests ${CMAKE_SOURCE_DIR}/Data/Content)
