@@ -16,6 +16,8 @@
 #include "PerfectWorldInteractionComponent.h"
 #include "PerfectWorldKeyBindings.h"
 #include "PerfectWorldKeyBindingsContext.h"
+#include "PerfectWorldReadingPresenter.h"
+#include "UI/PWQuestText.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPWPlayerInput, Log, All);
 
@@ -38,6 +40,17 @@ enum ELegacyAxis : int32
 };
 
 constexpr float PlayLookPitchLimit = 80.0f; // degrees up and down; keeps the horizon stable and the view from flipping
+
+/** The quests key asks the front end HUD to open the quest window; ignored while a menu, a conversation or a reading panel is up. */
+void QwRequestQuests(const TWeakObjectPtr<const APawn>& Pawn)
+{
+    const APawn* Owner = Pawn.Get();
+    const UPWReadingPresenter* Reading = UPWReadingPresenter::Get(Owner);
+    if (Owner != nullptr && !UPWInteractionComponent::IsWorldInputBlocked(Owner) && (Reading == nullptr || !Reading->IsOpen()))
+    {
+        PWQuest::RequestToggle();
+    }
+}
 } // namespace
 
 bool APerfectWorldPlayerCharacter::WantsEnhancedInput() const
@@ -69,6 +82,7 @@ void APerfectWorldPlayerCharacter::BuildInputAssets()
     ZoomHeldAction = MakeAction(TEXT("IA_ZoomHeld"), EInputActionValueType::Axis1D);
     InteractAction = MakeAction(TEXT("IA_Interact"), EInputActionValueType::Boolean);
     CycleTargetAction = MakeAction(TEXT("IA_CycleTarget"), EInputActionValueType::Boolean);
+    QuestsAction = MakeAction(TEXT("IA_Quests"), EInputActionValueType::Boolean);
 
     WalkingContext = NewObject<UInputMappingContext>(this, TEXT("IMC_Walking"));
 
@@ -88,6 +102,7 @@ void APerfectWorldPlayerCharacter::BuildInputAssets()
         Actions.ZoomHeld = ZoomHeldAction.Get();
         Actions.Interact = InteractAction.Get();
         Actions.CycleTarget = CycleTargetAction.Get();
+        Actions.Quests = QuestsAction.Get();
         return Actions;
     };
     KbPopulateWalkingContext(*WalkingContext, MakeKbActions(), *this, FKbBindingStore::Get().Current());
@@ -125,6 +140,8 @@ void APerfectWorldPlayerCharacter::BindEnhancedInput(UEnhancedInputComponent& In
     // Started fires once per press; holding the key never repeats the action.
     Input.BindAction(InteractAction, ETriggerEvent::Started, this, &APerfectWorldPlayerCharacter::OnInteractStarted);
     Input.BindAction(CycleTargetAction, ETriggerEvent::Started, this, &APerfectWorldPlayerCharacter::OnCycleTargetStarted);
+    Input.BindActionInstanceLambda(QuestsAction.Get(), ETriggerEvent::Started,
+        [Pawn = TWeakObjectPtr<const APawn>(this)](const FInputActionInstance&) { QwRequestQuests(Pawn); });
 }
 
 void APerfectWorldPlayerCharacter::AddWalkingContext()
@@ -345,6 +362,12 @@ void APerfectWorldPlayerCharacter::BindLegacyInput(UInputComponent& Input)
     for (const FKey& Key : KeysOf(EKbAction::ZoomOut))
     {
         Input.BindKey(Key, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnLegacyZoomOut);
+    }
+    for (const FKey& Key : KeysOf(EKbAction::Quests))
+    {
+        FInputKeyBinding Binding(FInputChord(Key), IE_Pressed);
+        Binding.KeyDelegate.GetDelegateForManualSet().BindLambda([Pawn = TWeakObjectPtr<const APawn>(this)]() { QwRequestQuests(Pawn); });
+        Input.KeyBindings.Emplace(MoveTemp(Binding));
     }
 }
 

@@ -746,3 +746,9 @@ add_test(NAME PerfectWorldSaveSlotSummaryTests COMMAND PerfectWorldSaveSlotSumma
 add_executable(PerfectWorldDoorsRoster29Tests Tests/DoorsRoster29Tests.cpp)
 target_link_libraries(PerfectWorldDoorsRoster29Tests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldDoorsRoster29Tests COMMAND PerfectWorldDoorsRoster29Tests)
+
+# F3: quest log projection (Today, Promises, Discoveries), derived from authoritative state; no new persisted state.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/QuestLog.cpp)
+add_executable(PerfectWorldQuestLogTests Tests/QuestLogTests.cpp)
+target_link_libraries(PerfectWorldQuestLogTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldQuestLogTests COMMAND PerfectWorldQuestLogTests ${CMAKE_SOURCE_DIR}/Data/Content)
