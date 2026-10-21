@@ -1,5 +1,6 @@
 #include "PerfectWorldAcceptanceHomes.h"
 
+#include "PerfectWorldAcceptanceDoorBell.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
@@ -43,7 +44,7 @@ const TCHAR* HmAnswerText(const EHmAnswer Answer)
 EHmAnswer HmClassify(const FText& Notice)
 {
     const FString Text = Notice.ToString();
-    if (Text.Contains(TEXT("Someone answers"))) { return EHmAnswer::Admitted; }
+    if (PWAcceptance::DoorBell::IsAnsweredNotice(Text)) { return EHmAnswer::Admitted; } // F5: "Someone is coming..." (the ring's answer)
     if (Text.Contains(TEXT("Nobody answers"))) { return EHmAnswer::NoAnswer; }
     if (Text.Contains(TEXT("receiving visitors"))) { return EHmAnswer::NotReceiving; }
     return EHmAnswer::None;
@@ -257,11 +258,19 @@ FStepDef HmDoorStep(const FString& Name, const TCHAR* DoorId, const bool bWantOp
         15.0);
 }
 
-/** E on the door: bFirst records and judges the answer against the schedules; the second press opens it only for an admitted knock. */
+/**
+ * E on the BELL (F5): bFirst records and judges the answer against the schedules; the second press is E on the DOOR for an admitted
+ * visitor (it opens the unlatched door), and a second ring for anyone else (the same answer, the door stays shut).
+ */
 FStepDef HmKnockStep(const FString& Name, const TCHAR* DoorId, const bool bFirst)
 {
     const FName Id(DoorId);
-    return PWAcceptance::MakeInteractStep(Name, [Id](UPWAcceptanceSubsystem& Sub) -> AActor* { return HmFindDoor(Sub.GetPlayWorld(), Id); },
+    return PWAcceptance::MakeInteractStep(Name,
+        [Id, bFirst](UPWAcceptanceSubsystem& Sub) -> AActor*
+        {
+            if (!bFirst && HmLedger().LastObserved == EHmAnswer::Admitted) { return HmFindDoor(Sub.GetPlayWorld(), Id); }
+            return PWAcceptance::DoorBell::FindBell(Sub.GetPlayWorld(), Id);
+        },
         [Id, bFirst](UPWAcceptanceSubsystem& Sub, FString& Detail)
         {
             FHmLedger& Ledger = HmLedger();

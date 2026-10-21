@@ -37,7 +37,7 @@
 //   4. Unit B and unit A host truth is independent (the clock is moved by the core's own commands): Tuesday 11:00 Sahana is sewing at home,
 //      Nirmal is at work; 14:30 she is out on her errand and he is still at work; 18:30 both are home. Each host answer comes from
 //      UPWLaneLifeSubsystem::IsHostHome and must equal the answer derived from the schedules.
-//   5. Real knocks (E on the door) at unit B: 11:00 not receiving (home, outside visiting hours), 14:30 no answer (away, the explained
+//   5. Real rings (E on the calling bell beside unit B's door, F5; an admitted visitor then presses the door) at unit B: 11:00 not receiving (home, outside visiting hours), 14:30 no answer (away, the explained
 //      unavailability), 18:30 admitted, 20:45 not receiving (late sewing, home but busy and outside visiting hours).
 //   6. At 18:30 Talk and Leave through the conversation panel; the agreement is a core fact and survives SaveActiveGame (slot read back).
 //   7. At 20:45 and 23:30 the polite decline (busy, asleep) with Leave only; the core intent keeps her work across the conversation.

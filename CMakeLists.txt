@@ -735,3 +735,8 @@ add_executable(PerfectWorldNpcBehaviourRegressionTests Tests/NpcBehaviourRegress
 target_link_libraries(PerfectWorldNpcBehaviourRegressionTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldNpcBehaviourRegressionTests COMMAND PerfectWorldNpcBehaviourRegressionTests
     ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule)
+
+# F5: the calling bell. Header-only portable rules (DoorBell.h) over the core's own knock and passage; no roster or save change.
+add_executable(PerfectWorldDoorBellTests Tests/DoorBellTests.cpp)
+target_link_libraries(PerfectWorldDoorBellTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldDoorBellTests COMMAND PerfectWorldDoorBellTests)

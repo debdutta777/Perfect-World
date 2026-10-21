@@ -6,6 +6,7 @@
 #include "EngineUtils.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Misc/FileHelper.h"
+#include "PerfectWorldAcceptanceDoorBell.h"
 #include "PerfectWorldAcceptanceHomes.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "PerfectWorldConversationPresenter.h"
@@ -127,10 +128,12 @@ FStepDef R52DoorMove(const FString& Name, const TCHAR* Id, bool Open)
         }, 15);
 }
 
+// F5: the ring is E on the home's calling bell (the door itself now only says "Ring the bell first."). An admitted ring unlatches the door;
+// the following R52DoorMove step presses the door, exactly as it pressed it after the old knock.
 FStepDef R52Knock(const FString& Name, FR52Home Home, bool Admit)
 {
     return PWAcceptance::MakeInteractStep(Name,
-        [Home](UPWAcceptanceSubsystem& Sub) -> AActor* { return R52Door(Sub.GetPlayWorld(), Home.Door); },
+        [Home](UPWAcceptanceSubsystem& Sub) -> AActor* { return PWAcceptance::DoorBell::FindBell(Sub.GetPlayWorld(), FName(Home.Door)); },
         [Home, Admit](UPWAcceptanceSubsystem& Sub, FString& Detail)
         {
             auto* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
@@ -143,7 +146,7 @@ FStepDef R52Knock(const FString& Name, FR52Home Home, bool Admit)
             const bool RefusalState = Admit || (Intent && (Life->GetMinuteOfDay() >= 22 * 60
                 ? Intent->State == PerfectWorld::NpcState::Sleep : Intent->AnchorId != Def->LocationId));
             return RefusalState && !Door->IsOpen() && Life->IsHostHomeForAcceptance(*Def) == Admit &&
-                Detail.Contains(Admit ? TEXT("Someone answers") : TEXT("Nobody answers"));
+                Detail.Contains(Admit ? TEXT("Someone is coming") : TEXT("Nobody answers"));
         }, nullptr, 15);
 }
 

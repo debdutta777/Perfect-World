@@ -1,6 +1,12 @@
 #include "PerfectWorldLaneTallFlats.h"
 
+#include "EngineUtils.h"
+#include "PerfectWorldAcceptanceDoorBell.h"
+#include "PerfectWorldAcceptanceHomes.h"
 #include "PerfectWorldAcceptanceSubsystem.h"
+#include "PerfectWorldDoorActor.h"
+#include "PerfectWorldInteractionComponent.h"
+#include "PerfectWorldLaneLifeSubsystem.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "PerfectWorldFrontEndHUD.h"
 #include "PerfectWorldLaneLifePersistence.h"
@@ -58,9 +64,77 @@ T6StepDef T6Walk(const FString& Name, double U, double V, double Feet, double He
     return Def;
 }
 
+FName T6UpperDoorName()
+{
+    return FName(UTF8_TO_TCHAR(std::string(PerfectWorld::LaneTallFlats::UpperDoorId).c_str()));
+}
+
+APWDoorActor* T6FindUpperDoor(UWorld* World)
+{
+    if (World == nullptr) return nullptr;
+    for (TActorIterator<APWDoorActor> It(World); It; ++It)
+        if (It->GetDoorId() == T6UpperDoorName()) return *It;
+    return nullptr;
+}
+
+// F5: the upper flat is Ishita Banerjee's home behind a private door, so the walk in is no longer free: the visitor stands on the top
+// landing, the clock moves to her visiting hours (16:00 the next day, through the core's own commands, as homes_round5 does), the visitor
+// RINGS the calling bell beside the door (E on the bell), and presses the unlatched door (E on the door) before walking in. The door
+// is hung: R5-01 hung it, so the old "planned but unhung upper doorway" comment was stale and the walk was blocked by the closed leaf.
+T6StepDef T6VisitingClock(const FString& Name)
+{
+    return T6Action(Name, [Name](UPWAcceptanceSubsystem& Sub, T6StepRuntime& Rt)
+    {
+        auto* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
+        if (!Life) return T6StepOutcome::Fail(TEXT("no lane-life subsystem for the clock"));
+        const int32 Day = static_cast<int32>((Life->GetNow() + 360) / 1440) + 1;
+        auto Def = PWAcceptance::Homes::HmClockStep(Name, Day, 16, 0);
+        return Def.Run(Sub, Rt);
+    });
+}
+
+T6StepDef T6RingUpperBell(const FString& Name)
+{
+    return PWAcceptance::MakeInteractStep(Name,
+        [](UPWAcceptanceSubsystem& Sub) -> AActor* { return PWAcceptance::DoorBell::FindBell(Sub.GetPlayWorld(), T6UpperDoorName()); },
+        [](UPWAcceptanceSubsystem& Sub, FString& Detail)
+        {
+            const auto* Interaction = Sub.GetInteraction();
+            if (!Interaction || !PWAcceptance::DoorBell::IsAnsweredNotice(Interaction->GetNotice().ToString())) return false;
+            Detail = TEXT("the bell was answered: the resident is home inside her visiting hours");
+            return true;
+        }, nullptr, 20);
+}
+
+T6StepDef T6OpenUpperDoor(const FString& Name)
+{
+    return PWAcceptance::MakeInteractStep(Name,
+        [](UPWAcceptanceSubsystem& Sub) -> AActor* { return T6FindUpperDoor(Sub.GetPlayWorld()); },
+        [](UPWAcceptanceSubsystem& Sub, FString& Detail)
+        {
+            const auto* Door = T6FindUpperDoor(Sub.GetPlayWorld());
+            if (!Door || Door->IsMoving() || !Door->IsOpen() || Door->GetOpenFraction() < 0.99f) return false;
+            Detail = TEXT("the unlatched upper door is open");
+            return true;
+        },
+        [](UPWAcceptanceSubsystem& Sub)
+        {
+            const auto* Door = T6FindUpperDoor(Sub.GetPlayWorld());
+            return Door && !Door->IsMoving() && Door->IsOpen() && Door->GetOpenFraction() >= 0.99f;
+        }, 20);
+}
+
+void T6AddEntry(TArray<T6StepDef>& Out, const FString& Prefix)
+{
+    Out.Add(T6VisitingClock(Prefix + TEXT("_visiting_clock")));
+    Out.Add(T6RingUpperBell(Prefix + TEXT("_ring_bell")));
+    Out.Add(T6OpenUpperDoor(Prefix + TEXT("_open_door")));
+}
+
 void T6Visit(TArray<T6StepDef>& Out, const FString& Prefix)
 {
-    // From the top landing, through the planned but unhung upper doorway, then through the internal doorway.
+    // From the top landing: ring, open the unlatched door, walk through the upper doorway, then through the internal doorway.
+    T6AddEntry(Out, Prefix);
     Out.Add(T6Walk(Prefix + TEXT("_enter_sleeping"), 715, 715, 315));
     Out.Add(T6Walk(Prefix + TEXT("_sleeping_column"), 715, 500, 315));
     Out.Add(T6Walk(Prefix + TEXT("_internal_approach"), 965, 500, 315));
@@ -156,6 +230,7 @@ void AppendTallFlatsUpstairsSteps(TArray<T6StepDef>& Out)
         Out.Add(MakeShotStep(Prefix + TEXT("_shot_returned")));
     }
     Out.Add(T6Walk(TEXT("save_walk_up"), 550, 715, 315));
+    T6AddEntry(Out, TEXT("save"));
     Out.Add(T6Walk(TEXT("save_enter_upper"), 715, 715, 315));
     Out.Add(T6Action(TEXT("save_upstairs"), [](UPWAcceptanceSubsystem& Sub, T6StepRuntime&)
     {
