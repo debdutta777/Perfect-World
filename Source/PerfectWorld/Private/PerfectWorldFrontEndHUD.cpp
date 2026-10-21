@@ -12,6 +12,7 @@
 #include "PerfectWorldBlockTestGameMode.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
+#include "PerfectWorldMapSubsystem.h"
 #include "PerfectWorldLaneLifePersistence.h"
 #include "PerfectWorldPresentationSettings.h"
 #include "PerfectWorldTitleView.h"
@@ -137,6 +138,10 @@ void APerfectWorldFrontEndHUD::ToggleInWorldMenu()
     if (!Root.IsValid())
     {
         return;
+    }
+    if (UPWMapSubsystem* Map = UPWMapSubsystem::Get(this))
+    {
+        Map->CloseWorldMap(); // F2: a menu never opens over the full map
     }
     if (Mode == EFrontEndMode::Playing)
     {

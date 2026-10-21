@@ -16,6 +16,7 @@
 #include "PerfectWorldInteractionComponent.h"
 #include "PerfectWorldKeyBindings.h"
 #include "PerfectWorldKeyBindingsContext.h"
+#include "PerfectWorldMapSubsystem.h"
 #include "PerfectWorldReadingPresenter.h"
 #include "UI/PWQuestText.h"
 
@@ -83,6 +84,7 @@ void APerfectWorldPlayerCharacter::BuildInputAssets()
     InteractAction = MakeAction(TEXT("IA_Interact"), EInputActionValueType::Boolean);
     CycleTargetAction = MakeAction(TEXT("IA_CycleTarget"), EInputActionValueType::Boolean);
     QuestsAction = MakeAction(TEXT("IA_Quests"), EInputActionValueType::Boolean);
+    MapAction = MakeAction(TEXT("IA_ToggleMap"), EInputActionValueType::Boolean);
 
     WalkingContext = NewObject<UInputMappingContext>(this, TEXT("IMC_Walking"));
 
@@ -103,9 +105,11 @@ void APerfectWorldPlayerCharacter::BuildInputAssets()
         Actions.Interact = InteractAction.Get();
         Actions.CycleTarget = CycleTargetAction.Get();
         Actions.Quests = QuestsAction.Get();
+        Actions.Map = MapAction.Get();
         return Actions;
     };
     KbPopulateWalkingContext(*WalkingContext, MakeKbActions(), *this, FKbBindingStore::Get().Current());
+    PushMapCloseKeys();
 
     // Rebuild the mappings in place whenever the player changes a binding, so a new key works at once.
     FKbBindingStore::Get().OnChanged.AddWeakLambda(this, [this, MakeKbActions]()
@@ -115,6 +119,7 @@ void APerfectWorldPlayerCharacter::BuildInputAssets()
             return;
         }
         KbPopulateWalkingContext(*WalkingContext, MakeKbActions(), *this, FKbBindingStore::Get().Current());
+        PushMapCloseKeys();
         const APlayerController* PlayerController = Cast<APlayerController>(GetController());
         ULocalPlayer* LocalPlayer = PlayerController != nullptr ? PlayerController->GetLocalPlayer() : nullptr;
         if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
@@ -142,6 +147,38 @@ void APerfectWorldPlayerCharacter::BindEnhancedInput(UEnhancedInputComponent& In
     Input.BindAction(CycleTargetAction, ETriggerEvent::Started, this, &APerfectWorldPlayerCharacter::OnCycleTargetStarted);
     Input.BindActionInstanceLambda(QuestsAction.Get(), ETriggerEvent::Started,
         [Pawn = TWeakObjectPtr<const APawn>(this)](const FInputActionInstance&) { QwRequestQuests(Pawn); });
+    Input.BindAction(MapAction, ETriggerEvent::Started, this, &APerfectWorldPlayerCharacter::OnToggleMapStarted);
+}
+
+void APerfectWorldPlayerCharacter::OnToggleMapStarted()
+{
+    if (IsInputBlocked())
+    {
+        return;
+    }
+    if (UPWMapSubsystem* Map = UPWMapSubsystem::Get(this))
+    {
+        Map->ToggleWorldMap();
+    }
+}
+
+void APerfectWorldPlayerCharacter::PushMapCloseKeys() const
+{
+    UPWMapSubsystem* Map = UPWMapSubsystem::Get(this);
+    if (Map == nullptr)
+    {
+        return;
+    }
+    TArray<FKey> Keys;
+    for (const EKbDevice Device : {EKbDevice::Keyboard, EKbDevice::Gamepad})
+    {
+        const FKey Key = FKbBindingStore::Get().Current().Get(EKbAction::Map, Device);
+        if (Key.IsValid())
+        {
+            Keys.Add(Key);
+        }
+    }
+    Map->SetMapCloseKeys(Keys);
 }
 
 void APerfectWorldPlayerCharacter::AddWalkingContext()
@@ -362,6 +399,10 @@ void APerfectWorldPlayerCharacter::BindLegacyInput(UInputComponent& Input)
     for (const FKey& Key : KeysOf(EKbAction::ZoomOut))
     {
         Input.BindKey(Key, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnLegacyZoomOut);
+    }
+    for (const FKey& Key : KeysOf(EKbAction::Map))
+    {
+        Input.BindKey(Key, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnToggleMapStarted);
     }
     for (const FKey& Key : KeysOf(EKbAction::Quests))
     {
