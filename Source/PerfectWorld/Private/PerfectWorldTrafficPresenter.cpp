@@ -15,6 +15,10 @@
 
 namespace
 {
+/** Whole centimetres for the portable occupancy rectangles (FMath's rounding returns int64 for doubles). */
+int R72PFloorCm(const double V) { return static_cast<int>(FMath::FloorToDouble(V)); }
+int R72PCeilCm(const double V) { return static_cast<int>(FMath::CeilToDouble(V)); }
+
 PerfectWorld::NeighbourhoodTrafficTime R72PNext(PerfectWorld::NeighbourhoodTrafficTime Now)
 {
     Now.Millisecond += PerfectWorld::NeighbourhoodTrafficStepMs;
@@ -125,10 +129,10 @@ void APWTrafficPresenter::GatherPedestrians(std::vector<PerfectWorld::Neighbourh
         Current.Add(Key, Centre);
         const double Radius = FMath::Max(Extent.X, Extent.Y) + 3;
         Out.push_back({{
-            FMath::FloorToInt(FMath::Min3(From.X, Centre.X, Future.X) - Radius),
-            FMath::FloorToInt(FMath::Min3(From.Y, Centre.Y, Future.Y) - Radius),
-            FMath::CeilToInt(FMath::Max3(From.X, Centre.X, Future.X) + Radius),
-            FMath::CeilToInt(FMath::Max3(From.Y, Centre.Y, Future.Y) + Radius)}});
+            R72PFloorCm(FMath::Min3(From.X, Centre.X, Future.X) - Radius),
+            R72PFloorCm(FMath::Min3(From.Y, Centre.Y, Future.Y) - Radius),
+            R72PCeilCm(FMath::Max3(From.X, Centre.X, Future.X) + Radius),
+            R72PCeilCm(FMath::Max3(From.Y, Centre.Y, Future.Y) + Radius)}});
     }
     LastPawnPositions = MoveTemp(Current);
     if (AppendCrowdOccupancy) AppendCrowdOccupancy(Out);
@@ -146,7 +150,7 @@ void APWTrafficPresenter::Tick(float DeltaSeconds)
     }
     if (Life->GetClockHold() != EPWClockHold::None) return;
     const auto* Controller = GetWorld()->GetFirstPlayerController();
-    const auto* Player = Controller ? Controller->GetPawn() : nullptr;
+    const APawn* Player = Controller ? Controller->GetPawn() : nullptr;
     if (!Player) return;
     std::vector<PerfectWorld::NeighbourhoodPedestrianOccupancy> Occupancy;
     GatherPedestrians(Occupancy);
@@ -238,10 +242,10 @@ void APWTrafficPresenter::BeginSegment(const FVector& PlayerPosition, std::span<
     for (const auto& Slot : Slots) if (Slot.bRetiring) if (const auto* Actor = Slot.Actor.Get())
     {
         const auto& B = Actor->GetBody()->Bounds;
-        Blocked.push_back({{FMath::FloorToInt(B.Origin.X - B.BoxExtent.X - 2),
-            FMath::FloorToInt(B.Origin.Y - B.BoxExtent.Y - 2),
-            FMath::CeilToInt(B.Origin.X + B.BoxExtent.X + 2),
-            FMath::CeilToInt(B.Origin.Y + B.BoxExtent.Y + 2)}});
+        Blocked.push_back({{R72PFloorCm(B.Origin.X - B.BoxExtent.X - 2),
+            R72PFloorCm(B.Origin.Y - B.BoxExtent.Y - 2),
+            R72PCeilCm(B.Origin.X + B.BoxExtent.X + 2),
+            R72PCeilCm(B.Origin.Y + B.BoxExtent.Y + 2)}});
     }
     const auto Vehicles = Model->VehiclesAt(NextTime, Centre, PWTraffic::R72PRadiusCm, Blocked);
     PresentedTime = ModelTime;
