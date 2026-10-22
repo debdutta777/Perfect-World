@@ -155,7 +155,7 @@ void APWCrowdPresenter::RefreshNow()
 {
     auto* Life = UPWLaneLifeSubsystem::Get(this);
     auto* Controller = GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr;
-    auto* Player = Controller ? Controller->GetPawn() : nullptr;
+    APawn* Player = Controller ? Controller->GetPawn() : nullptr;
     if (!Life || !Player || !Model) return;
     const auto Now = Life->GetNow();
     const bool bDiscontinuity = !bHaveNow || Now < PreviousNow || Now - PreviousNow > 2 ||
@@ -172,7 +172,8 @@ void APWCrowdPresenter::RefreshNow()
     for (TActorIterator<APWNpcCharacter> It(GetWorld()); It; ++It) ++Budget.NamedActorCount;
     const auto At = Player->GetActorLocation();
     const int32 Fraction = MinuteFractionSource ? FMath::Clamp(MinuteFractionSource(), 0, 999) : 0;
-    SampleAt(Now, {FMath::RoundToInt(At.X), FMath::RoundToInt(At.Y), FMath::RoundToInt(At.Z)}, Budget, Fraction, bDiscontinuity);
+    SampleAt(Now, {static_cast<int>(FMath::RoundToDouble(At.X)), static_cast<int>(FMath::RoundToDouble(At.Y)), static_cast<int>(FMath::RoundToDouble(At.Z))},
+             Budget, Fraction, bDiscontinuity);
     RestoreToken = Life->GetRestorePresentationCount();
 }
 
