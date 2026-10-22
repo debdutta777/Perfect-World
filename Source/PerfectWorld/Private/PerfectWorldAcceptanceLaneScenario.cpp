@@ -2,6 +2,7 @@
 #include "PerfectWorldAcceptanceFrontages.h"
 #include "PerfectWorldAcceptanceScaleR4.h"
 #include "PerfectWorldAcceptanceMahua.h"
+#include "PerfectWorldAcceptanceTailor.h"
 #include "PerfectWorldAmbientBindings.h"
 #include "PerfectWorldLaneTallFlats.h"
 
@@ -512,6 +513,11 @@ bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps)
     if (Name == TEXT("mahua_workday"))
     {
         AppendMahuaWorkdaySteps(OutSteps);
+        return true;
+    }
+    if (Name == TEXT("tailor_workday"))
+    {
+        AppendTailorWorkdaySteps(OutSteps);
         return true;
     }
     if (Name == TEXT("stationery_shift"))

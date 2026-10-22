@@ -742,6 +742,13 @@ add_executable(PerfectWorldNeighbourhoodPlanTests Tests/NeighbourhoodPlanTests.c
 target_link_libraries(PerfectWorldNeighbourhoodPlanTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldNeighbourhoodPlanTests COMMAND PerfectWorldNeighbourhoodPlanTests)
 
+# R66: tailor dialogue and life/work coverage. Shared registrations are in R6-06_notes.md.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationTailor.cpp)
+add_executable(PerfectWorldTailorLifeTests Tests/TailorLifeTests.cpp)
+target_link_libraries(PerfectWorldTailorLifeTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldTailorLifeTests COMMAND PerfectWorldTailorLifeTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.satyajit_dutta.json)
+
 # R6-07: school planning/arrival through the world reducer; existing attendance/day-loop persistence.
 target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldSchoolDay.cpp)
 add_executable(PerfectWorldWorldSchoolDayTests Tests/WorldSchoolDayTests.cpp)
