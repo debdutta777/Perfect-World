@@ -5,6 +5,7 @@
 #include "PerfectWorldAcceptanceTailor.h"
 #include "PerfectWorldAcceptanceStreetsR7.h"
 #include "PerfectWorldAcceptanceSchoolR7.h"
+#include "PerfectWorldAcceptanceTrafficR7.h"
 #include "PerfectWorldAmbientBindings.h"
 #include "PerfectWorldLaneTallFlats.h"
 
@@ -535,6 +536,11 @@ bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps)
     if (Name == TEXT("school_round7_late"))
     {
         AppendSchoolRound7LateSteps(OutSteps);
+        return true;
+    }
+    if (Name == TEXT("traffic_round7"))
+    {
+        AppendTrafficRound7Steps(OutSteps);
         return true;
     }
     if (Name == TEXT("stationery_shift"))
