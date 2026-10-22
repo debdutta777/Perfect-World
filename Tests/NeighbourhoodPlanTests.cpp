@@ -36,7 +36,7 @@ void R71Dimensions(const NeighbourhoodPlan& p,std::string_view id,int w,int d)
 }
 void R71Routes(const NeighbourhoodPlan& p)
 {
-    R71Expect(p.HomeEntrances.size()==8,"all eight current dwelling entrances (including three flat units)");
+    R71Expect(p.HomeEntrances.size()==10,"all ten current dwelling entrances (three flat units, and R6-01's alley house and stair flats)");
     for(const auto& home:p.HomeEntrances)
     {
         const auto& entrance=R71Feature(p,home);
