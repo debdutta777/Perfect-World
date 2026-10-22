@@ -2242,3 +2242,24 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 - R7-02 traffic presenter;
 - R7-04 staffed shops;
 - R8-01 commerce contract (`Docs/ROUND8_PLAN_2026-10-22.md`).
+
+## Checkpoint — crowds and traffic merged; staffed shops on their branch, 2026-10-23
+
+**Merged at `835ee1b`:**
+- **R7-02 traffic presenter:** gpt-6.1-sol, finished by Claude Sonnet after the ChatGPT usage limit.
+- **R7-05 crowd presenter:** the same.
+  - Student windows now follow `bell_schedule.nabapara_xi_science`: arrive 09:15–10:00, leave 15:50–16:30.
+- **Hooks:** `SpawnTrafficPresenter`, `PWCrowd::SpawnCrowdPresenter`, `traffic_round7`, `crowd_round7`.
+- **First-compile fixes:** player pointers were `TObjectPtr` read through `auto*`, and `FMath` rounding returned int64 for the portable rectangles.
+
+**Verification:**
+- Rung 1: 198/198 on the combined crowd and traffic tree.
+- The editor target compiled.
+- Not run: packaging, automation, acceptance, and a boot test.
+
+**R7-04 staffed shops (`content/r704-shops`, not merged):**
+- Bimal Modak and Tithi Ghoshal at the sweet shop; Aparna Lahiri at the pharmacy; Gouranga Nandi at the tea stall; Koushik Mondal selling jhalmuri.
+- Rung 1: 197/197 on an integrated scratch copy.
+- **Blocked on the owner:** the streets' counters are solid across each keeper's axis. A 120 cm service-flap patch (`D:\PWWork\r74_shoplots.diff`, `r74_stalls.diff`) was refused to the agent by the permission system and awaits the owner's decision.
+
+**R8-01 (commerce contract)** waits for the ChatGPT usage reset.
