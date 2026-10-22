@@ -789,6 +789,13 @@ add_executable(PerfectWorldLaneMapViewTests Tests/LaneMapViewTests.cpp)
 target_link_libraries(PerfectWorldLaneMapViewTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldLaneMapViewTests COMMAND PerfectWorldLaneMapViewTests)
 
+# R75: transient calendar-driven ambient cohorts; no persistent RNG or save changes.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/AmbientCrowd.cpp)
+add_executable(PerfectWorldAmbientCrowdTests Tests/AmbientCrowdTests.cpp)
+target_link_libraries(PerfectWorldAmbientCrowdTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldAmbientCrowdTests COMMAND PerfectWorldAmbientCrowdTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/calendar/calendar.nabapara_2042_43.json)
+
 # R72: transient seeded Kolkata traffic, crossing/occupancy safety and fair junction service.
 target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/NeighbourhoodTraffic.cpp)
 add_executable(PerfectWorldNeighbourhoodTrafficTests Tests/NeighbourhoodTrafficTests.cpp)

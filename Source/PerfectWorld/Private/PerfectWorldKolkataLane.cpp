@@ -29,6 +29,7 @@
 #include "PerfectWorldNeighbourhoodStreets.h"
 #include "PerfectWorldSchoolCampus.h"
 #include "PerfectWorldTrafficPresenter.h"
+#include "PerfectWorldCrowdPresenter.h"
 #include "PerfectWorldSubrataBindings.h"
 
 namespace PWLane
@@ -306,6 +307,7 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     SpawnNeighbourhoodStreets(World, Scene, Cube, BaseMaterial); // R7-02: para and main roads, frontages, stops, club
     PWSchool::SpawnSchoolCampus(World, Scene);                     // R7-03: Nabapara Vidyalaya
     SpawnTrafficPresenter(World);                                  // R7-02: moving taxis, buses, autos, rickshaws and the tram
+    PWCrowd::SpawnCrowdPresenter(World);                           // R7-05: students, commuters, vendors, children and elders
     FaSpawnFarida(World, Scene);
     PbSpawnAnindita(World, Scene);
     SpawnSubrata(World, Scene);
