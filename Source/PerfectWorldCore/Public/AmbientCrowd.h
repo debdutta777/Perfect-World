@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Attendance.h"
 #include "GameClock.h"
 #include "NeighbourhoodPlan.h"
 #include "SchoolCalendar.h"
@@ -37,6 +38,21 @@ struct CrowdPresentationBudget
 {
     std::size_t AmbientActorLimit = 36, NamedActorCount = 0, FarFigureLimit = 80;
 };
+/** School commute windows, minutes of the school day (civil clock, 06:00 epoch NOT applied).
+ * Defaults equal bell_schedule.nabapara_xi_science: gates 09:30, first bell 10:00,
+ * dismissal 15:50. Arrival begins 15 minutes before the gates open and ends at the first bell;
+ * departure begins at the last bell and ends 40 minutes later. Use CrowdSchoolTimingFromBell
+ * to follow other authored content.
+ */
+struct CrowdSchoolTiming
+{
+    int ArrivalBeginMinute = 555, ArrivalEndMinute = 600;
+    int DepartureBeginMinute = 950, DepartureEndMinute = 990;
+    friend bool operator==(const CrowdSchoolTiming&, const CrowdSchoolTiming&) = default;
+};
+/** Derives the commute windows from an authored bell schedule (gates open, first bell, last bell). */
+[[nodiscard]] PERFECTWORLDCORE_API CrowdSchoolTiming CrowdSchoolTimingFromBell(const BellSchedule& schedule);
+
 struct CrowdRouteSegment
 {
     std::string LinkId;
@@ -49,7 +65,7 @@ struct CrowdRouteSlot
     std::uint32_t Slot = 0;
     CrowdCohort Cohort = CrowdCohort::PasserBy;
     int BeginMinute = 0, EndMinute = 0;
-    bool SchoolOnly = false, Loop = false;
+    bool SchoolOnly = false, Loop = false, Arrival = false;
     CrowdActivity RestActivity = CrowdActivity::Walking;
     std::string EnterEntranceId, ExitEntranceId;
     NeighbourhoodRoute Route;
@@ -109,7 +125,7 @@ class PERFECTWORLDCORE_API AmbientCrowd
 public:
     /** Copy immutable inputs once. Calendar institution must match the spatial school contract. */
     AmbientCrowd(std::uint64_t worldSeed, std::string district, const NeighbourhoodPlan& plan,
-                 const SchoolCalendar& calendar);
+                 const SchoolCalendar& calendar, CrowdSchoolTiming timing = {});
     [[nodiscard]] CrowdSnapshot CrowdAt(GameInstant now, NeighbourhoodPoint centre, int radiusCm,
         CrowdPresentationBudget budget = {}, int minuteFractionMilli = 0) const;
     [[nodiscard]] CrowdDensityTarget DensityAt(GameInstant now) const;
@@ -126,6 +142,7 @@ private:
     [[nodiscard]] std::uint64_t DailySeed(CalendarDay day, std::uint32_t slot) const;
     [[nodiscard]] std::string PersonId(CalendarDay day, std::uint32_t slot) const;
     std::uint64_t Seed_ = 0;
+    CrowdSchoolTiming Timing_;
     std::string District_;
     NeighbourhoodPlan Plan_;
     SchoolCalendar Calendar_;

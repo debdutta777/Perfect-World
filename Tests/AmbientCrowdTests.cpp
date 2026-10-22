@@ -37,6 +37,32 @@ SchoolCalendar R75Calendar(const char* path)
     R75Expect(problems.empty() && ValidateSchoolCalendar(calendar).empty(), "real calendar passes its rules");
     return calendar;
 }
+// Authoritative school timetable: bell_schedule.nabapara_xi_science (gates 09:30, bell 10:00, dismissal 15:50).
+BellSchedule R75Bell(const std::string& calendarPath)
+{
+    const auto marker = calendarPath.find("calendar");
+    R75Expect(marker != std::string::npos, "calendar path names the content tree");
+    const auto path = calendarPath.substr(0, marker) + "bell_schedule/bell_schedule.nabapara_xi_science.json";
+    std::ifstream input(path);
+    R75Expect(input.good(), "authoritative bell schedule opens: " + path);
+    const std::string text((std::istreambuf_iterator<char>(input)), {});
+    const auto json = ParseJson(text);
+    R75Expect(json.Value.has_value(), "bell schedule JSON parses");
+    BellSchedule bell;
+    bell.Id = "bell_schedule.nabapara_xi_science";
+    const auto* gates = json.Value->Find("gatesOpen");
+    const auto* bells = json.Value->Find("bells");
+    R75Expect(gates && gates->Integer && bells && bells->IsArray() && !bells->Array.empty(), "bell schedule fields");
+    bell.GatesOpenMinute = static_cast<std::int32_t>(*gates->Integer);
+    for (const auto& value : bells->Array) bell.Bells.push_back(static_cast<std::int32_t>(*value.Integer));
+    return bell;
+}
+// Commute windows under test; equal to the defaults and verified against the bell file in main().
+constexpr int R75ArriveBegin = 555, R75ArriveEnd = 600, R75DepartBegin = 950, R75DepartEnd = 990;
+bool R75Peak(int minute)
+{
+    return (minute >= R75ArriveBegin && minute < R75ArriveEnd) || (minute >= R75DepartBegin && minute < R75DepartEnd);
+}
 std::int64_t R75Distance(NeighbourhoodPoint a, NeighbourhoodPoint b)
 {
     const auto abs = [](std::int64_t v) { return v < 0 ? -v : v; };
@@ -86,8 +112,8 @@ void R75Routes(const AmbientCrowd& crowd, const NeighbourhoodPlan& plan)
         }
         R75Expect(expanded == length, "expanded route retains all bends");
         if (slot.Cohort == CrowdCohort::Student)
-            R75Expect(slot.SchoolOnly && ((slot.BeginMinute == 405 && slot.EndMinute == 450) ||
-                (slot.BeginMinute == 810 && slot.EndMinute == 870)), "morning school shift");
+            R75Expect(slot.SchoolOnly && ((slot.BeginMinute == R75ArriveBegin && slot.EndMinute == R75ArriveEnd) ||
+                (slot.BeginMinute == R75DepartBegin && slot.EndMinute == R75DepartEnd)), "bell-schedule commute windows");
         if (slot.Cohort == CrowdCohort::OfficeCommuter)
             R75Expect(slot.EnterEntranceId == "stop.nabapara.bus_west" &&
                 route.NodeIds.back() == "walk.nabapara.main_cross_west", "commuters use main-road bus stop");
@@ -107,7 +133,7 @@ void R75Day(const AmbientCrowd& crowd, const NeighbourhoodPlan& plan, CalendarDa
         bands.insert(target.Band);
         R75Expect(snapshot.People.size() >= static_cast<std::size_t>(target.Minimum) &&
             snapshot.People.size() <= static_cast<std::size_t>(target.Maximum), "density at minute " + std::to_string(minute));
-        const bool peak = school && ((minute >= 405 && minute < 450) || (minute >= 810 && minute < 870));
+        const bool peak = school && R75Peak(minute);
         R75Expect((target.Band == CrowdTimeBand::SchoolArrival || target.Band == CrowdTimeBand::SchoolDeparture) == peak,
                   "calendar controls target band");
         std::set<std::string> ids;
@@ -130,7 +156,7 @@ void R75Day(const AmbientCrowd& crowd, const NeighbourhoodPlan& plan, CalendarDa
                 ++students;
                 R75Expect(person.Outfit == CrowdOutfit::WhiteShirtBlueTrousers ||
                     person.Outfit == CrowdOutfit::WhiteShirtBlueSkirt, "white and blue student uniforms");
-                R75Expect(person.ShortExchangeTextKey == (minute < 450 ? "ambient.exchange.heading_to_school" :
+                R75Expect(person.ShortExchangeTextKey == (minute < R75ArriveEnd ? "ambient.exchange.heading_to_school" :
                     "ambient.exchange.greeting"), "student exchange key matches arrival/departure");
             }
             R75Expect(!person.RecordsJournalFacts && !person.ShortExchangeTextKey.empty(), "exchanges cannot record facts");
@@ -186,8 +212,8 @@ void R75Reconstruction(const AmbientCrowd& crowd, const NeighbourhoodPlan& plan,
     R75Expect(stepped != anotherSeed.CrowdAt(R75At(1100), centre, 10000), "seed affects generation");
     R75Expect(stepped != anotherDistrict.CrowdAt(R75At(1100), centre, 10000), "district affects generation");
     R75Expect(stepped != crowd.CrowdAt(R75At(1100, 1), centre, 10000), "date affects identity and appearance");
-    const auto before = crowd.CrowdAt(R75At(420), centre, 10000);
-    const auto after = crowd.CrowdAt(R75At(421), centre, 10000);
+    const auto before = crowd.CrowdAt(R75At(570), centre, 10000);
+    const auto after = crowd.CrowdAt(R75At(571), centre, 10000);
     for (const auto& person : before.People)
     {
         const auto* next = R75Person(after, person.Id);
@@ -195,7 +221,7 @@ void R75Reconstruction(const AmbientCrowd& crowd, const NeighbourhoodPlan& plan,
                   "daily slot appearance remains stable across query order and time");
     }
     // Subminute positions stay continuous across movement, waiting and cycle boundaries.
-    for (int minute : {0, 301, 404, 405, 406, 407, 420, 448, 449, 809, 810, 868, 869, 1020, 1199, 1439})
+    for (int minute : {0, 301, 404, 405, 406, 554, 555, 556, 570, 598, 599, 949, 950, 951, 980, 989, 1020, 1199, 1439})
     {
         auto previous = crowd.CrowdAt(R75At(minute), centre, 100000, {}, 0);
         for (int fraction = 1; fraction <= 1000; ++fraction)
@@ -214,7 +240,7 @@ void R75Caps(const AmbientCrowd& crowd)
     for (const auto budget : {CrowdPresentationBudget{}, CrowdPresentationBudget{100, 20, 100},
                               CrowdPresentationBudget{0, 0, 5}, CrowdPresentationBudget{100, 99, 100}})
     {
-        const auto snapshot = crowd.CrowdAt(R75At(420), centre, 10000, budget);
+        const auto snapshot = crowd.CrowdAt(R75At(570), centre, 10000, budget);
         std::size_t full = 0, far = 0;
         for (const auto& person : snapshot.People)
         {
@@ -228,11 +254,11 @@ void R75Caps(const AmbientCrowd& crowd)
         R75Expect(far <= std::min(budget.FarFigureLimit, std::size_t(80)), "far cap clamped");
     }
     R75Expect(crowd.CrowdAt(R75At(420), centre, -1).People.empty(), "negative radius refused");
-    R75Expect(crowd.CrowdAt(R75At(420), centre, 10000, {}, 1000).People.empty(), "invalid fractional minute refused");
+    R75Expect(crowd.CrowdAt(R75At(570), centre, 10000, {}, 1000).People.empty(), "invalid fractional minute refused");
     R75Expect(crowd.CrowdAt(R75At(420), {std::numeric_limits<int>::min(), std::numeric_limits<int>::min()},
         std::numeric_limits<int>::max()).People.empty(), "radius arithmetic does not overflow");
-    const auto all = crowd.CrowdAt(R75At(420), centre, 10000);
-    const auto point = crowd.CrowdAt(R75At(420), all.People.front().Position, 0);
+    const auto all = crowd.CrowdAt(R75At(570), centre, 10000);
+    const auto point = crowd.CrowdAt(R75At(570), all.People.front().Position, 0);
     R75Expect(!point.People.empty(), "inclusive radius zero");
 }
 void R75Events(const AmbientCrowd& crowd, const NeighbourhoodPlan& plan)
@@ -305,13 +331,32 @@ int main(int argc, char** argv)
     const AmbientCrowd crowd(7505, std::string(NeighbourhoodId), plan, calendar);
     for (const auto& problem : crowd.Problems()) std::cerr << problem << '\n';
     R75Expect(crowd.Problems().empty(), "crowd inputs and public routes valid");
+    const auto bell = R75Bell(argv[1]);
+    const auto timing = CrowdSchoolTimingFromBell(bell);
+    R75Expect(timing.ArrivalBeginMinute == R75ArriveBegin && timing.ArrivalEndMinute == R75ArriveEnd &&
+        timing.DepartureBeginMinute == R75DepartBegin && timing.DepartureEndMinute == R75DepartEnd &&
+        timing == CrowdSchoolTiming{}, "default commute windows match the authored bell schedule");
+    R75Expect(bell.GatesOpenMinute == 570 && bell.Bells.front() == 600 && bell.Bells.back() == 950,
+              "bell file is the 09:30 / 10:00 / 15:50 timetable");
+    {
+        const AmbientCrowd fromBell(7505, std::string(NeighbourhoodId), plan, calendar, timing);
+        R75Expect(fromBell.Problems().empty() &&
+            fromBell.CrowdAt(R75At(570), {6500, 4700}, 10000) == crowd.CrowdAt(R75At(570), {6500, 4700}, 10000),
+            "bell-derived timing builds the same crowd");
+        BellSchedule shifted = bell; shifted.GatesOpenMinute += 10; shifted.Bells.front() += 10; shifted.Bells.back() += 10;
+        const AmbientCrowd later(7505, std::string(NeighbourhoodId), plan, calendar, CrowdSchoolTimingFromBell(shifted));
+        R75Expect(later.Problems().empty() && later.DensityAt(R75At(609)).Band == CrowdTimeBand::SchoolArrival &&
+            later.DensityAt(R75At(610)).Band != CrowdTimeBand::SchoolArrival, "timing follows a different bell schedule");
+        const AmbientCrowd invalid(7505, std::string(NeighbourhoodId), plan, calendar, CrowdSchoolTiming{700, 600, 950, 990});
+        R75Expect(!invalid.Problems().empty(), "inverted commute window refused");
+    }
     R75Routes(crowd, plan);
     R75Day(crowd, plan, 0, true);
     const auto holiday = CalendarDayFromDate(2042, 8, 15);
     R75Expect(holiday && !CalendarIsSchoolDay(calendar, *holiday), "authoritative Independence Day closure");
     R75Day(crowd, plan, *holiday, false);
     for (const auto date : {CalendarDay(5), CalendarDay(6), *CalendarDayFromDate(2042, 12, 26), CalendarDay(1000)})
-        for (int minute : {420, 840})
+        for (int minute : {570, 960})
         {
             const auto snapshot = crowd.CrowdAt(CalendarDayStartInstant(date)+minute, {6500,4700}, 10000);
             R75Expect(std::none_of(snapshot.People.begin(), snapshot.People.end(), [](const auto& person) {
@@ -324,7 +369,7 @@ int main(int argc, char** argv)
     {
         const AmbientCrowd other(seed, std::string(NeighbourhoodId), plan, calendar);
         R75Expect(other.Problems().empty(), "seed extremes have valid routes");
-        for (int minute : {360, 405, 420, 449, 450, 480, 810, 840, 869, 900, 1020, 1199, 1230, 1260})
+        for (int minute : {360, 405, 480, 555, 570, 599, 600, 870, 949, 950, 970, 989, 990, 1020, 1199, 1230, 1260})
         {
             const auto snapshot = other.CrowdAt(R75At(minute), {6500,4700}, 10000);
             R75Expect(snapshot.People.size() >= static_cast<std::size_t>(snapshot.Target.Minimum) &&
@@ -336,7 +381,7 @@ int main(int argc, char** argv)
     }
     auto broken = plan; broken.Links.clear();
     const AmbientCrowd disconnected(0, std::string(NeighbourhoodId), broken, calendar);
-    R75Expect(!disconnected.Problems().empty() && disconnected.CrowdAt(420, {6500,4700}, 10000).People.empty(),
+    R75Expect(!disconnected.Problems().empty() && disconnected.CrowdAt(570, {6500,4700}, 10000).People.empty(),
               "invalid graph cannot emit crowds");
     auto wrongCalendar = calendar; wrongCalendar.InstitutionId = "institution.other";
     const AmbientCrowd mismatched(0, std::string(NeighbourhoodId), plan, wrongCalendar);
