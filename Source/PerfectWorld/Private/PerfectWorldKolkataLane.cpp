@@ -26,6 +26,8 @@
 #include "PerfectWorldProprietorBindings.h"
 #include "PerfectWorldResidentsR5Bindings.h"
 #include "PerfectWorldTailorBindings.h"
+#include "PerfectWorldNeighbourhoodStreets.h"
+#include "PerfectWorldSchoolCampus.h"
 #include "PerfectWorldSubrataBindings.h"
 
 namespace PWLane
@@ -44,7 +46,7 @@ void AddGroundAndRoad(FLaneBlocks& K)
     K.Box(ELaneColour::Ground, FVector(-30000.0, -30000.0, GZ - 400.0), FVector(40000.0, 30000.0, GZ - 5.0));
 
     K.Box(ELaneColour::Asphalt, FVector(LaneX0, -RoadHalfWidth, GZ - 20.0), FVector(LaneX1, RoadHalfWidth, GZ));
-    K.Box(ELaneColour::Asphalt, FVector(AlleyPlusA, RoadHalfWidth, GZ - 20.0), FVector(AlleyPlusB, 1500.0, GZ));
+    // R7-02: the +Y alley is the cross street now; the neighbourhood overlay lays its carriageway and footpaths.
     K.Box(ELaneColour::Asphalt, FVector(AlleyMinusA, -1500.0, GZ - 20.0), FVector(AlleyMinusB, -RoadHalfWidth, GZ));
 
     // Open drains along both road edges.
@@ -300,6 +302,8 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     SpawnWarmLights(World, Scene.LightSpots);
     SpawnRoomLights(World, Scene.RoomLights);
     SpawnDoors(World, Scene.Doors);
+    SpawnNeighbourhoodStreets(World, Scene, Cube, BaseMaterial); // R7-02: para and main roads, frontages, stops, club
+    PWSchool::SpawnSchoolCampus(World, Scene);                     // R7-03: Nabapara Vidyalaya
     FaSpawnFarida(World, Scene);
     PbSpawnAnindita(World, Scene);
     SpawnSubrata(World, Scene);
