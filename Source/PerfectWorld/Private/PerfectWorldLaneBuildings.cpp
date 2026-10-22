@@ -1,5 +1,7 @@
 #include "PerfectWorldLaneBuildings.h"
 
+#include "NeighbourhoodPlan.h"
+
 #include "PerfectWorldLaneInteriors.h"
 #include "PerfectWorldLaneShops.h"
 #include "PerfectWorldLaneCareInterior.h"
@@ -330,6 +332,9 @@ void BuildLow(FLaneScene& S, const FLaneBuilding& B)
 void BuildStrip(FLaneScene& S, bool bAlongX, int32 Sign, double Distance, double From, double To, double MinWidth, double WidthRange,
                 int32 MinStoreys, int32 StoreyRange, double Depth, ELaneDetail Detail, int32 SeedBase)
 {
+    // R7-02: decorative back rows and skyline give way to the neighbourhood overlay (streets, campus, club, new lots). The cursor,
+    // index and hash advance exactly as before even for a skipped building, so no later massing shifts.
+    static const PerfectWorld::NeighbourhoodPlan R71Plan = PerfectWorld::BuildNeighbourhoodPlan(0); // immutable; built once, not per strip
     double Cursor = From;
     int32 Index = 0;
     int32 Previous = -1;
@@ -353,7 +358,15 @@ void BuildStrip(FLaneScene& S, bool bAlongX, int32 Sign, double Distance, double
         const double SignD = static_cast<double>(Sign);
         B.Frame = bAlongX ? MakeLaneFrame(Cursor, SignD * Distance, FVector(1.0, 0.0, 0.0), FVector(0.0, SignD, 0.0))
                           : MakeLaneFrame(SignD * Distance, Cursor, FVector(0.0, 1.0, 0.0), FVector(SignD, 0.0, 0.0));
-        BuildLaneBuilding(S, B);
+        const FVector R71A = B.Frame.Pt(0.0, 0.0, 0.0);
+        const FVector R71B = B.Frame.Pt(B.Width, B.Depth, 0.0);
+        const PerfectWorld::NeighbourhoodRect R71Lot{
+            static_cast<int>(FMath::Min(R71A.X, R71B.X)) - 101, static_cast<int>(FMath::Min(R71A.Y, R71B.Y)) - 101,
+            static_cast<int>(FMath::Max(R71A.X, R71B.X)) + 101, static_cast<int>(FMath::Max(R71A.Y, R71B.Y)) + 101};
+        if (!PerfectWorld::NeighbourhoodReservesRect(R71Plan, R71Lot))
+        {
+            BuildLaneBuilding(S, B);
+        }
         Cursor += B.Width + 150.0 * LaneUnit(H >> 4);
         ++Index;
     }

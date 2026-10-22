@@ -18,6 +18,12 @@ void SealGap(FLaneBlocks& K, int32 Side, double XA, double XB)
     const double Z1 = GroundZ + BarrierTop;
     if (XB - XA > MaxFilledGap)
     {
+        // R7-02: the +Y north alley is the neighbourhood's cross street now (NeighbourhoodPlan.h), so its stopping barrier goes.
+        // Only that gap: the -Y alley stop and every narrow-gap seal stay.
+        if (Side > 0 && XA == AlleyPlusA && XB == AlleyPlusB)
+        {
+            return;
+        }
         K.Barrier(FVector(XA - Overlap, Sign * (AlleyStopAbsY - AlleyStopThickness), Z0), FVector(XB + Overlap, Sign * AlleyStopAbsY, Z1));
     }
     else
