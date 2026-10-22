@@ -1,0 +1,137 @@
+{
+  "type": "npc_schedule",
+  "id": "npc_schedule.tithi_ghoshal",
+  "note": "R74: Tithi Ghoshal, sweet-shop assistant, age 24, height 159 cm. All seven days: 07:00-13:30 and 15:30-21:00, with a meal and afternoon lull onsite. She prepares trays while Bimal serves, and serves while he prepares. No customer order or sale is implied. Her distinct staff spot is 150 cm east of the R71 counter; the 450 cm entrance path bends via (6800,3200). The door metadata is the R71 spatial entrance, not a save door. The 1680 cm home leg is an off-lane abstraction pending Unreal binding. Travel gaps equal ceil(path length / 140). She leaves at 21:00 and reaches home at 21:16.",
+  "person": "person.tithi_ghoshal",
+  "home": "location.nabapara.tithi_home",
+  "workplace": "location.nabapara.sweet_shop",
+  "door": "entrance.nabapara.sweet_shop",
+  "speedCmPerMinute": 140,
+  "routine": [
+    {
+      "days": 127,
+      "start": 0,
+      "end": 360,
+      "zone": "location.nabapara.tithi_home",
+      "role": "sleeping"
+    },
+    {
+      "days": 127,
+      "start": 360,
+      "end": 385,
+      "zone": "location.nabapara.tithi_home",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 385,
+      "end": 404,
+      "zone": "location.nabapara.tithi_home",
+      "role": "at_home"
+    },
+    {
+      "days": 127,
+      "start": 420,
+      "end": 600,
+      "zone": "anchor.nabapara.sweet_shop_assistant_counter",
+      "role": "cooking"
+    },
+    {
+      "days": 127,
+      "start": 600,
+      "end": 720,
+      "zone": "anchor.nabapara.sweet_shop_assistant_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 720,
+      "end": 810,
+      "zone": "anchor.nabapara.sweet_shop_assistant_counter",
+      "role": "cooking"
+    },
+    {
+      "days": 127,
+      "start": 810,
+      "end": 930,
+      "zone": "anchor.nabapara.sweet_shop_assistant_counter",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 930,
+      "end": 1080,
+      "zone": "anchor.nabapara.sweet_shop_assistant_counter",
+      "role": "cooking"
+    },
+    {
+      "days": 127,
+      "start": 1080,
+      "end": 1140,
+      "zone": "anchor.nabapara.sweet_shop_assistant_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 1140,
+      "end": 1260,
+      "zone": "anchor.nabapara.sweet_shop_assistant_counter",
+      "role": "cooking"
+    },
+    {
+      "days": 127,
+      "start": 1276,
+      "end": 1296,
+      "zone": "location.nabapara.tithi_home",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 1296,
+      "end": 1440,
+      "zone": "location.nabapara.tithi_home",
+      "role": "sleeping"
+    }
+  ],
+  "routes": [
+    {
+      "id": "route.r74.tithi_ghoshal.counter_entrance",
+      "from": "anchor.nabapara.sweet_shop_assistant_counter",
+      "to": "entrance.nabapara.sweet_shop",
+      "lengthCm": 450
+    },
+    {
+      "id": "route.r74.tithi_ghoshal.entrance_home",
+      "from": "entrance.nabapara.sweet_shop",
+      "to": "location.nabapara.tithi_home",
+      "lengthCm": 1680
+    }
+  ],
+  "travel": [
+    {
+      "from": "anchor.nabapara.sweet_shop_assistant_counter",
+      "to": "entrance.nabapara.sweet_shop",
+      "minutes": 4,
+      "routes": [
+        "route.r74.tithi_ghoshal.counter_entrance"
+      ]
+    },
+    {
+      "from": "anchor.nabapara.sweet_shop_assistant_counter",
+      "to": "location.nabapara.tithi_home",
+      "minutes": 16,
+      "routes": [
+        "route.r74.tithi_ghoshal.counter_entrance",
+        "route.r74.tithi_ghoshal.entrance_home"
+      ]
+    },
+    {
+      "from": "entrance.nabapara.sweet_shop",
+      "to": "location.nabapara.tithi_home",
+      "minutes": 12,
+      "routes": [
+        "route.r74.tithi_ghoshal.entrance_home"
+      ]
+    }
+  ]
+}

@@ -788,3 +788,12 @@ add_test(NAME PerfectWorldLaneMapTests COMMAND PerfectWorldLaneMapTests)
 add_executable(PerfectWorldLaneMapViewTests Tests/LaneMapViewTests.cpp)
 target_link_libraries(PerfectWorldLaneMapViewTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldLaneMapViewTests COMMAND PerfectWorldLaneMapViewTests)
+
+# R74: staffed shops; shared schedule/catalogue/journal registrations are integrator-owned.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/ShopsR7.cpp
+    Source/PerfectWorldCore/Private/ConversationShopsR7.cpp)
+add_executable(PerfectWorldShopsR7Tests Tests/ShopsR7Tests.cpp)
+target_link_libraries(PerfectWorldShopsR7Tests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldShopsR7Tests COMMAND PerfectWorldShopsR7Tests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule)

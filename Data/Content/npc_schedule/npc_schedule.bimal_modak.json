@@ -1,0 +1,137 @@
+{
+  "type": "npc_schedule",
+  "id": "npc_schedule.bimal_modak",
+  "note": "R74: Bimal Modak, sweet-shop owner, age 52, height 170 cm. All seven days: 07:00-13:30 and 15:30-21:00, with a meal and afternoon lull onsite. Cooking at his counter means preparing sweet trays; Tithi serves while he prepares. No customer order or sale is implied. The door metadata is the R71 spatial entrance, not a save door. Counter-to-entrance is 300 cm; the 1680 cm home leg is an off-lane abstraction pending Unreal binding. Travel gaps equal ceil(path length / 140). He leaves at 21:00 and reaches home at 21:15.",
+  "person": "person.bimal_modak",
+  "home": "location.nabapara.bimal_home",
+  "workplace": "location.nabapara.sweet_shop",
+  "door": "entrance.nabapara.sweet_shop",
+  "speedCmPerMinute": 140,
+  "routine": [
+    {
+      "days": 127,
+      "start": 0,
+      "end": 360,
+      "zone": "location.nabapara.bimal_home",
+      "role": "sleeping"
+    },
+    {
+      "days": 127,
+      "start": 360,
+      "end": 385,
+      "zone": "location.nabapara.bimal_home",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 385,
+      "end": 405,
+      "zone": "location.nabapara.bimal_home",
+      "role": "at_home"
+    },
+    {
+      "days": 127,
+      "start": 420,
+      "end": 600,
+      "zone": "anchor.nabapara.sweet_shop_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 600,
+      "end": 720,
+      "zone": "anchor.nabapara.sweet_shop_counter",
+      "role": "cooking"
+    },
+    {
+      "days": 127,
+      "start": 720,
+      "end": 810,
+      "zone": "anchor.nabapara.sweet_shop_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 810,
+      "end": 930,
+      "zone": "anchor.nabapara.sweet_shop_counter",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 930,
+      "end": 1080,
+      "zone": "anchor.nabapara.sweet_shop_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 1080,
+      "end": 1140,
+      "zone": "anchor.nabapara.sweet_shop_counter",
+      "role": "cooking"
+    },
+    {
+      "days": 127,
+      "start": 1140,
+      "end": 1260,
+      "zone": "anchor.nabapara.sweet_shop_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 1275,
+      "end": 1295,
+      "zone": "location.nabapara.bimal_home",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 1295,
+      "end": 1440,
+      "zone": "location.nabapara.bimal_home",
+      "role": "sleeping"
+    }
+  ],
+  "routes": [
+    {
+      "id": "route.r74.bimal_modak.counter_entrance",
+      "from": "anchor.nabapara.sweet_shop_counter",
+      "to": "entrance.nabapara.sweet_shop",
+      "lengthCm": 300
+    },
+    {
+      "id": "route.r74.bimal_modak.entrance_home",
+      "from": "entrance.nabapara.sweet_shop",
+      "to": "location.nabapara.bimal_home",
+      "lengthCm": 1680
+    }
+  ],
+  "travel": [
+    {
+      "from": "anchor.nabapara.sweet_shop_counter",
+      "to": "entrance.nabapara.sweet_shop",
+      "minutes": 3,
+      "routes": [
+        "route.r74.bimal_modak.counter_entrance"
+      ]
+    },
+    {
+      "from": "anchor.nabapara.sweet_shop_counter",
+      "to": "location.nabapara.bimal_home",
+      "minutes": 15,
+      "routes": [
+        "route.r74.bimal_modak.counter_entrance",
+        "route.r74.bimal_modak.entrance_home"
+      ]
+    },
+    {
+      "from": "entrance.nabapara.sweet_shop",
+      "to": "location.nabapara.bimal_home",
+      "minutes": 12,
+      "routes": [
+        "route.r74.bimal_modak.entrance_home"
+      ]
+    }
+  ]
+}

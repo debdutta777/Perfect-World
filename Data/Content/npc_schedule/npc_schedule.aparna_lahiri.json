@@ -1,0 +1,151 @@
+{
+  "type": "npc_schedule",
+  "id": "npc_schedule.aparna_lahiri",
+  "note": "R74: Aparna Lahiri, pharmacist, age 39, height 172 cm. All seven days: 09:00-23:00, closing for a meal 14:00-14:30 and rest 17:00-17:15. Shelf-arranging props stay within reach of the R71 pharmacy staff counter; no inventory, dispensing or sale is implied. The door metadata is the R71 spatial entrance, not a save door. Counter-to-entrance is 300 cm; the 1680 cm home leg is an off-lane abstraction pending Unreal binding. Travel gaps equal ceil(path length / 140). She leaves at 23:00 and reaches home at 23:15.",
+  "person": "person.aparna_lahiri",
+  "home": "location.nabapara.aparna_home",
+  "workplace": "location.nabapara.pharmacy",
+  "door": "entrance.nabapara.pharmacy",
+  "speedCmPerMinute": 140,
+  "routine": [
+    {
+      "days": 127,
+      "start": 0,
+      "end": 480,
+      "zone": "location.nabapara.aparna_home",
+      "role": "sleeping"
+    },
+    {
+      "days": 127,
+      "start": 480,
+      "end": 505,
+      "zone": "location.nabapara.aparna_home",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 505,
+      "end": 525,
+      "zone": "location.nabapara.aparna_home",
+      "role": "at_home"
+    },
+    {
+      "days": 127,
+      "start": 540,
+      "end": 660,
+      "zone": "anchor.nabapara.pharmacy_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 660,
+      "end": 690,
+      "zone": "anchor.nabapara.pharmacy_counter",
+      "role": "stocking"
+    },
+    {
+      "days": 127,
+      "start": 690,
+      "end": 840,
+      "zone": "anchor.nabapara.pharmacy_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 840,
+      "end": 870,
+      "zone": "anchor.nabapara.pharmacy_counter",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 870,
+      "end": 1020,
+      "zone": "anchor.nabapara.pharmacy_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 1020,
+      "end": 1035,
+      "zone": "anchor.nabapara.pharmacy_counter",
+      "role": "resting"
+    },
+    {
+      "days": 127,
+      "start": 1035,
+      "end": 1080,
+      "zone": "anchor.nabapara.pharmacy_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 1080,
+      "end": 1110,
+      "zone": "anchor.nabapara.pharmacy_counter",
+      "role": "stocking"
+    },
+    {
+      "days": 127,
+      "start": 1110,
+      "end": 1380,
+      "zone": "anchor.nabapara.pharmacy_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 1395,
+      "end": 1415,
+      "zone": "location.nabapara.aparna_home",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 1415,
+      "end": 1440,
+      "zone": "location.nabapara.aparna_home",
+      "role": "sleeping"
+    }
+  ],
+  "routes": [
+    {
+      "id": "route.r74.aparna_lahiri.counter_entrance",
+      "from": "anchor.nabapara.pharmacy_counter",
+      "to": "entrance.nabapara.pharmacy",
+      "lengthCm": 300
+    },
+    {
+      "id": "route.r74.aparna_lahiri.entrance_home",
+      "from": "entrance.nabapara.pharmacy",
+      "to": "location.nabapara.aparna_home",
+      "lengthCm": 1680
+    }
+  ],
+  "travel": [
+    {
+      "from": "anchor.nabapara.pharmacy_counter",
+      "to": "entrance.nabapara.pharmacy",
+      "minutes": 3,
+      "routes": [
+        "route.r74.aparna_lahiri.counter_entrance"
+      ]
+    },
+    {
+      "from": "anchor.nabapara.pharmacy_counter",
+      "to": "location.nabapara.aparna_home",
+      "minutes": 15,
+      "routes": [
+        "route.r74.aparna_lahiri.counter_entrance",
+        "route.r74.aparna_lahiri.entrance_home"
+      ]
+    },
+    {
+      "from": "entrance.nabapara.pharmacy",
+      "to": "location.nabapara.aparna_home",
+      "minutes": 12,
+      "routes": [
+        "route.r74.aparna_lahiri.entrance_home"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,193 @@
+{
+  "type": "npc_schedule",
+  "id": "npc_schedule.gouranga_nandi",
+  "note": "R74: Gouranga Nandi, para-road tea-stall keeper, age 48, height 175 cm. All seven days: 05:00-21:00, closing for rest 10:00-10:20, meal/rest 14:00-14:40 and rest 17:00-17:15. Cooking at the pitch means brewing tea; no customer order, cup transfer or sale is implied. The door metadata is the R71 spatial entrance, not a save door. Counter-to-entrance is 100 cm; the 1680 cm home leg is an off-lane abstraction pending Unreal binding. Travel gaps equal ceil(path length / 140). He leaves at 21:00 and reaches home at 21:13.",
+  "person": "person.gouranga_nandi",
+  "home": "location.nabapara.gouranga_home",
+  "workplace": "pitch.nabapara.tea",
+  "door": "entrance.nabapara.tea",
+  "speedCmPerMinute": 140,
+  "routine": [
+    {
+      "days": 127,
+      "start": 0,
+      "end": 260,
+      "zone": "location.nabapara.gouranga_home",
+      "role": "sleeping"
+    },
+    {
+      "days": 127,
+      "start": 260,
+      "end": 285,
+      "zone": "location.nabapara.gouranga_home",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 285,
+      "end": 287,
+      "zone": "location.nabapara.gouranga_home",
+      "role": "at_home"
+    },
+    {
+      "days": 127,
+      "start": 300,
+      "end": 330,
+      "zone": "anchor.nabapara.tea_counter",
+      "role": "cooking"
+    },
+    {
+      "days": 127,
+      "start": 330,
+      "end": 480,
+      "zone": "anchor.nabapara.tea_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 480,
+      "end": 510,
+      "zone": "anchor.nabapara.tea_counter",
+      "role": "cooking"
+    },
+    {
+      "days": 127,
+      "start": 510,
+      "end": 600,
+      "zone": "anchor.nabapara.tea_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 600,
+      "end": 620,
+      "zone": "anchor.nabapara.tea_counter",
+      "role": "resting"
+    },
+    {
+      "days": 127,
+      "start": 620,
+      "end": 660,
+      "zone": "anchor.nabapara.tea_counter",
+      "role": "cooking"
+    },
+    {
+      "days": 127,
+      "start": 660,
+      "end": 840,
+      "zone": "anchor.nabapara.tea_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 840,
+      "end": 880,
+      "zone": "anchor.nabapara.tea_counter",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 880,
+      "end": 900,
+      "zone": "anchor.nabapara.tea_counter",
+      "role": "cooking"
+    },
+    {
+      "days": 127,
+      "start": 900,
+      "end": 1020,
+      "zone": "anchor.nabapara.tea_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 1020,
+      "end": 1035,
+      "zone": "anchor.nabapara.tea_counter",
+      "role": "resting"
+    },
+    {
+      "days": 127,
+      "start": 1035,
+      "end": 1065,
+      "zone": "anchor.nabapara.tea_counter",
+      "role": "cooking"
+    },
+    {
+      "days": 127,
+      "start": 1065,
+      "end": 1200,
+      "zone": "anchor.nabapara.tea_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 1200,
+      "end": 1230,
+      "zone": "anchor.nabapara.tea_counter",
+      "role": "cooking"
+    },
+    {
+      "days": 127,
+      "start": 1230,
+      "end": 1260,
+      "zone": "anchor.nabapara.tea_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 1273,
+      "end": 1293,
+      "zone": "location.nabapara.gouranga_home",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 1293,
+      "end": 1440,
+      "zone": "location.nabapara.gouranga_home",
+      "role": "sleeping"
+    }
+  ],
+  "routes": [
+    {
+      "id": "route.r74.gouranga_nandi.counter_entrance",
+      "from": "anchor.nabapara.tea_counter",
+      "to": "entrance.nabapara.tea",
+      "lengthCm": 100
+    },
+    {
+      "id": "route.r74.gouranga_nandi.entrance_home",
+      "from": "entrance.nabapara.tea",
+      "to": "location.nabapara.gouranga_home",
+      "lengthCm": 1680
+    }
+  ],
+  "travel": [
+    {
+      "from": "anchor.nabapara.tea_counter",
+      "to": "entrance.nabapara.tea",
+      "minutes": 1,
+      "routes": [
+        "route.r74.gouranga_nandi.counter_entrance"
+      ]
+    },
+    {
+      "from": "anchor.nabapara.tea_counter",
+      "to": "location.nabapara.gouranga_home",
+      "minutes": 13,
+      "routes": [
+        "route.r74.gouranga_nandi.counter_entrance",
+        "route.r74.gouranga_nandi.entrance_home"
+      ]
+    },
+    {
+      "from": "entrance.nabapara.tea",
+      "to": "location.nabapara.gouranga_home",
+      "minutes": 12,
+      "routes": [
+        "route.r74.gouranga_nandi.entrance_home"
+      ]
+    }
+  ]
+}

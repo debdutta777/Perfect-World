@@ -1,6 +1,7 @@
 #include "NpcBehaviour.h"
 
 #include "NpcBehaviourR5Support.h"
+#include "ShopsR7.h"
 
 #include <algorithm>
 #include <array>
@@ -89,7 +90,7 @@ void R5BPersonRegression(const NpcSchedule& schedule)
 {
     const auto from = R5BAt(0), to = R5BAt(0, 7);
     const bool pilot = schedule.Person.PersonId == "person.debashis_pal" || schedule.Person.PersonId == "person.mahua_saha" ||
-        schedule.Person.PersonId == "person.satyajit_dutta";
+        schedule.Person.PersonId == "person.satyajit_dutta" || IsShopStaffR7(schedule.Person.PersonId);
     for (auto at = from; at < to; ++at)
     {
         const auto resolution = ResolveSchedule(schedule.Person, schedule.Travel, at);

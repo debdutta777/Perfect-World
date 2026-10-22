@@ -1,0 +1,158 @@
+{
+  "type": "npc_schedule",
+  "id": "npc_schedule.koushik_mondal",
+  "note": "R74: Koushik Mondal, jhalmuri vendor, age 32, height 177 cm. All seven days: 15:00-21:00, closing for rest 18:00-18:20. Cooking at the pitch means mixing jhalmuri; no packet is prepared for the player and no sale is implied. The door metadata is the R71 spatial entrance, not a save door. Counter-to-entrance is 100 cm; the 1680 cm home leg is an off-lane abstraction pending Unreal binding. Travel gaps equal ceil(path length / 140). He leaves at 21:00 and reaches home at 21:13.",
+  "person": "person.koushik_mondal",
+  "home": "location.nabapara.koushik_home",
+  "workplace": "pitch.nabapara.vendor",
+  "door": "entrance.nabapara.vendor",
+  "speedCmPerMinute": 140,
+  "routine": [
+    {
+      "days": 127,
+      "start": 0,
+      "end": 420,
+      "zone": "location.nabapara.koushik_home",
+      "role": "sleeping"
+    },
+    {
+      "days": 127,
+      "start": 420,
+      "end": 450,
+      "zone": "location.nabapara.koushik_home",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 450,
+      "end": 720,
+      "zone": "location.nabapara.koushik_home",
+      "role": "at_home"
+    },
+    {
+      "days": 127,
+      "start": 720,
+      "end": 750,
+      "zone": "location.nabapara.koushik_home",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 750,
+      "end": 887,
+      "zone": "location.nabapara.koushik_home",
+      "role": "reading"
+    },
+    {
+      "days": 127,
+      "start": 900,
+      "end": 915,
+      "zone": "anchor.nabapara.vendor_counter",
+      "role": "cooking"
+    },
+    {
+      "days": 127,
+      "start": 915,
+      "end": 1020,
+      "zone": "anchor.nabapara.vendor_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 1020,
+      "end": 1035,
+      "zone": "anchor.nabapara.vendor_counter",
+      "role": "cooking"
+    },
+    {
+      "days": 127,
+      "start": 1035,
+      "end": 1080,
+      "zone": "anchor.nabapara.vendor_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 1080,
+      "end": 1100,
+      "zone": "anchor.nabapara.vendor_counter",
+      "role": "resting"
+    },
+    {
+      "days": 127,
+      "start": 1100,
+      "end": 1115,
+      "zone": "anchor.nabapara.vendor_counter",
+      "role": "cooking"
+    },
+    {
+      "days": 127,
+      "start": 1115,
+      "end": 1245,
+      "zone": "anchor.nabapara.vendor_counter",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 1245,
+      "end": 1260,
+      "zone": "anchor.nabapara.vendor_counter",
+      "role": "cooking"
+    },
+    {
+      "days": 127,
+      "start": 1273,
+      "end": 1293,
+      "zone": "location.nabapara.koushik_home",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 1293,
+      "end": 1440,
+      "zone": "location.nabapara.koushik_home",
+      "role": "sleeping"
+    }
+  ],
+  "routes": [
+    {
+      "id": "route.r74.koushik_mondal.counter_entrance",
+      "from": "anchor.nabapara.vendor_counter",
+      "to": "entrance.nabapara.vendor",
+      "lengthCm": 100
+    },
+    {
+      "id": "route.r74.koushik_mondal.entrance_home",
+      "from": "entrance.nabapara.vendor",
+      "to": "location.nabapara.koushik_home",
+      "lengthCm": 1680
+    }
+  ],
+  "travel": [
+    {
+      "from": "anchor.nabapara.vendor_counter",
+      "to": "entrance.nabapara.vendor",
+      "minutes": 1,
+      "routes": [
+        "route.r74.koushik_mondal.counter_entrance"
+      ]
+    },
+    {
+      "from": "anchor.nabapara.vendor_counter",
+      "to": "location.nabapara.koushik_home",
+      "minutes": 13,
+      "routes": [
+        "route.r74.koushik_mondal.counter_entrance",
+        "route.r74.koushik_mondal.entrance_home"
+      ]
+    },
+    {
+      "from": "entrance.nabapara.vendor",
+      "to": "location.nabapara.koushik_home",
+      "minutes": 12,
+      "routes": [
+        "route.r74.koushik_mondal.entrance_home"
+      ]
+    }
+  ]
+}

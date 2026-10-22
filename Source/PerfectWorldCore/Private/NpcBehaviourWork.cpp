@@ -1,5 +1,7 @@
 #include "NpcBehaviour.h"
 
+#include "ShopsR7.h"
+
 #include <algorithm>
 #include <array>
 
@@ -45,6 +47,11 @@ constexpr std::array<R5BPhaseDef, 12> R5BPhases{{
 
 R5BPhaseDef R5BPhase(const PersonSchedule& person, const ScheduleResolution& block)
 {
+    const auto R74Shop = ShopWorkAtR7(person, block);
+    if (R74Shop.Phase != NpcWorkPhase::None)
+    {
+        return {person.PersonId, block.Zone, block.Doing, R74Shop.Phase, R74Shop.Action, R74Shop.Pause, R74Shop.Reason};
+    }
     if (block.Status == ScheduleStatus::Stay && block.Kind == ScheduleDoingKind::Role)
     {
         for (const auto& phase : R5BPhases)
@@ -281,7 +288,8 @@ namespace
 {
 bool R5BNeedsPilot(std::string_view person)
 {
-    return person == "person.debashis_pal" || person == "person.mahua_saha" || person == "person.satyajit_dutta";
+    return person == "person.debashis_pal" || person == "person.mahua_saha" || person == "person.satyajit_dutta" ||
+        IsShopStaffR7(person);
 }
 
 struct R5BNeedBlock
@@ -295,7 +303,7 @@ R5BNeedBlock R5BNeedsBlock(const PersonSchedule& person, const ScheduleTravelTab
 {
     if (block.Status != ScheduleStatus::Stay || block.Kind != ScheduleDoingKind::Role) { return {}; }
     const auto minute = (block.SegmentStart + 360) % MinutesPerDay;
-    const bool midday = minute >= 720 && minute < 840;
+    const bool midday = minute >= 720 && (minute < 840 || (IsShopStaffR7(person.PersonId) && minute < 900));
     if (block.Doing == "break")
     {
         const auto mealEnd = std::min(block.SegmentEnd, block.SegmentStart + NpcMealBreakMinutes);
