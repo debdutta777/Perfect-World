@@ -110,8 +110,7 @@ void R71Lane(R71Author& a)
     for (const auto& row : std::vector<R71OldLot>{
         {"care_home",{-1400,-1300,-300,-400},3},{"opening_home",{-300,-1300,700,-400},5},
         {"stationery",{-100,460,600,1160},3},{"shanti_chai",{600,520,1300,1420},3},
-        {"alley_house",{3900,-1420,4300,-520},3},{"stair_flats",{4900,-1200,5700,-400},5},
-        {"corner_stalls",{-2400,460,-1300,1360},5},
+        // alley_house, stair_flats and corner_stalls come from the kit catalogue above since R6-01 opened them.
         {"west_end_block",{-3300,-1300,-2400,1300},4},{"east_end_block",{6400,-1300,7300,1300},5}})
         a.Lot("building.nabapara."+std::string(row.Id),row.R,R71Foot::ExistingBuilding,row.Storeys,true);
     for (const auto& row : std::vector<std::pair<std::string,R71Point>>{

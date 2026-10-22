@@ -39,7 +39,8 @@ std::vector<ContentFile> R67ReadContent(const std::filesystem::path& root)
         std::ifstream input(path, std::ios::binary);
         std::ostringstream text;
         text << input.rdbuf();
-        files.push_back({std::filesystem::relative(path, root).generic_string(), text.str()});
+        // The registry names files as /relative/paths, as pwcontent does.
+        files.push_back({"/" + std::filesystem::relative(path, root).generic_string(), text.str()});
     }
     return files;
 }

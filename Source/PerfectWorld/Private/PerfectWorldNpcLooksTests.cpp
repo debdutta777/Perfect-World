@@ -38,6 +38,7 @@ const FNlPerson NlPeople[] = {
     {TEXT("person.rekha_bose"), 161.0, EPWNpcOutfit::ParentHousehold, true},
     {TEXT("person.prabir_chatterjee"), 169.0, EPWNpcOutfit::HouseholdAdult, true},
     {TEXT("person.ishita_banerjee"), 165.0, EPWNpcOutfit::ParentHousehold, true},
+    {TEXT("person.satyajit_dutta"), 167.0, EPWNpcOutfit::ShopProprietor, true},
 };
 
 constexpr double NlCapsuleRadius = 34.0;

@@ -2171,3 +2171,74 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 - R6-01 (last three frontages, 29 doors) and R6-02 (slot summary) are implemented and being integrated.
 - R6-03 (scenario repairs) and R5-05 (working-proprietor bridge) are on their branches, waiting for an Unreal compile.
 - R6-06 (tailor) and R6-07 (school arrival) stopped when the ChatGPT account reached its usage limit. Their partial work is kept, and they will be relaunched once.
+
+## Checkpoint — v0.4.0-alpha published (owner feedback), 2026-10-21
+
+**Released as `v0.4.0-alpha` (prerelease):**
+- Tag on `cafc35e`: https://github.com/debdutta777/Perfect-World/releases/tag/v0.4.0-alpha
+- Asset: 413,924,210 bytes, sha256 `781a9d068f01b299d3942df1570cb7f7b106c57fcacc8e093b8f977643ffac5c`.
+
+**Owner feedback items merged (Claude Sonnet):**
+- **F1:** a seven-axis trait radar. The core has 7 trait domains, so the chart is not a pentagon.
+- **F2:** a portable lane map projection, an upper-right minimap, and a full world map opened with M or D-pad Left.
+- **F3:**
+  - a portable quest projection;
+  - a quest window opened with J or D-pad Right, or from the pause menu;
+  - a tracked-objective line.
+- **F4:** key remapping (a binding store, and a Controls tab in Settings), with Settings now in the pause menu.
+- **F5:** calling bells at every dwelling entrance; a threshold guard against un-admitted entry through open leaves; the household closes a visitor's door; knocks reset on load; family start shells count as home.
+- **Fixes during integration:**
+  - four first-compile errors;
+  - the bell roster grew to include R6-01's two residences;
+  - the lane map knows R6-01's three buildings;
+  - the school-day test names content files as `/relative` paths.
+
+**Also merged:**
+- R5-05: the working-proprietor bridge.
+- R6-01: the last three side frontages, 29 doors, a frozen 26-door fixture, goldens re-pinned.
+- R6-02: the slot summary.
+- R6-03: scenario repairs.
+- R6-07: school arrival through the reducer.
+
+**Verification:**
+- Rung 1: 194/194.
+- The editor and game targets compiled.
+- Package exit 0.
+- Not run: automation, acceptance, and a boot test.
+
+**Next:**
+- **R6-06**, the staffed tailor Satyajit Dutta: being integrated.
+- **R7-01**, the neighbourhood spatial contract: on its branch.
+- **Round 7 in flight:**
+  - R7-05 crowds and R7-02 traffic: the portable models, by gpt-6.1-sol.
+  - R7-02 streets and R7-03 school campus: Unreal, by Claude Sonnet.
+
+## Checkpoint — v0.5.0-alpha published: Kolkata streets and Nabapara Vidyalaya, 2026-10-22
+
+**Released as `v0.5.0-alpha` (prerelease):**
+- Tag on `b62900d`: https://github.com/debdutta777/Perfect-World/releases/tag/v0.5.0-alpha
+- Asset: 414,793,414 bytes, sha256 `b75c98fb9403596b107d8f8a3378fb7bc0f308e80a28a855d76cc9ccee6d8299`.
+
+**Merged:**
+- **R6-06 (gpt-6.1-sol), the tailor Satyajit Dutta.** Integration added the registrations, content pins at 156 files and 192 records, and readable Today text for Prabir's, Ishita's and the tailor's agreements.
+- **R7-01 (gpt-6.1-sol), the neighbourhood spatial contract.** Integration fixed one thing: R6-01's three opened buildings now come from the kit catalogue rather than a duplicate lot.
+- **R7-02 streets (Claude Sonnet).** The north alley reopened as the cross street, and the old +Y asphalt box was retired.
+- **R7-03 campus (Claude Sonnet).**
+
+**Verification:**
+- Rung 1: 196/196.
+- The editor target compiled; the about 40 new files compiled clean on the first attempt.
+- Package exit 0, with 0 cook errors.
+- Not run: automation, acceptance, and a boot test.
+
+**Known follow-ups:**
+- The crowd model's student windows must follow `bell_schedule.nabapara_xi_science` (gates 09:30, first bell 10:00, dismissal 15:50), not the plan's 06:45–07:30.
+- Gate sign-in copies the world; it should move to a lane-life command path.
+
+**Environment:** the host now powers off about every 20 minutes, and three GPT jobs were killed twice.
+
+**In flight (gpt-6.1-sol):**
+- R7-05 crowd presenter;
+- R7-02 traffic presenter;
+- R7-04 staffed shops;
+- R8-01 commerce contract (`Docs/ROUND8_PLAN_2026-10-22.md`).
