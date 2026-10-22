@@ -11,7 +11,8 @@
 
 bool R55IsWorkPilot(const FName PersonId)
 {
-    return PersonId == FName(TEXT("person.debashis_pal")) || PersonId == FName(TEXT("person.mahua_saha"));
+    return PersonId == FName(TEXT("person.debashis_pal")) || PersonId == FName(TEXT("person.mahua_saha")) ||
+        PersonId == FName(TEXT("person.satyajit_dutta"));
 }
 
 FText R55NpcReasonText(const FName Key)

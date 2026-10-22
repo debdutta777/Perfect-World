@@ -61,6 +61,7 @@ constexpr double BrowseReachCm = 35.0;  // the browse interaction point is this 
 constexpr double BrowseHeightCm = 95.0; // ... and this high above the finished floor
 
 inline constexpr const TCHAR* UnstaffedPhrase = TEXT("Unstaffed. Purchasing unavailable.");
+inline constexpr const TCHAR* R66TailorStaffedPhrase = TEXT("Staffed. Purchasing unavailable.");
 inline constexpr const TCHAR* BrowseVerb = TEXT("Browse goods");
 } // namespace KitPublic
 

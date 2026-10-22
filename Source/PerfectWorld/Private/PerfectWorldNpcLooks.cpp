@@ -28,6 +28,7 @@ const FCastRow NlCast[] = {
     {TEXT("person.rekha_bose"), 161.0, ELook::Rekha},         // R4-06: passer-by; long plait, rose saree, furled umbrella
     {TEXT("person.prabir_chatterjee"), 169.0, ELook::Prabir}, // R52: narrow, silver thinning hair, slate short kurta, glasses
     {TEXT("person.ishita_banerjee"), 165.0, ELook::Ishita},    // R52: short curls, teal kurta, canvas shoulder bag
+    {TEXT("person.satyajit_dutta"), 167.0, ELook::Satyajit},  // R66: burgundy waistcoat, tape and chalk, short dark hair
 };
 
 void NlLegacyHouseholdAdult(const double H, TArray<FPWNpcBlock>& Out)
@@ -111,6 +112,7 @@ FSilhouette NlSilhouetteOfLook(const ELook Look, const EPWNpcOutfit Outfit)
     case ELook::Rekha: return {EHair::LongPlait, EGarment::Saree, EAccessory::Umbrella, EBuild::Slight};
     case ELook::Prabir: return {EHair::Thinning, EGarment::Kurta, EAccessory::Glasses, EBuild::Slight};
     case ELook::Ishita: return {EHair::ShortCurls, EGarment::Kurta, EAccessory::ClothBag, EBuild::Medium};
+    case ELook::Satyajit: return {EHair::ShortWavy, EGarment::Waistcoat, EAccessory::TapeAndChalk, EBuild::Slight};
     default: break;
     }
     switch (Outfit)

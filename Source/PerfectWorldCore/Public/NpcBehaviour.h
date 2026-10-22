@@ -169,8 +169,9 @@ struct NpcIntentResult
 /** "" when every routine entry and exception of the person has a known role (Activity entries need only a non-empty ID). */
 [[nodiscard]] PERFECTWORLDCORE_API std::string ValidateNpcSchedule(const PersonSchedule& person);
 
-// R5-04 is opt-in. The legacy intent API above, its fields and its output stay unchanged.
-enum class NpcWorkPhase : std::uint8_t { None, Inspect, Repair, Test, Collect, ToolRestock, Serve, Weigh, StockRestock };
+// R5-04/R66 are opt-in. The legacy intent API above, its fields and its output stay unchanged.
+enum class NpcWorkPhase : std::uint8_t { None, Inspect, Repair, Test, Collect, ToolRestock, Serve, Weigh, StockRestock,
+    Measure, Cut, Stitch, Press };
 enum class NpcDecisionReason : std::uint8_t
 {
     Available, Bench, Tools, Finishing, Counter, Scale, Stock, Meal, Rest, TeaBreak, Closing, Walking, Asleep,

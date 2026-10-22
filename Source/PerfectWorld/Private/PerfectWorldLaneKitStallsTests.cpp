@@ -49,7 +49,7 @@ bool FPWKitStallsPostedHoursTest::RunTest(const FString& Parameters)
         {
             TestEqual(*FString::Printf(TEXT("%s: the hours line"), *Name), Lines[1], Hours);
             TestEqual(*FString::Printf(TEXT("%s: the unstaffed line is exactly the phrase"), *Name), Lines[2],
-                      FString(TEXT("Unstaffed. Purchasing unavailable.")));
+                      FString(Door->Id == "door.nabapara.tailor_shop_front" ? KitPublic::R66TailorStaffedPhrase : KitPublic::UnstaffedPhrase));
         }
         TestTrue(*FString::Printf(TEXT("%s: the board carries every required phrase"), *Name), StHasEveryRequiredPhrase(Sign, *Door));
         const FString Notice = BrowseNoticeText(*Door);

@@ -22,7 +22,10 @@
 #include "PerfectWorldLaneNpcBindings.h"
 #include "PerfectWorldLaneStationeryShop.h"
 #include "PerfectWorldNpcCharacter.h"
+#include "PerfectWorldNpcPilotBridge.h"
 #include "PerfectWorldNpcPresenceSubsystem.h"
+#include "PerfectWorldProprietorBindings.h"
+#include "PerfectWorldTailorBindings.h"
 #include "WorldReducer.h"
 
 namespace PWRosterTest
@@ -51,6 +54,7 @@ const FRosterPerson RosterPeople[] = {
     {TEXT("person.household_adult"), TEXT("Your parent"), 168.0, EPWNpcOutfit::ParentHousehold, true, false, true, TEXT(""), 0},
     {TEXT("person.care_worker"), TEXT("Care worker"), 162.0, EPWNpcOutfit::HouseholdAdult, true, true, true, TEXT(""), 450},
     {TEXT("person.anindita_sen"), TEXT("Anindita"), 154.0, EPWNpcOutfit::ShopProprietor, true, true, true, TEXT(""), 540},
+    {TEXT("person.satyajit_dutta"), TEXT("Satyajit Dutta"), 167.0, EPWNpcOutfit::ShopProprietor, true, true, true, TEXT(""), 610},
     {TEXT("person.farida_qadri"), TEXT("Farida"), 158.0, EPWNpcOutfit::ShopProprietor, true, true, true, TEXT(""), 685},
     {TEXT("person.mira_sen"), TEXT("Mira"), 160.0, EPWNpcOutfit::HouseholdAdult, true, true, true, TEXT(""), 1440 + 1020},
     {TEXT("person.subrata_dey"), TEXT("Subrata"), 181.0, EPWNpcOutfit::HouseholdAdult, false, true, true, TEXT(""), 0},
@@ -183,6 +187,19 @@ void TalkAndResume(FAutomationTestBase& Test, NpPresenceTest::FNpWorld& Fixture,
     Fixture.Presence->Reconcile(Sim.State().Clock.Now());
     const PerfectWorld::NpcIntent* Intent = Fixture.Presence->FindIntent(PersonName);
     if (!Test.TestNotNull(*(Label + TEXT(": has a schedule intent now")), Intent)) { return; }
+    const bool bR66Pilot = R55IsWorkPilot(PersonName);
+    if (bR66Pilot)
+    {
+        if (!Test.TestTrue(*(Label + TEXT(": requests core Chat")), Fixture.Presence->RequestPilotChat(PersonName))) { return; }
+        const auto* R66Decision = Fixture.Presence->FindPilotDecision(PersonName);
+        if (!Test.TestNotNull(*(Label + TEXT(": has a pilot decision")), R66Decision)) { return; }
+        if (R66Decision->DeferredUntil && !Test.TestTrue(*(Label + TEXT(": reaches the safe pause")),
+            Sim.Submit({PerfectWorld::CommandSource::Player,
+                PerfectWorld::AdvanceTime{*R66Decision->DeferredUntil - Sim.State().Clock.Now()}}).Accepted)) { return; }
+        Fixture.Presence->Reconcile(Sim.State().Clock.Now());
+        Intent = Fixture.Presence->FindIntent(PersonName);
+        if (!Test.TestTrue(*(Label + TEXT(": core accepted Chat")), Intent != nullptr && Intent->State == PerfectWorld::NpcState::Chat)) { return; }
+    }
     const PerfectWorld::PersonAvailability Availability = Intent->Availability;
     const FVector Before = Npc.GetActorLocation();
 
@@ -208,6 +225,7 @@ void TalkAndResume(FAutomationTestBase& Test, NpPresenceTest::FNpWorld& Fixture,
     Test.TestTrue(*(Label + TEXT(": Leave is accepted")),
                   Sim.Submit({PerfectWorld::CommandSource::Player, PerfectWorld::ConversationLeave{Id}}).Accepted);
     Npc.GetNpcMovement()->SetLocalConversationActive(false);
+    if (bR66Pilot) { Fixture.Presence->ReleasePilotChat(PersonName); }
 
     Fixture.Presence->Reconcile(Sim.State().Clock.Now());
     Test.TestTrue(*(Label + TEXT(": the same actor goes on after the talk")), Fixture.Presence->FindPerson(PersonName) == &Npc);
@@ -340,8 +358,8 @@ bool FPWRosterSpawnedTest::RunTest(const FString& Parameters)
     UaMiraPresence::FUaShopPhysics UaShopPhysics;
     if (!TestNotNull(TEXT("presence subsystem"), Fixture.Presence)) { return false; }
 
-    // Anindita's and Mira's schedules join the fixture's database (it carries the care worker's and Farida's).
-    for (const TCHAR* FileId : {TEXT("npc_schedule.anindita_sen"), TEXT("npc_schedule.mira_sen")})
+    // Placed shop residents join the fixture's care-worker and Farida database.
+    for (const TCHAR* FileId : {TEXT("npc_schedule.anindita_sen"), TEXT("npc_schedule.mira_sen"), TEXT("npc_schedule.satyajit_dutta")})
     {
         FString Text;
         if (!TestTrue(FString::Printf(TEXT("%s loads"), FileId),
@@ -354,6 +372,12 @@ bool FPWRosterSpawnedTest::RunTest(const FString& Parameters)
 
     // The providers the lane registers, in the lane's order: bindings first, then the people.
     if (!TestTrue(TEXT("care home bindings"), Fixture.BindCare())) { return false; }
+    {
+        PWLane::FLaneBuilding R66Building;
+        if (!TestTrue(TEXT("tailor catalogue building"), PWLane::MakeProprietorBuilding(PWLane::R66TailorBuilding, R66Building)) ||
+            !TestTrue(TEXT("tailor production bindings"), Fixture.Presence->Bindings().RegisterProvider(
+                FName(PWLane::R66TailorBuilding), PWLane::R66TailorBindings(R66Building)))) { return false; }
+    }
     {
         FNpBindingProvider Tea;
         FNpAnchorBinding Counter;

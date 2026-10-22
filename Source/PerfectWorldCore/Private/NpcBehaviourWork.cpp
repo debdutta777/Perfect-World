@@ -16,7 +16,7 @@ struct R5BPhaseDef
 };
 constexpr R5BPhaseDef R5BTestPhase{"person.debashis_pal", "anchor.repair_workshop.workbench", "inspecting", NpcWorkPhase::Test,
     "work.test", "npc.pause.test_stopped", NpcDecisionReason::Bench};
-constexpr std::array<R5BPhaseDef, 8> R5BPhases{{
+constexpr std::array<R5BPhaseDef, 12> R5BPhases{{
     {"person.debashis_pal", "anchor.repair_workshop.workbench", "inspecting", NpcWorkPhase::Inspect,
      "work.inspect", "npc.pause.inspection_recorded", NpcDecisionReason::Bench},
     {"person.debashis_pal", "anchor.repair_workshop.workbench", "repairing", NpcWorkPhase::Repair,
@@ -33,6 +33,14 @@ constexpr std::array<R5BPhaseDef, 8> R5BPhases{{
      "work.weigh", "npc.pause.scale_cleared", NpcDecisionReason::Scale},
     {"person.mahua_saha", "anchor.hardware_store.stock_room", "stocking", NpcWorkPhase::StockRestock,
      "work.stock", "npc.pause.stock_secured", NpcDecisionReason::Stock},
+    {"person.satyajit_dutta", "anchor.tailor_shop.staff_counter", "inspecting", NpcWorkPhase::Measure,
+     "work.measure", "npc.pause.measure_recorded", NpcDecisionReason::Counter},
+    {"person.satyajit_dutta", "anchor.tailor_shop.workbench", "repairing", NpcWorkPhase::Cut,
+     "work.cut", "npc.pause.shears_down", NpcDecisionReason::Bench},
+    {"person.satyajit_dutta", "anchor.tailor_shop.finishing_table", "repairing", NpcWorkPhase::Stitch,
+     "work.stitch", "npc.pause.needle_secured", NpcDecisionReason::Finishing},
+    {"person.satyajit_dutta", "anchor.tailor_shop.finishing_table", "inspecting", NpcWorkPhase::Press,
+     "work.press", "npc.pause.iron_stood", NpcDecisionReason::Finishing},
 }};
 
 R5BPhaseDef R5BPhase(const PersonSchedule& person, const ScheduleResolution& block)
@@ -273,7 +281,7 @@ namespace
 {
 bool R5BNeedsPilot(std::string_view person)
 {
-    return person == "person.debashis_pal" || person == "person.mahua_saha";
+    return person == "person.debashis_pal" || person == "person.mahua_saha" || person == "person.satyajit_dutta";
 }
 
 struct R5BNeedBlock
