@@ -781,3 +781,9 @@ add_test(NAME PerfectWorldLaneMapTests COMMAND PerfectWorldLaneMapTests)
 add_executable(PerfectWorldLaneMapViewTests Tests/LaneMapViewTests.cpp)
 target_link_libraries(PerfectWorldLaneMapViewTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldLaneMapViewTests COMMAND PerfectWorldLaneMapViewTests)
+
+# R72: transient seeded Kolkata traffic, crossing/occupancy safety and fair junction service.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/NeighbourhoodTraffic.cpp)
+add_executable(PerfectWorldNeighbourhoodTrafficTests Tests/NeighbourhoodTrafficTests.cpp)
+target_link_libraries(PerfectWorldNeighbourhoodTrafficTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldNeighbourhoodTrafficTests COMMAND PerfectWorldNeighbourhoodTrafficTests)
