@@ -2263,3 +2263,29 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 - **Blocked on the owner:** the streets' counters are solid across each keeper's axis. A 120 cm service-flap patch (`D:\PWWork\r74_shoplots.diff`, `r74_stalls.diff`) was refused to the agent by the permission system and awaits the owner's decision.
 
 **R8-01 (commerce contract)** waits for the ChatGPT usage reset.
+
+## Checkpoint — v0.6.0-alpha published (crowds and traffic); R8-01 merged, 2026-10-23
+
+**Released as `v0.6.0-alpha` (prerelease):**
+- Tag on `25a1931`: https://github.com/debdutta777/Perfect-World/releases/tag/v0.6.0-alpha
+- Asset: 415,549,584 bytes, sha256 `789d2f7cb75bc6e01fa79279de4a2561b26fc022a1fab30952375947dc962452`.
+- **Verification:**
+  - Rung 1: 198/198.
+  - The editor and game targets compiled.
+  - Package exit 0.
+  - Not run: automation, acceptance, and a boot test.
+
+**R8-01 (gpt-6.1-sol), the portable commerce contract, is merged:**
+- a wallet in paise;
+- a household-rank allowance;
+- inventory;
+- quotes and purchase refusals;
+- atomic purchases with receipts;
+- consumption.
+- Rung 1: 199/199. No save-format change.
+
+**In flight:**
+- R8-02 content and R8-03 reducer integration (gpt-6.1-sol).
+- R8-05 Buy panel, wallet and inventory UI (Claude Sonnet).
+- R8-04, the save migration to schema 10 and hash 7, follows R8-03 (Claude deep-work).
+- The staffed shops (R7-04) still wait on the owner's decision about the counter patch.
