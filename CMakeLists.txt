@@ -807,3 +807,9 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/Neighbou
 add_executable(PerfectWorldNeighbourhoodTrafficTests Tests/NeighbourhoodTrafficTests.cpp)
 target_link_libraries(PerfectWorldNeighbourhoodTrafficTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldNeighbourhoodTrafficTests COMMAND PerfectWorldNeighbourhoodTrafficTests)
+
+# R82: authored commerce items, catalogues, funding and soft keeper unavailability.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/CommerceContent.cpp)
+add_executable(PerfectWorldCommerceContentTests Tests/CommerceContentTests.cpp)
+target_link_libraries(PerfectWorldCommerceContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldCommerceContentTests COMMAND PerfectWorldCommerceContentTests ${CMAKE_SOURCE_DIR}/Data/Content)
