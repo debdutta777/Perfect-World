@@ -3,6 +3,7 @@
 #include "PerfectWorldAcceptanceScaleR4.h"
 #include "PerfectWorldAcceptanceMahua.h"
 #include "PerfectWorldAcceptanceTailor.h"
+#include "PerfectWorldAcceptanceFrontagesR6.h"
 #include "PerfectWorldAcceptanceStreetsR7.h"
 #include "PerfectWorldAcceptanceSchoolR7.h"
 #include "PerfectWorldAcceptanceTrafficR7.h"
@@ -507,6 +508,11 @@ bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps)
     if (Name == TEXT("homes_round5"))
     {
         AppendHomesRound5Steps(OutSteps);
+        return true;
+    }
+    if (Name == TEXT("frontages_round6"))
+    {
+        AppendFrontagesRound6Steps(OutSteps);
         return true;
     }
     if (Name == TEXT("homes_round6"))
