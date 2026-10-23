@@ -1,0 +1,10 @@
+{
+  "type": "commerce_item",
+  "id": "item.tea",
+  "name": "Tea",
+  "unit": "cup",
+  "stackLimit": 10,
+  "effect": "tea",
+  "hungerRelief": 0,
+  "note": "Supported effect: +2000 Energy with the shared 60 game minute tea cooldown; no learning bonus."
+}

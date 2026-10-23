@@ -1,0 +1,35 @@
+{
+  "type": "commerce_shop",
+  "id": "shop.shanti_chai",
+  "name": "Shanti Chai",
+  "counterAnchor": "anchor.shanti_chai.counter",
+  "keepers": [
+    {
+      "person": "person.farida_qadri",
+      "counterAnchor": "anchor.shanti_chai.counter"
+    }
+  ],
+  "opening": [
+    {
+      "days": 127,
+      "start": 360,
+      "end": 690
+    },
+    {
+      "days": 127,
+      "start": 930,
+      "end": 1140
+    }
+  ],
+  "entries": [
+    {
+      "item": "item.tea",
+      "unitPricePaise": 2500
+    },
+    {
+      "item": "item.biscuits",
+      "unitPricePaise": 1000
+    }
+  ],
+  "note": "Fictional 2042 balance prices in integer paise, per displayed unit. Authored split opening hours are authoritative. Registration alone never authorizes sales; schedule presence and a safe pause are required."
+}

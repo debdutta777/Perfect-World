@@ -816,3 +816,9 @@ target_link_libraries(PerfectWorldResidentsR6Tests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldResidentsR6Tests COMMAND PerfectWorldResidentsR6Tests
     ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.madhabi_das.json
     ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.arup_basu.json)
+
+# R82: authored commerce items, catalogues, funding and soft keeper unavailability.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/CommerceContent.cpp)
+add_executable(PerfectWorldCommerceContentTests Tests/CommerceContentTests.cpp)
+target_link_libraries(PerfectWorldCommerceContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldCommerceContentTests COMMAND PerfectWorldCommerceContentTests ${CMAKE_SOURCE_DIR}/Data/Content)
