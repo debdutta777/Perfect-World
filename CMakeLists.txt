@@ -736,6 +736,12 @@ target_link_libraries(PerfectWorldNpcBehaviourRegressionTests PRIVATE PerfectWor
 add_test(NAME PerfectWorldNpcBehaviourRegressionTests COMMAND PerfectWorldNpcBehaviourRegressionTests
     ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule)
 
+# R71: deterministic authored neighbourhood overlay; no content registry, save or hash changes.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/NeighbourhoodPlan.cpp)
+add_executable(PerfectWorldNeighbourhoodPlanTests Tests/NeighbourhoodPlanTests.cpp)
+target_link_libraries(PerfectWorldNeighbourhoodPlanTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldNeighbourhoodPlanTests COMMAND PerfectWorldNeighbourhoodPlanTests)
+
 # R66: tailor dialogue and life/work coverage. Shared registrations are in R6-06_notes.md.
 target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationTailor.cpp)
 add_executable(PerfectWorldTailorLifeTests Tests/TailorLifeTests.cpp)
@@ -788,3 +794,16 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/Commerce
 add_executable(PerfectWorldCommerceTests Tests/CommerceTests.cpp)
 target_link_libraries(PerfectWorldCommerceTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldCommerceTests COMMAND PerfectWorldCommerceTests)
+
+# R75: transient calendar-driven ambient cohorts; no persistent RNG or save changes.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/AmbientCrowd.cpp)
+add_executable(PerfectWorldAmbientCrowdTests Tests/AmbientCrowdTests.cpp)
+target_link_libraries(PerfectWorldAmbientCrowdTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldAmbientCrowdTests COMMAND PerfectWorldAmbientCrowdTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/calendar/calendar.nabapara_2042_43.json)
+
+# R72: transient seeded Kolkata traffic, crossing/occupancy safety and fair junction service.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/NeighbourhoodTraffic.cpp)
+add_executable(PerfectWorldNeighbourhoodTrafficTests Tests/NeighbourhoodTrafficTests.cpp)
+target_link_libraries(PerfectWorldNeighbourhoodTrafficTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldNeighbourhoodTrafficTests COMMAND PerfectWorldNeighbourhoodTrafficTests)
