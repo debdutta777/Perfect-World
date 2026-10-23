@@ -237,6 +237,24 @@ constexpr std::array<ApprovedRoute, 2> R5RIshitaRoutes{{
 constexpr Spec R5RIshitaSpec{"npc_schedule.ishita_banerjee", "person.ishita_banerjee", R5RIshitaHome, R5RIshitaWork,
                              "door.nabapara.tall_flats_upper_a", R5RIshitaRoutes, R5RIshitaWork, 450, 900};
 
+// Madhabi Das, municipal records clerk, the alley house (R6-04): a weekday commute off-lane is her only away block.
+constexpr std::string_view R64MadhabiHome = "location.nabapara.alley_house";
+constexpr std::string_view R64MadhabiAway = "location.nabapara.madhabi_work";
+constexpr std::array<ApprovedRoute, 1> R64MadhabiRoutes{{
+    {"route.madhabi.home_to_work", R64MadhabiHome, R64MadhabiAway, 2100},
+}};
+constexpr Spec R64MadhabiSpec{"npc_schedule.madhabi_das", "person.madhabi_das", R64MadhabiHome, R64MadhabiAway,
+                              "door.nabapara.alley_house_front", R64MadhabiRoutes, R64MadhabiAway, 540, 870};
+
+// Arup Basu, parcel dispatch supervisor, the stair-flats ground home (R6-04): an early shift off-lane.
+constexpr std::string_view R64ArupHome = "location.nabapara.stair_flats";
+constexpr std::string_view R64ArupAway = "location.nabapara.arup_work";
+constexpr std::array<ApprovedRoute, 1> R64ArupRoutes{{
+    {"route.arup.home_to_work", R64ArupHome, R64ArupAway, 2800},
+}};
+constexpr Spec R64ArupSpec{"npc_schedule.arup_basu", "person.arup_basu", R64ArupHome, R64ArupAway,
+                           "door.nabapara.stair_flats_front", R64ArupRoutes, R64ArupAway, 360, 870};
+
 // Satyajit Dutta, tailor (R6-06): the shop's Workshop anchors and an off-lane home.
 constexpr std::array<ApprovedRoute, 5> R66TailorRoutes{{
     {"route.tailor_shop.counter_to_door", "anchor.tailor_shop.staff_counter", "anchor.tailor_shop.front_door", 1182},
@@ -248,8 +266,9 @@ constexpr std::array<ApprovedRoute, 5> R66TailorRoutes{{
 constexpr Spec R66TailorSpec{"npc_schedule.satyajit_dutta", "person.satyajit_dutta", "location.nabapara.dutta_home",
     "location.nabapara.tailor_shop", "door.nabapara.tailor_shop_front", R66TailorRoutes, "anchor.tailor_shop.", 600, 1170};
 
-constexpr std::array<const Spec*, 15> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec, &SubrataSpec, &NirmalSpec, &RupaSpec, &SahanaSpec, &AmpurnimaSpec, &AmarunSpec, &AmrekhaSpec,
-                                               &DebashisSpec, &MahuaSpec, &R5RPrabirSpec, &R5RIshitaSpec, &R66TailorSpec};
+constexpr std::array<const Spec*, 17> AllSpecs{&CareSpec, &AninditaSpec, &MiraSpec, &SubrataSpec, &NirmalSpec, &RupaSpec, &SahanaSpec, &AmpurnimaSpec, &AmarunSpec, &AmrekhaSpec,
+                                               &DebashisSpec, &MahuaSpec, &R5RPrabirSpec, &R5RIshitaSpec, &R66TailorSpec,
+                                               &R64MadhabiSpec, &R64ArupSpec};
 
 const Spec* FindSpec(std::string_view personId)
 {

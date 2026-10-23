@@ -807,3 +807,12 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/Neighbou
 add_executable(PerfectWorldNeighbourhoodTrafficTests Tests/NeighbourhoodTrafficTests.cpp)
 target_link_libraries(PerfectWorldNeighbourhoodTrafficTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldNeighbourhoodTrafficTests COMMAND PerfectWorldNeighbourhoodTrafficTests)
+
+# R6-04: the two remaining private homes get a resident each (Madhabi Das, alley house; Arup Basu, stair flats).
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationResidentsR6.cpp)
+add_executable(PerfectWorldResidentsR6Tests Tests/ResidentsR6Tests.cpp)
+target_include_directories(PerfectWorldResidentsR6Tests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldResidentsR6Tests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldResidentsR6Tests COMMAND PerfectWorldResidentsR6Tests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.madhabi_das.json
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.arup_basu.json)

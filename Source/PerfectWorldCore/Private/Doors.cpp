@@ -35,7 +35,10 @@ constexpr DoorOpeningWindow R1BrowsingHours[]{{540, 780}, {900, 1170}};
 constexpr DoorOpeningWindow R53ClothHours[]{{600, 780}, {900, 1200}};
 constexpr DoorOpeningWindow R53NarrowHours[]{{540, 780}, {900, 1170}};
 constexpr DoorOpeningWindow R53TailorHours[]{{600, 780}, {900, 1170}};
-// R61: no visiting windows on the two homes until residents exist; the corner room offers browsing only.
+// R64: Madhabi Das (alley house) and Arup Basu (stair flats) are home and awake 16:00-19:30 every day, so both homes receive then.
+constexpr DoorOpeningWindow R64AlleyVisiting[]{{960, 1170}};
+constexpr DoorOpeningWindow R64StairVisiting[]{{960, 1170}};
+// R61: the corner room offers browsing only.
 constexpr DoorOpeningWindow R61CornerHours[]{{540, 780}, {900, 1170}};
 constexpr std::array<DoorDef, 29> DoorTable{{
     {"door.nabapara.home_front", OpeningHome, false, DoorAccess::Private, 0, 0},
@@ -64,8 +67,8 @@ constexpr std::array<DoorDef, 29> DoorTable{{
     {"door.nabapara.cloth_merchant_front", "location.nabapara.cloth_merchant", false, DoorAccess::BusinessHours, 0, 0, R53ClothHours, false, -1},
     {"door.nabapara.narrow_shop_front", "location.nabapara.narrow_shop", false, DoorAccess::BusinessHours, 0, 0, R53NarrowHours, false, -1},
     {"door.nabapara.tailor_shop_front", "location.nabapara.tailor_shop", false, DoorAccess::BusinessHours, 0, 0, R53TailorHours, false, 1},
-    {"door.nabapara.alley_house_front", "location.nabapara.alley_house", false, DoorAccess::Private, 0, 0, {}, false, -1},
-    {"door.nabapara.stair_flats_front", "location.nabapara.stair_flats", false, DoorAccess::Private, 0, 0, {}, false, -1},
+    {"door.nabapara.alley_house_front", "location.nabapara.alley_house", false, DoorAccess::Private, 0, 0, {}, false, -1, R64AlleyVisiting},
+    {"door.nabapara.stair_flats_front", "location.nabapara.stair_flats", false, DoorAccess::Private, 0, 0, {}, false, -1, R64StairVisiting},
     {"door.nabapara.corner_stalls_front", "location.nabapara.corner_stalls", false, DoorAccess::BusinessHours, 0, 0, R61CornerHours, false, 1},
 }};
 

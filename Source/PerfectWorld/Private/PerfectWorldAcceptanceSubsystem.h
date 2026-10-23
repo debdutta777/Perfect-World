@@ -172,6 +172,8 @@ void AppendJournalStateSteps(TArray<FStepDef>& OutSteps);
 void AppendJournalTodaySteps(TArray<FStepDef>& OutSteps);
 /** R5-02: real home visits in both cameras and a fresh-process agreement Continue pair. */
 void AppendHomesRound5Steps(TArray<FStepDef>& OutSteps);
+/** R6-04: ring, admission, entry, Talk and Leave at the alley house and the stair flats in both cameras; a fresh-process agreement pair. */
+void AppendHomesRound6Steps(TArray<FStepDef>& OutSteps);
 /** R5-03: the next three browsing frontages; fresh-process restart pair (PerfectWorldAcceptanceFrontagesR5.cpp). */
 void AppendFrontagesRound5Steps(TArray<FStepDef>& OutSteps);
 /** R5-05: independent physical visit to Mahua and her working day (PerfectWorldAcceptanceMahua.cpp). */

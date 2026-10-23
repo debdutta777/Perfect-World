@@ -25,6 +25,7 @@
 #include "PerfectWorldAmbientBindings.h"
 #include "PerfectWorldProprietorBindings.h"
 #include "PerfectWorldResidentsR5Bindings.h"
+#include "PerfectWorldResidentsR6Bindings.h"
 #include "PerfectWorldTailorBindings.h"
 #include "PerfectWorldNeighbourhoodStreets.h"
 #include "PerfectWorldSchoolCampus.h"
@@ -317,6 +318,10 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     if (!SpawnResidentsR5(World, Scene))
     {
         UE_LOG(LogTemp, Error, TEXT("R52 resident bindings/registration failed; homes_round5 cannot pass."));
+    }
+    if (!SpawnResidentsR6(World, Scene))
+    {
+        UE_LOG(LogTemp, Error, TEXT("R64 resident bindings/registration failed; homes_round6 cannot pass."));
     }
     SpawnAmbientLife(World);
     SpawnDebashis(World, Scene);
