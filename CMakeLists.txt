@@ -807,3 +807,9 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/Neighbou
 add_executable(PerfectWorldNeighbourhoodTrafficTests Tests/NeighbourhoodTrafficTests.cpp)
 target_link_libraries(PerfectWorldNeighbourhoodTrafficTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldNeighbourhoodTrafficTests COMMAND PerfectWorldNeighbourhoodTrafficTests)
+
+# R83: reducer commerce/service inputs, every time path and atomic refusals; save/hash remain R8-04's.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldCommerce.cpp)
+add_executable(PerfectWorldWorldCommerceTests Tests/WorldCommerceTests.cpp)
+target_link_libraries(PerfectWorldWorldCommerceTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldCommerceTests COMMAND PerfectWorldWorldCommerceTests)

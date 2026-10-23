@@ -2,10 +2,13 @@
 
 #include "Commands.h"
 #include "WorldState.h"
+#include "WorldCommerce.h"
 
 #include <cstdint>
+#include <map>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #ifndef PERFECTWORLDCORE_API
@@ -76,12 +79,16 @@ public:
      * School catalogues are borrowed, immutable and must outlive the sim; bind the same content on load/replay.
      */
     explicit WorldSim(std::uint64_t worldSeed, std::size_t eventCap = MaxEventsPerAdvance,
-                      DayLoopCatalogues school = {});
+                      DayLoopCatalogues school = {}, WorldCommerceCatalogues commerce = {});
+    explicit WorldSim(std::uint64_t worldSeed, const CharacterCreator& creation,
+                      std::size_t eventCap = MaxEventsPerAdvance, DayLoopCatalogues school = {},
+                      WorldCommerceCatalogues commerce = {});
     /**
      * Continue a loaded world (DeserializeWorldSave's World). The state must be in step
      * (IsWorldDayInStep); the command log starts empty, so it holds the commands since the load.
      */
-    explicit WorldSim(WorldState state, std::size_t eventCap = MaxEventsPerAdvance, DayLoopCatalogues school = {});
+    explicit WorldSim(WorldState state, std::size_t eventCap = MaxEventsPerAdvance, DayLoopCatalogues school = {},
+                      WorldCommerceCatalogues commerce = {});
 
     /**
      * The only mutation entry point. Atomic: a rejected command, including a paid conversation choice whose charge
@@ -92,6 +99,10 @@ public:
     /** Accepted commands in order: the replay log (ROADMAP M1-03). */
     const std::vector<Command>& Log() const noexcept { return Log_; }
     [[nodiscard]] SchoolArrivalView SchoolArrivalToday() const { return QuerySchoolArrival(State_, School_); }
+    [[nodiscard]] CommerceServiceView CommerceService(std::string_view shopId) const;
+    [[nodiscard]] CommerceQuote QuoteCommerce(std::string_view shopId, std::string_view itemId, std::int32_t quantity) const;
+    /** Current keeper decision, including released service windows. Presentation uses this for work resumption. */
+    [[nodiscard]] NpcDecision CommerceKeeperDecision(std::string_view shopId) const;
 
 private:
     std::optional<Rejection> Validate(const Command& command) const;
@@ -118,11 +129,17 @@ private:
     // Free planning and arrival only, in WorldSchoolDay.cpp; application commits a successful day-loop copy.
     std::optional<Rejection> ValidateSchoolCommand(const Command& command) const;
     std::optional<Rejection> ApplySchoolCommand(const Command& command, CommandResult& result);
+    // WorldCommerce.cpp: stage commerce and service inputs before commit; no persisted service context.
+    std::optional<Rejection> ApplyCommerceCommand(const Command& command);
+    std::optional<Rejection> ApplyWorldDayCommand(const WorldDayCommand& command, CommandResult& result);
 
     WorldState State_;
     std::vector<Command> Log_;
     std::size_t EventCap_ = MaxEventsPerAdvance;
     DayLoopCatalogues School_;
+    WorldCommerceCatalogues Commerce_;
+    std::string ServiceShop_;
+    std::map<std::string, std::vector<NpcInterruptionWindow>, std::less<>> ServiceHistory_;
 };
 
 /** True for the conversation.* and door.* commands (WorldConversation.cpp). */
