@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Conversation.h"
+#include "CharacterCreation.h"
+#include "Commerce.h"
 #include "DayLoop.h"
 #include "Doors.h"
 #include "GameClock.h"
@@ -100,6 +102,8 @@ struct WorldState
      * earlier worlds start from the authored defaults, as here. Historical door rosters migrate explicitly.
      */
     DoorState Doors = MakeInitialDoorState();
+    /** R8-03 authoritative slice. R8-04 owns its later save/hash encoding. */
+    CommerceState Commerce;
 };
 
 /** A fresh world: the clock at the campaign epoch (2 Jun 2042 06:00), no flags or Gates, RNG streams seeded from the world seed, a fresh day. */
@@ -109,6 +113,15 @@ inline WorldState MakeWorldState(std::uint64_t worldSeed)
     state.WorldSeed = worldSeed;
     state.Rng = RandomStreams(worldSeed).Capture();
     state.DayLoop = NewDayLoopState(state.Clock.Now());
+    state.Commerce = InitialiseCommerce(0, state.Clock.Now()).State;
+    return state;
+}
+
+/** Creation was validated by CharacterCreator; its resource rank is always in 0..4. */
+inline WorldState MakeWorldState(std::uint64_t worldSeed, const CharacterCreator& creation)
+{
+    WorldState state = MakeWorldState(worldSeed);
+    state.Commerce = InitialiseCommerce(creation.GetTraitRank(HouseholdResourcesTraitId), state.Clock.Now()).State;
     return state;
 }
 
