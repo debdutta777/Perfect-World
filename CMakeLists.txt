@@ -782,3 +782,9 @@ add_test(NAME PerfectWorldLaneMapTests COMMAND PerfectWorldLaneMapTests)
 add_executable(PerfectWorldLaneMapViewTests Tests/LaneMapViewTests.cpp)
 target_link_libraries(PerfectWorldLaneMapViewTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldLaneMapViewTests COMMAND PerfectWorldLaneMapViewTests)
+
+# R81: frozen commerce contract, atomic rules and deterministic allowance/receipts.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/Commerce.cpp)
+add_executable(PerfectWorldCommerceTests Tests/CommerceTests.cpp)
+target_link_libraries(PerfectWorldCommerceTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldCommerceTests COMMAND PerfectWorldCommerceTests)
