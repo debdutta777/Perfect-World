@@ -9,6 +9,7 @@
 #include "PerfectWorldLaneBlocks.h"
 #include "PerfectWorldLaneBuildings.h"
 #include "PerfectWorldLaneCareInterior.h"
+#include "PerfectWorldLaneEndInteriors.h"
 #include "PerfectWorldLaneHomeFurniture.h"
 #include "PerfectWorldLaneKitDisplays.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
@@ -323,6 +324,7 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     SpawnMahua(World, Scene);
     R66SpawnTailor(World, Scene);
     SpawnKitShopDisplays(World, Scene); // R4-01: the browse actors and posted hours of market_stalls_a, market_stalls_b and end_shop
+    SpawnLaneEndSigns(World);           // R6-05: the posted hours over the community hall and market hall archways
     if (Scene.bOpeningHomeBuilt)
     {
         SpawnHouseholdAdult(World);

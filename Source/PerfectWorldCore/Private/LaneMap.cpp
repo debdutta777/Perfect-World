@@ -1,5 +1,6 @@
 #include "LaneMap.h"
 
+#include "LaneEndLayouts.h"
 #include "LaneFrontageCatalogue.h"
 
 #include <algorithm>
@@ -117,6 +118,7 @@ PoiKind MpPoiKindOf(BuildingKind kind) noexcept
     {
     case BuildingKind::Home: return PoiKind::Home;
     case BuildingKind::School: return PoiKind::School;
+    case BuildingKind::Civic: return PoiKind::Civic;
     case BuildingKind::Workshop: return PoiKind::Workshop;
     default: return PoiKind::Shop;
     }
@@ -232,16 +234,24 @@ Building MpMakeBuilding(Map& map, const Frontage& f)
     return b;
 }
 
-/** The two masses that close the lane: sealed, 2600 wide and 900 deep (BuildClosingRows). */
+/** The two masses that close the lane, 2600 wide and 900 deep (BuildClosingRows), opened by R6-05 as the community hall (west) and the market hall
+ *  (east). The entrance is the doorless archway on the lane-facing X edge, on the lane axis; no door exists, so there is no MapDoor. */
 Building MpMakeEndMass(bool east)
 {
+    const LaneEnds::HallInfo& hall = LaneEnds::GetHallInfo(east ? LaneEnds::EndHall::MarketHall : LaneEnds::EndHall::CommunityHall);
     Building b;
     b.Side = 0;
-    b.Kind = BuildingKind::Sealed;
-    b.Id = east ? "building.nabapara.east_end_block" : "building.nabapara.west_end_block";
-    b.Storeys = east ? 5 : 4;
+    b.Kind = east ? BuildingKind::Shop : BuildingKind::Civic;
+    b.Id = std::string(hall.BuildingId);
+    b.Label = std::string(hall.Label);
+    b.LabelKey = std::string(hall.LabelKey);
+    b.Storeys = hall.Storeys;
     b.Footprint = east ? MpRect(LaneX1Cm, -1300.0, LaneX1Cm + 900.0, 1300.0) : MpRect(LaneX0Cm - 900.0, -1300.0, LaneX0Cm, 1300.0);
     b.Centre = MpCentre(b.Footprint);
+    const LaneEnds::WorldPoint entrance = LaneEnds::HallEntrancePoint(hall.Hall);
+    b.Entrance = {static_cast<double>(entrance.X), static_cast<double>(entrance.Y)};
+    b.bHasEntrance = true;
+    b.bEnterable = true;
     return b;
 }
 

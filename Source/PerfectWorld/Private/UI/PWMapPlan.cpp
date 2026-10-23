@@ -48,6 +48,7 @@ EQuadRole QuadRoleOf(PerfectWorld::LaneMap::BuildingKind Kind)
     case MpLm::BuildingKind::School: return EQuadRole::School;
     case MpLm::BuildingKind::Workshop: return EQuadRole::Workshop;
     case MpLm::BuildingKind::Sealed: return EQuadRole::Sealed;
+    case MpLm::BuildingKind::Civic: return EQuadRole::School; // institutional colour; no new palette entry (R6-05)
     }
     return EQuadRole::Sealed;
 }

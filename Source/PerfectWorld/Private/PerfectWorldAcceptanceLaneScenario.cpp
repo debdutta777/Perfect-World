@@ -4,6 +4,7 @@
 #include "PerfectWorldAcceptanceMahua.h"
 #include "PerfectWorldAcceptanceTailor.h"
 #include "PerfectWorldAcceptanceStreetsR7.h"
+#include "PerfectWorldAcceptanceLaneEnds.h"
 #include "PerfectWorldAcceptanceSchoolR7.h"
 #include "PerfectWorldAcceptanceTrafficR7.h"
 #include "PerfectWorldAcceptanceCrowdR7.h"
@@ -522,6 +523,11 @@ bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps)
     if (Name == TEXT("tailor_workday"))
     {
         AppendTailorWorkdaySteps(OutSteps);
+        return true;
+    }
+    if (Name == TEXT("lane_ends"))
+    {
+        AppendLaneEndsSteps(OutSteps);
         return true;
     }
     if (Name == TEXT("streets_round7"))

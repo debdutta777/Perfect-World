@@ -807,3 +807,12 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/Neighbou
 add_executable(PerfectWorldNeighbourhoodTrafficTests Tests/NeighbourhoodTrafficTests.cpp)
 target_link_libraries(PerfectWorldNeighbourhoodTrafficTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldNeighbourhoodTrafficTests COMMAND PerfectWorldNeighbourhoodTrafficTests)
+
+# R65: the two lane-end masses opened as public halls (community hall west, market hall east); doorless archways, no roster or save change.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/LaneEndLayouts.cpp
+    Source/PerfectWorldCore/Private/LaneEndHallCommunity.cpp
+    Source/PerfectWorldCore/Private/LaneEndHallMarket.cpp)
+add_executable(PerfectWorldLaneEndLayoutsTests Tests/LaneEndLayoutsTests.cpp)
+target_link_libraries(PerfectWorldLaneEndLayoutsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneEndLayoutsTests COMMAND PerfectWorldLaneEndLayoutsTests)

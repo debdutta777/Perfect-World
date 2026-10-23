@@ -86,6 +86,7 @@ FText KindText(PerfectWorld::LaneMap::BuildingKind Kind)
     case BuildingKind::School: return LOCTEXT("KindSchool", "School");
     case BuildingKind::Workshop: return LOCTEXT("KindWorkshop", "Workshop");
     case BuildingKind::Sealed: return LOCTEXT("KindSealed", "Closed up");
+    case BuildingKind::Civic: return LOCTEXT("KindCivic", "Public hall");
     }
     return FText::GetEmpty();
 }

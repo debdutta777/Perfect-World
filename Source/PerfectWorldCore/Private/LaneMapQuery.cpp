@@ -26,6 +26,23 @@ bool MpOnFrontEdge(const Polygon& rect, Point p) noexcept
     return p.X >= minX && p.X <= maxX && (p.Y == minY || p.Y == maxY);
 }
 
+/** The two end masses (Side 0) are entered from the lane: the entrance is on the left or right edge, with y inside it. */
+bool MpOnLaneFacingEdge(const Polygon& rect, Point p) noexcept
+{
+    double minX = rect[0].X;
+    double maxX = rect[0].X;
+    double minY = rect[0].Y;
+    double maxY = rect[0].Y;
+    for (const Point& q : rect)
+    {
+        minX = std::min(minX, q.X);
+        maxX = std::max(maxX, q.X);
+        minY = std::min(minY, q.Y);
+        maxY = std::max(maxY, q.Y);
+    }
+    return p.Y >= minY && p.Y <= maxY && (p.X == minX || p.X == maxX);
+}
+
 bool MpOverlap(const Polygon& a, const Polygon& b) noexcept
 {
     const auto bounds = [](const Polygon& p, double& x0, double& y0, double& x1, double& y1) {
@@ -71,7 +88,8 @@ bool IsMapValid(const Map& map) noexcept
         {
             return false;
         }
-        if (b.bEnterable != b.bHasEntrance || (b.bHasEntrance && !MpOnFrontEdge(b.Footprint, b.Entrance)))
+        if (b.bEnterable != b.bHasEntrance ||
+            (b.bHasEntrance && !(b.Side == 0 ? MpOnLaneFacingEdge(b.Footprint, b.Entrance) : MpOnFrontEdge(b.Footprint, b.Entrance))))
         {
             return false;
         }
@@ -178,6 +196,7 @@ std::string_view BuildingKindId(BuildingKind kind) noexcept
     case BuildingKind::School: return "school";
     case BuildingKind::Workshop: return "workshop";
     case BuildingKind::Sealed: return "sealed";
+    case BuildingKind::Civic: return "civic";
     }
     return "sealed";
 }
@@ -192,6 +211,7 @@ std::string_view PoiKindId(PoiKind kind) noexcept
     case PoiKind::School: return "school";
     case PoiKind::Alley: return "alley";
     case PoiKind::LaneEnd: return "lane_end";
+    case PoiKind::Civic: return "civic";
     }
     return "shop";
 }
