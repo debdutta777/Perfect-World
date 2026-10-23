@@ -813,3 +813,9 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/Commerce
 add_executable(PerfectWorldCommerceContentTests Tests/CommerceContentTests.cpp)
 target_link_libraries(PerfectWorldCommerceContentTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldCommerceContentTests COMMAND PerfectWorldCommerceContentTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# R91: frozen Awakening inputs/state contract and exactly-once genuine activity credits.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/AwakeningInputs.cpp)
+add_executable(PerfectWorldAwakeningInputsTests Tests/AwakeningInputsTests.cpp)
+target_link_libraries(PerfectWorldAwakeningInputsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldAwakeningInputsTests COMMAND PerfectWorldAwakeningInputsTests ${CMAKE_SOURCE_DIR}/Data/Content)
