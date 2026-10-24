@@ -1,6 +1,7 @@
 #include "WorldSave.h"
 
 #include "CreationSaveSerialization.h"
+#include "Doors.h"
 #include "GateSites.h"
 #include "Json.h"
 #include "WorldHash.h"
@@ -23,7 +24,9 @@ std::string WorldSaveHex(std::uint64_t value)
     return text;
 }
 
-/** Quotes and escapes; a newline becomes \n, other control bytes become \u00xx and every other byte passes through, so any ID round-trips exactly. */
+} // namespace
+
+/** Quotes and escapes; control bytes are escaped, so module text round-trips exactly. */
 std::string WorldSaveQuoted(std::string_view value)
 {
     static const char digits[] = "0123456789abcdef";
@@ -50,6 +53,8 @@ std::string WorldSaveQuoted(std::string_view value)
     return out;
 }
 
+namespace
+{
 std::string WorldSaveHexQuoted(std::uint64_t value)
 {
     return "\"" + WorldSaveHex(value) + "\"";
@@ -71,7 +76,7 @@ WorldSaveResult WorldSaveReadEnvelope(std::string_view text, const JsonValue& do
     std::int64_t version = 0;
     if (!WorldSaveAsInt(doc.Find("schemaVersion"), version))
         return WorldSaveMalformed("the schema version is not a whole number.");
-    if (version != WorldSaveSchemaVersion && version != WorldSaveLastWithoutDayLoopVersion)
+    if (version < WorldSaveLastWithoutDayLoopVersion || version > WorldSaveSchemaVersion)
         return WorldSaveFail(WorldSaveError::UnsupportedVersion, "This save was written by a different version of the game and cannot be opened.");
     if (!WorldSaveExactKeys(doc, {"format", "schemaVersion", "creation", "world", "player", "hashVersion", "stateHash"}))
         return WorldSaveMalformed("it is missing a section or has an unexpected one.");
@@ -86,7 +91,7 @@ WorldSaveResult WorldSaveReadEnvelope(std::string_view text, const JsonValue& do
     WorldSaveData data;
     data.Creation = creator.CaptureSave();
     // A v6 world record has no day loop: the player gets a fresh day at the clock's instant.
-    if (WorldSaveResult world = WorldSaveReadWorld(*doc.Find("world"), data.World, version == WorldSaveSchemaVersion); !world)
+    if (WorldSaveResult world = WorldSaveReadWorld(*doc.Find("world"), data.World, static_cast<std::int32_t>(version)); !world)
         return world;
     if (WorldSaveResult player = WorldSaveReadPlayer(*doc.Find("player"), data.Player); !player)
         return player;
@@ -97,11 +102,22 @@ WorldSaveResult WorldSaveReadEnvelope(std::string_view text, const JsonValue& do
         return WorldSaveMalformed("the world hash is missing or malformed.");
     WorldSaveResult result;
     result.SourceVersion = static_cast<std::int32_t>(version);
-    if (hashVersion == static_cast<std::int64_t>(WorldHashVersion))
+    const bool R4JHistoricalHash = version == 8 && hashVersion == 5;
+    if (R4JHistoricalHash || (version == WorldSaveSchemaVersion && hashVersion == static_cast<std::int64_t>(WorldHashVersion)))
     {
-        if (HashWorldState(data.World) != storedHash)
+        // Historical door rosters (ten, eleven, sixteen or twenty doors) and the v8 empty-journal migration change the loaded world.
+        // hashes as it was saved. Its checksum is authenticated over the door text exactly as stored, so the appended
+        // defaults never count towards it; a tampered roster fails here. The changed world loads unverified, and its
+        // first save is certified again. Unknown rosters were already refused by the world reader.
+        const JsonValue* storedDoors = doc.Find("world")->Find("doors");
+        const bool doorsMigrated = storedDoors != nullptr && storedDoors->IsString() &&
+                                   DeserialiseDoorState(storedDoors->String).bMigrated;
+        const std::uint64_t expected = R4JHistoricalHash
+            ? HashWorldStateWithDoorsText(data.World, storedDoors->String, 5)
+            : doorsMigrated ? HashWorldStateWithDoorsText(data.World, storedDoors->String) : HashWorldState(data.World);
+        if (expected != storedHash)
             return WorldSaveFail(WorldSaveError::HashMismatch, "This save file is damaged: its world does not match its checksum.");
-        result.HashVerified = true;
+        result.HashVerified = !doorsMigrated && !R4JHistoricalHash;
     }
     out = std::move(data);
     return result;
@@ -182,6 +198,9 @@ WorldSaveResult BeginWorldFromCreation(const CharacterCreationSave& creation, st
 std::string SerializeWorldSave(const WorldSaveData& data)
 {
     const WorldState& world = data.World;
+    const std::string lane = WorldSaveWriteLane(world);
+    if (lane.empty())
+        return {};
     std::string creation = SerializeCreationSave(data.Creation);
     while (!creation.empty() && std::isspace(static_cast<unsigned char>(creation.back())) != 0)
         creation.pop_back();
@@ -236,7 +255,7 @@ std::string SerializeWorldSave(const WorldSaveData& data)
         out += "], \"draws\": " + WorldSaveHexQuoted(stream.Draws) + " }";
     }
     // The player's day is its own envelope text, hash line included, carried as one string.
-    out += "\n    ],\n    \"dayloop\": " + WorldSaveQuoted(SerialiseDayLoop(world.DayLoop)) + "\n  }";
+    out += "\n    ],\n    \"dayloop\": " + WorldSaveQuoted(SerialiseDayLoop(world.DayLoop)) + lane + "\n  }";
 
     const PlayerPlacement& player = data.Player;
     out += ",\n  \"player\": { \"zone\": " + WorldSaveQuoted(player.ZoneId) + ", \"posCm\": [" + std::to_string(player.PositionCm[0]) + ", " +

@@ -1,3 +1,11 @@
+# Front-end redesign phase 1 — 11 October 2026
+
+- **Implemented in source, uncommitted:** cancellable delayed focus with hidden/disabled subtree rejection; Cancel-first save-slot selection and explicit replacement confirmation; pause departure confirmations; in-session save recovery; responsive creator shell with a persistent stepper/footer and one scrolling body; shared palette, typography, controls and dialog shadow; title scrim, save-aware primary action, Credits and bounded camera drift.
+- Hind Siliguri uses one style-owned composite family, matching static weights and full shaping. Filename-backed faces use `EFontLoadingPolicy::LazyLoad`; inspected UE 5.8's font cache calls `FFileHelper::LoadFileToArray`, compatible with UFS staging. `DefaultGame.ini` stages all of `UIResources`, including the existing OFL licence.
+- **Static validation only:** reviewed local UE 5.8 headers for font constructors/loading, gradient/box painting, animation, render transforms, opacity setters, scroll navigation and text shaping. Modified C++ files include their own header first, stay below 500 lines and pass delimiter checks. UE 5.8 exposes render opacity as a construction argument, so animation updates it through `SetRenderOpacity` in Tick; translation remains a render attribute and layout is not rebuilt.
+- **Not verified:** Unreal compilation, PIE, cooked UFS loading, Bengali IME/rendering, or mouse/keyboard/controller interaction at 1280×720, 1366×768, 1600×900 and 1920×1080. No Unreal build was run, as requested. Portable core, Data, Tests, DefaultEngine.ini and DefaultInput.ini were not edited.
+- **Next:** phase 2 should redesign the trait rows/inspector and household/stream previews, obtaining numeric effects and any mutation/undo support from the portable core rather than duplicating rules in Slate. Run the phase-1 Unreal and packaged interaction checks before visual acceptance.
+
 # Starter checkpoint — 19 September 2026
 
 ## Completed
@@ -1127,3 +1135,1157 @@ Built by a Claude Sonnet 5.5 subagent and merged here as a straight copy (its ba
 **Check:** `python Scripts/build_core.py --build-dir D:/pwc_tpres` in the agent's worktree: **100% tests passed out of 145**, no warnings. The same run on main was still in progress at commit time and is recorded separately.
 
 **For review:** the agent wrote the 80 rank meanings (ranks 1–4) itself. The doc gives only effect numbers, so the wording needs a narrative pass.
+
+## Checkpoint — trait rank meanings rewritten for tone and fairness (gpt-6-astra), 2026-10-12
+
+gpt-6-astra (Codex, medium effort) edited only the English strings in `Source/PerfectWorldCore/Private/CreationPresentation.cpp`: the 20 one-line descriptions and the rank meanings. No number, unit, direction, effect subject, rule note, ID or structure changed; I checked the diff for that.
+- **Framing:** abilities are lived experience and practice, not innate superiority. Unsupported promises (reflexes, illness, academic results) are removed. Household reserve is kept separate from affection and stability, and caregiver wording includes children's-home staff.
+- **Rank 0:** reads "You bring everyday experience, with room to learn as you go." Household Resources rank 0 still states institutional care in a children's home, with no family household and no reserve, written with equal dignity.
+
+**Exact check:** `python Scripts/build_core.py --build-dir D:/pwm` on `integrate/ui-phase1-lane-week`: **100% tests passed out of 146**.
+
+## Checkpoint — M3-02 week compression and the state diff tool, 2026-10-12
+
+Commit `2606af6`.
+
+**Files:**
+- New: `Public/{WeekCompression.h, StateDiff.h}`, `Private/WeekCompression{Plan,Run,Compare}.cpp` and `Private/StateDiff{,Lines}.cpp`.
+- New tool: `Tools/StateDiff/main.cpp` (`pwstatediff`).
+- New tests: seven test files under `Tests/` (`WeekCompression*`, `StateDiff*`).
+
+**What it adds:**
+- **Two resolvers:** `CompressWeek` and `PlayWeekStepByStep` resolve the same plan through `ApplyDayCommand`.
+- **Equivalence:** the two must give identical persistent state, field by field, except for the quantities the time contract excludes.
+- **Interrupts:** at most one per week.
+- **Firsts:** a first-of-kind entry always stops compression for play.
+- **Disclosures:** every choice taken by standing order is listed.
+
+**Exact check:** Rung 1 on `integrate/ui-phase1-lane-week`, **146/146**.
+
+**Not yet done:** the week planner (M3-15) does not use it.
+
+## Checkpoint — UI phase 1, Kolkata lane and week compression verified in the packaged build, 2026-10-12
+
+These results are for `integrate/ui-phase1-lane-week` at `662b26f`, built from the D: clone:
+- **Rung 1:** `build_core.py`, **146/146**.
+- **Rung 2:** `build_unreal.py`, **Succeeded**. The shared PCHs were pre-warmed first.
+- **Rung 4:** `package_windows.py`, exit 0, `BUILD SUCCESSFUL`.
+
+**Seen in the packaged build** (windowed, 1600×900):
+- **Title:** it renders over the block-built Kolkata lane. The left panel fades from left to right, which confirms the `Orient_Vertical` fix. The save-aware **Continue** shows the slot note beneath it. See `Docs/Images/title-phase1-lane.png`.
+- **Household page:** it renders in the new palette and in Hind Siliguri, with the cyan focus outline. See `Docs/Images/household-phase1.png`.
+
+**Not walked through on screen:** the cloud PC's virtual gamepad presses the focused button within seconds of launch, so the rest of the flow went untested on screen. That covers the Identity, Stream and Review pages, the pause menu, and controller navigation.
+
+## Checkpoint — UI phase 2: Traits, Household and Stream, with the review fixes, 2026-10-12
+
+**Who did what:**
+- **gpt-6.1-sol (Codex, medium):** wrote phase 2 per `UI_FRONTEND_SPEC.md` §2–4 (`1027ee0`); its report is `Docs/UI_PHASE2_STATUS.md`.
+- **Traits page:** a 0–4 rank selector, an inspector comparing the current and proposed rank, a sticky budget strip, a "Choose a starting background" drawer with preview-before-apply, Undo and Redo, and Clear and Reset under More.
+- **Household and Stream:** redesigned with a 35/65 and a 60/40 split.
+- **Integrator:** dropped Codex's unrequested `STATUS.md` split and audit script.
+- **gpt-6-astra (Codex, medium, read-only review):** found no compile or crash defects. It asked for changes:
+  - five input and focus defects;
+  - the UI computing group totals and the strongest traits itself;
+  - the Stream page's missing sample-day and route content;
+  - localisation of core strings, which is deferred.
+- **Fixes:**
+  - **gpt-6.1-sol (`08b8e01`), five input fixes:**
+    - stick input reaches the rank selector, and the Traits page owns the stick latches;
+    - drawer traversal at the scroll bounds;
+    - Escape and B cancel a proposal before leaving Traits;
+    - held-key repeats are consumed;
+    - the ladder toggle keeps focus.
+
+    The integrator changed one thing: the stick now only scrolls the preview, because analog events arrive every frame.
+  - **Claude Sonnet (`0bb8471`):**
+    - new core APIs `GroupAllocationTotals` and `StrongestTraits`, which previews now carry;
+    - new `StreamPresentation.{h,cpp}` holding the spec's stream copy verbatim: card summaries, four sample-day rows, captions, and the routes and equal-XP text;
+    - the adapter and Stream page now read the core;
+    - new test `PerfectWorldStreamPresentationTests`.
+- **Integrator fixes:**
+  - Unreal has a global `ETextRole`, so `using PWUI::ETextRole;` failed to compile; the name is now qualified;
+  - the deprecated `EKeys::Virtual_Accept` is dropped.
+
+**Exact checks on `41d599d`:**
+- **Rung 1:** `build_core.py --build-dir D:/pwm`, **147/147**.
+- **Rung 2:** **Succeeded**, no warnings.
+
+**Not yet verified:** packaged screenshots and a walk-through of the new pages.
+
+## Checkpoint — M4-03 the ten days (portable), 2026-10-12
+
+Built by Claude Sonnet 5.5 in its own worktree and merged as `0c5c0d7`.
+
+**Files:**
+- New: `Public/{Countdown.h, CountdownContent.h}` and `Private/Countdown{Content,Rules,Profile,Offers,Run,Text}.cpp`, plus `CountdownInternal.h`.
+- New tests: six files `Tests/Countdown*`.
+
+**What it adds:**
+- **Span:** from 18:00 on Awakening Day to 06:00 on exam morning, resolved only through `CompressWeek`.
+- **Opportunities:** twelve, with mutual-exclusion groups and time-overlap refusal.
+- **Odds:** shown before committing, and moved by relationships.
+- **Seeds:** stored at commit, so a reload never rerolls. A byte-identical replay is tested.
+- **Obligations:** three. Each stands by default and can be negotiated once, with its cost shown first.
+- **World event:** one Gate event at a fixed time.
+- **Strategies:** study, people and rest end with different but comparable profiles, also across six more seeds.
+
+**Design choices:** 11 places where the docs were silent; each is marked `// Design choice (M4-03):` in the code. Examples: six preparation dimensions mirroring the tower floor types, and a definition of "comparable" as totals within 25%.
+
+**Not yet done:**
+- not in `WorldState`, the world hash or the save;
+- relationship requests are carried but not applied;
+- no institutional-care obligation variant yet.
+
+**Exact checks:**
+- **Rung 1:** `build_core.py --build-dir D:/pwm`, **148/148**, `PerfectWorld countdown: 6250 checks passed`.
+- **Rung 2:** **Succeeded**.
+
+## Checkpoint — M1-13 walking player and the scale audit, 2026-10-12
+
+Built by Claude Sonnet 5.5 in its own worktree (`7743105`) and merged as `fcb17d9`.
+
+**The player:** `APerfectWorldPlayerCharacter` replaces the flying `ADefaultPawn`.
+- Capsule radius 34 cm, half-height 82.5 cm.
+- First-person camera on the capsule at 155 cm eye height. The old camera sat 2 m above the road.
+- Walk 140 cm/s, run 400 cm/s, step height 45 cm.
+- Third person on a 300 cm spring arm, adjustable from 120 to 600 cm. V or gamepad Y toggles it without changing position or facing.
+- A block body, hidden in first person.
+
+**Input:** Enhanced Input actions and a mapping context are built in C++ at runtime, with no config edits. `APerfectWorldPlayerController` forces the Enhanced player-input class, and a legacy fallback is logged if it is ever needed.
+
+**Collision:** walls, road, footpath and ground block. Invisible pawn-only barriers seal the gaps between buildings and the alleys. Poles, vehicles and stall counters also block. Decoration does not.
+
+**Scale:** `Docs/SCALE_AUDIT.md` has the full table.
+- Stair-room door 70 × 175 → 90 × 210; balcony and residence doors → 90 × 210.
+- Windows 120 × 135, sill at 75, with a 45 cm chhajja.
+- Railings 100, parapet 100, shutters 240, stall counters 90, poles 900.
+- Taxi 436 × 165 × 160; scooter 190 long.
+
+**Exact check:** Rung 2 on `fcb17d9`, **Succeeded** on the first compile.
+
+**Not yet verified:** walking, collision, camera toggling and the feel in play. The owner's desktop was in use, so the game was not launched.
+
+## Checkpoint — M4-04 tower route matrix and scoring (portable), and the walking build packaged, 2026-10-12
+
+**Who did what:**
+- **gpt-6.1-sol (Codex, medium):** started M4-04 and was cut off twice, first by a network error and then by the account usage limit. Its partial `Tower.{h,cpp}` and tests were kept.
+- **Claude Sonnet 5.5:** finished it (`core/m4-04-tower`).
+- **Integrator:** added a `static_assert` and an id test tying `TowerMethod` to M4-03's `CountdownDimension`, and settled the countdown's `TODO (M4-04)`.
+
+**What it adds:**
+- **Routes:** nine, three per floor, mirroring M4-10 to M4-12. Every route has a non-combat completion. The one combat-capable route earns the same ceiling.
+- **Disciplines:** every one is reachable by at least two routes. Hunter is reached through team transit.
+- **Mission clock:** resolved once through `TimeContract`.
+- **Defeat:** costs rank at every depth. The score is signed, and defeat ranks below withdrawing.
+- **Credentials:** one per aptitude path.
+- **Rank:** against a uniform synthetic cohort of 999, to be calibrated at M6.
+- **Offers:** at least four at any result, including a retake. The hunter licence is gated by credential, not by combat.
+- **Top decile:** every non-combat route combination reaches it at the same quality, about 785 per floor.
+
+**Exact checks:**
+- **Rung 1:** `build_core.py --build-dir D:/pwm`, **149/149**, `PerfectWorld tower: 9628 checks passed` (before the integrator's alignment checks were added).
+- **Rung 2:** on `e5dfddf`, **Succeeded**.
+- **Rung 4:** packaging of the M1-13 walking build at `49d0550` to `D:\PWBuilds`, `BUILD SUCCESSFUL`. The build was not launched, because the owner's desktop was in use.
+
+## Checkpoint — world-entry deadlock fixed; walking verified in the packaged build, 2026-10-13
+
+**The hang:**
+- **Symptom:** the packaged walking build froze the moment Continue entered the world. CPU fell to 0% and the frame counter stopped.
+- **Diagnosis:** relaunching with `-ini:Engine:[Core.System]:HangDuration=10` made the hang detector log the game thread's stack. Destroying the title screen re-entered Slate's locked accessible-text registry. The cause was `PWUI::MakeContentButton`'s accessible-text lambda, which held a strong `TSharedRef` to the button content.
+- **Fix:** `02b0b6b` captures a `TWeakPtr` instead. The trap is recorded in `DEVELOPMENT_WORKFLOW.md` §4.
+- **Origin:** phase 2 code. It was not the walking-player code.
+
+**Exact checks:**
+- **Rung 4:** `package_windows.py` at `02b0b6b`, `BUILD SUCCESSFUL`.
+- **Launched at 1600×900 with the hang detector on:** Continue entered the world and the game stayed responsive.
+- **Driven by key events:**
+  - W walks;
+  - Shift+W runs;
+  - D strafes up the 15 cm kerb onto the footpath;
+  - V shows the third-person block body, and a second V returns to first person.
+- **Log:** confirms Enhanced Input is active.
+- **Screenshots:** `Docs/Images/walk-first-person.png`, `walk-third-person.png` and `walk-footpath-stall.png`.
+
+**Seen, and being fixed:** at a stall the footpath is too narrow to pass. The strafe ended pressed against the counter under the awning, as `LANE_LIFE_PLAN.md` §D found.
+
+**Not yet judged:** the movement feel, which needs the owner; the controller; and 20 camera toggles.
+
+**Capture helper:** an earlier capture helper copied screen pixels and photographed another full-screen app that was on top. It also once froze the game through `PrintWindow`. Captures are now taken only while the game window is in the foreground.
+
+## Checkpoint — lane circulation and floor datums, verified in the packaged build, 2026-10-13
+
+Built by Claude Sonnet 5.5 from `LANE_LIFE_PLAN.md` §D and `LANE_LIFE_IMPLEMENTATION.md` §C, and merged as `968f7f7`.
+
+**What it changes:**
+- **Stalls:** recessed into 100 cm niches inside the building.
+- **Kerb side:** poles and trees sit at the kerb edge, with collision ending at |Y| 279.
+- **Pots:** placed only where a setback leaves at least 129 cm.
+- **Awnings:** they clear 210 cm above the footpath; zero-setback awnings are held by stay rods instead of poles.
+- **Residence thresholds:** run from 0 to 15.5 cm, so the opening is a true 90 × 210.
+- **Floor heights:** `FloorZ(n) = 15 + n × StoreyHeightCm` per building, 300 cm by default with 360 cm available. Upper floors rise 15 cm.
+- **Collision:** colour rows now carry explicit collision roles. Solid props block the Pawn, Camera and Visibility channels within 5 cm of their visible geometry. The lane boundary stays Pawn-only.
+- **Props:** the tank, scooter and taxi are rebuilt to their references.
+- **`SCALE_AUDIT.md`:** rewritten, including the work still to track.
+
+**Exact checks:**
+- **Rung 4:** at `968f7f7`, `BUILD SUCCESSFUL`, with no compile warnings or errors.
+- **Development-only route check:** logs `Lane footpath route: continuous; narrowest clear width 121 cm at X -714 on side -1 (3278 samples)`.
+- **In play:** strafed onto the right footpath and walked 7 s along it, past the recessed stalls, without obstruction. The third-person view works under the awnings.
+- **Screenshots:** `Docs/Images/walk-footpath-recessed-stalls.png` and `walk-footpath-third-person.png`.
+
+**Still tracked:**
+- solid building volumes and interiors;
+- filled door and window frames;
+- balcony and roof collision;
+- navigation geometry;
+- visible alley-end architecture;
+- the registered door, window and counter assets disagreeing with the lane;
+- run speed 4 m/s against the 3.5 m/s reference.
+
+## Checkpoint — Fivefold Aperture and reduced motion (lane life stage 1), seen in the packaged build, 2026-10-13
+
+**Who did what:**
+- **gpt-6.1-sol (Codex, medium):** built `LANE_LIFE_PLAN.md` §A, merged as `d27345b`.
+  - `UI/PWSigilPainter` and `UI/SPWAwakeningSigil` are procedural Slate (`MakeLines`/`MakeBox`) with geometry cached per size. The widget is non-focusable, hidden from hit tests and excluded from accessibility.
+  - The title has one aperture: five equal 48° sectors, open chevrons, calibration ticks with only the outer ring rotating (90 s per turn), and motes.
+  - The creation stepper, pause and review screens have seals with the specified pictograms.
+  - Reduced motion is a `Config=GameUserSettings` preference with a Settings toggle. It stops the sigils, page transitions, the traits drawer and the title camera drift at once.
+  - The Start Life flourish is deferred until start-and-save is transactional (`TODO_StartLifeTransactionalFlourish`).
+- **Integrator:**
+  - **Exit-crash guard:** the sigil's destructor no longer touches UObjects after shutdown.
+  - **Contrast change (`de95ce3`):** a deliberate departure from the plan's 25–45% opacity, for the full title aperture only; seals keep the specified weights. The first packaged capture showed the aperture almost invisible against a sunlit wall. It now sits on a soft dark lens of the Background token, with 2.25 px strokes at 72% amber and brighter ticks and motes.
+
+**Exact checks:**
+- **Rung 4:** at `d27345b` and again at `de95ce3`, `BUILD SUCCESSFUL`, with no compile errors or warnings.
+- **Seen in the packaged build at 1600×900:** the title aperture (`Docs/Images/title-fivefold-aperture.png`) and the creator step seals on the phase 2 household page (`Docs/Images/creator-step-seals-household.png`).
+
+**Not yet checked:**
+- the reduced-motion toggle in use;
+- 720p and 150% text;
+- the pause and review seals;
+- whether astra accepts the contrast change.
+
+## Planning note — next batch, 2026-10-13
+
+**The batch-planning call failed.** The owner asked gpt-6-astra to lead planning. Its call to pick the next batch hit the ChatGPT usage limit, which resets 2026-10-14 00:09. It was not retried.
+
+**The batch instead:** the integrator took the next steps directly from astra's existing `LANE_LIFE_PLAN.md`: stage 3, "One home and one adult".
+
+**Who builds it:** Codex is unavailable, so three Claude Sonnet 5.5 agents run in parallel, each owning separate files.
+- **A, portable core:** `Doors` holds door definitions, door state and access refusals. `Conversation` holds the household adult's authored lines, selection by time and remembered facts, and costs charged exactly once.
+- **B, Unreal:** `PerfectWorldLaneInteriors`, a walkable, furnished shell for the opening home. `APWDoorActor` is a hinged door. B also owns the shared `IPWInteractable` interface.
+- **C, Unreal:** `UPWInteractionComponent`, which handles reach, the view cone, priority, stickiness and an E/X action, plus an interaction prompt, a conversation panel and presenter, and `APWNpcCharacter`.
+
+The integrator then wires the doors and the conversation through the core.
+
+## Checkpoint — one home and one adult (lane life stage 3), walked in the packaged build, 2026-10-14
+
+**Built by:** three Claude Sonnet 5.5 work orders and an integration order. Codex was rate-limited. The batch was chosen from astra's `LANE_LIFE_PLAN.md`.
+
+**Merged:**
+- **Core `Doors` and `Conversation`:** 303 and 9,018 checks, 151/151.
+- **Unreal:** the opening home shell and furniture, `APWDoorActor`, `UPWInteractionComponent`, the prompt, the conversation panel and presenter, and `APWNpcCharacter`.
+- **Integration:** `UPWLaneLifeSubsystem` owns the live `DoorState` and `ConversationState`. Doors and the conversation run through the core, refusals appear as on-screen notices, and the household adult stands in the living room.
+- **Integrator fixes:**
+  - a missing `class APawn;` in `PerfectWorldInteractable.h`;
+  - a unity-build clash: two .cpp files each defined `Fl` and `CeilingW`, now shared as `HomeFloorW` and `HomeCeilingW`;
+  - an empty stray file at the repo root, deleted.
+
+**Exact checks:**
+- **Rung 1:** 151/151.
+- **Rung 2:** at `50b28bb`, **Succeeded**, with no warnings.
+- **Rung 4:** `BUILD SUCCESSFUL`.
+
+**In the packaged build at 1600×900, driven by key and mouse events** (the cheat `EnableCheats` + `BugItGo` from the console placed the camera inside the small home):
+- **Front door:** "E / X · Open" at the front door. E swings it inward through the core and the prompt changes to "Close".
+- **Inside:** walked into the entry; the washroom door opens onto a toilet, ventilator and shower rail.
+- **Living room:** a real, furnished room with a table and chairs by the front windows (the street is visible outside), divan, family photo, almirah, rug, ceiling fan and warm lights.
+- **Conversation:** "E / X · Talk to Your parent" opens the panel. "Your parent: Breakfast is ready. Tell me what time you expect to be back." The morning line matches the fixed 07:30. Choosing "Around seven." gives "All right. Let me know if it changes." Esc leaves and returns control.
+- **Screenshots:** `Docs/Images/home-front-door-opened.png`, `home-living-room.png`, `home-washroom.png`, `home-parent-in-living-room.png` and `home-talk-to-parent.png`.
+
+**Defects found, to fix next:**
+1. The living door, open by default in the core, swings its leaf across the household adult's spot and line of sight. Move the adult or the hinge side.
+2. The adult appeared to face away from the entering player, although they are meant to face the living door. Check the block body's forward direction against the actor yaw.
+3. From the doorway, the adult sits at almost exactly the 2 m reach, so they do not qualify and the door wins the prompt. Place them nearer the threshold.
+4. Navigating the small home by scripted keys is hard. Future walk tests should start from `BugItGo` positions.
+
+**Not yet done:** charging conversation time (no clock yet); saving doors and conversation; naming the adult (the owner decides); the care-origin staff counterpart.
+
+## Checkpoint — wave 1 of the lane life batch merged and seen in the packaged build, 2026-10-16
+
+**What merged:**
+- **gpt-6.1-sol:**
+  - **D:** door passage by direction and residency, offers, Knock, invitations and split windows; 151/151 in its own build.
+  - **O:** `ResolveLaneOrigin`, which binds the five households and care to residency and a counterpart.
+- **Claude Sonnet 5.5:**
+  - **DA:** the door swing checks the leaf every 5 cm or less of tip travel, stops at the last safe angle, and settles through `OnSettled`.
+  - **TS:** Shanti Chai Corner.
+  - **NB:** pure NPC intent (Work, Travel, Idle, Chat, Sleep, Yield).
+  - **HL:** the living door moved and made one-way, `HomeAdultSpot`, seat and newspaper anchors, the stair reservation and shadowed light specs.
+  - **CR+CH:** catalogue-driven conversation with per-session charge receipts, `pw.conversation/2` with /1 migration, and household lines that remember the concrete arrangement and claim no result.
+
+**Integrator work:**
+- door settlement corrects the core;
+- the tea shop is hooked into `BuildFull`;
+- the adult stands at `HomeAdultSpot`;
+- room lights are shadowed with a 6 cm source;
+- NPC block heads get a face on +X (eyes, brows, nose), because a symmetric head did not show which way it faced;
+- two unity-build name clashes fixed;
+- a CMake merge conflict resolved;
+- `LaneOrigin.cpp` moved into the core library.
+
+**Exact checks:**
+- **Rung 1:** **154/154**.
+- **Rung 2:** **Succeeded**.
+- **Rung 4:** at `a4267de`, `BUILD SUCCESSFUL`.
+
+**In the packaged build** (positioned with `BugItGo`):
+- **Living doorway:** the adult stands in front of the player, facing them, with a readable face. The prompt reads "E / X · Talk to Your parent" with "Tab / RB for the next". The open living-door leaf lies against the wall. E opens the morning conversation. Screenshot: `Docs/Images/home-parent-at-doorway.png`.
+- **Shanti Chai Corner:** frontage, sign band, awning, a 90 × 210 door between barred hatch windows, and outdoor benches. Inside are the 90 cm service counter and the prep area (stove platform and kettle, worktable, shelf, back-room doorway), with a fan and warm lights. Screenshots: `Docs/Images/teashop-front.png` and `teashop-counter-and-prep.png`.
+
+**Open items:**
+- the shop's shutter door is not yet in the core: D2 is in progress;
+- Farida is not yet placed;
+- conversation time is not yet charged: CK+TX is pending.
+
+## Checkpoint — wave 2, first part: door settlement, dialogue catalogues, reading and seats, 2026-10-16
+
+**What merged:**
+- **gpt-6.1-sol, D2:**
+  - `ApplyDoorSettlement` with the swing side;
+  - `pw.doors/2` with /1 migration;
+  - `door.nabapara.shanti_chai_shutter` with two opening windows (06:00–11:30 and 15:30–19:00);
+  - four care-home doors.
+  
+  15,460 door assertions passed.
+- **Claude Sonnet 5.5:**
+  - **CC:** the care worker's catalogue. On duty 07:00–15:00, the evening staff and a handover note afterwards, no second person named, shared-jobs agreements that claim no result, and a word-level tone guard.
+  - **CF:** Farida's catalogue. Her day runs preparing, serving, midday close, serving, closing. Tea is a social 10-minute sit charged once per session, not a purchase. The bench line plays only after the player asked.
+  - **RD:** the reading presenter and panel, paper-like and paged, with text size and keyboard/controller support. Built-in "The Kolkata Morning Courier" for 2 June 2042, with no real people, politics or religion.
+  - **FI:** seat and readable actors. Seated state: a sweep-checked 0.4 s glide, eye at 112–115 cm, look limits, safe stand-up spots, and a third-person sitting pose.
+- **Integrator:**
+  - settlement goes through the core, and doors restore their saved swing side;
+  - the home's divan and table chair seats and the newspaper are spawned from the layout specs;
+  - `APWReadableActor::GlobalReadRequested` opens the reading presenter.
+
+**Exact checks:**
+- **Rung 1:** **156/156**.
+- **Rung 2:** at `97015f8`, **Succeeded**: RD, FI, CC and CF compiled first time.
+
+**Not yet verified:** sitting and reading have not been tried in play; the packaged walk is next.
+
+**Packaged walk at `49d560a` (2026-10-16):**
+- **Reading:** E on the table's newspaper ("E / X · Read…") opens the paper-like reading panel. It shows "The Kolkata Morning Courier, Monday, 2 June 2042", Page 1 of 3, A-/A+, Previous/Next and Close. Right turns the page and Esc closes it. Screenshot: `Docs/Images/home-reading-newspaper.png`.
+- **Seat prompt:** "E / X · Sit at the table" shows at the table chair. Screenshot: `Docs/Images/home-sit-prompt.png`.
+- **Sitting itself is NOT verified.** The cheat teleport `BugItGo` leaves the pawn in ghost (flying) mode, so `TrySit` correctly refused ("You can't sit down right now", not on the ground). A second positioning attempt missed the chair. The next walk-through should test sitting from a normal walking start.
+
+## Checkpoint — NPC movement and Farida's schedule merged, 2026-10-16
+
+**Claude Sonnet 5.5, NM:** `UPWNpcMovementComponent`, built in two parts, each under 500 lines.
+- **Route following:** follows the core's travel progress at 140 cm/s, catching up at up to 200 cm/s.
+- **Far snap:** happens only when more than 5 m away and unseen; the NPC never teleports through a wall.
+- **Local yield:** a raised-hand pose when blocked. A persistent block reports through `OnBlockChanged`.
+- **Gestures and chat:** procedural work gestures, presentation only. Chat holds the NPC and resumes afterwards.
+- **Polite declines are reachable:** the verb stays "Talk to <name>", and E shows the decline.
+
+**gpt-6.1-sol, S:** Farida's `npc_schedule` content.
+- **Data:** schema, typed loading and the JSON at `Data/Content/npc_schedule/npc_schedule.farida_qadri.json`.
+- **Validation:** weekly coverage, both serving windows, and route-length travel budgets at 140 cm per game minute.
+- **Tests:** 23,530 assertions.
+
+**Integrator:**
+- registered the schema and its semantic validation in the shared registry (CAT);
+- fixed the schedule test's registry path, which must be `<type>/<id>.json`, and made the test print registry issues on failure;
+- resolved two CMake merge conflicts.
+
+**Exact checks:**
+- **Rung 1:** **157/157**.
+- **Rung 2:** at `031fde3`, **Succeeded**: NM and S compiled first time.
+
+**Not yet done:**
+- Farida is not yet placed or driven by her schedule;
+- the clock does not run yet (CK+TX is in progress).
+
+## Checkpoint — Farida at work, the children's home, and the core clock, 2026-10-17
+
+**What merged:**
+- **gpt-6.1-sol, FA:**
+  - `UPWContentSubsystem` loads the staged `Data/Content`, via `+DirectoriesToAlwaysStageAsNonUFS=(Path="../Data/Content")`, verified against UE 5.8's staging code. All 149 JSON files are staged in the package.
+  - Farida's schedule drives her intent through `NpcBehaviour` into `UPWNpcMovementComponent`, along the tea shop's anchors and routes.
+  - The `ShopProprietor` outfit.
+  - A conversation catalogue and availability per person.
+- **Claude Opus deep-work, CK+TX:**
+  - due-now events drain without advancing the clock;
+  - a capped advance stops at the last fired event;
+  - `conversation.open/choose/leave` charge `CostMinutes` exactly once per `(ChoiceId, Session)` receipt, all-or-nothing;
+  - `door.set` and `door.settle` commands;
+  - per-person `Conversations` and `Doors` in `WorldState` (not yet in the save or hash; v8 is next).
+  
+  Checks: 4,684 lane-transaction checks and 17,073 clock checks.
+- **Claude Sonnet 5.5, CI:**
+  - The children's home: first row, -Y side, Index 1, X -1400 to -300.
+  - Rooms: an entry with a staff desk, noticeboard and stair reservation; a common room with study and dining tables; a dormitory with five beds and the resident's own bed, padlocked trunk, tin box and photograph; a washroom.
+  - Four doors, a staff spot, seat, readable and storage anchors, and shadowed lights.
+- **Integrator:**
+  - hooked the children's home into `BuildFull`, and placed its on-duty care worker and seats;
+  - resolved a CMake conflict;
+  - deleted a stray scratch file an agent's shell had written into the Git install folder.
+
+**Exact checks:**
+- **Rung 1:** **158/158**.
+- **Rung 4:** at `c776b07` (Farida) and at `962aad2` (CK and the children's home), `BUILD SUCCESSFUL` both times, with no compile errors.
+
+**In the packaged build** (positioned with `BugItGo`):
+- **Farida:** she stands behind her counter in her apron, making the serving gesture, at 07:30. "E / X · Talk to Farida" opens: "Good morning. The first pot is ready, if you'd like a cup." The choices are "Sit down for a cup of tea · 10 minutes", "Not today, thank you." and "May I move the bench a little?". Screenshots: `Docs/Images/farida-at-counter.png`, `farida-talk.png`.
+- **Care worker:** in the common room. "Good morning. Breakfast is being set out. Tell me what time you expect to be back, and I will put it in my note for the evening staff." The shared-jobs talk costs 3 minutes. Screenshot: `Docs/Images/care-worker-talk.png`.
+- **Dormitory:** the resident's bed with its personal objects, and the "Sit on your bed" prompt. Screenshot: `Docs/Images/care-dormitory-own-bed.png`.
+
+**Still open:**
+- **Clock bridge:** the clock does not run in Unreal yet. The bridge (BR) must hold a `WorldSim`, drive `time.advance` from free roam, and route conversations and doors through the new commands.
+- **Not yet built:** world save v8 for conversations and doors; the care-origin start placing the player in the children's home; the care worker's duty schedule; authored text for the care-home readables.
+- **Not yet verified:** sitting from a normal walk.
+
+## Checkpoint — clock bridge, care content, origin-aware start, and C: disk recovery, 2026-10-17
+
+**What merged:**
+- **Claude Sonnet 5.5, BR:** one `WorldSim` owns lane time.
+  - The free-roam clock runs at 60 real seconds to 60 game minutes. It holds for menus, conversation, reading and an unfocused window.
+  - Partial and settle handling.
+  - Conversations and doors go through the core commands, so a paid choice moves the clock by its cost.
+  - A clock readout.
+- **Claude Sonnet 5.5, content:**
+  - The care worker's duty schedule: 07:00–15:00 every day with a handover at the desk, plus a weekend variant. A generic `LoadNpcSchedule` loads it.
+  - The noticeboard and exercise-book texts.
+- **gpt-6.1-sol, EN:**
+  - Transactional Start Life: a failed save restores the draft.
+  - A `GetLaneOrigin` view.
+  - Placement by origin: inside the family home's entry, or beside the resident's own bed in the children's home dormitory.
+- **Integrator:**
+  - a new life resets the lane world;
+  - door residency asks the current life's resolved origin and fails closed, replacing the synthetic Parent plan.
+
+**C: drive incident:**
+- **Symptom:** C: reached 0.09–1.5 GB free. Packaging failed with C1060 out of heap, LNK1108 cannot write temp, then LNK1102 out of memory.
+- **Silent cook failures:** two failed links left the core editor DLL at 0 bytes and then 4 MB. UBT still treated it as up to date, so the cook quit after 14 seconds with no log.
+- **Moved off C:,** nothing deleted:
+  - 70 old worktrees removed or archived to `D:\PWArchive`;
+  - old scratch files;
+  - Unreal's Zen data and local DDC, now junctions to `D:\UnrealDDC`;
+  - Codex replay data, now junctions to `D:\CodexData`, with the owner's approval.
+- **Build settings:** build temp goes to `D:\PWTemp`, and `MaxParallelActions` is capped at 4.
+- **Owner asked to:** move the Windows page file (system-managed on C:, about 4.3 GB) to D: and restart.
+
+**Exact checks:**
+- **Rung 1:** at `0d4d90a`, **159/159**.
+- **Rung 2:** **Succeeded** after the forced relink.
+- **Rung 4:** `BUILD SUCCESSFUL`, with the cook exiting 0.
+
+**Not walked in play yet:** the owner's Eastern Era Resource Editor was open, so the game was not launched (it would take focus and send keys). Pending checks: the clock readout, a 10-minute tea with Farida moving the clock, sitting, the care-origin start, and door residency.
+
+## Checkpoint — world save v8 merged (conversations and doors persist), 2026-10-17
+
+**What merged:**
+- **gpt-6.1-sol, SV:** world save schema v8 and world hash v5.
+  - The world record gains `conversations` (each person's canonical `pw.conversation/2` text) and `doors` (`pw.doors/2`).
+  - It refuses an unknown person, invalid module state, a mismatched open-session person, or a second open session.
+  - v7 and v6 files still load, unverified, with no conversations and the authored door defaults; v6 also gets a fresh day.
+  - `SerializeWorldSave` returns an empty string for an invalid lane authority. Unreal does not write world saves yet, so no caller is affected today.
+- **Integrator:**
+  - Found the `PerfectWorldDayLoopTests` crash (0xC0000409, no output): the v6-downgrade block in `DayLoopWorldTests.cpp` still searched for `"schemaVersion": 7`. `find` returned npos, `std::string::replace` threw `out_of_range`, and nothing caught it.
+  - The test now builds the strings from `WorldSaveSchemaVersion` and `WorldHashVersion` and checks for them first, so the next version bump fails a check instead of aborting. The day-loop test passes with 820,923 checks.
+
+**Exact checks:**
+- **Rung 1:** at `c3cefe1`, **159/159**.
+- **Rung 2:** **Succeeded**.
+- No package or walk was made for this step: it changes only the portable save, which the game does not call yet.
+
+**Next:** two Claude Sonnet agents are running.
+- **AN:** Anindita Sen's schedule data and conversation in the core.
+- **SS:** the stationery shop building in Unreal, with Anindita at her counter.
+
+Later rounds (gpt-6.1-sol after the ChatGPT reset):
+- schedule-driven presence for any `npc_schedule` person (the care worker, Anindita);
+- Mira Sen.
+
+## Checkpoint — packaged walk of the clock, Farida's tea and the care worker; astra's upgrade plan, 2026-10-17
+
+**Walked in the Rung 4 package built at `0d4d90a`.** It contains the clock bridge, the origin-aware start and residency.
+- **Clock readout (top right, "Mon 2 Jun · 07:37"):**
+  - It runs at one game minute per real second: 07:37 became 08:48 over about 71 s.
+  - It holds while a conversation is open: 10:11 held for 5 s.
+  - Choosing "Sit down for a cup of tea · 10 minutes" with Farida moved it to exactly 10:21, and it held again afterwards.
+  - Screenshot: `Docs/Images/farida-tea-clock.png`.
+- **Farida:** she is at her counter at 10:11 with the three choices; after tea, "Here you are. Mind the cup, it's hot. There's no hurry."
+- **Children's home:** the care worker is on duty at 10:27, talkable, and at another spot 12 minutes later. She first stood in the common-room doorway and the player had to go around her; LL-02 plans doorway yielding.
+- **Continue start:** a clean launch puts the player inside the family home's entry, by the coat and shoe racks, with the living-room doorway open to the right. Interacting gives no obstruction.
+  - The morning's "Something is in the way" at `door.nabapara.home_front` was a test-harness artefact. The launch script typed `EnableCheats` while the game was still loading, so the letters reached the game as movement and interact keys.
+  - The script now waits for the game to be ready and has a `-NoCheats` mode.
+
+**Not verified in play:**
+- **Sitting from a normal walk.** It is covered by the `PerfectWorld.Furniture` automation (started, occupied, obstructed, busy, wrong level), but the scripted keyboard walk did not reach a seat.
+- **The care-origin start.**
+- **Transactional Start Life.**
+
+**Plan:** `Docs/LANE_LIFE_UPGRADE_PLAN_2026-10-17.md` is gpt-6-astra's plan for this round, with five work orders:
+- **LL-01, safe entry and seats:** integrator.
+- **LL-02, one schedule presenter with doorway yielding:** gpt-6.1-sol, after Anindita's content (AN) merges.
+- **LL-03, parametric interior kit, with the stationery shop as its public variant:** Claude Sonnet, running.
+- **LL-04, dawn title view and recomposed title:** Claude Sonnet, running.
+- **LL-05, measured scale and circulation:** integrator.
+
+Earlier today a gpt-6.1-sol run was refused for the account's usage limit and was not retried. The limit has since reset, and astra's planning run succeeded.
+
+## Checkpoint — Anindita's content and the dawn title merged; this machine's clock jumps, 2026-10-17
+
+**What merged:**
+- **Claude Sonnet, AN:**
+  - Anindita Sen's `npc_schedule`:
+    - stock check from 07:30;
+    - counter 08:00–13:00;
+    - meal closure at home;
+    - counter 15:00–19:30;
+    - reconciliation at the packing desk;
+    - home by 21:00, asleep from 22:30.
+  - The loader's frozen spec table gains her entry, and the care worker is unchanged.
+  - Her conversation catalogue, with two 10-minute help choices charged once per session, and a remembered line after helping with the labels.
+  - Three new test executables, including a world save v8 round trip mid-conversation.
+  - Route lengths are provisional until the stationery shop (LL-03) is built.
+- **Claude Sonnet, LL-04 (1):**
+  - A dedicated dawn title viewpoint over the lane (`APWTitleView`). It drifts slowly and stops entirely under reduced motion.
+  - While the title is up, the pawn is hidden, never moved or turned. The view is dismissed only after placement succeeds.
+  - The title composition is responsive: the menu sits on a dark surface on the left, and the aperture takes the right third (a ring of about 336 at 1280×720 and about 410 at 1920×1080). Ornament is suppressed before controls compress.
+  - Not yet walked: the framing and contrast are calculated, not measured.
+
+**Exact checks:**
+- **Rung 1:** at `66cd0ea`, in a fresh build directory, **162/162**.
+- **Rung 2:** **Succeeded**. It recompiled the whole core and all three game-module unity blobs.
+- **LL-04's automation** (`PerfectWorld.TitleView.*`) is compiled but not run.
+
+**Trap: the system clock jumps.**
+- In one afternoon this machine's clock read 13:50, then 22:05, 18:18 and 17:10. `w32tm` reports NTP sync, but something keeps moving it, probably the VM host's time sync.
+- After a backwards jump, MSBuild and UBT treat new sources as older than their outputs and skip the rebuild.
+  - The incremental `D:/pwm` run failed `PerfectWorldActivitiesTests` ("the real content validates") because the core library still held the old schedule loader, which refuses Anindita.
+  - A test binary rebuilt with a probe did not contain the probe's text.
+- Until the owner fixes the clock, run Rung 1 in a fresh build directory, and check that Rung 2 lists the changed modules among its compile actions.
+
+## Checkpoint — interior kit, NPC presenter and start acknowledgement merged; first headless automation run, 2026-10-17
+
+**What merged:**
+- **gpt-6.1-sol, LL-02 (1):** `UPWNpcPresenceSubsystem`.
+  - One record per person, presented from `npc_schedule` at the lane clock's instant.
+  - Arrivals and departures happen out of view. A missing binding gives a diagnostic and never a default spawn.
+  - Provider-based lane bindings, including the children's home's.
+  - Doorway yielding with hysteresis.
+- **Integrator hooks:**
+  - The presenter is initialised with the lane life, reconciled after every accepted command, and reset with the world.
+  - Conversation availability comes from the presenter for its people.
+  - **The care worker now works to her schedule on the presenter** instead of a static spawn.
+  - Farida keeps her own path: the generic loader did not know her schedule yet (fixed in 2a, below).
+- **Claude Sonnet, LL-03 (1):**
+  - The portable parametric interior layout: compact residence, shop with stockroom and shared entry. Doorways are 90×210 clear, circulation 120, with door sweeps, mirroring and 22 refusal codes; a footprint sweep tests 7,896 layouts.
+  - The Unreal kit presenter.
+  - **The stationery shop** at the +Y index 2 frontage (X −100…600): sales room, counter with staff gap, stock room, packing desk, and the anchors Anindita's schedule names.
+- **Claude Sonnet, LL-04 (2):** a quiet start acknowledgement, played only after a fresh life is saved and placed. All sectors expand about 12% and fade over 450 ms. Nothing plays under reduced motion, and it never delays control.
+
+**Exact checks:**
+- **Rung 1:** at `b01c603`, in a fresh directory, **163/163**.
+- **Rung 2:** **Succeeded**. LL-03's tests first failed to compile (`Num()` on `std::vector`) and were fixed at `a902a39`. Rung 2 also succeeded at `a5a68e7`, with every game-module blob recompiled.
+- **Headless automation (`UnrealEditor-Cmd -nullrhi`), the first run of these suites:**
+  - **Pass:**
+    - `PerfectWorld.InteriorKit` (3/3);
+    - `PerfectWorld.TitleView` (4/4);
+    - `PerfectWorld.StartAcknowledgement` (4/4), after a test fix: Slate caches a bound visibility until a prepass;
+    - `CareHome`, `Doors` and most of `Furniture`, `NpcMovement` and `TeaShop`.
+  - **Fail, nine tests:**
+    - five of the new `PerfectWorld.NpcPresence` tests (missing bindings in their setup, and Farida's schedule not loadable by the generic loader);
+    - `Furniture.RefusesOccupiedAndObstructedSeats` ("another level refused");
+    - `NpcMovement.OnlyFarUnseenPeopleAreMovedAndNearOnesWalk` and `NpcMovement.BlockedPeopleWaitVisiblyAndNeverTeleportThroughWalls` (the far, unseen person is not moved);
+    - `TeaShop.Build` ("blocking boxes were recorded").
+  - The four older suites had never been run before (STATUS records only `PerfectWorld.Core`), so these are long-standing, not regressions of this round.
+  - The earlier statement that sitting is "covered by the Furniture automation" was too strong: one of its cases fails.
+
+**Why the sessions keep ending:**
+- The event log shows `qemu-ga.exe has initiated the power off of computer TRUECLOUD`. The cloud provider powers the VM off from outside, while Windows' AC sleep setting is "never".
+- Each boot then starts 5 h 30 min off (local time read as UTC) until NTP corrects it. That is the clock jump behind the stale incremental builds.
+- Both are for the owner: the provider's auto-shutdown setting, and the VM's real-time-clock time zone.
+- Long jobs now run detached (`D:\PWWork\run_codex.ps1`, `D:\PWWork\run_automation.ps1`), so a restart does not kill them.
+
+## Checkpoint — LL-02 (2a) merged: Farida on the generic loader, the stationery door, leaving after closing; the VM's 12-minute power-offs, 2026-10-17
+
+**What merged:**
+- **gpt-6.1-sol, LL-02 (2a):**
+  - `LoadNpcSchedule` now loads Farida's authored schedule. Tests show it agrees with `FaridaSchedule` at every minute across eight days.
+  - Anindita's routes and travel minutes now come from the built shop. The ten travel totals are 8, 6, 5, 23, 14, 13, 15, 10, 28 and 27 minutes.
+  - `door.nabapara.stationery_front` joins the authored door set, closed by default and open in her hours. Historical ten-door `pw.doors/2` text migrates, keeping its doors' states, and the new door is added closed.
+  - `DoorDirection::Exit`: a person inside may leave a business after closing, while entry stays refused.
+- **Integrator:**
+  - A v8 world save written before the new door migrates on load, so it no longer hashes as stored. `HashWorldStateWithDoorsText` now authenticates the stored checksum over the door text as stored: tampering is still refused, and the changed world loads unverified.
+  - The world-hash goldens were re-pinned from the independent reference encoder (`PW_PRINT_GOLDEN=1`). They change only because the default door text gained an eleventh entry; `WorldHashVersion` stays 5.
+
+**Exact checks:**
+- **Rung 1:** on `core/presence-2a` at `8e4f0a6`, **164/164**. The run was incremental in `D:/pwc2a_j`, with every changed file's timestamp refreshed first.
+- **Rung 2:** for the merge (`24308c1`), **pending**. The automation debugging agent holds the Unreal build slot on the D: clone.
+
+**Power-offs:** the host's guest agent (`qemu-ga`) powered the VM off at 17:57, 18:08 and 18:21, about every 12 minutes, so any longer job died. None has happened since 18:21, while the session keeps the computer awake.
+- Long jobs run detached and write `.done` files.
+- Builds stay incremental with refreshed timestamps instead of fresh directories.
+- The owner should check the provider's auto-stop or idle settings.
+
+**Running:**
+- **gpt-6.1-sol, LL-02 (2b):** Farida onto the presenter, Anindita's stationery bindings and spawn, and the door bridge's Exit direction.
+- **A debugging agent:** the nine automation failures.
+
+## Checkpoint — Farida and Anindita on the presenter, the stationery shop staffed, and every related automation test passing, 2026-10-17
+
+**What merged:**
+- **gpt-6.1-sol, LL-02 (2b):**
+  - Farida moves onto the NPC presenter. Her LaneLife bridge, seven fields and conversation special case are gone, and availability now comes from the generic intent.
+  - Anindita's stationery bindings: anchors, the three built routes, her off-lane home, and doorway zones with waiting points. She is registered as a scheduled person when the shop exists.
+  - Door commands use `DoorDirection::Exit` when the operating pawn stands on a door's authored inside, so anyone inside can leave a business after closing while entry stays refused.
+- **Claude deep-work agent, finished by the integrator:** fixes for all nine failing automation tests. In every case the test was wrong and production was right:
+  - **Test worlds never ticked:** `TimeSeconds` stayed 0 with `LastRenderTime` 0, so every actor counted as recently rendered. The fixtures now advance time.
+  - **Presence test order:** the lane now reconciles at start, so presence tests bind providers before registering a person.
+  - **Overlapping spawn:** the "upstairs" sit test spawned its player inside the first one and was pushed up, falling.
+  - **Tea shop count:** the blocking-box threshold was off by one; it is now an exact count.
+  - **Content pins:** `ContentLoadsInEngine` now pins 143 files and 179 records.
+
+**Exact checks, at `34fb4d4`:**
+- **Rung 2:** **Succeeded**, recompiling the core and all three game blobs after refreshing the changed files' timestamps.
+- **Headless automation:** **49/49 Success** across `NpcPresence`, `NpcYield`, `InteriorKit`, `TitleView`, `StartAcknowledgement`, `NpcMovement`, `CareHome`, `Doors`, `Furniture`, `TeaShop` and `Core`.
+- **Rung 1:** the core is unchanged since `core/presence-2a` (164/164).
+- **Not yet walked in a package:**
+  - Farida's afternoon return;
+  - Anindita opening at 08:00, her meal closure, and the stock-room route through the staff gap;
+  - doorway yielding;
+  - leaving the shop after 19:30;
+  - the dawn title and the start acknowledgement.
+
+**Housekeeping:** the D: build clone's index had been loaded with an old tree that staged hundreds of deletions; the cause is unknown. Its working state is kept in a stash ("D-clone index/worktree anomaly…") and the clone is clean on `integrate`.
+
+## Checkpoint — packaged walk of the staffed lane: Anindita present but pinned behind her counter, 2026-10-17
+
+**Package:** Rung 4 at `34fb4d4`, `BUILD SUCCESSFUL`, built at 22:19.
+
+**Walk.** Positions were read with the console command `getall CapsuleComponent RelativeLocation`, which logs every capsule. It is more reliable than steering a camera by script.
+- **Entry:** the player enters at 07:38 in the family home's entry and the clock runs.
+- **Stationery shop:** it is built and enterable, with wall shelves of coloured exercise books, a window display of pens and a hinged front door ("Open").
+- **Four NPCs exist:**
+  - Farida at her counter, (900, 957);
+  - the household adult at home, (220, −690);
+  - the care worker in the common room, (−854, −752), moving slowly;
+  - Anindita inside the shop.
+- No missing-binding or registration diagnostics appear in the game log.
+
+**Finding: Anindita does not reach her counter.**
+- At 08:42 she was creeping −U at a few centimetres per real second, along local V ≈ 527 in the stock room.
+- From about 09:30 to 10:06 she sat at local (250, 481), pressed against the sales and stock partition (V 435–447 plus her 34 cm capsule radius), directly behind the counter anchor at (250, 325).
+- The partition's only opening is at U 568–662.
+- The route resolver reverses routes correctly. The likely fault is in following them: a lagging actor chases the moving target, or the next anchor, in a straight line.
+- The Claude deep-work agent is on it (`fix/npc-route-following`), with a reproducing two-room automation test.
+
+**Not yet seen:** her meal closure, leaving after closing, doorway yielding, the dawn title in the package, and the start acknowledgement.
+
+## Checkpoint — NPCs keep their pace and finish along their routes, 2026-10-18
+
+**What merged (`530e743`), from the Claude deep-work agent:**
+- **People crawled at real frame rates.** `UPWNpcMovementComponent` ticked at a fixed 1/30 s and applied movement input only on its own ticks, while the character movement braked on every frame without input.
+  - At 120 fps, Anindita walked 15 of 635 cm in her five-minute travel window. The care worker was slow for the same reason.
+  - The mover now ticks every frame while walking. Decisions stay at 10 Hz.
+- **A Travel route was dropped when the intent became Work.** A lagging person then walked straight at the anchor, into the stationery partition: 156.2 cm off, 0.1 cm from the wall, exactly the packaged sample at local (250, 481).
+  - The route is now kept as a finish route and followed to the anchor.
+  - The look-ahead is fixed at 50 cm, so corners are cut by at most about 18 cm.
+- **New tests:** `PerfectWorld.NpcRoute` (two tests, on a fixture with the shop's partition and off-axis doorway). Both fail on the old code.
+
+**Exact checks:**
+- **Rung 2:** succeeded.
+- **Headless automation:** **51/51 Success** (`NpcRoute` 2, `NpcPresence` 5, `NpcYield` 2, `InteriorKit` 3, `TitleView` 4, `StartAcknowledgement` 4, `NpcMovement` 8, `CareHome` 6, `Doors` 3, `Furniture` 5, `TeaShop` 5, `Core` 4).
+- **Rung 4:** at `530e743`, `BUILD SUCCESSFUL`, and the game target recompiled all three blobs.
+- **Packaged walk: not run yet.** The owner's browser window was open, and the game is not driven while the owner's windows are on screen.
+
+**Known limit:** a person sent to a far anchor with no Travel route still walks straight. That happens on a fresh spawn away from the anchor, or a paid skip from one stay into another; only the unseen teleport beyond 5 m covers it. It needs path data from the presence bindings.
+
+## Checkpoint — LL-03 (2): the frontage inventory and three more enterable ground floors, 2026-10-18
+
+**What merged (`b1ba237`):**
+- **Claude Sonnet, LL-03 (2):**
+  - `Docs/LANE_BUILDING_INVENTORY.md` covers the lane's 19 near side frontages (10 on −Y, 9 on +Y) plus 2 end masses. 4 were hand-built before this.
+  - A pinned portable frontage catalogue (`LaneFrontageCatalogue.h`).
+  - The first kit-built batch, all with open doorways until their doors are migrated in the core:
+    - `building.nabapara.caretaker_flat` (−Y, X 2600–3300, compact residence);
+    - `building.nabapara.tall_flats` (+Y, X −1300 to −200, shared entry with a stair passage);
+    - `building.nabapara.tea_row_house` (+Y, X 1400–2100, mirrored compact residence).
+- **Integrator hook:** catalogue-pinned frontages build their ground floor with the interior kit (`BuildFull`).
+- **Still sealed:** 12 side frontages and the 2 end masses.
+- **Still to do for these three:** doors (each needs a core door-set migration), shop furniture sets, and walks in both cameras.
+
+**Exact checks:**
+- **Rung 1:** 165/165 on the branch (fresh directory). This adds `PerfectWorldLaneFrontageCatalogueTests`, which ports the row generator and proves every pin, overlap and clearance.
+- **Rung 2:** at `b1ba237`, **Succeeded**. The first compile of the frontage code recompiled `LaneFrontageCatalogue.cpp` and all three game blobs.
+- **Headless automation:**
+  - The full run passed 53 tests with no failures, including `KitFrontages` 4/4. Its log ends mid-line after the second `TitleView` test.
+  - A separate `TitleView` run passed 4/4.
+  - So all 55 tests pass across the two runs; the first run's log did not record its last two.
+- **Packaged walk:** still pending. That covers the route fix and these frontages.
+
+## Checkpoint — persistence (A): Unreal slots read and write world save v8, 2026-10-18
+
+**What merged (`ffe6129`), from gpt-6.1-sol:** `PerfectWorldLaneLifePersistence.h/.cpp`.
+- `CaptureWorldSave` builds a v8 save from the creation record, the lane `WorldSim` and the player's placement, and refuses an invalid snapshot rather than writing an empty file.
+- `WriteWorldSlot` uses the existing temp-and-backup protocol, so a failed write keeps the previous usable slot.
+- `ReadWorldSlot` validates fully before anything live changes. It reports the source version, whether the hash verified, and whether the save migrated.
+- A save made mid-conversation closes the conversation on load and keeps its memory and payment receipts, so nothing is charged twice.
+- The restore checklist for wiring this into the game is in `Docs/PERSISTENCE_HANDOFF.md`. Wiring is submission B, and it alone makes a restart actually keep the world.
+
+**Exact checks:**
+- **Rung 2:** at `ffe6129`, **Succeeded**.
+- **Headless automation:** **60/60 Success** in one run, including `PerfectWorld.Persistence` 5/5:
+  - `RoundTrip`;
+  - `InterruptedWrite`;
+  - `RefusesDamageWithoutMutation`;
+  - `LegacyCreatorAndWorldVersions`;
+  - `BackupRecoveryAndRepeatedSave`.
+- **Rung 1:** sol ran 164/164 on its branch before the frontage catalogue merged; the core is unchanged by this order.
+
+## Checkpoint — Mira Sen in the core, 2026-10-18
+
+**What merged (`bf50f20`), from Claude Sonnet:**
+- **Mira Sen's seven-day `npc_schedule`:**
+  - morning study at home;
+  - school 09:50–15:50 (`location.nabapara.school`, off-lane);
+  - Tuesday and Thursday 16:30–18:00 serving at `anchor.stationery.packing_desk`, never on Anindita's anchor at the same minute;
+  - her own afternoons on Monday, Wednesday and Friday (`location.nabapara.mira_out`);
+  - lighter weekends;
+  - evening study, and sleep from 22:30.
+- **Her conversation:**
+  - the plan's lines, word for word;
+  - a remembered line only after the notes are returned;
+  - two 10-minute choices charged once per session;
+  - Busy and Asleep decline nodes.
+- **Tests:** three executables (schedule, conversation, world save v8 round trip).
+- **Engine:** the content pins move to 144 files and 180 records.
+- **Gap:** "Give back the notes" is always offered at the desk, because the core catalogue cannot see `thread.borrowed_notes`.
+
+**Exact checks:**
+- **Rung 1:** at `bf50f20`, **168/168**. The run was incremental in `D:/pwm3`, with the changed files' timestamps refreshed.
+- **Rung 2:** **Succeeded**.
+- **Headless automation:** **60/60** in one run.
+- **Not in Unreal yet:** Mira needs a packing-desk spot from the stationery provider, and her off-lane legs must enter and leave at the shop door.
+
+**Running:**
+- gpt-6.1-sol on persistence (B): Start, Save, Load and Continue on the v8 slots.
+- gpt-6-astra planning the next round, as the owner asked.
+
+## Checkpoint — persistence (B): Start, Save, Load and Continue use world-save-v8 slots; sol's upgrade plan, 2026-10-18
+
+**What merged (`02c9395`), from gpt-6.1-sol:**
+- **Start** writes a fresh v8 world transactionally.
+- **Save** (pause) captures the clock, door swings, conversation memory and receipts, and the player's placement. A failure is reported in the UI.
+- **Load and Continue** validate before anything live changes, then:
+  - close saved conversations without a second charge;
+  - restore doors and swings;
+  - reset NPC presentation once;
+  - restore placement if it is safe, otherwise fall back home.
+- **New tests:** `PerfectWorld.PersistenceFlow` (4).
+
+**Plan:** `Docs/UPGRADE_PLAN_2026-10-18.md` is gpt-6.1-sol's upgrade plan (UP-01..06), for Claude Sonnet subagents, at the owner's request.
+- **Running:** UP-04 (talkability and person heights; finished, not merged), UP-05 (stairs), UP-06 (creation and pause).
+- **Next:** UP-01 and UP-02 (Mira in Unreal) and UP-03 (Subrata) wait on NL-01 and NL-03.
+
+**Exact checks:**
+- **Rung 2:** at `02c9395`, **Succeeded**. The first attempt stalled: three `cl.exe` processes used about 8 s of CPU in 35 minutes while four agent builds competed for the machine. They were ended, and the rerun succeeded.
+- **Headless automation:** **64/64 Success** in one run.
+- **Not run yet:** a packaged restart (quit, relaunch, Continue). It needs the owner's windows closed.
+
+## Checkpoint — Batch A pieces merged: furniture sets, heights, 16 doors with knocking, Mira's bindings, stairs and richer creation and pause, 2026-10-19
+
+**What merged (integrate at `0329a19`):**
+- **NL-03:** general-goods and workshop furniture sets.
+- **UP-04:** per-person authored heights and the `NpcRoster` talkability gate. Presence spawn clearance now uses the person's height.
+- **NL-01 (Claude deep-work):** a 16-door roster with private-dwelling access (knock, visiting hours, host home) and unrestricted exit.
+  - 10- and 11-door v8 saves migrate. Real frozen fixtures, and the generator that made them, are in `Tools/DoorFixtures/`.
+  - The hash goldens were re-pinned.
+- **NL-04 (Claude Sonnet):**
+  - The three kit front doors and the two tall-flats unit doors are hung.
+  - Each door's two-way flag comes from the core.
+  - The LaneLife bridge handles knocking (`PerfectWorldLaneLifeKnock.cpp`).
+- **UP-01:** Mira's bindings. School and her own afternoons are off-lane behind the shop threshold. A standalone probe walked all 30 journeys with no wall crossing.
+- **Integrator:** Mira is registered with the presenter.
+- **UP-05:** a stair layout contract and an isolated test fixture.
+- **UP-06:** richer creation and pause screens.
+- **Fixed:** the `ShopFurniture` test expected 7 anchors, but each set publishes 6 by design.
+
+**Exact checks:**
+- **Rung 2:** at `0329a19`, **Succeeded**.
+- **Headless automation:** 83 found, **80 passed, 3 failed**:
+  - `CreationPause.CreationHierarchyAndProgressionHoldAtEverySize`: the header wraps at 150%-scaled sizes;
+  - `CreationPause.PauseFitsEveryWindowAndScale`: the pause card overflows at 853×480;
+  - `LaneStair.Walk`: about 23 cm of headroom to the slab against 25 cm required.
+  - These went back to their authors, who are fixing them.
+- **Rung 1:** for this merge, interrupted by power-offs and not completed.
+
+**Power-offs:** the host powered the VM off at 18:29, 19:14, 22:32 and 22:59 on 2026-10-18. Build jobs no longer refresh timestamps on a rerun, so an interrupted build's objects are kept. The owner has asked to favour pushing and delegating over long builds.
+
+## Checkpoint — UP-02 (Mira's arrivals), AW-01 (the scenario driver) and the stair and UI fixes compiled; 87/95, 2026-10-18
+
+**What merged and compiled, at `28f8b29`:**
+- **gpt-6.1-sol, UP-02:** off-lane arrivals reconstruct the authored journey and appear unseen at the threshold, then walk in. Departures walk out to the threshold before unseen removal. Eight `MiraPresence` tests.
+- **Claude Sonnet, AW-01:** the non-Shipping scenario driver (`-PWAcceptance`). It walks the real pawn and writes an atomic result per step, with screenshots. Four `Acceptance` tests.
+- **Claude Sonnet, fixes:**
+  - UP-05: stair headroom volumes reach back two capsule radii.
+  - UP-06: a 22 pt creation header and a tighter pause card.
+
+**Exact checks:**
+- **Rung 2:** **Succeeded**. This was the first compile of AW-01 and UP-02.
+- **Headless automation:** 95 found, all completed, **87 passed, 8 failed**.
+  - **Fixed:** `LaneStair.Walk` and the creation header.
+  - **Still failing:**
+    - `CreationPause.PauseFitsEveryWindowAndScale`: the pause card still overflows 853×480.
+    - Six `MiraPresence` tests: "walk reaches the authored endpoint".
+    - `NpcRoster.SpawnedPeopleAreTalkable`: Mira is not physically present at Tuesday 17:00.
+  - All of these went back to their authors.
+
+## Checkpoint — Batch A compiles and passes: 100/100 engine automation, 2026-10-19
+
+**What merged since 87/95:**
+- **gpt-6.1-sol:**
+  - AW-02, the acceptance runner: a private `-UserDir` plus verified save backups with a restore journal, and evidence checks. Self-test 41/41.
+  - The UP-02 test fix.
+- **Claude Sonnet:**
+  - UP-06 fix 2: a two-column compact pause card, measured at 792×262 of 821×448.
+  - UP-03a: Subrata's portable life (schedule, conversation, tests).
+  - UP-03b: Subrata's bindings and spawn.
+- **Claude deep-work:** NPC polylines collapse exact reversals.
+  - Mira's walk-in ran out to the counter hub and straight back along the same line. The 50 cm look-ahead then folded back on itself and she oscillated 298.7 cm from her desk.
+  - The same latent bug existed in every journey composed through a hub.
+- **Integrator:**
+  - the roster lists Subrata as scheduled;
+  - content pins at 145 files and 181 records;
+  - Subrata's spawn hook;
+  - a `size()` fix in Subrata's binding test.
+
+**Exact checks:**
+- **Rung 2:** at `b96234a`, **Succeeded**.
+- **Headless automation:** **100/100 Success** in one run, including:
+  - `MiraPresence` 8/8, `NpcRoster`, `SubrataBindings`, `NpcRoute` (with the new hub-spur test), `CreationPause`, `LaneStair`, `Acceptance`, `PersistenceFlow`, `KitDoors`, `KitFrontages`, `ShopFurniture`, `MiraBindings` and the rest.
+- **Expected warnings:**
+  - Subrata's tall-flats passage legs are 395 and 390 cm, against the schedule's 500 cm minimums, so his walk is paced at about 78–79%;
+  - his roster row is not yet marked "placed".
+- **Rung 1:** the merged run is still pending.
+- **Next:** the packaged build and the first offscreen acceptance spike (AW-01/02).
+
+**Plan:** `Docs/ROUND3_PLAN_2026-10-19.md` (gpt-6.1-sol, NR-01..06).
+- **Running:**
+  - NR-01: Rupa Ghosh, the row-house resident, and the `doors_knock` scenario (Claude Sonnet);
+  - NR-02: Nirmal Bose, tall-flats unit A, and `save_restart` (gpt-6.1-sol);
+  - NR-04: person looks, `anindita_mira` and `origins_seating_cameras` (Claude Sonnet).
+
+## Checkpoint — the first automated packaged walk ran offscreen, 2026-10-19
+
+**Package:** Rung 4 at `b96234a`, `BUILD SUCCESSFUL`. Executable SHA-256 `6662afa7…`.
+- The first attempt shipped a truncated executable: exactly 2 MiB, against about 335 MB. A power-off at 12:27 had cut the link short, and UBT then treated the file as up to date. Windows refused to launch it ("file is corrupted and unreadable", WinError 1392).
+- The truncated file was deleted and relinked. The spike job now deletes the executable before packaging whenever it is under 100 MB.
+
+**Acceptance spike:** `run_lane_acceptance.py --scenario boot_walk_interact --start new`, offscreen, one process. No owner windows were open.
+- **Passed:**
+  - `world_ready`: offscreen flag on, 1280×720 viewport, 5 seats and 16 doors built;
+  - `enter_world`: a new family life;
+  - `walk_to_living_doorway`: reached in 1.4 s by real movement input;
+  - `shot_living_doorway`: a real rendered PNG, `Docs/Images/acceptance-offscreen-living-doorway.png`, showing the clock "Mon 2 Jun · 07:32" and the "Your life has begun" notice.
+- **Failed:** `walk_to_table_chair`, blocked 160 cm short. The straight-line path runs into the open living-room door leaf, so this is a driver path fix, sent back to AW-01's author.
+- **Your saves:** a private `-UserDir`, with verified backup and restore of the real save slot. "Save restoration verified: True".
+- **Overall:** FAIL (incomplete scenario). **Offscreen capture is proven on this VM.**
+
+## Checkpoint — round 3, batch A: Rupa, Nirmal, person looks and the acceptance scenarios; Rung 1 175/175 and engine 108/108, 2026-10-19
+
+**What merged:**
+- **gpt-6.1-sol, NR-02:**
+  - Nirmal Bose of tall-flats unit A: off-lane work, home and awake through 17:00–20:30 visiting.
+  - His bindings from the unit doorstep.
+  - The `save_restart` scenario.
+- **Claude Sonnet, NR-01:** Rupa Ghosh of the row house (home inside 16:00–19:30 visiting), her bindings, and the `doors_knock` scenario.
+- **Claude Sonnet, NR-04:**
+  - Person looks split into `PerfectWorldNpcLooks` (bespoke figures for Mira, Anindita, Subrata, Rupa, Nirmal and Sahana).
+  - The `anindita_mira` and `origins_seating_cameras` scenarios.
+- **Claude Sonnet, AW-01 path fix:** the chair walk goes around the household adult. Her capsule, not the door leaf, had blocked the spike.
+- **Integrator:**
+  - spawn and scenario hooks;
+  - content pins at 147 files and 183 records;
+  - Nirmal's travel legs re-sorted;
+  - two compile fixes;
+  - roster rows for Nirmal and Rupa;
+  - the NpcLooks fix merged (hair stays inside the authored height).
+
+**Problems found along the way:**
+- **Stale generated headers:** UHT had not regenerated `*.generated.h` after headers changed, because the clock jumped, so the line-keyed `GENERATED_BODY` no longer matched. Deleting `Intermediate/.../UHT` fixed it.
+- **Invalid schedule data:** Nirmal's schedule had unsorted travel legs, written in a sandbox that could not compile. The loader refused the file, which emptied the content database and failed 10 dependent tests.
+
+**Exact checks:**
+- **Rung 1:** at `b44782a`, **175/175**.
+- **Rung 2:** **Succeeded**.
+- **Headless automation:** **108/108 Success** in one run.
+
+## Checkpoint — round 3, batch B merged (not yet built in Unreal): Sahana, three more frontages, the first real upstairs, 2026-10-19
+
+**What merged (`d6f1add`, pushed):**
+- **Claude Sonnet, NR-03:** Sahana Mitra of tall-flats unit B.
+  - Sewing at home, plus an off-lane errand.
+  - Home and awake for every minute of her door's 17:00–20:30 visiting hours.
+  - A remembered sewing agreement.
+  - Her bindings, and the `resident_homes` scenario covering Subrata, Nirmal, Rupa and Sahana: host truth, real knocks, Talk and Leave, and save read-back.
+  - Focused portable tests pass: `SahanaLifeTests`, content, and `pwcontent` at 148 files and 184 records.
+- **gpt-6.1-sol, NR-05:** three more catalogue frontages, with 794 focused portable assertions passing:
+  - `repair_workshop` (−Y/3, X 800–1700, Workshop);
+  - `hardware_store` (+Y/8, X 5200–6400, GeneralGoods);
+  - `old_house` (+Y/7, X 4500–5200, Residence).
+  - Planned door definitions for a 16→19 door migration. Doorways stay unhung until it lands.
+  - The `frontage_three` scenario.
+- **gpt-6.1-sol, NR-06:** the first real upstairs.
+  - The stair fits inside `tall_flats` without losing either ground unit: 130×640 cm, two 120 cm landings, 17 risers from 15 to 315 cm, a 130×418 slab opening, 220 cm headroom and 100 cm guards.
+  - A furnished upper dwelling (its door is planned for a 19→20 migration), its presenter, and the `tall_flats_upstairs` scenario.
+  - 10,303 layout assertions and 231,482 stair assertions pass.
+- **Integrator hooks:**
+  - Sahana's spawn and roster row;
+  - three scenario dispatches;
+  - the tall flats are built by `BuildTallFlatsUpstairs` before the generic kit branch;
+  - CMake lines;
+  - content pins at 148 files and 184 records.
+
+**Not run** (the owner asked to hold builds): the merged Rung 1, the Unreal compile, automation, and packaging. The parked package and acceptance job (`D:\PWWork\job_acceptance.ps1`) is ready to rerun.
+
+**Remaining sealed:** 9 side frontages and the 2 end masses.
+
+## Checkpoint — doors 16→20 merged; round 4 under way, 2026-10-19
+
+**What merged (`843f73e`):** the door roster grows from 16 to 20 doors (Claude deep-work agent).
+- New doors: the repair workshop and hardware store (business hours), the old house (private visiting), and the tall-flats upper flat (private).
+- 16-door saves migrate and authenticate against their stored door text.
+- A real frozen 16-door fixture.
+- The three frontages now hang their doors.
+- The hash goldens were re-pinned.
+- **Rung 1:** 178/178 on the branch.
+- **Unreal:** not built, by the owner's request to hold builds.
+- **Follow-ups:**
+  - The old house and the upper flat need a resident or a real invitation before the walk scenarios can enter them.
+  - The upper-flat leaf is authored but not hung yet.
+
+**Round 4** (`Docs/ROUND4_PLAN_2026-10-19.md`, gpt-6-astra):
+- **R4-03, gpt-6.1-sol:** ambient life (vendor Purnima Das with a cart, passers-by Arun Paul and Rekha Bose). Pushed on `content/r403-ambient`, not yet merged: its portable tests could not run in the sandbox.
+- **R4-02, Claude Sonnet:** the proprietors Debashis Pal and Mahua Saha.
+- **R4-06, Claude Sonnet:** looks and heights for the five newcomers.
+- R4-02 and R4-06 are in progress, with WIP pushed on their branches.
+- **Queued:**
+  - R4-01: three more frontages and a 20→23 door migration;
+  - R4-04: journal state;
+  - R4-05: the "Today" journal screen.
+
+## Checkpoint — R4-02 and R4-03 merged; Rung 1 181/181, 2026-10-19
+
+**Merged:**
+- **R4-03** (`f49c445`, gpt-6.1-sol): vendor Purnima Das with her block cart, and the passers-by Arun Paul and Rekha Bose.
+- **R4-02** (`81d5541`, Claude Sonnet): the proprietors Debashis Pal (repair workshop, 171 cm) and Mahua Saha (hardware store, 162 cm).
+  - Their schedules, conversations, bindings and the `proprietors_workday` scenario.
+  - The schedule and catalogue tables now hold 12 entries each.
+  - The roster rows are not yet marked placed.
+
+**Rung 1 on the merged tree** (fresh build directory `D:/pwm81d`): **181/181 passed**. `pwcontent validate` passes with 153 files and 189 records, matching the engine pins.
+
+**Not run** (the owner is holding builds): the Unreal compile, automation, packaging and the AW scenarios.
+
+**R4-01 in progress** on `core/r401-frontages`:
+- **Core** (gpt-6.1-sol): three GeneralGoods frontages (`market_stalls_a`, `market_stalls_b`, `end_shop`) and the 20→23 door edition.
+- **Fixture:** the frozen 20-door fixture was generated by the unchanged generator from `git archive 843f73e`.
+- **Goldens:** re-pinned after the hash test agreed with the reference encoder.
+- **Unreal half** (Claude Sonnet, not compiled):
+  - stall faces brought forward of the kit wall, with a 120 cm route kept;
+  - posted-hours boards derived from the door definitions;
+  - "Browse goods" interactables showing "Unstaffed. Purchasing unavailable.";
+  - `frontages_round4` registered for the restart pair.
+
+**R4-04** (journal state, gpt-6.1-sol) is running on `core/r404-journal`.
+
+## Checkpoint — R4-01 and R4-04 merged; Rung 1 183/183; Round 5 planned, 2026-10-19
+
+**R4-01** (`39912f6`):
+- Three browsing frontages (`market_stalls_a`, `market_stalls_b`, `end_shop`) and the 20→23 door edition.
+- The real frozen 20-door fixture, generated from `git archive 843f73e`.
+- Unreal production faces (Claude Sonnet): stalls, posted hours, "Browse goods", and `frontages_round4`.
+- Rung 1: 182/182 on the branch.
+
+**R4-04** (`7f3c045`, gpt-6.1-sol; integration fixes by Claude):
+- The lane journal: dated encounters per person per day, and agreements derived from conversation facts.
+- Save schema 9, hash version 6, and `pw.lane_journal/1`. Older saves keep their agreements with an empty encounter log.
+- The journal test had assumed the rota conversation was open at breakfast; it now moves to the real conversation windows. The rollback test now asserts that only the event cap refuses its paid choice.
+- Current-schema assertions read `WorldSaveSchemaVersion`.
+- Goldens re-pinned after the reference encoder agreed.
+- `journal_state` is registered, including as a restart pair.
+- **Rung 1 on the merged tree: 183/183.**
+
+**Not run:** the Unreal compile, automation, packaging and every AW scenario. The owner is holding builds.
+
+**Round 5** (`Docs/ROUND5_PLAN_2026-10-19.md`, gpt-6-astra) recommends serial engine verification before merging more Unreal features. That decision is put to the owner. Branch work continues.
+
+**R4-05** ("Today" journal screen, Claude Sonnet) is in progress on `ui/r405-today`.
+
+## Checkpoint — v0.2.0-alpha published, 2026-10-19
+
+**Released as `v0.2.0-alpha` (prerelease):**
+- Tag `v0.2.0-alpha` on `0c32eea`: https://github.com/debdutta777/Perfect-World/releases/tag/v0.2.0-alpha
+- Asset `PerfectWorld-v0.2.0-alpha-Win64.zip`: 410,987,006 bytes, sha256 `feaeb77d9293ebdea9b133074487044bd0ad6d590d362487477e04f1c5d59534`, 201 files. It is the Development packaged build, with the `Saved` folder left out.
+
+**First compile of the Round 3/4 backlog.** The game target failed in two places, both now fixed:
+- `PerfectWorldAcceptanceHomes.h` forward-declared `NpcSchedule` as a struct, but it is a type alias. It now includes `NpcScheduleContent.h`.
+  - The scenario also called the private `IsHostHome`. It now uses the public `IsHostHomeForAcceptance`.
+- `PerfectWorldAcceptanceTests.cpp` reached `PerfectWorld::ParseJson` only through unity-blob neighbours: a bare `"Json.h"` can be the engine's. It now includes `ContentRegistry.h`.
+
+**Verification:**
+- **Rung 1:** 183/183.
+- **Game target:** compiled.
+- **Rung 4:** package succeeded (BuildCookRun exit 0; exe 337,518,080 bytes).
+- **Not run:** the editor build (Rung 2), engine automation, and every AW scenario. It is not boot-tested, because the owner's windows were open, so the game was not launched.
+
+**Next:** Round 5. R5-01, R5-04 and R5-06 are on their branches, awaiting integration.
+
+## Checkpoint — v0.3.0-alpha published; owner feedback, Rounds 6 and 7 under way, 2026-10-20
+
+**Released as `v0.3.0-alpha` (prerelease):**
+- Tag on `7b553a3`: https://github.com/debdutta777/Perfect-World/releases/tag/v0.3.0-alpha
+- Asset `PerfectWorld-v0.3.0-alpha-Win64.zip`: 411,785,449 bytes, sha256 `0780e295e348309d34cc97aec02b9e31887e22410a51adbd91f3cc086a171403`.
+- **Verification:**
+  - Rung 1: 187/187.
+  - Game target and editor target compiled.
+  - Package: BuildCookRun exit 0. A host power-off killed the first cook, and the second run succeeded.
+  - Automation, acceptance and a boot test were not run.
+
+**Owner feedback after playing:**
+- a visual pentagon for creation points;
+- a minimap and a full map;
+- a quest window;
+- key mapping in Settings;
+- ring a calling bell before entering homes;
+- the city should look like real Kolkata, with far more people (students), shops, shopkeepers, a proper school and roads.
+- **Orders (Claude Sonnet, branches `ui/f1-pentagon`, `ui/f2-map`, `ui/f3-quests`, `ui/f4-keybinds`, `game/f5-doorbell`):** F1 pentagon, F2 map, F3 quests, F4 keybinds, F5 doorbell.
+- **The city:** `Docs/ROUND7_PLAN_2026-10-20.md` (gpt-6-astra). R7-01, the portable spatial contract, is running (gpt-6.1-sol).
+
+**Round 6:**
+- R6-01 (last three frontages, 29 doors) and R6-02 (slot summary) are implemented and being integrated.
+- R6-03 (scenario repairs) and R5-05 (working-proprietor bridge) are on their branches, waiting for an Unreal compile.
+- R6-06 (tailor) and R6-07 (school arrival) stopped when the ChatGPT account reached its usage limit. Their partial work is kept, and they will be relaunched once.
+
+## Checkpoint — v0.4.0-alpha published (owner feedback), 2026-10-21
+
+**Released as `v0.4.0-alpha` (prerelease):**
+- Tag on `cafc35e`: https://github.com/debdutta777/Perfect-World/releases/tag/v0.4.0-alpha
+- Asset: 413,924,210 bytes, sha256 `781a9d068f01b299d3942df1570cb7f7b106c57fcacc8e093b8f977643ffac5c`.
+
+**Owner feedback items merged (Claude Sonnet):**
+- **F1:** a seven-axis trait radar. The core has 7 trait domains, so the chart is not a pentagon.
+- **F2:** a portable lane map projection, an upper-right minimap, and a full world map opened with M or D-pad Left.
+- **F3:**
+  - a portable quest projection;
+  - a quest window opened with J or D-pad Right, or from the pause menu;
+  - a tracked-objective line.
+- **F4:** key remapping (a binding store, and a Controls tab in Settings), with Settings now in the pause menu.
+- **F5:** calling bells at every dwelling entrance; a threshold guard against un-admitted entry through open leaves; the household closes a visitor's door; knocks reset on load; family start shells count as home.
+- **Fixes during integration:**
+  - four first-compile errors;
+  - the bell roster grew to include R6-01's two residences;
+  - the lane map knows R6-01's three buildings;
+  - the school-day test names content files as `/relative` paths.
+
+**Also merged:**
+- R5-05: the working-proprietor bridge.
+- R6-01: the last three side frontages, 29 doors, a frozen 26-door fixture, goldens re-pinned.
+- R6-02: the slot summary.
+- R6-03: scenario repairs.
+- R6-07: school arrival through the reducer.
+
+**Verification:**
+- Rung 1: 194/194.
+- The editor and game targets compiled.
+- Package exit 0.
+- Not run: automation, acceptance, and a boot test.
+
+**Next:**
+- **R6-06**, the staffed tailor Satyajit Dutta: being integrated.
+- **R7-01**, the neighbourhood spatial contract: on its branch.
+- **Round 7 in flight:**
+  - R7-05 crowds and R7-02 traffic: the portable models, by gpt-6.1-sol.
+  - R7-02 streets and R7-03 school campus: Unreal, by Claude Sonnet.
+
+## Checkpoint — v0.5.0-alpha published: Kolkata streets and Nabapara Vidyalaya, 2026-10-22
+
+**Released as `v0.5.0-alpha` (prerelease):**
+- Tag on `b62900d`: https://github.com/debdutta777/Perfect-World/releases/tag/v0.5.0-alpha
+- Asset: 414,793,414 bytes, sha256 `b75c98fb9403596b107d8f8a3378fb7bc0f308e80a28a855d76cc9ccee6d8299`.
+
+**Merged:**
+- **R6-06 (gpt-6.1-sol), the tailor Satyajit Dutta.** Integration added the registrations, content pins at 156 files and 192 records, and readable Today text for Prabir's, Ishita's and the tailor's agreements.
+- **R7-01 (gpt-6.1-sol), the neighbourhood spatial contract.** Integration fixed one thing: R6-01's three opened buildings now come from the kit catalogue rather than a duplicate lot.
+- **R7-02 streets (Claude Sonnet).** The north alley reopened as the cross street, and the old +Y asphalt box was retired.
+- **R7-03 campus (Claude Sonnet).**
+
+**Verification:**
+- Rung 1: 196/196.
+- The editor target compiled; the about 40 new files compiled clean on the first attempt.
+- Package exit 0, with 0 cook errors.
+- Not run: automation, acceptance, and a boot test.
+
+**Known follow-ups:**
+- The crowd model's student windows must follow `bell_schedule.nabapara_xi_science` (gates 09:30, first bell 10:00, dismissal 15:50), not the plan's 06:45–07:30.
+- Gate sign-in copies the world; it should move to a lane-life command path.
+
+**Environment:** the host now powers off about every 20 minutes, and three GPT jobs were killed twice.
+
+**In flight (gpt-6.1-sol):**
+- R7-05 crowd presenter;
+- R7-02 traffic presenter;
+- R7-04 staffed shops;
+- R8-01 commerce contract (`Docs/ROUND8_PLAN_2026-10-22.md`).
+
+## Checkpoint — crowds and traffic merged; staffed shops on their branch, 2026-10-23
+
+**Merged at `835ee1b`:**
+- **R7-02 traffic presenter:** gpt-6.1-sol, finished by Claude Sonnet after the ChatGPT usage limit.
+- **R7-05 crowd presenter:** the same.
+  - Student windows now follow `bell_schedule.nabapara_xi_science`: arrive 09:15–10:00, leave 15:50–16:30.
+- **Hooks:** `SpawnTrafficPresenter`, `PWCrowd::SpawnCrowdPresenter`, `traffic_round7`, `crowd_round7`.
+- **First-compile fixes:** player pointers were `TObjectPtr` read through `auto*`, and `FMath` rounding returned int64 for the portable rectangles.
+
+**Verification:**
+- Rung 1: 198/198 on the combined crowd and traffic tree.
+- The editor target compiled.
+- Not run: packaging, automation, acceptance, and a boot test.
+
+**R7-04 staffed shops (`content/r704-shops`, not merged):**
+- Bimal Modak and Tithi Ghoshal at the sweet shop; Aparna Lahiri at the pharmacy; Gouranga Nandi at the tea stall; Koushik Mondal selling jhalmuri.
+- Rung 1: 197/197 on an integrated scratch copy.
+- **Blocked on the owner:** the streets' counters are solid across each keeper's axis. A 120 cm service-flap patch (`D:\PWWork\r74_shoplots.diff`, `r74_stalls.diff`) was refused to the agent by the permission system and awaits the owner's decision.
+
+**R8-01 (commerce contract)** waits for the ChatGPT usage reset.
+
+## Checkpoint — v0.6.0-alpha published (crowds and traffic); R8-01 merged, 2026-10-23
+
+**Released as `v0.6.0-alpha` (prerelease):**
+- Tag on `25a1931`: https://github.com/debdutta777/Perfect-World/releases/tag/v0.6.0-alpha
+- Asset: 415,549,584 bytes, sha256 `789d2f7cb75bc6e01fa79279de4a2561b26fc022a1fab30952375947dc962452`.
+- **Verification:**
+  - Rung 1: 198/198.
+  - The editor and game targets compiled.
+  - Package exit 0.
+  - Not run: automation, acceptance, and a boot test.
+
+**R8-01 (gpt-6.1-sol), the portable commerce contract, is merged:**
+- a wallet in paise;
+- a household-rank allowance;
+- inventory;
+- quotes and purchase refusals;
+- atomic purchases with receipts;
+- consumption.
+- Rung 1: 199/199. No save-format change.
+
+**In flight:**
+- R8-02 content and R8-03 reducer integration (gpt-6.1-sol).
+- R8-05 Buy panel, wallet and inventory UI (Claude Sonnet).
+- R8-04, the save migration to schema 10 and hash 7, follows R8-03 (Claude deep-work).
+- The staffed shops (R7-04) still wait on the owner's decision about the counter patch.

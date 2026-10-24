@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #ifndef PERFECTWORLDCORE_API
@@ -30,8 +31,10 @@ namespace PerfectWorld
  * 1: meta, clock, flags. 2 (2026-10-05): adds the gates section (ROADMAP M1-35).
  * 3 (2026-10-05): adds the rng section, the four stream states (ROADMAP M1-05).
  * 4 (2026-10-11): adds the dayloop section, HashDayLoop of the player's day (ROADMAP M2-12).
+ * 5 (2026-10-17): adds conversations (person ID and canonical module text) and doors (canonical module text).
+ * 6 (2026-10-19): appends journal (count, then day/person/first-met absolute minute).
  */
-constexpr std::uint32_t WorldHashVersion = 4;
+constexpr std::uint32_t WorldHashVersion = 6;
 
 struct WorldSectionHash
 {
@@ -39,11 +42,19 @@ struct WorldSectionHash
     std::uint64_t Hash = 0;
 };
 
-/** One entry per save section, always in the same order: meta, clock, flags, gates, rng, dayloop (then any later sections). */
+/** Fixed order: meta, clock, flags, gates, rng, dayloop, conversations, doors, journal. */
 [[nodiscard]] PERFECTWORLDCORE_API std::vector<WorldSectionHash> HashWorldSections(const WorldState& state);
 
 /** The fingerprint of the whole world. */
 [[nodiscard]] PERFECTWORLDCORE_API std::uint64_t HashWorldState(const WorldState& state);
+
+/**
+ * HashWorldState with the doors section taken over `doorsText`, the pw.doors text as a save stored it. A save whose door
+ * set migrated on load authenticates its original checksum with this; for unmigrated doors it equals HashWorldState.
+ * Pass hashVersion 5 only to authenticate historical v8 saves: that encoding excludes the new journal section.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API std::uint64_t HashWorldStateWithDoorsText(const WorldState& state, std::string_view doorsText,
+                                                                         std::uint32_t hashVersion = WorldHashVersion);
 
 struct ReplayOptions
 {
@@ -53,6 +64,8 @@ struct ReplayOptions
     std::size_t CheckpointEvery = 0;
     /** Keep every command's result (events included); off by default to save memory. */
     bool KeepResults = false;
+    /** Borrowed immutable content binding; use the same school catalogues that produced school.* commands. */
+    DayLoopCatalogues School{};
 };
 
 struct ReplayCheckpoint

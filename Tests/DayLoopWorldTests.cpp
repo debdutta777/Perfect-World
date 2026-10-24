@@ -97,8 +97,9 @@ void TestScriptedDayInWorld()
     for (const WorldState& w : boundary)
         hashes.insert(HashWorldState(w));
     Check(hashes.size() == boundary.size(), "every command of the day changes the world hash");
-    Check(HashWorldSections(boundary[0]).back().Name == "dayloop" &&
-              HashWorldSections(boundary[0]).back().Hash != HashWorldSections(boundary[29]).back().Hash &&
+    // Hash v5 appends conversations and doors after dayloop, which remains at index 5.
+    Check(HashWorldSections(boundary[0])[5].Name == "dayloop" &&
+              HashWorldSections(boundary[0])[5].Hash != HashWorldSections(boundary[29])[5].Hash &&
               HashWorldSections(boundary[0])[0].Hash == HashWorldSections(boundary[29])[0].Hash,
           "the day moves the dayloop section, and nothing else of the meta section");
     const std::uint64_t finalHash = HashWorldState(world);
@@ -157,9 +158,13 @@ void TestScriptedDayInWorld()
         const std::size_t key = v6.find(",\n    \"dayloop\": ");
         const std::size_t end = v6.find("\n  }", key);
         Check(key != std::string::npos && end != std::string::npos, "the day's save has a dayloop member");
-        v6.erase(key, end - key);
-        v6.replace(v6.find("\"schemaVersion\": 7"), 18, "\"schemaVersion\": 6");
-        v6.replace(v6.find("\"hashVersion\": 4"), 16, "\"hashVersion\": 3");
+        v6.erase(key, end - key); // the dayloop, conversations and doors members, none of which v6 had
+        const std::string schema = "\"schemaVersion\": " + std::to_string(WorldSaveSchemaVersion);
+        const std::string hash = "\"hashVersion\": " + std::to_string(WorldHashVersion);
+        Check(v6.find(schema) != std::string::npos && v6.find(hash) != std::string::npos,
+              "the save names the current schema and hash versions");
+        v6.replace(v6.find(schema), schema.size(), "\"schemaVersion\": 6");
+        v6.replace(v6.find(hash), hash.size(), "\"hashVersion\": 3");
         WorldSaveData loaded;
         const WorldSaveResult result = DeserializeWorldSave(v6, loaded);
         Check(result.Succeeded() && result.SourceVersion == 6 && !result.HashVerified && !result.Migrated, "the old save loads, unverified");

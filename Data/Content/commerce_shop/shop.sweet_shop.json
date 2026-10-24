@@ -1,0 +1,39 @@
+{
+  "type": "commerce_shop",
+  "id": "shop.sweet_shop",
+  "name": "Sweet shop",
+  "counterAnchor": "anchor.nabapara.sweet_shop_counter",
+  "keepers": [
+    {
+      "person": "person.bimal_modak",
+      "counterAnchor": "anchor.nabapara.sweet_shop_counter"
+    },
+    {
+      "person": "person.tithi_ghoshal",
+      "counterAnchor": "anchor.nabapara.sweet_shop_assistant_counter"
+    }
+  ],
+  "opening": [
+    {
+      "days": 127,
+      "start": 420,
+      "end": 810
+    },
+    {
+      "days": 127,
+      "start": 930,
+      "end": 1260
+    }
+  ],
+  "entries": [
+    {
+      "item": "item.rasgulla",
+      "unitPricePaise": 3000
+    },
+    {
+      "item": "item.sandesh",
+      "unitPricePaise": 3500
+    }
+  ],
+  "note": "Fictional 2042 balance prices in integer paise, per displayed unit. Authored split opening hours are authoritative. Registration alone never authorizes sales; schedule presence and a safe pause are required."
+}

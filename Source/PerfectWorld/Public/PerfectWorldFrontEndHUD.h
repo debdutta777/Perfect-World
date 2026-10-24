@@ -5,6 +5,7 @@
 #include "PerfectWorldFrontEndHUD.generated.h"
 
 class SPWFrontEndRoot;
+class SPWQuestTracker;
 class SWeakWidget;
 class UPerfectWorldCharacterCreatorSubsystem;
 
@@ -34,6 +35,9 @@ public:
     /** Escape or the controller menu button while playing: opens the pause menu, or closes it. */
     void ToggleInWorldMenu();
 
+    /** F3: the quests key while playing pauses straight onto the quest window. */
+    void OpenQuestWindow();
+
     /** Resets the creator to a fresh draft and opens the first creation page. */
     void BeginNewCreation();
 
@@ -43,13 +47,14 @@ public:
     /** Loads a slot, then enters the world (started life) or reopens the creator (draft). Empty text on success. */
     FText LoadSlot(int32 SlotIndex);
 
-    /** Begins life, saves it to the slot, and enters the world. Empty text on success, otherwise the message. */
+    /** Starts and saves together before entry; a failed write preserves the draft. Returns the failure message. */
     FText StartNewLife(int32 SlotIndex);
 
     void ResumeGame();
 
     /** Writes the active life to its slot. The returned text says what happened; bOutSucceeded says whether it worked. */
     FText SaveActiveGame(bool& bOutSucceeded);
+    FText SaveGameToSlot(int32 SlotIndex, bool& bOutSucceeded);
 
     void ReturnToTitle();
     void QuitGame();
@@ -70,16 +75,19 @@ private:
         Paused
     };
 
-    void EnterWorld(const FText& Notice);
+    /** Places the player and hands over play. bFreshLifeSaved is true only for a new life already written to its slot. */
+    FText EnterWorld(const FText& Notice, bool bFreshLifeSaved = false);
     void ApplyMenuInput();
     void ApplyGameInput();
     void FaceTitleView();
 
     TSharedPtr<SPWFrontEndRoot> Root;
     TSharedPtr<SWeakWidget> ViewportHolder;
+    /** F3: the tracked objective's line, drawn under the clock while playing. */
+    TSharedPtr<SPWQuestTracker> QuestTracker;
+    TSharedPtr<SWeakWidget> QuestTrackerHolder;
     EFrontEndMode Mode = EFrontEndMode::Title;
 
     /** The slot the running life saves to, or -1 when it has none yet. */
     int32 ActiveSlot = -1;
-    float TitleYaw = 0.0f;
 };

@@ -1,5 +1,6 @@
 #include "UI/SPWIdentityPage.h"
 
+#include "Fonts/FontCache.h"
 #include "Misc/DateTime.h"
 #include "UI/PWCreationModel.h"
 #include "UI/PWStyle.h"
@@ -58,6 +59,7 @@ TSharedRef<SEditableTextBox> IdentityMakeBox(const FString& Initial, const FText
 {
     return SNew(SEditableTextBox)
         .Style(&PWUI::FStyle::Get().TextBox)
+        .TextShapingMethod(ETextShapingMethod::FullShaping)
         .Text(FText::FromString(Initial))
         .HintText(Hint)
         .MaximumLength(MaxLength)

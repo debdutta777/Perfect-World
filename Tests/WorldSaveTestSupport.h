@@ -1,6 +1,6 @@
 #pragma once
 
-// Builders and comparison helpers for WorldSaveTests.cpp. Included by that file only; it relies on its Check().
+// Builders and comparison helpers shared by the world-save tests; relies on their Check().
 
 #include "CharacterCreation.h"
 #include "CreationSaveSerialization.h"
@@ -18,6 +18,7 @@
 void Check(bool condition, const char* message);
 /** WorldSaveDayTests.cpp: the day loop in the v7 save, and the v6 save without it. */
 void TestWorldSaveDay();
+void TestWorldSaveLane();
 
 namespace
 {
@@ -197,6 +198,7 @@ void CheckSame(const WorldSaveData& a, const WorldSaveData& b, const char* what)
     Check(a.World.Flags == b.World.Flags, what);
     Check(SameGates(a.World, b.World), what);
     Check(a.World.Rng == b.World.Rng, what);
+    Check(a.World.Conversations == b.World.Conversations && a.World.Doors == b.World.Doors, what);
     Check(a.World.DayLoop == b.World.DayLoop && SerialiseDayLoop(a.World.DayLoop) == SerialiseDayLoop(b.World.DayLoop), what);
     Check(IsWorldDayInStep(a.World) == IsWorldDayInStep(b.World) && a.World.DayLoop.Now == a.World.Clock.Now(), what);
     Check(a.Player == b.Player, what);
