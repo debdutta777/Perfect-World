@@ -1,0 +1,203 @@
+{
+  "type": "tower_scenario",
+  "id": "p2.design",
+  "note": "Floor 2 route design: Class XI spring-mass harmonic span where stiffness doubles in-phase and calms in anti-phase.",
+  "route": "tower.route.design",
+  "floor": 2,
+  "runner": "tower.runner.design",
+  "primaryMethod": "construction",
+  "allowsCombat": false,
+  "classroomModel": "model.xi.spring_mass_shm",
+  "changedRuleKey": "p2.a7.design.changed_rule",
+  "titleKey": "p2.a7.design.title",
+  "setupKey": "p2.a7.design.setup",
+  "entryBeat": "beat.1",
+  "beats": [
+    {
+      "id": "beat.1",
+      "promptKey": "p2.a7.design.b1.prompt",
+      "metric": "discipline",
+      "clues": [
+        {
+          "id": "clue.1",
+          "method": "analysis",
+          "textKey": "p2.a7.design.b1.clue1"
+        },
+        {
+          "id": "clue.2",
+          "method": "construction",
+          "textKey": "p2.a7.design.b1.clue2"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "opt.test_antiphase_pair",
+          "labelKey": "p2.a7.design.b1.opt1.label",
+          "outcomeKey": "p2.a7.design.b1.opt1.outcome",
+          "method": "construction",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 500,
+          "minutes": 5,
+          "nextBeat": "beat.2"
+        },
+        {
+          "id": "opt.weigh_each_hanger",
+          "labelKey": "p2.a7.design.b1.opt2.label",
+          "outcomeKey": "p2.a7.design.b1.opt2.outcome",
+          "method": "analysis",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 350,
+          "minutes": 6,
+          "nextBeat": "beat.2"
+        },
+        {
+          "id": "opt.lock_all_in_phase",
+          "labelKey": "p2.a7.design.b1.opt3.label",
+          "outcomeKey": "p2.a7.design.b1.opt3.outcome",
+          "method": "construction",
+          "isCombat": false,
+          "isMistake": true,
+          "scoreMilli": 150,
+          "minutes": 4,
+          "nextBeat": "recovery"
+        }
+      ],
+      "recovery": {
+        "id": "rec.1",
+        "promptKey": "p2.a7.design.b1.rec.prompt",
+        "actionKey": "p2.a7.design.b1.rec.action",
+        "outcomeKey": "p2.a7.design.b1.rec.outcome",
+        "method": "construction",
+        "restoredScoreMilli": 400,
+        "minutes": 3,
+        "nextBeat": "beat.2"
+      }
+    },
+    {
+      "id": "beat.2",
+      "promptKey": "p2.a7.design.b2.prompt",
+      "metric": "discipline",
+      "clues": [
+        {
+          "id": "clue.1",
+          "method": "construction",
+          "textKey": "p2.a7.design.b2.clue1"
+        },
+        {
+          "id": "clue.2",
+          "method": "analysis",
+          "textKey": "p2.a7.design.b2.clue2"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "opt.build_alternating_rocker",
+          "labelKey": "p2.a7.design.b2.opt1.label",
+          "outcomeKey": "p2.a7.design.b2.opt1.outcome",
+          "method": "construction",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 500,
+          "minutes": 6,
+          "nextBeat": "beat.3"
+        },
+        {
+          "id": "opt.preload_end_springs",
+          "labelKey": "p2.a7.design.b2.opt2.label",
+          "outcomeKey": "p2.a7.design.b2.opt2.outcome",
+          "method": "construction",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 350,
+          "minutes": 7,
+          "nextBeat": "beat.3"
+        },
+        {
+          "id": "opt.stack_center_mass",
+          "labelKey": "p2.a7.design.b2.opt3.label",
+          "outcomeKey": "p2.a7.design.b2.opt3.outcome",
+          "method": "construction",
+          "isCombat": false,
+          "isMistake": true,
+          "scoreMilli": 150,
+          "minutes": 4,
+          "nextBeat": "recovery"
+        }
+      ],
+      "recovery": {
+        "id": "rec.2",
+        "promptKey": "p2.a7.design.b2.rec.prompt",
+        "actionKey": "p2.a7.design.b2.rec.action",
+        "outcomeKey": "p2.a7.design.b2.rec.outcome",
+        "method": "construction",
+        "restoredScoreMilli": 400,
+        "minutes": 3,
+        "nextBeat": "beat.3"
+      }
+    },
+    {
+      "id": "beat.3",
+      "promptKey": "p2.a7.design.b3.prompt",
+      "metric": "common_judgment",
+      "clues": [
+        {
+          "id": "clue.1",
+          "method": "construction",
+          "textKey": "p2.a7.design.b3.clue1"
+        },
+        {
+          "id": "clue.2",
+          "method": "endurance",
+          "textKey": "p2.a7.design.b3.clue2"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "opt.lay_tactile_cadence_strips",
+          "labelKey": "p2.a7.design.b3.opt1.label",
+          "outcomeKey": "p2.a7.design.b3.opt1.outcome",
+          "method": "construction",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 1000,
+          "minutes": 3,
+          "nextBeat": "complete"
+        },
+        {
+          "id": "opt.chalk_node_ticks",
+          "labelKey": "p2.a7.design.b3.opt2.label",
+          "outcomeKey": "p2.a7.design.b3.opt2.outcome",
+          "method": "construction",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 750,
+          "minutes": 2,
+          "nextBeat": "complete"
+        },
+        {
+          "id": "opt.remove_test_pins",
+          "labelKey": "p2.a7.design.b3.opt3.label",
+          "outcomeKey": "p2.a7.design.b3.opt3.outcome",
+          "method": "construction",
+          "isCombat": false,
+          "isMistake": true,
+          "scoreMilli": 250,
+          "minutes": 2,
+          "nextBeat": "recovery"
+        }
+      ],
+      "recovery": {
+        "id": "rec.3",
+        "promptKey": "p2.a7.design.b3.rec.prompt",
+        "actionKey": "p2.a7.design.b3.rec.action",
+        "outcomeKey": "p2.a7.design.b3.rec.outcome",
+        "method": "construction",
+        "restoredScoreMilli": 800,
+        "minutes": 2,
+        "nextBeat": "complete"
+      }
+    }
+  ]
+}
