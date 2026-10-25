@@ -819,3 +819,16 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/Commerce
 add_executable(PerfectWorldCommerceContentTests Tests/CommerceContentTests.cpp)
 target_link_libraries(PerfectWorldCommerceContentTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldCommerceContentTests COMMAND PerfectWorldCommerceContentTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# P2C: frozen Phase 2 school/tower contracts. This is the single appended block.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/SchoolSessions.cpp
+    Source/PerfectWorldCore/Private/SchoolWork.cpp
+    Source/PerfectWorldCore/Private/SchoolLife.cpp
+    Source/PerfectWorldCore/Private/SchoolWeek.cpp
+    Source/PerfectWorldCore/Private/TowerSession.cpp)
+foreach(P2C_SYSTEM SchoolSessions SchoolWork SchoolLife SchoolWeek TowerSession)
+    add_executable(PerfectWorld${P2C_SYSTEM}Tests Tests/${P2C_SYSTEM}Tests.cpp)
+    target_link_libraries(PerfectWorld${P2C_SYSTEM}Tests PRIVATE PerfectWorldCore)
+    add_test(NAME PerfectWorld${P2C_SYSTEM}Tests COMMAND PerfectWorld${P2C_SYSTEM}Tests ${CMAKE_SOURCE_DIR}/Data/Content)
+endforeach()
