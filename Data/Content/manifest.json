@@ -1,0 +1,1105 @@
+{
+  "schema": "pw.content_manifest/1",
+  "fileCount": 177,
+  "recordCount": 213,
+  "files": [
+    {
+      "path": "/ability_recipe/ability_recipe.agni_assay_flame.json",
+      "records": [
+        { "id": "ability_recipe.agni_assay_flame", "kind": "ability_recipe" }
+      ]
+    },
+    {
+      "path": "/ability_recipe/ability_recipe.agni_fine_heat.json",
+      "records": [
+        { "id": "ability_recipe.agni_fine_heat", "kind": "ability_recipe" }
+      ]
+    },
+    {
+      "path": "/ability_recipe/ability_recipe.agni_warmth.json",
+      "records": [
+        { "id": "ability_recipe.agni_warmth", "kind": "ability_recipe" }
+      ]
+    },
+    {
+      "path": "/ability_recipe/ability_recipe.akasha_open_sense.json",
+      "records": [
+        { "id": "ability_recipe.akasha_open_sense", "kind": "ability_recipe" }
+      ]
+    },
+    {
+      "path": "/ability_recipe/ability_recipe.akasha_quiet_focus.json",
+      "records": [
+        { "id": "ability_recipe.akasha_quiet_focus", "kind": "ability_recipe" }
+      ]
+    },
+    {
+      "path": "/ability_recipe/ability_recipe.akasha_survey_sense.json",
+      "records": [
+        { "id": "ability_recipe.akasha_survey_sense", "kind": "ability_recipe" }
+      ]
+    },
+    {
+      "path": "/ability_recipe/ability_recipe.jala_common_ground.json",
+      "records": [
+        { "id": "ability_recipe.jala_common_ground", "kind": "ability_recipe" }
+      ]
+    },
+    {
+      "path": "/ability_recipe/ability_recipe.jala_ease.json",
+      "records": [
+        { "id": "ability_recipe.jala_ease", "kind": "ability_recipe" }
+      ]
+    },
+    {
+      "path": "/ability_recipe/ability_recipe.jala_make_do.json",
+      "records": [
+        { "id": "ability_recipe.jala_make_do", "kind": "ability_recipe" }
+      ]
+    },
+    {
+      "path": "/ability_recipe/ability_recipe.prithvi_shoring.json",
+      "records": [
+        { "id": "ability_recipe.prithvi_shoring", "kind": "ability_recipe" }
+      ]
+    },
+    {
+      "path": "/ability_recipe/ability_recipe.prithvi_steady_hold.json",
+      "records": [
+        { "id": "ability_recipe.prithvi_steady_hold", "kind": "ability_recipe" }
+      ]
+    },
+    {
+      "path": "/ability_recipe/ability_recipe.prithvi_tally_stone.json",
+      "records": [
+        { "id": "ability_recipe.prithvi_tally_stone", "kind": "ability_recipe" }
+      ]
+    },
+    {
+      "path": "/ability_recipe/ability_recipe.vayu_light_step.json",
+      "records": [
+        { "id": "ability_recipe.vayu_light_step", "kind": "ability_recipe" }
+      ]
+    },
+    {
+      "path": "/ability_recipe/ability_recipe.vayu_relay.json",
+      "records": [
+        { "id": "ability_recipe.vayu_relay", "kind": "ability_recipe" }
+      ]
+    },
+    {
+      "path": "/ability_recipe/ability_recipe.vayu_swiftline.json",
+      "records": [
+        { "id": "ability_recipe.vayu_swiftline", "kind": "ability_recipe" }
+      ]
+    },
+    {
+      "path": "/activity/activity.attend_class.json",
+      "records": [
+        { "id": "activity.attend_class", "kind": "activity" }
+      ]
+    },
+    {
+      "path": "/activity/activity.eat_meal.json",
+      "records": [
+        { "id": "activity.eat_meal", "kind": "activity" }
+      ]
+    },
+    {
+      "path": "/activity/activity.exercise_run.json",
+      "records": [
+        { "id": "activity.exercise_run", "kind": "activity" }
+      ]
+    },
+    {
+      "path": "/activity/activity.household_chores.json",
+      "records": [
+        { "id": "activity.household_chores", "kind": "activity" }
+      ]
+    },
+    {
+      "path": "/activity/activity.rest.json",
+      "records": [
+        { "id": "activity.rest", "kind": "activity" }
+      ]
+    },
+    {
+      "path": "/activity/activity.sleep_night.json",
+      "records": [
+        { "id": "activity.sleep_night", "kind": "activity" }
+      ]
+    },
+    {
+      "path": "/activity/activity.study_at_home.json",
+      "records": [
+        { "id": "activity.study_at_home", "kind": "activity" }
+      ]
+    },
+    {
+      "path": "/assessment_paper/assessment_paper.xi_half_yearly_mixed.json",
+      "records": [
+        { "id": "assessment_paper.xi_half_yearly_mixed", "kind": "assessment_paper" }
+      ]
+    },
+    {
+      "path": "/attribute/attribute.agility.json",
+      "records": [
+        { "id": "attribute.agility", "kind": "attribute" }
+      ]
+    },
+    {
+      "path": "/attribute/attribute.body.json",
+      "records": [
+        { "id": "attribute.body", "kind": "attribute" }
+      ]
+    },
+    {
+      "path": "/attribute/attribute.charisma.json",
+      "records": [
+        { "id": "attribute.charisma", "kind": "attribute" }
+      ]
+    },
+    {
+      "path": "/attribute/attribute.intelligence.json",
+      "records": [
+        { "id": "attribute.intelligence", "kind": "attribute" }
+      ]
+    },
+    {
+      "path": "/attribute/attribute.perception.json",
+      "records": [
+        { "id": "attribute.perception", "kind": "attribute" }
+      ]
+    },
+    {
+      "path": "/attribute/attribute.willpower.json",
+      "records": [
+        { "id": "attribute.willpower", "kind": "attribute" }
+      ]
+    },
+    {
+      "path": "/bell_schedule/bell_schedule.nabapara_xi_commerce.json",
+      "records": [
+        { "id": "bell_schedule.nabapara_xi_commerce", "kind": "bell_schedule" }
+      ]
+    },
+    {
+      "path": "/bell_schedule/bell_schedule.nabapara_xi_humanities.json",
+      "records": [
+        { "id": "bell_schedule.nabapara_xi_humanities", "kind": "bell_schedule" }
+      ]
+    },
+    {
+      "path": "/bell_schedule/bell_schedule.nabapara_xi_science.json",
+      "records": [
+        { "id": "bell_schedule.nabapara_xi_science", "kind": "bell_schedule" }
+      ]
+    },
+    {
+      "path": "/calendar/calendar.nabapara_2042_43.json",
+      "records": [
+        { "id": "calendar.nabapara_2042_43", "kind": "calendar" }
+      ]
+    },
+    {
+      "path": "/city/city.bengaluru.json",
+      "records": [
+        { "id": "city.bengaluru", "kind": "city" },
+        { "id": "district.bengaluru.apartment_belt", "kind": "district" },
+        { "id": "district.bengaluru.campus", "kind": "district" },
+        { "id": "district.bengaluru.industrial", "kind": "district" },
+        { "id": "district.bengaluru.market", "kind": "district" },
+        { "id": "district.bengaluru.research_campus", "kind": "district" },
+        { "id": "gate.bengaluru.quarry_ridge", "kind": "gate_site" }
+      ]
+    },
+    {
+      "path": "/city/city.chennai.json",
+      "records": [
+        { "id": "city.chennai", "kind": "city" },
+        { "id": "district.chennai.dense_core", "kind": "district" },
+        { "id": "district.chennai.industrial", "kind": "district" },
+        { "id": "district.chennai.medical", "kind": "district" },
+        { "id": "district.chennai.port", "kind": "district" },
+        { "id": "district.chennai.suburb", "kind": "district" },
+        { "id": "gate.chennai.breakwater", "kind": "gate_site" },
+        { "id": "gate.chennai.salt_pans", "kind": "gate_site" }
+      ]
+    },
+    {
+      "path": "/city/city.delhi.json",
+      "records": [
+        { "id": "city.delhi", "kind": "city" },
+        { "id": "district.delhi.apartment_belt", "kind": "district" },
+        { "id": "district.delhi.campus", "kind": "district" },
+        { "id": "district.delhi.civic_quarter", "kind": "district" },
+        { "id": "district.delhi.government", "kind": "district" },
+        { "id": "district.delhi.old_core", "kind": "district" },
+        { "id": "gate.delhi.old_canal", "kind": "gate_site" },
+        { "id": "gate.delhi.ridge_forest", "kind": "gate_site" }
+      ]
+    },
+    {
+      "path": "/city/city.kolkata.json",
+      "records": [
+        { "id": "city.kolkata", "kind": "city" },
+        { "id": "district.kolkata.apartment_belt", "kind": "district" },
+        { "id": "district.kolkata.market_belt", "kind": "district" },
+        { "id": "district.kolkata.nabapara", "kind": "district" },
+        { "id": "district.kolkata.north_core", "kind": "district" },
+        { "id": "district.kolkata.rail_yard", "kind": "district" },
+        { "id": "district.kolkata.riverfront", "kind": "district" },
+        { "id": "gate.kolkata.canal_works", "kind": "gate_site" },
+        { "id": "gate.kolkata.dockyard", "kind": "gate_site" },
+        { "id": "gate.kolkata.river_warehouse", "kind": "gate_site" }
+      ]
+    },
+    {
+      "path": "/city/city.mumbai.json",
+      "records": [
+        { "id": "city.mumbai", "kind": "city" },
+        { "id": "district.mumbai.apartment_belt", "kind": "district" },
+        { "id": "district.mumbai.dense_core", "kind": "district" },
+        { "id": "district.mumbai.harbour_works", "kind": "district" },
+        { "id": "district.mumbai.informal", "kind": "district" },
+        { "id": "district.mumbai.port", "kind": "district" },
+        { "id": "gate.mumbai.harbour_works", "kind": "gate_site" },
+        { "id": "gate.mumbai.offshore_shoal", "kind": "gate_site" }
+      ]
+    },
+    {
+      "path": "/commerce_funding/commerce_funding.rank_0.json",
+      "records": [
+        { "id": "commerce_funding.rank_0", "kind": "commerce_funding" }
+      ]
+    },
+    {
+      "path": "/commerce_funding/commerce_funding.rank_1.json",
+      "records": [
+        { "id": "commerce_funding.rank_1", "kind": "commerce_funding" }
+      ]
+    },
+    {
+      "path": "/commerce_funding/commerce_funding.rank_2.json",
+      "records": [
+        { "id": "commerce_funding.rank_2", "kind": "commerce_funding" }
+      ]
+    },
+    {
+      "path": "/commerce_funding/commerce_funding.rank_3.json",
+      "records": [
+        { "id": "commerce_funding.rank_3", "kind": "commerce_funding" }
+      ]
+    },
+    {
+      "path": "/commerce_funding/commerce_funding.rank_4.json",
+      "records": [
+        { "id": "commerce_funding.rank_4", "kind": "commerce_funding" }
+      ]
+    },
+    {
+      "path": "/commerce_item/item.biscuits.json",
+      "records": [
+        { "id": "item.biscuits", "kind": "commerce_item" }
+      ]
+    },
+    {
+      "path": "/commerce_item/item.geometry_box.json",
+      "records": [
+        { "id": "item.geometry_box", "kind": "commerce_item" }
+      ]
+    },
+    {
+      "path": "/commerce_item/item.jhalmuri.json",
+      "records": [
+        { "id": "item.jhalmuri", "kind": "commerce_item" }
+      ]
+    },
+    {
+      "path": "/commerce_item/item.notebook.json",
+      "records": [
+        { "id": "item.notebook", "kind": "commerce_item" }
+      ]
+    },
+    {
+      "path": "/commerce_item/item.ors.json",
+      "records": [
+        { "id": "item.ors", "kind": "commerce_item" }
+      ]
+    },
+    {
+      "path": "/commerce_item/item.pen.json",
+      "records": [
+        { "id": "item.pen", "kind": "commerce_item" }
+      ]
+    },
+    {
+      "path": "/commerce_item/item.phuchka.json",
+      "records": [
+        { "id": "item.phuchka", "kind": "commerce_item" }
+      ]
+    },
+    {
+      "path": "/commerce_item/item.plasters.json",
+      "records": [
+        { "id": "item.plasters", "kind": "commerce_item" }
+      ]
+    },
+    {
+      "path": "/commerce_item/item.rasgulla.json",
+      "records": [
+        { "id": "item.rasgulla", "kind": "commerce_item" }
+      ]
+    },
+    {
+      "path": "/commerce_item/item.sandesh.json",
+      "records": [
+        { "id": "item.sandesh", "kind": "commerce_item" }
+      ]
+    },
+    {
+      "path": "/commerce_item/item.tea.json",
+      "records": [
+        { "id": "item.tea", "kind": "commerce_item" }
+      ]
+    },
+    {
+      "path": "/commerce_shop/shop.pharmacy.json",
+      "records": [
+        { "id": "shop.pharmacy", "kind": "commerce_shop" }
+      ]
+    },
+    {
+      "path": "/commerce_shop/shop.shanti_chai.json",
+      "records": [
+        { "id": "shop.shanti_chai", "kind": "commerce_shop" }
+      ]
+    },
+    {
+      "path": "/commerce_shop/shop.stationery.json",
+      "records": [
+        { "id": "shop.stationery", "kind": "commerce_shop" }
+      ]
+    },
+    {
+      "path": "/commerce_shop/shop.sweet_shop.json",
+      "records": [
+        { "id": "shop.sweet_shop", "kind": "commerce_shop" }
+      ]
+    },
+    {
+      "path": "/commerce_shop/shop.vendor.json",
+      "records": [
+        { "id": "shop.vendor", "kind": "commerce_shop" }
+      ]
+    },
+    {
+      "path": "/coordinate_case/coordinate_case.xi_debate_hall.json",
+      "records": [
+        { "id": "coordinate_case.xi_debate_hall", "kind": "coordinate_case" }
+      ]
+    },
+    {
+      "path": "/coordinate_case/coordinate_case.xi_science_stall.json",
+      "records": [
+        { "id": "coordinate_case.xi_science_stall", "kind": "coordinate_case" }
+      ]
+    },
+    {
+      "path": "/coordinate_case/coordinate_case.xi_sports_day_stall.json",
+      "records": [
+        { "id": "coordinate_case.xi_sports_day_stall", "kind": "coordinate_case" }
+      ]
+    },
+    {
+      "path": "/coordinate_case/coordinate_case.xi_titration_report.json",
+      "records": [
+        { "id": "coordinate_case.xi_titration_report", "kind": "coordinate_case" }
+      ]
+    },
+    {
+      "path": "/coordinate_family/coordinate_family.xi_group_work.json",
+      "records": [
+        { "id": "coordinate_family.xi_group_work", "kind": "coordinate_family" }
+      ]
+    },
+    {
+      "path": "/education_stage/stage.gate_academy.json",
+      "records": [
+        { "id": "stage.gate_academy", "kind": "education_stage" }
+      ]
+    },
+    {
+      "path": "/education_stage/stage.higher_secondary.json",
+      "records": [
+        { "id": "stage.higher_secondary", "kind": "education_stage" }
+      ]
+    },
+    {
+      "path": "/education_stage/stage.open_schooling.json",
+      "records": [
+        { "id": "stage.open_schooling", "kind": "education_stage" }
+      ]
+    },
+    {
+      "path": "/education_stage/stage.postgraduate.json",
+      "records": [
+        { "id": "stage.postgraduate", "kind": "education_stage" }
+      ]
+    },
+    {
+      "path": "/education_stage/stage.pre_primary.json",
+      "records": [
+        { "id": "stage.pre_primary", "kind": "education_stage" }
+      ]
+    },
+    {
+      "path": "/education_stage/stage.primary.json",
+      "records": [
+        { "id": "stage.primary", "kind": "education_stage" }
+      ]
+    },
+    {
+      "path": "/education_stage/stage.secondary.json",
+      "records": [
+        { "id": "stage.secondary", "kind": "education_stage" }
+      ]
+    },
+    {
+      "path": "/education_stage/stage.undergraduate.json",
+      "records": [
+        { "id": "stage.undergraduate", "kind": "education_stage" }
+      ]
+    },
+    {
+      "path": "/education_stage/stage.upper_primary.json",
+      "records": [
+        { "id": "stage.upper_primary", "kind": "education_stage" }
+      ]
+    },
+    {
+      "path": "/education_stage/stage.vocational.json",
+      "records": [
+        { "id": "stage.vocational", "kind": "education_stage" }
+      ]
+    },
+    {
+      "path": "/explain_case/explain_case.xi_annex_notice.json",
+      "records": [
+        { "id": "explain_case.xi_annex_notice", "kind": "explain_case" }
+      ]
+    },
+    {
+      "path": "/explain_case/explain_case.xi_canal_log.json",
+      "records": [
+        { "id": "explain_case.xi_canal_log", "kind": "explain_case" }
+      ]
+    },
+    {
+      "path": "/explain_case/explain_case.xi_tea_price.json",
+      "records": [
+        { "id": "explain_case.xi_tea_price", "kind": "explain_case" }
+      ]
+    },
+    {
+      "path": "/explain_case/explain_case.xi_tram_poem.json",
+      "records": [
+        { "id": "explain_case.xi_tram_poem", "kind": "explain_case" }
+      ]
+    },
+    {
+      "path": "/explain_family/explain_family.xi_claim_evidence_limit.json",
+      "records": [
+        { "id": "explain_family.xi_claim_evidence_limit", "kind": "explain_family" }
+      ]
+    },
+    {
+      "path": "/institution/institution.ananta_instrument_park.json",
+      "records": [
+        { "id": "institution.ananta_instrument_park", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.aravalli_gate_academy.json",
+      "records": [
+        { "id": "institution.aravalli_gate_academy", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.astra_kolkata.json",
+      "records": [
+        { "id": "institution.astra_kolkata", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.bhagirathi_state_university.json",
+      "records": [
+        { "id": "institution.bhagirathi_state_university", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.chandrabindu_primary.json",
+      "records": [
+        { "id": "institution.chandrabindu_primary", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.coromandel_gate_clinic.json",
+      "records": [
+        { "id": "institution.coromandel_gate_clinic", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.coromandel_medical_university.json",
+      "records": [
+        { "id": "institution.coromandel_medical_university", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.deccan_research_university.json",
+      "records": [
+        { "id": "institution.deccan_research_university", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.delhi_civic_school_14.json",
+      "records": [
+        { "id": "institution.delhi_civic_school_14", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.harbourline_university.json",
+      "records": [
+        { "id": "institution.harbourline_university", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.hooghly_tide_academy.json",
+      "records": [
+        { "id": "institution.hooghly_tide_academy", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.kadal_polytechnic.json",
+      "records": [
+        { "id": "institution.kadal_polytechnic", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.konkan_gate_university.json",
+      "records": [
+        { "id": "institution.konkan_gate_university", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.mallige_high_school.json",
+      "records": [
+        { "id": "institution.mallige_high_school", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.nabapara_vidyalaya.json",
+      "records": [
+        { "id": "institution.nabapara_vidyalaya", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.nga.json",
+      "records": [
+        { "id": "institution.nga", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.nga_tower_hall_delhi.json",
+      "records": [
+        { "id": "institution.nga_tower_hall_delhi", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.nga_ward_annex_nabapara.json",
+      "records": [
+        { "id": "institution.nga_ward_annex_nabapara", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.nilgagan_school.json",
+      "records": [
+        { "id": "institution.nilgagan_school", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.sagar_kinara_school.json",
+      "records": [
+        { "id": "institution.sagar_kinara_school", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.shalbon_heights.json",
+      "records": [
+        { "id": "institution.shalbon_heights", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.vanguard_guild.json",
+      "records": [
+        { "id": "institution.vanguard_guild", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/institution/institution.yamuna_institute.json",
+      "records": [
+        { "id": "institution.yamuna_institute", "kind": "institution" }
+      ]
+    },
+    {
+      "path": "/investigate_case/investigate_case.xi_bicycle_lamp.json",
+      "records": [
+        { "id": "investigate_case.xi_bicycle_lamp", "kind": "investigate_case" }
+      ]
+    },
+    {
+      "path": "/investigate_case/investigate_case.xi_cash_total.json",
+      "records": [
+        { "id": "investigate_case.xi_cash_total", "kind": "investigate_case" }
+      ]
+    },
+    {
+      "path": "/investigate_case/investigate_case.xi_classroom_fan.json",
+      "records": [
+        { "id": "investigate_case.xi_classroom_fan", "kind": "investigate_case" }
+      ]
+    },
+    {
+      "path": "/investigate_case/investigate_case.xi_torch_circuit.json",
+      "records": [
+        { "id": "investigate_case.xi_torch_circuit", "kind": "investigate_case" }
+      ]
+    },
+    {
+      "path": "/investigate_family/investigate_family.xi_fault_finding.json",
+      "records": [
+        { "id": "investigate_family.xi_fault_finding", "kind": "investigate_family" }
+      ]
+    },
+    {
+      "path": "/nation/nation.india.json",
+      "records": [
+        { "id": "nation.india", "kind": "nation" }
+      ]
+    },
+    {
+      "path": "/npc_schedule/npc_schedule.anindita_sen.json",
+      "records": [
+        { "id": "npc_schedule.anindita_sen", "kind": "npc_schedule" }
+      ]
+    },
+    {
+      "path": "/npc_schedule/npc_schedule.arun_paul.json",
+      "records": [
+        { "id": "npc_schedule.arun_paul", "kind": "npc_schedule" }
+      ]
+    },
+    {
+      "path": "/npc_schedule/npc_schedule.care_worker.json",
+      "records": [
+        { "id": "npc_schedule.care_worker", "kind": "npc_schedule" }
+      ]
+    },
+    {
+      "path": "/npc_schedule/npc_schedule.debashis_pal.json",
+      "records": [
+        { "id": "npc_schedule.debashis_pal", "kind": "npc_schedule" }
+      ]
+    },
+    {
+      "path": "/npc_schedule/npc_schedule.farida_qadri.json",
+      "records": [
+        { "id": "npc_schedule.farida_qadri", "kind": "npc_schedule" }
+      ]
+    },
+    {
+      "path": "/npc_schedule/npc_schedule.ishita_banerjee.json",
+      "records": [
+        { "id": "npc_schedule.ishita_banerjee", "kind": "npc_schedule" }
+      ]
+    },
+    {
+      "path": "/npc_schedule/npc_schedule.mahua_saha.json",
+      "records": [
+        { "id": "npc_schedule.mahua_saha", "kind": "npc_schedule" }
+      ]
+    },
+    {
+      "path": "/npc_schedule/npc_schedule.mira_sen.json",
+      "records": [
+        { "id": "npc_schedule.mira_sen", "kind": "npc_schedule" }
+      ]
+    },
+    {
+      "path": "/npc_schedule/npc_schedule.nirmal_bose.json",
+      "records": [
+        { "id": "npc_schedule.nirmal_bose", "kind": "npc_schedule" }
+      ]
+    },
+    {
+      "path": "/npc_schedule/npc_schedule.prabir_chatterjee.json",
+      "records": [
+        { "id": "npc_schedule.prabir_chatterjee", "kind": "npc_schedule" }
+      ]
+    },
+    {
+      "path": "/npc_schedule/npc_schedule.purnima_das.json",
+      "records": [
+        { "id": "npc_schedule.purnima_das", "kind": "npc_schedule" }
+      ]
+    },
+    {
+      "path": "/npc_schedule/npc_schedule.rekha_bose.json",
+      "records": [
+        { "id": "npc_schedule.rekha_bose", "kind": "npc_schedule" }
+      ]
+    },
+    {
+      "path": "/npc_schedule/npc_schedule.rupa_ghosh.json",
+      "records": [
+        { "id": "npc_schedule.rupa_ghosh", "kind": "npc_schedule" }
+      ]
+    },
+    {
+      "path": "/npc_schedule/npc_schedule.sahana_mitra.json",
+      "records": [
+        { "id": "npc_schedule.sahana_mitra", "kind": "npc_schedule" }
+      ]
+    },
+    {
+      "path": "/npc_schedule/npc_schedule.satyajit_dutta.json",
+      "records": [
+        { "id": "npc_schedule.satyajit_dutta", "kind": "npc_schedule" }
+      ]
+    },
+    {
+      "path": "/npc_schedule/npc_schedule.subrata_dey.json",
+      "records": [
+        { "id": "npc_schedule.subrata_dey", "kind": "npc_schedule" }
+      ]
+    },
+    {
+      "path": "/problem_case/problem_case.xi_bus_stand_queue.json",
+      "records": [
+        { "id": "problem_case.xi_bus_stand_queue", "kind": "problem_case" }
+      ]
+    },
+    {
+      "path": "/problem_case/problem_case.xi_cricket_required_rate.json",
+      "records": [
+        { "id": "problem_case.xi_cricket_required_rate", "kind": "problem_case" }
+      ]
+    },
+    {
+      "path": "/problem_case/problem_case.xi_daybook_cash_box.json",
+      "records": [
+        { "id": "problem_case.xi_daybook_cash_box", "kind": "problem_case" }
+      ]
+    },
+    {
+      "path": "/problem_case/problem_case.xi_monsoon_canal.json",
+      "records": [
+        { "id": "problem_case.xi_monsoon_canal", "kind": "problem_case" }
+      ]
+    },
+    {
+      "path": "/problem_case/problem_case.xi_overhead_tank_draw.json",
+      "records": [
+        { "id": "problem_case.xi_overhead_tank_draw", "kind": "problem_case" }
+      ]
+    },
+    {
+      "path": "/problem_case/problem_case.xi_roof_rainwater_tank.json",
+      "records": [
+        { "id": "problem_case.xi_roof_rainwater_tank", "kind": "problem_case" }
+      ]
+    },
+    {
+      "path": "/problem_case/problem_case.xi_stationery_notebooks.json",
+      "records": [
+        { "id": "problem_case.xi_stationery_notebooks", "kind": "problem_case" }
+      ]
+    },
+    {
+      "path": "/problem_case/problem_case.xi_water_tank_level.json",
+      "records": [
+        { "id": "problem_case.xi_water_tank_level", "kind": "problem_case" }
+      ]
+    },
+    {
+      "path": "/problem_family/problem_family.xi_stock_and_flow.json",
+      "records": [
+        { "id": "problem_family.xi_stock_and_flow", "kind": "problem_family" }
+      ]
+    },
+    {
+      "path": "/realm_region/realm.region.india.json",
+      "records": [
+        { "id": "realm.region.india", "kind": "realm_region" }
+      ]
+    },
+    {
+      "path": "/resource/resource.condition.json",
+      "records": [
+        { "id": "resource.condition", "kind": "resource" }
+      ]
+    },
+    {
+      "path": "/resource/resource.credentials.json",
+      "records": [
+        { "id": "resource.credentials", "kind": "resource" }
+      ]
+    },
+    {
+      "path": "/resource/resource.gate_materials.json",
+      "records": [
+        { "id": "resource.gate_materials", "kind": "resource" }
+      ]
+    },
+    {
+      "path": "/resource/resource.household_budget.json",
+      "records": [
+        { "id": "resource.household_budget", "kind": "resource" }
+      ]
+    },
+    {
+      "path": "/resource/resource.money_personal.json",
+      "records": [
+        { "id": "resource.money_personal", "kind": "resource" }
+      ]
+    },
+    {
+      "path": "/resource/resource.public_goods.json",
+      "records": [
+        { "id": "resource.public_goods", "kind": "resource" }
+      ]
+    },
+    {
+      "path": "/resource/resource.relationships.json",
+      "records": [
+        { "id": "resource.relationships", "kind": "resource" }
+      ]
+    },
+    {
+      "path": "/resource/resource.time.json",
+      "records": [
+        { "id": "resource.time", "kind": "resource" }
+      ]
+    },
+    {
+      "path": "/school_type/school_type.government.json",
+      "records": [
+        { "id": "school_type.government", "kind": "school_type" }
+      ]
+    },
+    {
+      "path": "/school_type/school_type.government_aided.json",
+      "records": [
+        { "id": "school_type.government_aided", "kind": "school_type" }
+      ]
+    },
+    {
+      "path": "/school_type/school_type.private_budget.json",
+      "records": [
+        { "id": "school_type.private_budget", "kind": "school_type" }
+      ]
+    },
+    {
+      "path": "/school_type/school_type.private_premium.json",
+      "records": [
+        { "id": "school_type.private_premium", "kind": "school_type" }
+      ]
+    },
+    {
+      "path": "/school_type/school_type.residential_academy.json",
+      "records": [
+        { "id": "school_type.residential_academy", "kind": "school_type" }
+      ]
+    },
+    {
+      "path": "/skill/skill.academics.json",
+      "records": [
+        { "id": "skill.academics", "kind": "skill" }
+      ]
+    },
+    {
+      "path": "/skill/skill.commerce.json",
+      "records": [
+        { "id": "skill.commerce", "kind": "skill" }
+      ]
+    },
+    {
+      "path": "/skill/skill.communication.json",
+      "records": [
+        { "id": "skill.communication", "kind": "skill" }
+      ]
+    },
+    {
+      "path": "/skill/skill.computing.json",
+      "records": [
+        { "id": "skill.computing", "kind": "skill" }
+      ]
+    },
+    {
+      "path": "/skill/skill.creative.json",
+      "records": [
+        { "id": "skill.creative", "kind": "skill" }
+      ]
+    },
+    {
+      "path": "/skill/skill.fitness.json",
+      "records": [
+        { "id": "skill.fitness", "kind": "skill" }
+      ]
+    },
+    {
+      "path": "/skill/skill.household_tasks.json",
+      "records": [
+        { "id": "skill.household_tasks", "kind": "skill" }
+      ]
+    },
+    {
+      "path": "/skill/skill.logistics.json",
+      "records": [
+        { "id": "skill.logistics", "kind": "skill" }
+      ]
+    },
+    {
+      "path": "/skill/skill.practical_repair.json",
+      "records": [
+        { "id": "skill.practical_repair", "kind": "skill" }
+      ]
+    },
+    {
+      "path": "/skill/skill.self_management.json",
+      "records": [
+        { "id": "skill.self_management", "kind": "skill" }
+      ]
+    },
+    {
+      "path": "/stratum/stratum.comfortable.json",
+      "records": [
+        { "id": "stratum.comfortable", "kind": "stratum" }
+      ]
+    },
+    {
+      "path": "/stratum/stratum.institutional_care.json",
+      "records": [
+        { "id": "stratum.institutional_care", "kind": "stratum" }
+      ]
+    },
+    {
+      "path": "/stratum/stratum.middle.json",
+      "records": [
+        { "id": "stratum.middle", "kind": "stratum" }
+      ]
+    },
+    {
+      "path": "/stratum/stratum.precarious.json",
+      "records": [
+        { "id": "stratum.precarious", "kind": "stratum" }
+      ]
+    },
+    {
+      "path": "/stratum/stratum.working.json",
+      "records": [
+        { "id": "stratum.working", "kind": "stratum" }
+      ]
+    },
+    {
+      "path": "/structure/structure.construct_an_explanation.json",
+      "records": [
+        { "id": "structure.construct_an_explanation", "kind": "structure" }
+      ]
+    },
+    {
+      "path": "/structure/structure.coordinate_a_group.json",
+      "records": [
+        { "id": "structure.coordinate_a_group", "kind": "structure" }
+      ]
+    },
+    {
+      "path": "/structure/structure.investigate_a_fault.json",
+      "records": [
+        { "id": "structure.investigate_a_fault", "kind": "structure" }
+      ]
+    },
+    {
+      "path": "/structure/structure.model_a_system.json",
+      "records": [
+        { "id": "structure.model_a_system", "kind": "structure" }
+      ]
+    },
+    {
+      "path": "/thread_template/thread.borrowed_notes.json",
+      "records": [
+        { "id": "thread.borrowed_notes", "kind": "thread_template" }
+      ]
+    },
+    {
+      "path": "/thread_template/thread.canal_side_stall.json",
+      "records": [
+        { "id": "thread.canal_side_stall", "kind": "thread_template" }
+      ]
+    },
+    {
+      "path": "/thread_template/thread.evening_rota.json",
+      "records": [
+        { "id": "thread.evening_rota", "kind": "thread_template" }
+      ]
+    },
+    {
+      "path": "/thread_template/thread.hidden_pickup.json",
+      "records": [
+        { "id": "thread.hidden_pickup", "kind": "thread_template" }
+      ]
+    },
+    {
+      "path": "/thread_template/thread.refused_invitations.json",
+      "records": [
+        { "id": "thread.refused_invitations", "kind": "thread_template" }
+      ]
+    },
+    {
+      "path": "/thread_template/thread.sports_day_rival.json",
+      "records": [
+        { "id": "thread.sports_day_rival", "kind": "thread_template" }
+      ]
+    },
+    {
+      "path": "/university_tier/university_tier.central.json",
+      "records": [
+        { "id": "university_tier.central", "kind": "university_tier" }
+      ]
+    },
+    {
+      "path": "/university_tier/university_tier.gate_research.json",
+      "records": [
+        { "id": "university_tier.gate_research", "kind": "university_tier" }
+      ]
+    },
+    {
+      "path": "/university_tier/university_tier.national_institute.json",
+      "records": [
+        { "id": "university_tier.national_institute", "kind": "university_tier" }
+      ]
+    },
+    {
+      "path": "/university_tier/university_tier.private.json",
+      "records": [
+        { "id": "university_tier.private", "kind": "university_tier" }
+      ]
+    },
+    {
+      "path": "/university_tier/university_tier.state.json",
+      "records": [
+        { "id": "university_tier.state", "kind": "university_tier" }
+      ]
+    }
+  ]
+}
