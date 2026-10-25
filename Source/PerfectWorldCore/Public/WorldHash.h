@@ -33,8 +33,9 @@ namespace PerfectWorld
  * 4 (2026-10-11): adds the dayloop section, HashDayLoop of the player's day (ROADMAP M2-12).
  * 5 (2026-10-17): adds conversations (person ID and canonical module text) and doors (canonical module text).
  * 6 (2026-10-19): appends journal (count, then day/person/first-met absolute minute).
+ * 7 (2026-10-23, R8-04): appends commerce, every CommerceState field in declaration order (WorldHash.cpp).
  */
-constexpr std::uint32_t WorldHashVersion = 6;
+constexpr std::uint32_t WorldHashVersion = 7;
 
 struct WorldSectionHash
 {
@@ -42,7 +43,7 @@ struct WorldSectionHash
     std::uint64_t Hash = 0;
 };
 
-/** Fixed order: meta, clock, flags, gates, rng, dayloop, conversations, doors, journal. */
+/** Fixed order: meta, clock, flags, gates, rng, dayloop, conversations, doors, journal, commerce. */
 [[nodiscard]] PERFECTWORLDCORE_API std::vector<WorldSectionHash> HashWorldSections(const WorldState& state);
 
 /** The fingerprint of the whole world. */
@@ -51,7 +52,8 @@ struct WorldSectionHash
 /**
  * HashWorldState with the doors section taken over `doorsText`, the pw.doors text as a save stored it. A save whose door
  * set migrated on load authenticates its original checksum with this; for unmigrated doors it equals HashWorldState.
- * Pass hashVersion 5 only to authenticate historical v8 saves: that encoding excludes the new journal section.
+ * Pass hashVersion 5 only to authenticate historical v8 saves (that encoding excludes journal and commerce) and 6 only for
+ * historical v9 saves (it excludes commerce). Any other version hashes every current section.
  */
 [[nodiscard]] PERFECTWORLDCORE_API std::uint64_t HashWorldStateWithDoorsText(const WorldState& state, std::string_view doorsText,
                                                                          std::uint32_t hashVersion = WorldHashVersion);
@@ -66,6 +68,8 @@ struct ReplayOptions
     bool KeepResults = false;
     /** Borrowed immutable content binding; use the same school catalogues that produced school.* commands. */
     DayLoopCatalogues School{};
+    /** Borrowed immutable commerce binding (R8-03); use the same catalogues that produced commerce.* commands. */
+    WorldCommerceCatalogues Commerce{};
 };
 
 struct ReplayCheckpoint
@@ -98,4 +102,13 @@ struct ReplayResult
 [[nodiscard]] PERFECTWORLDCORE_API ReplayResult ReplayCommandLog(std::uint64_t worldSeed,
                                                                   const std::vector<Command>& log,
                                                                   const ReplayOptions& options = {});
+
+/**
+ * Replay from an authenticated snapshot (a loaded save's World, or the world a WorldSim began from) instead of a seed. The
+ * seed-only form always begins a rank-0 household; this form keeps the snapshot's commerce funding policy, wallet,
+ * inventory and revision, so a life created at any Household Resources rank replays exactly.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API ReplayResult ReplayCommandLogFromSnapshot(const WorldState& initial,
+                                                                              const std::vector<Command>& log,
+                                                                              const ReplayOptions& options = {});
 } // namespace PerfectWorld

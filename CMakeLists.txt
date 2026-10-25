@@ -820,6 +820,17 @@ add_executable(PerfectWorldCommerceContentTests Tests/CommerceContentTests.cpp)
 target_link_libraries(PerfectWorldCommerceContentTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldCommerceContentTests COMMAND PerfectWorldCommerceContentTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
+# R84: commerce persistence (pw.commerce/1, schema 10, hash 7), legacy authentication and household migration.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldSaveCommerce.cpp)
+add_executable(PerfectWorldWorldSaveCommerceTests Tests/WorldSaveCommerceTests.cpp Tests/WorldSaveCommerceFixtureTests.cpp)
+target_link_libraries(PerfectWorldWorldSaveCommerceTests PRIVATE PerfectWorldCore)
+target_compile_definitions(PerfectWorldWorldSaveCommerceTests PRIVATE PW_COMMERCE_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
+add_test(NAME PerfectWorldWorldSaveCommerceTests COMMAND PerfectWorldWorldSaveCommerceTests)
+add_executable(PerfectWorldWorldHashCommerceTests Tests/WorldHashCommerceTests.cpp)
+target_link_libraries(PerfectWorldWorldHashCommerceTests PRIVATE PerfectWorldCore)
+target_compile_definitions(PerfectWorldWorldHashCommerceTests PRIVATE PW_COMMERCE_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
+add_test(NAME PerfectWorldWorldHashCommerceTests COMMAND PerfectWorldWorldHashCommerceTests)
+
 # S01: deterministic content manifest, diffing and pwcontent check-manifest gate.
 target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ContentManifest.cpp)
 add_executable(PerfectWorldContentManifestTests Tests/ContentManifestTests.cpp)

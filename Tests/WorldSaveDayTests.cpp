@@ -44,8 +44,8 @@ std::string AsVersionSix(std::string text)
     const DayTestSpan span = DayLoopSpan(text);
     const std::size_t end = text.find("\n  }", span.End);
     text.erase(span.Begin, end - span.Begin);
-    text = ReplaceOnce(text, "\"schemaVersion\": 9", "\"schemaVersion\": 6");
-    return ReplaceOnce(text, "\"hashVersion\": 6", "\"hashVersion\": 3");
+    text = ReplaceOnce(text, "\"schemaVersion\": " + std::to_string(WorldSaveSchemaVersion), "\"schemaVersion\": 6");
+    return ReplaceOnce(text, "\"hashVersion\": " + std::to_string(WorldHashVersion), "\"hashVersion\": 3");
 }
 
 void TestOldVersionSix()
@@ -62,6 +62,8 @@ void TestOldVersionSix()
     // Everything else is as saved; the player has a fresh day beginning at the world clock's instant.
     WorldSaveData expected = rich;
     expected.World.DayLoop = NewDayLoopState(rich.World.Clock.Now());
+    // R8-04: no commerce before v10; the household's starting wallet is granted once at the saved instant.
+    expected.World.Commerce = InitialiseCommerce(1, rich.World.Clock.Now()).State;
     CheckSame(expected, loaded, "an old v6 save loads with a fresh day at the world clock");
     Check(loaded.World.DayLoop.Now == rich.World.Clock.Now() && loaded.World.DayLoop.Seq == 0 && loaded.World.DayLoop.Phase == DayPhase::Plan &&
               loaded.World.DayLoop.Attendance == NewDayLoopState(rich.World.Clock.Now()).Attendance && IsWorldDayInStep(loaded.World),
@@ -85,19 +87,22 @@ void TestOldVersionSix()
     }
     Check(ErrorOf(ReplaceOnce(v6, "\"rng\"", "\"rngX\"")) == WorldSaveError::Malformed, "a renamed member of a v6 record is refused");
     Check(ErrorOf(ReplaceOnce(v6, "\"rng\":", "\"dayloop\": \"\", \"rng\":")) == WorldSaveError::Malformed, "a v6 record may not carry a day loop");
-    Check(ErrorOf(ReplaceOnce(v6, "\"schemaVersion\": 6", "\"schemaVersion\": 10")) == WorldSaveError::UnsupportedVersion, "a version after v9 is unsupported");
+    Check(ErrorOf(ReplaceOnce(v6, "\"schemaVersion\": 6", "\"schemaVersion\": " + std::to_string(WorldSaveSchemaVersion + 1))) == WorldSaveError::UnsupportedVersion, "a version after the current one is unsupported");
 
     // A clock the day loop cannot hold (before the campaign, or past its hundred years) is refused rather than given an invalid day.
     for (const GameInstant clock : {GameInstant{-5}, DayLoopMaxInstant + 1})
     {
-        WorldSaveData odd = RichSave(52, 3);
-        GameClockSave save;
-        save.Now = clock;
-        Check(odd.World.Clock.RestoreSave(save) && odd.World.Clock.Now() == clock, "set an odd clock");
+        // Today's writer refuses a world whose allowance cannot stand at such a clock (R8-04), so the old file's clock is
+        // written into the text of a valid save: no pending events, as a bare clock at that instant would have.
+        std::string oddText = AsVersionSix(SerializeWorldSave(RichSave(52, 3)));
+        const std::size_t clockAt = oddText.find("\"clock\": {");
+        Check(clockAt != DayTestNpos, "the v6 text has a clock");
+        oddText.replace(clockAt, oddText.find("] }", clockAt) + 3 - clockAt,
+                        "\"clock\": { \"now\": " + std::to_string(clock) + ", \"nextHandle\": 1, \"pending\": [] }");
         const WorldSaveResult refused = [&]
         {
             WorldSaveData out = Sentinel();
-            const WorldSaveResult r = DeserializeWorldSave(AsVersionSix(SerializeWorldSave(odd)), out);
+            const WorldSaveResult r = DeserializeWorldSave(oddText, out);
             Check(!r.Succeeded() && Untouched(out), "a v6 save with an unusable clock is refused and leaves the target untouched");
             return r;
         }();
@@ -127,7 +132,11 @@ void TestVersionSevenDay()
         GameClockSave save;
         save.Now = -5;
         Check(odd.World.Clock.RestoreSave(save), "set a negative clock");
-        Check(ErrorOf(SerializeWorldSave(odd)) == WorldSaveError::InvalidWorld, "a clock before the campaign cannot hold a day");
+        Check(SerializeWorldSave(odd).empty(), "the writer refuses an allowance that cannot stand at the clock (R8-04)");
+        std::string oddText = text;
+        const std::size_t clockAt = oddText.find("\"clock\": {");
+        oddText.replace(clockAt, oddText.find("] }", clockAt) + 3 - clockAt, "\"clock\": { \"now\": -5, \"nextHandle\": 1, \"pending\": [] }");
+        Check(ErrorOf(oddText) == WorldSaveError::InvalidWorld, "a clock before the campaign cannot hold a day");
     }
     {
         WorldSaveData invalid = rich;
@@ -168,7 +177,7 @@ void TestVersionSevenDay()
 void TestOneClock()
 {
     const CharacterCreationSave creation = MakeCreation("parent_household");
-    WorldSim live(5);
+    WorldSim live(5, CreatorOf(creation));
     Check(live.Submit({CommandSource::Player, AdvanceTime{90}}).Accepted, "advance before the save");
     WorldSaveData loaded = Sentinel();
     const WorldSaveResult result = DeserializeWorldSave(SerializeWorldSave(SaveOf(live, creation)), loaded);
