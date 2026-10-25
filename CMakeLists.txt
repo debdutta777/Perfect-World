@@ -861,3 +861,17 @@ add_executable(PerfectWorldTutorialContentTests Tests/TutorialContentTests.cpp)
 target_link_libraries(PerfectWorldTutorialContentTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldTutorialContentTests COMMAND PerfectWorldTutorialContentTests
     ${CMAKE_SOURCE_DIR}/Data/Content ${CMAKE_SOURCE_DIR}/Data/Text/en/tutorial.awakening.json)
+
+# Phase 2 A4 (Gemini Argon): teachers, classmates and home obligations - school_scene content.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/SchoolLifeContent.cpp)
+add_executable(PerfectWorldSchoolLifeContentTests Tests/SchoolLifeContentTests.cpp)
+target_link_libraries(PerfectWorldSchoolLifeContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSchoolLifeContentTests COMMAND PerfectWorldSchoolLifeContentTests
+    ${CMAKE_SOURCE_DIR}/Data/Content ${CMAKE_SOURCE_DIR}/Data/Text/en/phase2_a4.json)
+
+# Phase 2 A7 (Gemini Argon): tower scenario content - tower_scenario.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/TowerScenarioContent.cpp)
+add_executable(PerfectWorldTowerScenarioContentTests Tests/TowerScenarioContentTests.cpp)
+target_link_libraries(PerfectWorldTowerScenarioContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldTowerScenarioContentTests COMMAND PerfectWorldTowerScenarioContentTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/tower_scenario ${CMAKE_SOURCE_DIR}/Data/Text/en/phase2_a7.json)
