@@ -1,7 +1,7 @@
 {
   "schema": "pw.content_manifest/1",
-  "fileCount": 177,
-  "recordCount": 213,
+  "fileCount": 178,
+  "recordCount": 237,
   "files": [
     {
       "path": "/ability_recipe/ability_recipe.agni_assay_flame.json",
@@ -1069,6 +1069,35 @@
       "path": "/thread_template/thread.sports_day_rival.json",
       "records": [
         { "id": "thread.sports_day_rival", "kind": "thread_template" }
+      ]
+    },
+    {
+      "path": "/tutorial_content/tutorial.awakening.json",
+      "records": [
+        { "id": "actor.awakening.arup", "kind": "tutorial_actor" },
+        { "id": "actor.awakening.care", "kind": "tutorial_actor" },
+        { "id": "actor.awakening.family", "kind": "tutorial_actor" },
+        { "id": "actor.awakening.mira", "kind": "tutorial_actor" },
+        { "id": "actor.awakening.teacher", "kind": "tutorial_actor" },
+        { "id": "choice.awakening.corridor.evade", "kind": "tutorial_choice" },
+        { "id": "choice.awakening.corridor.hold", "kind": "tutorial_choice" },
+        { "id": "choice.awakening.corridor.improvise", "kind": "tutorial_choice" },
+        { "id": "choice.awakening.corridor.withdraw", "kind": "tutorial_choice" },
+        { "id": "choice.awakening.crossing.assist", "kind": "tutorial_choice" },
+        { "id": "choice.awakening.crossing.hold", "kind": "tutorial_choice" },
+        { "id": "choice.awakening.crossing.observe", "kind": "tutorial_choice" },
+        { "id": "choice.awakening.crossing.withdraw", "kind": "tutorial_choice" },
+        { "id": "choice.awakening.delivery.assist", "kind": "tutorial_choice" },
+        { "id": "choice.awakening.delivery.evade", "kind": "tutorial_choice" },
+        { "id": "choice.awakening.delivery.observe", "kind": "tutorial_choice" },
+        { "id": "choice.awakening.delivery.withdraw", "kind": "tutorial_choice" },
+        { "id": "scene.awakening.announcement", "kind": "tutorial_scene" },
+        { "id": "scene.awakening.evening_care", "kind": "tutorial_scene" },
+        { "id": "scene.awakening.evening_family", "kind": "tutorial_scene" },
+        { "id": "situation.awakening.corridor", "kind": "tutorial_situation" },
+        { "id": "situation.awakening.crossing", "kind": "tutorial_situation" },
+        { "id": "situation.awakening.delivery", "kind": "tutorial_situation" },
+        { "id": "tutorial.awakening", "kind": "tutorial_content" }
       ]
     },
     {
