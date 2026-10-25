@@ -825,3 +825,12 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/Awakenin
 add_executable(PerfectWorldAwakeningInputsTests Tests/AwakeningInputsTests.cpp)
 target_link_libraries(PerfectWorldAwakeningInputsTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldAwakeningInputsTests COMMAND PerfectWorldAwakeningInputsTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# R93: authored tutorial content, registry schema and complete text-reference validation.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/ContentTutorialSchemas.cpp
+    Source/PerfectWorldCore/Private/TutorialContent.cpp)
+add_executable(PerfectWorldTutorialContentTests Tests/TutorialContentTests.cpp)
+target_link_libraries(PerfectWorldTutorialContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldTutorialContentTests COMMAND PerfectWorldTutorialContentTests
+    ${CMAKE_SOURCE_DIR}/Data/Content ${CMAKE_SOURCE_DIR}/Data/Text/en/tutorial.awakening.json)
