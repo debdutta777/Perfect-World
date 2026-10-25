@@ -825,3 +825,9 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/Awakenin
 add_executable(PerfectWorldAwakeningInputsTests Tests/AwakeningInputsTests.cpp)
 target_link_libraries(PerfectWorldAwakeningInputsTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldAwakeningInputsTests COMMAND PerfectWorldAwakeningInputsTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# R92: supervised tutorial situations, recovery, safe withdrawal, make-up and atomic grant.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/TutorialDungeon.cpp)
+add_executable(PerfectWorldTutorialDungeonTests Tests/TutorialDungeonTests.cpp)
+target_link_libraries(PerfectWorldTutorialDungeonTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldTutorialDungeonTests COMMAND PerfectWorldTutorialDungeonTests ${CMAKE_SOURCE_DIR}/Data/Content)
