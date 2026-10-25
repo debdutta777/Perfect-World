@@ -819,3 +819,11 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/Commerce
 add_executable(PerfectWorldCommerceContentTests Tests/CommerceContentTests.cpp)
 target_link_libraries(PerfectWorldCommerceContentTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldCommerceContentTests COMMAND PerfectWorldCommerceContentTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# S01: deterministic content manifest, diffing and pwcontent check-manifest gate.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ContentManifest.cpp)
+add_executable(PerfectWorldContentManifestTests Tests/ContentManifestTests.cpp)
+target_link_libraries(PerfectWorldContentManifestTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldContentManifestTests COMMAND PerfectWorldContentManifestTests ${CMAKE_SOURCE_DIR}/Data/Content)
+add_test(NAME PerfectWorldContentManifestData COMMAND pwcontent check-manifest ${CMAKE_SOURCE_DIR}/Data/Content)
+
