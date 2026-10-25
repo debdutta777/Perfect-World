@@ -59,7 +59,7 @@ WorldSaveResult WorldSaveReadLane(const JsonValue& value, WorldState& world)
         world.Conversations.emplace(person, std::move(parsed.State));
     }
     world.Doors = std::move(parsedDoors.State);
-    // WorldSaveReadWorld requires this field only for v9; v8 migration leaves the log empty.
+    // WorldSaveReadWorld requires this field from v9; v8 migration leaves the log empty.
     if (const JsonValue* journal = value.Find("journal"))
     {
         if (!journal->IsString() || !DeserialiseLaneJournal(journal->String, world))
