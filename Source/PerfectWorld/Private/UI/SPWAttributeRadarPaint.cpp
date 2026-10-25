@@ -36,7 +36,8 @@ void PgClosed(FSlateWindowElementList& Elements, int32 Layer, const FGeometry& G
               const FLinearColor& Colour, float Width)
 {
     if (Poly.Num() < 2) return;
-    Poly.Add(Poly[0]);
+    const auto First = Poly[0]; // copy first; Add(Poly[0]) can reallocate under the reference
+    Poly.Add(First);
     PgLines(Elements, Layer, Geometry, MoveTemp(Poly), Colour, Width);
 }
 
