@@ -1,0 +1,308 @@
+{
+  "type": "school_scene",
+  "id": "p2.household_responsibility",
+  "note": "Phase 2 A4 bounded arc 3: renegotiating an evening household or care-home responsibility around Class XI study hours.",
+  "arcKind": "household_responsibility",
+  "titleKey": "school_scene.p2.household_responsibility.title",
+  "summaryKey": "school_scene.p2.household_responsibility.summary",
+  "institution": "institution.nabapara_vidyalaya",
+  "calendar": "calendar.nabapara_2042_43",
+  "term": "term_1",
+  "calendarSpan": "unit_test_1",
+  "threadTemplate": "thread.evening_rota",
+  "entryScene": "scene_morning_notice",
+  "cast": [
+    {
+      "person": "person.amrita_basu",
+      "role": "teacher",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.ishan_sheikh",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.household_adult",
+      "role": "family_adult",
+      "originVariant": "family",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.care_worker",
+      "role": "care_adult",
+      "originVariant": "care_home",
+      "proposedNewCast": false
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_morning_notice",
+      "titleKey": "school_scene.p2.household_responsibility.morning.title",
+      "promptKey": "school_scene.p2.household_responsibility.morning.prompt",
+      "speaker": "person.amrita_basu",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "timetable_period",
+        "bellSchedule": "bell_schedule.nabapara_xi_science",
+        "periodIndex": 0,
+        "subject": "physics",
+        "zone": "nhss.xi_a",
+        "startMinute": 620,
+        "endMinute": 665
+      },
+      "conversationTopic": "topic.amrita_basu.evening_study_timings",
+      "choices": [
+        {
+          "id": "raise_family_evening_clash",
+          "labelKey": "school_scene.p2.household_responsibility.morning.family.label",
+          "outcomeKey": "school_scene.p2.household_responsibility.morning.family.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_family_rota_talk",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.rota.family_evening_review_planned",
+            "factSet": "school.rota.discussing_family_errands"
+          }
+        },
+        {
+          "id": "raise_care_handover_clash",
+          "labelKey": "school_scene.p2.household_responsibility.morning.care.label",
+          "outcomeKey": "school_scene.p2.household_responsibility.morning.care.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_care_handover_rota",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.rota.care_handover_review_planned",
+            "factSet": "school.rota.discussing_care_rota"
+          }
+        },
+        {
+          "id": "keep_existing_schedule_refusal",
+          "labelKey": "school_scene.p2.household_responsibility.morning.refuse.label",
+          "outcomeKey": "school_scene.p2.household_responsibility.morning.refuse.outcome",
+          "costMinutes": 0,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.rota.kept_existing_timings",
+            "factSet": "school.rota.kept_as_was"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_family_rota_talk",
+      "titleKey": "school_scene.p2.household_responsibility.family_rota.title",
+      "promptKey": "school_scene.p2.household_responsibility.family_rota.prompt",
+      "speaker": "person.household_adult",
+      "originVariant": "family",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.player_home",
+        "startMinute": 1095,
+        "endMinute": 1155
+      },
+      "conversationTopic": "topic.household_adult.renegotiate_evening_errands",
+      "choices": [
+        {
+          "id": "propose_earlier_errand_slot",
+          "labelKey": "school_scene.p2.household_responsibility.family_rota.redesign.label",
+          "outcomeKey": "school_scene.p2.household_responsibility.family_rota.redesign.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_evening_settlement",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.rota.family_errand_shifted",
+            "threadEvent": "obligation_covered",
+            "factSet": "school.rota.family_slot_moved",
+            "journalAgreementFact": "a4_rota_family_redesigned"
+          }
+        },
+        {
+          "id": "split_errand_days_across_week",
+          "labelKey": "school_scene.p2.household_responsibility.family_rota.share.label",
+          "outcomeKey": "school_scene.p2.household_responsibility.family_rota.share.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_evening_settlement",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.rota.family_days_alternated",
+            "threadEvent": "jobs_shared",
+            "factSet": "school.rota.family_days_shared",
+            "journalAgreementFact": "a4_rota_family_shared"
+          }
+        },
+        {
+          "id": "pause_renegotiation_for_now",
+          "labelKey": "school_scene.p2.household_responsibility.family_rota.refuse.label",
+          "outcomeKey": "school_scene.p2.household_responsibility.family_rota.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.rota.family_rota_left_unchanged",
+            "factSet": "school.rota.family_rota_unchanged"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_care_handover_rota",
+      "titleKey": "school_scene.p2.household_responsibility.care_rota.title",
+      "promptKey": "school_scene.p2.household_responsibility.care_rota.prompt",
+      "speaker": "person.care_worker",
+      "originVariant": "care_home",
+      "schedule": {
+        "slotKind": "care_handover",
+        "periodIndex": -1,
+        "zone": "location.nabapara.care_home",
+        "startMinute": 850,
+        "endMinute": 895
+      },
+      "conversationTopic": "topic.care_worker.renegotiate_evening_rota",
+      "choices": [
+        {
+          "id": "log_handover_rota_shift",
+          "labelKey": "school_scene.p2.household_responsibility.care_rota.redesign.label",
+          "outcomeKey": "school_scene.p2.household_responsibility.care_rota.redesign.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_evening_settlement",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.rota.care_handover_note_logged",
+            "threadEvent": "obligation_covered",
+            "factSet": "school.rota.care_slot_moved",
+            "journalAgreementFact": "a4_rota_care_redesigned"
+          }
+        },
+        {
+          "id": "share_dining_prep_with_floor",
+          "labelKey": "school_scene.p2.household_responsibility.care_rota.share.label",
+          "outcomeKey": "school_scene.p2.household_responsibility.care_rota.share.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_evening_settlement",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.rota.care_rota_alternated",
+            "threadEvent": "jobs_shared",
+            "factSet": "school.rota.care_days_shared",
+            "journalAgreementFact": "a4_rota_care_shared"
+          }
+        },
+        {
+          "id": "keep_current_care_rota_refusal",
+          "labelKey": "school_scene.p2.household_responsibility.care_rota.refuse.label",
+          "outcomeKey": "school_scene.p2.household_responsibility.care_rota.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.rota.care_rota_left_unchanged",
+            "factSet": "school.rota.care_rota_unchanged"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_evening_settlement",
+      "titleKey": "school_scene.p2.household_responsibility.settlement.title",
+      "promptKey": "school_scene.p2.household_responsibility.settlement.prompt",
+      "speaker": "person.ishan_sheikh",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.evening_study",
+        "startMinute": 1170,
+        "endMinute": 1230
+      },
+      "conversationTopic": "topic.ishan_sheikh.evening_revision_hour",
+      "choices": [
+        {
+          "id": "confirm_redesigned_evening_timetable",
+          "labelKey": "school_scene.p2.household_responsibility.settlement.redesigned.label",
+          "outcomeKey": "school_scene.p2.household_responsibility.settlement.redesigned.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "redesigned",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.rota.redesigned_plan_settled",
+            "threadEvent": "rota_renegotiated",
+            "factSet": "school.rota.settled_redesigned"
+          }
+        },
+        {
+          "id": "confirm_shared_alternating_duties",
+          "labelKey": "school_scene.p2.household_responsibility.settlement.shared.label",
+          "outcomeKey": "school_scene.p2.household_responsibility.settlement.shared.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "shared_out",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.rota.shared_plan_settled",
+            "threadEvent": "jobs_shared",
+            "factSet": "school.rota.settled_shared_out"
+          }
+        },
+        {
+          "id": "step_back_to_old_hours_refusal",
+          "labelKey": "school_scene.p2.household_responsibility.settlement.refuse.label",
+          "outcomeKey": "school_scene.p2.household_responsibility.settlement.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.rota.returned_to_old_hours",
+            "factSet": "school.rota.reverted_without_fuss",
+            "factCleared": "school.rota.discussing_family_errands"
+          }
+        }
+      ]
+    }
+  ],
+  "resolutions": [
+    "redesigned",
+    "shared_out",
+    "stayed_as_was"
+  ]
+}

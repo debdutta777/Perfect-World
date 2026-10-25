@@ -1,0 +1,362 @@
+{
+  "type": "school_scene",
+  "id": "p2.changing_friendship",
+  "note": "Phase 2 A4 bounded arc 1: a changing friendship with Tara Das under afternoon pickup pressure, with family and care-home variants.",
+  "arcKind": "changing_friendship",
+  "titleKey": "school_scene.p2.changing_friendship.title",
+  "summaryKey": "school_scene.p2.changing_friendship.summary",
+  "institution": "institution.nabapara_vidyalaya",
+  "calendar": "calendar.nabapara_2042_43",
+  "term": "term_1",
+  "calendarSpan": "unit_test_1",
+  "threadTemplate": "thread.hidden_pickup",
+  "entryScene": "scene_tiffin_absence",
+  "cast": [
+    {
+      "person": "person.tara_das",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.mira_sen",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.amrita_basu",
+      "role": "teacher",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.household_adult",
+      "role": "family_adult",
+      "originVariant": "family",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.care_worker",
+      "role": "care_adult",
+      "originVariant": "care_home",
+      "proposedNewCast": false
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_tiffin_absence",
+      "titleKey": "school_scene.p2.changing_friendship.tiffin.title",
+      "promptKey": "school_scene.p2.changing_friendship.tiffin.prompt",
+      "speaker": "person.tara_das",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "school_break",
+        "bellSchedule": "bell_schedule.nabapara_xi_humanities",
+        "periodIndex": -1,
+        "zone": "nhss.court",
+        "startMinute": 770,
+        "endMinute": 800
+      },
+      "conversationTopic": "topic.tara_das.tiffin_hurry",
+      "choices": [
+        {
+          "id": "ask_after_tara",
+          "labelKey": "school_scene.p2.changing_friendship.tiffin.ask.label",
+          "outcomeKey": "school_scene.p2.changing_friendship.tiffin.ask.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_bengali_note",
+          "consequence": {
+            "targetPerson": "person.tara_das",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.friendship.tiffin_check_in",
+            "threadEvent": "confidence_shared",
+            "factSet": "school.friendship.tara_confided"
+          }
+        },
+        {
+          "id": "check_home_window_family",
+          "labelKey": "school_scene.p2.changing_friendship.tiffin.family_prep.label",
+          "outcomeKey": "school_scene.p2.changing_friendship.tiffin.family_prep.outcome",
+          "costMinutes": 5,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_family_evening_window",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.friendship.family_window_check",
+            "factSet": "school.friendship.checking_family_window"
+          }
+        },
+        {
+          "id": "check_care_handover",
+          "labelKey": "school_scene.p2.changing_friendship.tiffin.care_prep.label",
+          "outcomeKey": "school_scene.p2.changing_friendship.tiffin.care_prep.outcome",
+          "costMinutes": 5,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_care_handover_window",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.friendship.care_window_check",
+            "factSet": "school.friendship.checking_care_window"
+          }
+        },
+        {
+          "id": "respect_quiet_refusal",
+          "labelKey": "school_scene.p2.changing_friendship.tiffin.refuse.label",
+          "outcomeKey": "school_scene.p2.changing_friendship.tiffin.refuse.outcome",
+          "costMinutes": 0,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.tara_das",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.friendship.left_unpressed",
+            "factSet": "school.friendship.gave_space"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_family_evening_window",
+      "titleKey": "school_scene.p2.changing_friendship.family_window.title",
+      "promptKey": "school_scene.p2.changing_friendship.family_window.prompt",
+      "speaker": "person.household_adult",
+      "originVariant": "family",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.player_home",
+        "startMinute": 1110,
+        "endMinute": 1170
+      },
+      "conversationTopic": "topic.household_adult.thursday_detour",
+      "choices": [
+        {
+          "id": "family_clear_thursday_afternoon",
+          "labelKey": "school_scene.p2.changing_friendship.family_window.agree.label",
+          "outcomeKey": "school_scene.p2.changing_friendship.family_window.agree.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_bengali_note",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.friendship.family_detour_cleared",
+            "factSet": "school.friendship.family_detour_agreed",
+            "journalAgreementFact": "a4_friendship_family_window"
+          }
+        },
+        {
+          "id": "family_keep_evening_routine",
+          "labelKey": "school_scene.p2.changing_friendship.family_window.refuse.label",
+          "outcomeKey": "school_scene.p2.changing_friendship.family_window.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.friendship.family_hours_kept",
+            "factSet": "school.friendship.kept_family_hours"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_care_handover_window",
+      "titleKey": "school_scene.p2.changing_friendship.care_window.title",
+      "promptKey": "school_scene.p2.changing_friendship.care_window.prompt",
+      "speaker": "person.care_worker",
+      "originVariant": "care_home",
+      "schedule": {
+        "slotKind": "care_handover",
+        "periodIndex": -1,
+        "zone": "location.nabapara.care_home",
+        "startMinute": 840,
+        "endMinute": 885
+      },
+      "conversationTopic": "topic.care_worker.thursday_sign_in_note",
+      "choices": [
+        {
+          "id": "care_log_late_sign_in",
+          "labelKey": "school_scene.p2.changing_friendship.care_window.agree.label",
+          "outcomeKey": "school_scene.p2.changing_friendship.care_window.agree.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_bengali_note",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.friendship.care_handover_logged",
+            "factSet": "school.friendship.care_sign_in_arranged",
+            "journalAgreementFact": "a4_friendship_care_sign_in"
+          }
+        },
+        {
+          "id": "care_keep_standard_sign_in",
+          "labelKey": "school_scene.p2.changing_friendship.care_window.refuse.label",
+          "outcomeKey": "school_scene.p2.changing_friendship.care_window.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.friendship.care_sign_in_unchanged",
+            "factSet": "school.friendship.kept_care_sign_in"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_bengali_note",
+      "titleKey": "school_scene.p2.changing_friendship.bengali.title",
+      "promptKey": "school_scene.p2.changing_friendship.bengali.prompt",
+      "speaker": "person.tara_das",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "timetable_period",
+        "bellSchedule": "bell_schedule.nabapara_xi_humanities",
+        "periodIndex": 5,
+        "subject": "bengali",
+        "zone": "nhss.xi_c",
+        "startMinute": 905,
+        "endMinute": 950
+      },
+      "conversationTopic": "topic.tara_das.sibling_pickup_plan",
+      "choices": [
+        {
+          "id": "cover_thursday_pickup",
+          "labelKey": "school_scene.p2.changing_friendship.bengali.cover.label",
+          "outcomeKey": "school_scene.p2.changing_friendship.bengali.cover.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_after_school_gate",
+          "consequence": {
+            "targetPerson": "person.tara_das",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.friendship.offered_pickup_cover",
+            "threadEvent": "pickup_covered",
+            "factSet": "school.friendship.covering_pickup",
+            "journalAgreementFact": "a4_tara_pickup_shared"
+          }
+        },
+        {
+          "id": "suggest_amrita_timetable_flex",
+          "labelKey": "school_scene.p2.changing_friendship.bengali.adviser.label",
+          "outcomeKey": "school_scene.p2.changing_friendship.bengali.adviser.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "support_found",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "defend",
+            "relationshipEvent": "school.friendship.adviser_brought_in",
+            "threadEvent": "adviser_consulted",
+            "factSet": "school.friendship.amrita_consulted",
+            "journalAgreementFact": "a4_amrita_attendance_flex"
+          }
+        },
+        {
+          "id": "decline_pickup_kindly",
+          "labelKey": "school_scene.p2.changing_friendship.bengali.refuse.label",
+          "outcomeKey": "school_scene.p2.changing_friendship.bengali.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.tara_das",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.friendship.honest_limit_shared",
+            "factSet": "school.friendship.declined_without_breach"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_after_school_gate",
+      "titleKey": "school_scene.p2.changing_friendship.gate.title",
+      "promptKey": "school_scene.p2.changing_friendship.gate.prompt",
+      "speaker": "person.tara_das",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "after_school",
+        "bellSchedule": "bell_schedule.nabapara_xi_humanities",
+        "periodIndex": -1,
+        "zone": "nhss.court",
+        "startMinute": 955,
+        "endMinute": 1005
+      },
+      "conversationTopic": "topic.tara_das.primary_gate_walk",
+      "choices": [
+        {
+          "id": "walk_primary_gate_together",
+          "labelKey": "school_scene.p2.changing_friendship.gate.walk.label",
+          "outcomeKey": "school_scene.p2.changing_friendship.gate.walk.outcome",
+          "costMinutes": 25,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "lightened",
+          "consequence": {
+            "targetPerson": "person.tara_das",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.friendship.primary_gate_walked",
+            "threadEvent": "pickup_covered",
+            "factSet": "school.friendship.pickup_lightened"
+          }
+        },
+        {
+          "id": "bring_amrita_into_plan",
+          "labelKey": "school_scene.p2.changing_friendship.gate.adviser.label",
+          "outcomeKey": "school_scene.p2.changing_friendship.gate.adviser.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "support_found",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.friendship.gate_pass_arranged",
+            "threadEvent": "adviser_consulted",
+            "factSet": "school.friendship.gate_pass_settled"
+          }
+        },
+        {
+          "id": "step_back_after_one_walk",
+          "labelKey": "school_scene.p2.changing_friendship.gate.refuse.label",
+          "outcomeKey": "school_scene.p2.changing_friendship.gate.refuse.outcome",
+          "costMinutes": 10,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.tara_das",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.friendship.parted_warmly_at_gate",
+            "factSet": "school.friendship.stepped_back_kindly",
+            "factCleared": "school.friendship.covering_pickup"
+          }
+        }
+      ]
+    }
+  ],
+  "resolutions": [
+    "lightened",
+    "support_found",
+    "carried_alone"
+  ]
+}

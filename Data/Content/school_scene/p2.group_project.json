@@ -1,0 +1,368 @@
+{
+  "type": "school_scene",
+  "id": "p2.group_project",
+  "note": "Phase 2 A4 bounded arc 2: a practical and chart group project with Amrita Basu, Ishan Sheikh, Mira Sen and proposed new classmate Deven Chakraborty.",
+  "arcKind": "group_project",
+  "titleKey": "school_scene.p2.group_project.title",
+  "summaryKey": "school_scene.p2.group_project.summary",
+  "institution": "institution.nabapara_vidyalaya",
+  "calendar": "calendar.nabapara_2042_43",
+  "term": "term_1",
+  "calendarSpan": "half_yearly",
+  "threadTemplate": "thread.borrowed_notes",
+  "entryScene": "scene_lab_briefing",
+  "cast": [
+    {
+      "person": "person.amrita_basu",
+      "role": "teacher",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.ishan_sheikh",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.mira_sen",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.deven_chakraborty",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": true
+    },
+    {
+      "person": "person.household_adult",
+      "role": "family_adult",
+      "originVariant": "family",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.care_worker",
+      "role": "care_adult",
+      "originVariant": "care_home",
+      "proposedNewCast": false
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_lab_briefing",
+      "titleKey": "school_scene.p2.group_project.briefing.title",
+      "promptKey": "school_scene.p2.group_project.briefing.prompt",
+      "speaker": "person.amrita_basu",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "timetable_period",
+        "bellSchedule": "bell_schedule.nabapara_xi_science",
+        "periodIndex": 2,
+        "subject": "chemistry",
+        "zone": "nhss.lab_phys",
+        "startMinute": 720,
+        "endMinute": 765
+      },
+      "conversationTopic": "topic.amrita_basu.group_chart_briefing",
+      "choices": [
+        {
+          "id": "pair_with_ishan_and_deven",
+          "labelKey": "school_scene.p2.group_project.briefing.pair.label",
+          "outcomeKey": "school_scene.p2.group_project.briefing.pair.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_english_chart_handover",
+          "consequence": {
+            "targetPerson": "person.deven_chakraborty",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.project.bench_roles_divided",
+            "factSet": "school.project.joined_bench_team",
+            "journalAgreementFact": "a4_project_bench_roster"
+          }
+        },
+        {
+          "id": "plan_family_table_draft",
+          "labelKey": "school_scene.p2.group_project.briefing.family_table.label",
+          "outcomeKey": "school_scene.p2.group_project.briefing.family_table.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_family_evening_draft",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.project.asked_family_table",
+            "factSet": "school.project.planning_family_table"
+          }
+        },
+        {
+          "id": "plan_care_study_room_draft",
+          "labelKey": "school_scene.p2.group_project.briefing.care_table.label",
+          "outcomeKey": "school_scene.p2.group_project.briefing.care_table.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_care_evening_draft",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.project.asked_care_study_table",
+            "factSet": "school.project.planning_care_table"
+          }
+        },
+        {
+          "id": "work_solo_packet_refusal",
+          "labelKey": "school_scene.p2.group_project.briefing.refuse.label",
+          "outcomeKey": "school_scene.p2.group_project.briefing.refuse.outcome",
+          "costMinutes": 0,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.project.chose_individual_logbook",
+            "factSet": "school.project.individual_option_chosen"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_family_evening_draft",
+      "titleKey": "school_scene.p2.group_project.family_draft.title",
+      "promptKey": "school_scene.p2.group_project.family_draft.prompt",
+      "speaker": "person.household_adult",
+      "originVariant": "family",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.player_home",
+        "startMinute": 1140,
+        "endMinute": 1200
+      },
+      "conversationTopic": "topic.household_adult.project_chart_space",
+      "choices": [
+        {
+          "id": "clear_dining_table_for_charts",
+          "labelKey": "school_scene.p2.group_project.family_draft.clear.label",
+          "outcomeKey": "school_scene.p2.group_project.family_draft.clear.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_english_chart_handover",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.project.family_table_shared",
+            "factSet": "school.project.family_charts_drafted",
+            "journalAgreementFact": "a4_project_family_table"
+          }
+        },
+        {
+          "id": "keep_table_free_refusal",
+          "labelKey": "school_scene.p2.group_project.family_draft.refuse.label",
+          "outcomeKey": "school_scene.p2.group_project.family_draft.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.project.family_evening_kept_clear",
+            "factSet": "school.project.deferred_home_charts"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_care_evening_draft",
+      "titleKey": "school_scene.p2.group_project.care_draft.title",
+      "promptKey": "school_scene.p2.group_project.care_draft.prompt",
+      "speaker": "person.care_worker",
+      "originVariant": "care_home",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.care_home",
+        "startMinute": 1140,
+        "endMinute": 1200
+      },
+      "conversationTopic": "topic.care_worker.common_room_chart_slot",
+      "choices": [
+        {
+          "id": "reserve_common_room_table",
+          "labelKey": "school_scene.p2.group_project.care_draft.reserve.label",
+          "outcomeKey": "school_scene.p2.group_project.care_draft.reserve.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_english_chart_handover",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.project.care_common_table_booked",
+            "factSet": "school.project.care_charts_drafted",
+            "journalAgreementFact": "a4_project_care_common_table"
+          }
+        },
+        {
+          "id": "decline_common_table_refusal",
+          "labelKey": "school_scene.p2.group_project.care_draft.refuse.label",
+          "outcomeKey": "school_scene.p2.group_project.care_draft.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.project.care_evening_kept_quiet",
+            "factSet": "school.project.deferred_care_charts"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_english_chart_handover",
+      "titleKey": "school_scene.p2.group_project.handover.title",
+      "promptKey": "school_scene.p2.group_project.handover.prompt",
+      "speaker": "person.mira_sen",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "timetable_period",
+        "bellSchedule": "bell_schedule.nabapara_xi_commerce",
+        "periodIndex": 3,
+        "subject": "english",
+        "zone": "nhss.xi_b",
+        "startMinute": 805,
+        "endMinute": 850
+      },
+      "conversationTopic": "topic.mira_sen.chart_folder_handover",
+      "choices": [
+        {
+          "id": "return_ledger_packet_promptly",
+          "labelKey": "school_scene.p2.group_project.handover.return.label",
+          "outcomeKey": "school_scene.p2.group_project.handover.return.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "returned",
+          "consequence": {
+            "targetPerson": "person.mira_sen",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.project.notes_returned_clean",
+            "threadEvent": "notes_returned",
+            "factSet": "school.project.packet_returned_on_bell"
+          }
+        },
+        {
+          "id": "stay_to_reconcile_observations",
+          "labelKey": "school_scene.p2.group_project.handover.reconcile.label",
+          "outcomeKey": "school_scene.p2.group_project.handover.reconcile.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_after_school_review",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.project.observations_compared",
+            "threadEvent": "notes_explained_together",
+            "factSet": "school.project.reconciling_readings",
+            "journalAgreementFact": "a4_project_joint_revision"
+          }
+        },
+        {
+          "id": "step_back_from_joint_draft",
+          "labelKey": "school_scene.p2.group_project.handover.refuse.label",
+          "outcomeKey": "school_scene.p2.group_project.handover.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.deven_chakraborty",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.project.separate_sections_filed",
+            "factSet": "school.project.filed_separate_section"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_after_school_review",
+      "titleKey": "school_scene.p2.group_project.review.title",
+      "promptKey": "school_scene.p2.group_project.review.prompt",
+      "speaker": "person.deven_chakraborty",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "after_school",
+        "bellSchedule": "bell_schedule.nabapara_xi_science",
+        "periodIndex": -1,
+        "zone": "nhss.xi_a",
+        "startMinute": 955,
+        "endMinute": 1000
+      },
+      "conversationTopic": "topic.deven_chakraborty.worked_examples_review",
+      "choices": [
+        {
+          "id": "walk_through_worked_examples",
+          "labelKey": "school_scene.p2.group_project.review.explain.label",
+          "outcomeKey": "school_scene.p2.group_project.review.explain.outcome",
+          "costMinutes": 25,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "shared_understanding",
+          "consequence": {
+            "targetPerson": "person.deven_chakraborty",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.project.examples_worked_together",
+            "threadEvent": "notes_explained_together",
+            "factSet": "school.project.shared_understanding_reached"
+          }
+        },
+        {
+          "id": "hand_back_clean_sheets_only",
+          "labelKey": "school_scene.p2.group_project.review.return.label",
+          "outcomeKey": "school_scene.p2.group_project.review.return.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "returned",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.project.clean_sheets_returned",
+            "threadEvent": "notes_returned",
+            "factSet": "school.project.clean_sheets_filed"
+          }
+        },
+        {
+          "id": "wrap_early_for_home",
+          "labelKey": "school_scene.p2.group_project.review.refuse.label",
+          "outcomeKey": "school_scene.p2.group_project.review.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.deven_chakraborty",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.project.wrapped_on_time",
+            "factSet": "school.project.left_on_time",
+            "factCleared": "school.project.reconciling_readings"
+          }
+        }
+      ]
+    }
+  ],
+  "resolutions": [
+    "returned",
+    "shared_understanding",
+    "faded"
+  ]
+}
