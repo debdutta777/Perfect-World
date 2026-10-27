@@ -230,7 +230,7 @@
         "bellSchedule": "bell_schedule.nabapara_xi_humanities",
         "periodIndex": 5,
         "subject": "bengali",
-        "zone": "nhss.xi_c",
+        "zone": "nhss.room_xi_humanities",
         "startMinute": 905,
         "endMinute": 950
       },

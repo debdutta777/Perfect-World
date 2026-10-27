@@ -116,7 +116,7 @@ void AuditCatalogueAndSimulation(const SchoolSceneCatalogue& catalogue, const Sc
             if (scene.Origin == SchoolOriginVariant::CareHome) sawCareVariant = true;
 
             bool hasRefusalChoice = false;
-            for (const SchoolSceneChoice& ch : scene.Choices)
+            for (const SchoolSceneNodeChoice& ch : scene.Choices)
             {
                 if (ch.bRefusal) hasRefusalChoice = true;
                 Expect(!ch.bHumiliating, "no choice is humiliating: " + ch.Id);
@@ -149,13 +149,13 @@ void AuditCatalogueAndSimulation(const SchoolSceneCatalogue& catalogue, const Sc
 
             // Refusal path from entry resolves cleanly without humiliation.
             const auto refIt = std::find_if(entry->Choices.begin(), entry->Choices.end(),
-                                            [](const SchoolSceneChoice& c) { return c.bRefusal; });
+                                            [](const SchoolSceneNodeChoice& c) { return c.bRefusal; });
             Expect(refIt != entry->Choices.end(), "entry scene has refusal option");
             const SchoolLifeOutcome refOut = ResolveSchoolSceneChoice(catalogue, arc.Id, entry->Id, refIt->Id, careOrigin);
             Expect(refOut.bOk && !refOut.ResolutionId.empty(), "entry refusal resolves cleanly");
 
             // Cross-origin scene choice is refused.
-            for (const SchoolSceneChoice& ch : entry->Choices)
+            for (const SchoolSceneNodeChoice& ch : entry->Choices)
             {
                 if (ch.NextSceneId.empty()) continue;
                 const SchoolSceneNode* next = arc.FindScene(ch.NextSceneId);

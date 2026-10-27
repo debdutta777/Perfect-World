@@ -1,7 +1,6 @@
 #include "TowerScenarioContent.h"
 
-#include "ContentSchemaBuilders.h"
-#include "StructureModelCatalogue.h"
+#include "ContentSchemas.h"
 
 #include <algorithm>
 #include <array>
@@ -12,7 +11,7 @@ namespace PerfectWorld
 namespace
 {
 constexpr bool HasPrefix(std::string_view v, std::string_view p) { return v.size() > p.size() && v.rfind(p, 0) == 0; }
-const JsonValue* FindMember(const JsonValue& o, std::string_view k) { return o.Kind == JsonKind::Object ? o.Find(k) : nullptr; }
+const JsonValue* FindMember(const JsonValue& o, std::string_view k) { return o.IsObject() ? o.Find(k) : nullptr; }
 
 bool HasOnlyAllowedKeys(const JsonValue& obj, std::span<const std::string_view> allowed, std::string& err)
 {
@@ -24,7 +23,7 @@ bool HasOnlyAllowedKeys(const JsonValue& obj, std::span<const std::string_view> 
 bool ReadString(const JsonValue& obj, std::string_view key, std::string& out, std::string& err, bool allowEmpty = false)
 {
     const JsonValue* val = FindMember(obj, key);
-    if (val == nullptr || val->Kind != JsonKind::String || (!allowEmpty && val->String.empty()))
+    if (val == nullptr || !val->IsString() || (!allowEmpty && val->String.empty()))
     {
         err = "missing or invalid string field \"" + std::string(key) + "\"";
         return false;
@@ -35,18 +34,18 @@ bool ReadString(const JsonValue& obj, std::string_view key, std::string& out, st
 bool ReadInt(const JsonValue& obj, std::string_view key, std::int64_t lo, std::int64_t hi, std::int32_t& out, std::string& err)
 {
     const JsonValue* val = FindMember(obj, key);
-    if (val == nullptr || val->Kind != JsonKind::Integer || val->Integer < lo || val->Integer > hi)
+    if (val == nullptr || !val->Integer || *val->Integer < lo || *val->Integer > hi)
     {
         err = "invalid integer field \"" + std::string(key) + "\"";
         return false;
     }
-    out = static_cast<std::int32_t>(val->Integer);
+    out = static_cast<std::int32_t>(*val->Integer);
     return true;
 }
 bool ReadBool(const JsonValue& obj, std::string_view key, bool& out, std::string& err)
 {
     const JsonValue* val = FindMember(obj, key);
-    if (val == nullptr || val->Kind != JsonKind::Bool) { err = "invalid bool field \"" + std::string(key) + "\""; return false; }
+    if (val == nullptr || val->Type != JsonValue::Kind::Bool) { err = "invalid bool field \"" + std::string(key) + "\""; return false; }
     out = val->Bool;
     return true;
 }
@@ -60,7 +59,7 @@ bool ParseBeat(const JsonValue& node, const TowerScenario& s, std::set<std::stri
 {
     static constexpr std::array<std::string_view, 6> beatKeys = {"id", "promptKey", "metric", "clues", "decisions", "recovery"};
     std::string metricStr;
-    if (node.Kind != JsonKind::Object || !HasOnlyAllowedKeys(node, beatKeys, err) ||
+    if (!node.IsObject() || !HasOnlyAllowedKeys(node, beatKeys, err) ||
         !ReadString(node, "id", beat.Id, err) || !ReadString(node, "promptKey", beat.PromptKey, err) ||
         !ReadString(node, "metric", metricStr, err) || !HasPrefix(beat.Id, "beat.") ||
         !beatIds.insert(beat.Id).second || !HasPrefix(beat.PromptKey, "p2.a7.") ||
@@ -71,7 +70,7 @@ bool ParseBeat(const JsonValue& node, const TowerScenario& s, std::set<std::stri
     }
 
     const JsonValue* cluesVal = FindMember(node, "clues");
-    if (cluesVal == nullptr || cluesVal->Kind != JsonKind::Array || cluesVal->Array.size() < 2 || cluesVal->Array.size() > 4)
+    if (cluesVal == nullptr || !cluesVal->IsArray() || cluesVal->Array.size() < 2 || cluesVal->Array.size() > 4)
     {
         err = "each beat must have 2..4 clues";
         return false;
@@ -82,7 +81,7 @@ bool ParseBeat(const JsonValue& node, const TowerScenario& s, std::set<std::stri
         static constexpr std::array<std::string_view, 3> clueKeys = {"id", "method", "textKey"};
         TowerScenarioClue clue;
         std::string mStr;
-        if (cNode.Kind != JsonKind::Object || !HasOnlyAllowedKeys(cNode, clueKeys, err) ||
+        if (!cNode.IsObject() || !HasOnlyAllowedKeys(cNode, clueKeys, err) ||
             !ReadString(cNode, "id", clue.Id, err) || !ReadString(cNode, "method", mStr, err) ||
             !ReadString(cNode, "textKey", clue.TextKey, err) || !HasPrefix(clue.Id, "clue.") ||
             !clueIds.insert(clue.Id).second || !TowerMethodFromId(mStr, clue.Method) || !HasPrefix(clue.TextKey, "p2.a7."))
@@ -97,7 +96,7 @@ bool ParseBeat(const JsonValue& node, const TowerScenario& s, std::set<std::stri
     static constexpr std::array<std::string_view, 8> recKeys = {
         "id", "promptKey", "actionKey", "outcomeKey", "method", "restoredScoreMilli", "minutes", "nextBeat"};
     std::string recMStr;
-    if (recVal == nullptr || recVal->Kind != JsonKind::Object || !HasOnlyAllowedKeys(*recVal, recKeys, err) ||
+    if (recVal == nullptr || !recVal->IsObject() || !HasOnlyAllowedKeys(*recVal, recKeys, err) ||
         !ReadString(*recVal, "id", beat.Recovery.Id, err) || !ReadString(*recVal, "promptKey", beat.Recovery.PromptKey, err) ||
         !ReadString(*recVal, "actionKey", beat.Recovery.ActionKey, err) || !ReadString(*recVal, "outcomeKey", beat.Recovery.OutcomeKey, err) ||
         !ReadString(*recVal, "method", recMStr, err) ||
@@ -112,7 +111,7 @@ bool ParseBeat(const JsonValue& node, const TowerScenario& s, std::set<std::stri
     }
 
     const JsonValue* decsVal = FindMember(node, "decisions");
-    if (decsVal == nullptr || decsVal->Kind != JsonKind::Array || decsVal->Array.size() < 2 || decsVal->Array.size() > 4)
+    if (decsVal == nullptr || !decsVal->IsArray() || decsVal->Array.size() < 2 || decsVal->Array.size() > 4)
     {
         err = "each beat must have 2..4 decisions";
         return false;
@@ -125,7 +124,7 @@ bool ParseBeat(const JsonValue& node, const TowerScenario& s, std::set<std::stri
             "id", "labelKey", "outcomeKey", "method", "isCombat", "isMistake", "scoreMilli", "minutes", "nextBeat"};
         TowerScenarioDecision dec;
         std::string dMStr;
-        if (dNode.Kind != JsonKind::Object || !HasOnlyAllowedKeys(dNode, decKeys, err) ||
+        if (!dNode.IsObject() || !HasOnlyAllowedKeys(dNode, decKeys, err) ||
             !ReadString(dNode, "id", dec.Id, err) || !ReadString(dNode, "labelKey", dec.LabelKey, err) ||
             !ReadString(dNode, "outcomeKey", dec.OutcomeKey, err) || !ReadString(dNode, "method", dMStr, err) ||
             !ReadBool(dNode, "isCombat", dec.IsCombat, err) || !ReadBool(dNode, "isMistake", dec.IsMistake, err) ||
@@ -193,7 +192,7 @@ TowerScenarioResult LoadTowerScenario(const ContentRecord& record)
     static constexpr std::array<std::string_view, 14> topKeys = {
         "type", "id", "note", "route", "floor", "runner", "primaryMethod",
         "allowsCombat", "classroomModel", "changedRuleKey", "titleKey", "setupKey", "entryBeat", "beats"};
-    if (root.Kind != JsonKind::Object || !HasOnlyAllowedKeys(root, topKeys, result.Error))
+    if (!root.IsObject() || !HasOnlyAllowedKeys(root, topKeys, result.Error))
     {
         if (result.Error.empty()) result.Error = "root must be a JSON object";
         return result;
@@ -215,7 +214,7 @@ TowerScenarioResult LoadTowerScenario(const ContentRecord& record)
         return result;
     }
     s.Floor = static_cast<std::uint8_t>(floorInt);
-    const TowerRouteSpec* routeSpec = FindTowerRoute(s.RouteId);
+    const TowerRouteDefinition* routeSpec = FindTowerRoute(s.RouteId);
     if (routeSpec == nullptr || !TowerMethodFromId(primaryMethodStr, s.PrimaryMethod) ||
         routeSpec->Floor != s.Floor || routeSpec->AllowsCombat != s.AllowsCombat ||
         routeSpec->Method != s.PrimaryMethod || !HasPrefix(s.RunnerId, "tower.runner.") ||
@@ -224,13 +223,13 @@ TowerScenarioResult LoadTowerScenario(const ContentRecord& record)
         result.Error = "scenario route, floor, method, runner, or text key contract mismatch";
         return result;
     }
+    const bool isModel = HasPrefix(s.ClassroomModelId, "model.xi.");
     const bool validModel = (s.Floor == 2)
-        ? (FindStructureModel(s.ClassroomModelId) != nullptr && HasPrefix(s.ChangedRuleKey, "p2.a7."))
-        : ((s.ClassroomModelId == "none" || FindStructureModel(s.ClassroomModelId) != nullptr) &&
-           (s.ChangedRuleKey.empty() || HasPrefix(s.ChangedRuleKey, "p2.a7.")));
+        ? (isModel && HasPrefix(s.ChangedRuleKey, "p2.a7."))
+        : ((s.ClassroomModelId == "none" || isModel) && (s.ChangedRuleKey.empty() || HasPrefix(s.ChangedRuleKey, "p2.a7.")));
     if (!validModel) { result.Error = "invalid classroomModel or changedRuleKey for floor"; return result; }
     const JsonValue* beatsVal = FindMember(root, "beats");
-    if (beatsVal == nullptr || beatsVal->Kind != JsonKind::Array || beatsVal->Array.size() < 3 || beatsVal->Array.size() > 6)
+    if (beatsVal == nullptr || !beatsVal->IsArray() || beatsVal->Array.size() < 3 || beatsVal->Array.size() > 6)
     {
         result.Error = "beats must be an array of 3..6 beat objects";
         return result;
@@ -261,7 +260,7 @@ TowerScenarioResult LoadTowerScenario(const ContentRecord& record)
     }
 
     const TowerScenarioRunResult nonCombat = BuildOptimalNonCombatAttempt(s);
-    if (!nonCombat.Valid || nonCombat.Attempt.UsedCombat ||
+    if (!nonCombat.Valid || nonCombat.UsedCombat ||
         nonCombat.Attempt.DisciplineMilli != TowerScoreMaxMilli || nonCombat.Attempt.CommonJudgmentMilli != TowerScoreMaxMilli)
     {
         result.Error = "scenario non-combat path must reach 1000/1000 ceiling";
@@ -270,7 +269,7 @@ TowerScenarioResult LoadTowerScenario(const ContentRecord& record)
     if (s.AllowsCombat)
     {
         const TowerScenarioRunResult combatRun = BuildOptimalCombatAttempt(s);
-        if (!combatRun.Valid || !combatRun.Attempt.UsedCombat || combatRun.Attempt.CombatFedCommonJudgment ||
+        if (!combatRun.Valid || !combatRun.UsedCombat || combatRun.CombatFedCommonJudgment ||
             combatRun.Attempt.DisciplineMilli != TowerScoreMaxMilli || combatRun.Attempt.CommonJudgmentMilli != TowerScoreMaxMilli)
         {
             result.Error = "combat-allowing scenario must reach 1000/1000 without feeding common_judgment";
@@ -323,11 +322,11 @@ TowerScenarioCatalogueResult LoadTowerScenarioFiles(std::span<const ContentFile>
     ContentDb db;
     for (const auto& file : files)
     {
-        JsonParseResult parsed = ParseJson(file.JsonText);
+        JsonParseResult parsed = ParseJson(file.Text);
         if (!parsed.Value.has_value()) { out.Issues.push_back({file.Path, "", "JSON parse error: " + parsed.Error}); continue; }
-        CheckFairness(file.Path, "", *parsed.Value, out.Issues);
+        ContentSchema::CheckFairness(*parsed.Value, file.Path, out.Issues);
         const JsonValue* idVal = FindMember(*parsed.Value, "id");
-        const std::string idStr = (idVal != nullptr && idVal->Kind == JsonKind::String) ? idVal->String : "";
+        const std::string idStr = (idVal != nullptr && idVal->IsString()) ? idVal->String : "";
         std::string norm = file.Path;
         std::replace(norm.begin(), norm.end(), '\\', '/');
         const std::string suffix = "/tower_scenario/" + idStr + ".json";
@@ -365,16 +364,16 @@ bool LoadTowerScenarioTextTable(std::string_view jsonText, std::map<std::string,
 {
     outTable.clear();
     JsonParseResult parsed = ParseJson(jsonText);
-    if (!parsed.Value.has_value() || parsed.Value->Kind != JsonKind::Object)
+    if (!parsed.Value.has_value() || !parsed.Value->IsObject())
     {
         outError = parsed.Error.empty() ? "root must be a JSON object" : parsed.Error;
         return false;
     }
     const JsonValue* stringsObj = FindMember(*parsed.Value, "strings");
-    const JsonValue& source = (stringsObj != nullptr && stringsObj->Kind == JsonKind::Object) ? *stringsObj : *parsed.Value;
+    const JsonValue& source = (stringsObj != nullptr && stringsObj->IsObject()) ? *stringsObj : *parsed.Value;
     for (const auto& [key, val] : source.Object)
     {
-        if (val.Kind != JsonKind::String || val.String.empty() || !outTable.emplace(key, val.String).second)
+        if (!val.IsString() || val.String.empty() || !outTable.emplace(key, val.String).second)
         {
             outError = "invalid or duplicate text key \"" + key + "\"";
             return false;
@@ -397,9 +396,10 @@ void ValidateTowerScenarioTextKeys(
 TowerScenarioRunResult EvaluateTowerScenarioRun(const TowerScenario& scenario, std::span<const std::string_view> decisionIds)
 {
     TowerScenarioRunResult run;
-    run.Attempt.Floor = scenario.Floor;
-    run.Attempt.RouteId = scenario.RouteId;
-    run.Attempt.PrimaryMethod = scenario.PrimaryMethod;
+    const TowerRouteDefinition* route = FindTowerRoute(scenario.RouteId);
+    if (route == nullptr) { run.Error = "scenario names an unknown route"; return run; }
+    run.Attempt.RouteId = route->Id;
+    run.Attempt.Method = scenario.PrimaryMethod;
     std::string cursor = scenario.EntryBeat;
     std::size_t stepIdx = 0;
     while (cursor != "complete")
@@ -414,9 +414,9 @@ TowerScenarioRunResult EvaluateTowerScenarioRun(const TowerScenario& scenario, s
         run.Attempt.MissionMinutes += chosen->Minutes;
         if (chosen->IsCombat)
         {
-            run.Attempt.UsedCombat = true;
-            run.Attempt.PrimaryMethod = TowerMethod::Combat;
-            if (beat->Metric == TowerScenarioMetric::CommonJudgment) run.Attempt.CombatFedCommonJudgment = true;
+            run.UsedCombat = true;
+            run.Attempt.Method = TowerMethod::Combat;
+            if (beat->Metric == TowerScenarioMetric::CommonJudgment) run.CombatFedCommonJudgment = true;
         }
         std::int32_t earned = chosen->ScoreMilli;
         if (chosen->IsMistake)
@@ -437,6 +437,8 @@ TowerScenarioRunResult EvaluateTowerScenarioRun(const TowerScenario& scenario, s
     return run;
 }
 
+namespace
+{
 TowerScenarioRunResult SelectAndEvaluate(const TowerScenario& scenario, bool preferCombat, std::size_t mistakeIdx)
 {
     std::vector<std::string_view> choices;
@@ -455,37 +457,13 @@ TowerScenarioRunResult SelectAndEvaluate(const TowerScenario& scenario, bool pre
     }
     return EvaluateTowerScenarioRun(scenario, choices);
 }
+} // namespace
+
 TowerScenarioRunResult BuildOptimalNonCombatAttempt(const TowerScenario& s) { return SelectAndEvaluate(s, false, s.Beats.size()); }
 TowerScenarioRunResult BuildOptimalCombatAttempt(const TowerScenario& s) { return SelectAndEvaluate(s, true, s.Beats.size()); }
 TowerScenarioRunResult BuildRecoveredMistakeAttempt(const TowerScenario& s, std::size_t idx) { return SelectAndEvaluate(s, false, idx); }
 namespace ContentSchema
 {
-const TypeSchema& TowerScenarioSchema()
-{
-    static const TypeSchema schema = [] {
-        const std::vector<std::string> methods = {"combat", "analysis", "endurance", "construction", "negotiation", "logistics"};
-        const std::vector<std::string> metrics = {"discipline", "common_judgment"};
-        TypeSchema clue = Obj("tower_clue", {Id("id", "clue."), E("method", methods), Id("textKey", "p2.a7.")});
-        TypeSchema decision = Obj("tower_decision", {
-            Id("id", "opt."), Id("labelKey", "p2.a7."), Id("outcomeKey", "p2.a7."), E("method", methods),
-            B("isCombat"), B("isMistake"), I("scoreMilli", 0, TowerScoreMaxMilli), I("minutes", 1, 60), S("nextBeat")});
-        TypeSchema recovery = Obj("tower_recovery", {
-            Id("id", "rec."), Id("promptKey", "p2.a7."), Id("actionKey", "p2.a7."), Id("outcomeKey", "p2.a7."),
-            E("method", methods), I("restoredScoreMilli", 1, TowerScoreMaxMilli), I("minutes", 1, 60), S("nextBeat")});
-        TypeSchema beat = Obj("tower_beat", {
-            Id("id", "beat."), Id("promptKey", "p2.a7."), E("metric", metrics),
-            Arr("clues", FieldType::Object, 2, 4, false, {}, "", clue),
-            Arr("decisions", FieldType::Object, 2, 4, false, {}, "", decision),
-            Obj("recovery", recovery.Fields)});
-        return TypeSchema{"tower_scenario", "p2.", {
-            S("type"), Id("id", "p2."), S("note"), Id("route", "tower.route."),
-            I("floor", 1, static_cast<std::int64_t>(TowerFloorCount)), Id("runner", "tower.runner."),
-            E("primaryMethod", methods), B("allowsCombat"), S("classroomModel"), S("changedRuleKey", true),
-            Id("titleKey", "p2.a7."), Id("setupKey", "p2.a7."), Id("entryBeat", "beat."),
-            Arr("beats", FieldType::Object, 3, 6, false, {}, "", beat)}};
-    }();
-    return schema;
-}
 void ValidateTowerScenarioSemantics(const ContentDb& db, std::vector<ContentIssue>& issues)
 {
     std::size_t count = 0;

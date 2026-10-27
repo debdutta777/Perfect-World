@@ -870,7 +870,8 @@ add_test(NAME PerfectWorldSchoolLifeContentTests COMMAND PerfectWorldSchoolLifeC
     ${CMAKE_SOURCE_DIR}/Data/Content ${CMAKE_SOURCE_DIR}/Data/Text/en/phase2_a4.json)
 
 # Phase 2 A7 (Gemini Argon): tower scenario content - tower_scenario.
-target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/TowerScenarioContent.cpp)
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/TowerScenarioContent.cpp
+    Source/PerfectWorldCore/Private/TowerScenarioSchema.cpp)
 add_executable(PerfectWorldTowerScenarioContentTests Tests/TowerScenarioContentTests.cpp)
 target_link_libraries(PerfectWorldTowerScenarioContentTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldTowerScenarioContentTests COMMAND PerfectWorldTowerScenarioContentTests

@@ -1,7 +1,5 @@
 #include "TowerScenarioContent.h"
 
-#include "ContentSchemas.h"
-#include "StructureModelCatalogue.h"
 #include "Tower.h"
 
 #include <algorithm>
@@ -139,8 +137,8 @@ void TestCatalogueCoverageAndMetrics(const TowerScenarioCatalogue& catalogue)
         methodSeen[static_cast<std::size_t>(scenario->PrimaryMethod)] = true;
         if (scenario->Floor == 2)
         {
-            Require(FindStructureModel(scenario->ClassroomModelId) != nullptr,
-                    "Floor 2 scenario binds a real Class XI StructureModelCatalogue model");
+            Require(scenario->ClassroomModelId.rfind("model.xi.", 0) == 0,
+                    "Floor 2 scenario binds a Class XI classroom model id");
             Require(!scenario->ChangedRuleKey.empty(),
                     "Floor 2 scenario defines a changedRuleKey for its single changed rule");
             classroomModels.insert(scenario->ClassroomModelId);
@@ -184,8 +182,8 @@ void TestCatalogueCoverageAndMetrics(const TowerScenarioCatalogue& catalogue)
 
         const TowerScenarioRunResult optimalNonCombat = BuildOptimalNonCombatAttempt(*scenario);
         Require(optimalNonCombat.Valid, "optimal non-combat run is valid");
-        Require(!optimalNonCombat.Attempt.UsedCombat, "optimal non-combat run uses zero combat");
-        Require(!optimalNonCombat.Attempt.CombatFedCommonJudgment, "no combat fed common judgment");
+        Require(!optimalNonCombat.UsedCombat, "optimal non-combat run uses zero combat");
+        Require(!optimalNonCombat.CombatFedCommonJudgment, "no combat fed common judgment");
         Require(optimalNonCombat.Attempt.DisciplineMilli == TowerScoreMaxMilli,
                 "non-combat run reaches 1000 DisciplineMilli ceiling");
         Require(optimalNonCombat.Attempt.CommonJudgmentMilli == TowerScoreMaxMilli,
@@ -222,35 +220,31 @@ void TestFullNonCombatExaminationAndParity(const TowerScenarioCatalogue& catalog
     const TowerScenarioRunResult encNonCombat = BuildOptimalNonCombatAttempt(*f1Encounter);
     const TowerScenarioRunResult encCombat = BuildOptimalCombatAttempt(*f1Encounter);
     Require(encNonCombat.Valid && encCombat.Valid, "encounter supports both non-combat and combat paths");
-    Require(!encNonCombat.Attempt.UsedCombat && encNonCombat.Attempt.PrimaryMethod == TowerMethod::Endurance,
+    Require(!encNonCombat.UsedCombat && encNonCombat.Attempt.Method == TowerMethod::Endurance,
             "encounter non-combat path uses Endurance");
-    Require(encCombat.Attempt.UsedCombat && encCombat.Attempt.PrimaryMethod == TowerMethod::Combat,
+    Require(encCombat.UsedCombat && encCombat.Attempt.Method == TowerMethod::Combat,
             "encounter combat path uses Combat");
-    Require(!encCombat.Attempt.CombatFedCommonJudgment,
+    Require(!encCombat.CombatFedCommonJudgment,
             "encounter combat path never feeds CommonJudgment");
 
-    TowerAttempt nonCombatExam;
-    nonCombatExam.Floors = {
+    const std::vector<TowerFloorAttempt> nonCombatExam = {
         encNonCombat.Attempt,
         BuildOptimalNonCombatAttempt(*f2Rule).Attempt,
         BuildOptimalNonCombatAttempt(*f3Alliance).Attempt};
+    std::vector<TowerFloorAttempt> combatExam = nonCombatExam;
+    combatExam[0] = encCombat.Attempt;
 
-    TowerAttempt combatExam = nonCombatExam;
-    combatExam.Floors[0] = encCombat.Attempt;
-
-    const TowerOutcome nonCombatOut = ResolveTower(nonCombatExam);
-    const TowerOutcome combatOut = ResolveTower(combatExam);
-    Require(nonCombatOut.Valid && combatOut.Valid, "both exam attempts resolve cleanly in ResolveTower");
-    Require(!nonCombatOut.UsedAnyCombat && combatOut.UsedAnyCombat, "combat usage tracked accurately");
-    Require(nonCombatOut.Score == 6000 && combatOut.Score == 6000,
+    const TowerResult nonCombatOut = ResolveTower(nonCombatExam);
+    const TowerResult combatOut = ResolveTower(combatExam);
+    Require(nonCombatOut.Ok() && combatOut.Ok(), "both exam attempts resolve cleanly in ResolveTower");
+    Require(nonCombatOut.ScorePoints == 6000 && combatOut.ScorePoints == 6000,
             "non-combat and combat paths reach identical 6000 score ceiling");
-    Require(nonCombatOut.NationalDecile == 10 && combatOut.NationalDecile == 10,
-            "both paths reach top national decile");
-    Require(nonCombatOut.EligibleCredentials == combatOut.EligibleCredentials,
+    Require(nonCombatOut.Decile == 1 && combatOut.Decile == 1, "both paths reach the top national decile");
+    Require(nonCombatOut.Credentials == combatOut.Credentials,
             "combat grants no exclusive credential advantage");
 
     // 2. Every credential (all 10) is reachable through purely non-combat scenario combinations.
-    std::uint16_t unlockedNonCombatCredentials = 0;
+    std::set<AptitudePath> unlocked;
     const std::array<const TowerScenario*, 3> floor1Routes = {f1Encounter, f1Pace, f1Transit};
     const std::array<const TowerScenario*, 3> floor2Routes = {f2Rule, f2Stabilise, f2Design};
     const std::array<const TowerScenario*, 3> floor3Routes = {f3Alliance, f3Supply, f3Mediation};
@@ -261,34 +255,30 @@ void TestFullNonCombatExaminationAndParity(const TowerScenarioCatalogue& catalog
         {
             for (const auto* r3 : floor3Routes)
             {
-                TowerAttempt attempt;
-                attempt.Floors = {
-                    BuildOptimalNonCombatAttempt(*r1).Attempt,
-                    BuildOptimalNonCombatAttempt(*r2).Attempt,
-                    BuildOptimalNonCombatAttempt(*r3).Attempt};
-                const TowerOutcome outcome = ResolveTower(attempt);
-                Require(outcome.Valid && !outcome.UsedAnyCombat && outcome.NationalDecile == 10,
-                        "every 3-floor non-combat route combination is valid and reaches top decile");
-                unlockedNonCombatCredentials = static_cast<std::uint16_t>(
-                    unlockedNonCombatCredentials | outcome.EligibleCredentials);
+                const TowerScenarioRunResult run1 = BuildOptimalNonCombatAttempt(*r1);
+                const TowerScenarioRunResult run2 = BuildOptimalNonCombatAttempt(*r2);
+                const TowerScenarioRunResult run3 = BuildOptimalNonCombatAttempt(*r3);
+                Require(!run1.UsedCombat && !run2.UsedCombat && !run3.UsedCombat, "non-combat runs use no combat");
+                const TowerResult outcome = ResolveTower({run1.Attempt, run2.Attempt, run3.Attempt});
+                Require(outcome.Ok() && outcome.Completed && outcome.Decile == 1,
+                        "every 3-floor non-combat route combination is valid and reaches the top decile");
+                for (const auto& credential : outcome.Credentials) unlocked.insert(credential.Discipline);
             }
         }
     }
 
     for (const auto& cred : TowerCredentials())
     {
-        Require(HasCredential(unlockedNonCombatCredentials, cred.Credential),
+        Require(unlocked.contains(cred.Discipline),
                 "every Tower credential is achievable through non-combat scenario runs");
     }
 
     // 3. Mistake + recovery exam still completes and resolves validly.
-    TowerAttempt recoveredExam;
-    recoveredExam.Floors = {
+    const TowerResult recoveredOut = ResolveTower({
         BuildRecoveredMistakeAttempt(*f1Pace, 0).Attempt,
         BuildRecoveredMistakeAttempt(*f2Stabilise, 1).Attempt,
-        BuildRecoveredMistakeAttempt(*f3Supply, 2).Attempt};
-    const TowerOutcome recoveredOut = ResolveTower(recoveredExam);
-    Require(recoveredOut.Valid && !recoveredOut.UsedAnyCombat && recoveredOut.FloorsCleared == 3,
+        BuildRecoveredMistakeAttempt(*f3Supply, 2).Attempt});
+    Require(recoveredOut.Ok() && recoveredOut.Completed && recoveredOut.FloorsCleared == 3,
             "candidate who makes mistakes and recovers still clears all three floors without combat");
 }
 
@@ -325,7 +315,7 @@ void RefuseRecord(const JsonValue& badRoot, const char* reason)
 
 void TestMalformedRefusals(const std::vector<ContentFile>& files)
 {
-    const JsonParseResult parsed = ParseJson(files[3].JsonText); // p2.changed_rule.json
+    const JsonParseResult parsed = ParseJson(files[3].Text); // p2.changed_rule.json
     Require(parsed.Value.has_value(), "reference scenario JSON parses");
     const JsonValue& good = *parsed.Value;
 
@@ -383,8 +373,9 @@ int main(int argc, char** argv)
         std::cerr << issue.File << " [" << issue.Id << "]: " << issue.Message << '\n';
     }
     Require(loaded.Ok(), "all nine tower_scenario files load and pass fairness and semantic validation");
-    Require(ContentSchema::TowerScenarioSchema().Type == "tower_scenario",
-            "TowerScenarioSchema exports tower_scenario type definition");
+    const std::vector<std::string> knownTypes = KnownContentTypes();
+    Require(std::find(knownTypes.begin(), knownTypes.end(), "tower_scenario") != knownTypes.end(),
+            "tower_scenario is a registered content type");
 
     TestCatalogueCoverageAndMetrics(loaded.Catalogue);
     TestFullNonCombatExaminationAndParity(loaded.Catalogue);

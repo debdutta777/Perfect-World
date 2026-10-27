@@ -47,11 +47,11 @@
       "schedule": {
         "slotKind": "timetable_period",
         "bellSchedule": "bell_schedule.nabapara_xi_science",
-        "periodIndex": 0,
+        "periodIndex": 1,
         "subject": "physics",
-        "zone": "nhss.xi_a",
-        "startMinute": 620,
-        "endMinute": 665
+        "zone": "nhss.room_xi_science",
+        "startMinute": 670,
+        "endMinute": 715
       },
       "conversationTopic": "topic.amrita_basu.evening_study_timings",
       "choices": [

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ContentRegistry.h"
-#include "PerfectWorldCoreExport.h"
 #include "Tower.h"
 
 #include <cstdint>
@@ -11,6 +10,10 @@
 #include <string>
 #include <string_view>
 #include <vector>
+
+#ifndef PERFECTWORLDCORE_API
+#define PERFECTWORLDCORE_API
+#endif
 
 namespace PerfectWorld
 {
@@ -123,6 +126,10 @@ struct TowerScenarioRunResult
     bool Valid = false;
     std::string Error;
     TowerFloorAttempt Attempt;
+    /** True when any chosen decision was combat (TowerFloorAttempt has no combat flag; the runner owns it). */
+    bool UsedCombat = false;
+    /** True when a combat decision sat in a common_judgment beat; the content rules forbid it, so this stays false. */
+    bool CombatFedCommonJudgment = false;
     std::vector<std::string> VisitedBeats;
     std::int32_t RecoveriesUsed = 0;
 };

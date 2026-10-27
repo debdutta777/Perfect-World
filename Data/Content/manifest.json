@@ -1,7 +1,7 @@
 {
   "schema": "pw.content_manifest/1",
-  "fileCount": 178,
-  "recordCount": 237,
+  "fileCount": 190,
+  "recordCount": 249,
   "files": [
     {
       "path": "/ability_recipe/ability_recipe.agni_assay_flame.json",
@@ -892,6 +892,24 @@
       ]
     },
     {
+      "path": "/school_scene/p2.changing_friendship.json",
+      "records": [
+        { "id": "p2.changing_friendship", "kind": "school_scene" }
+      ]
+    },
+    {
+      "path": "/school_scene/p2.group_project.json",
+      "records": [
+        { "id": "p2.group_project", "kind": "school_scene" }
+      ]
+    },
+    {
+      "path": "/school_scene/p2.household_responsibility.json",
+      "records": [
+        { "id": "p2.household_responsibility", "kind": "school_scene" }
+      ]
+    },
+    {
       "path": "/school_type/school_type.government.json",
       "records": [
         { "id": "school_type.government", "kind": "school_type" }
@@ -1069,6 +1087,60 @@
       "path": "/thread_template/thread.sports_day_rival.json",
       "records": [
         { "id": "thread.sports_day_rival", "kind": "thread_template" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.alliance.json",
+      "records": [
+        { "id": "p2.alliance", "kind": "tower_scenario" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.changed_rule.json",
+      "records": [
+        { "id": "p2.changed_rule", "kind": "tower_scenario" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.design.json",
+      "records": [
+        { "id": "p2.design", "kind": "tower_scenario" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.encounter.json",
+      "records": [
+        { "id": "p2.encounter", "kind": "tower_scenario" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.mediation.json",
+      "records": [
+        { "id": "p2.mediation", "kind": "tower_scenario" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.pace.json",
+      "records": [
+        { "id": "p2.pace", "kind": "tower_scenario" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.stabilise.json",
+      "records": [
+        { "id": "p2.stabilise", "kind": "tower_scenario" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.supply.json",
+      "records": [
+        { "id": "p2.supply", "kind": "tower_scenario" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.team_transit.json",
+      "records": [
+        { "id": "p2.team_transit", "kind": "tower_scenario" }
       ]
     },
     {

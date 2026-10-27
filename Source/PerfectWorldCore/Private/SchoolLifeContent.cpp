@@ -1,6 +1,6 @@
 #include "SchoolLifeContent.h"
 
-#include "ContentFairness.h"
+#include "Relationships.h"
 #include "ContentSchemaBuilders.h"
 
 #include <algorithm>
@@ -35,13 +35,16 @@ std::optional<RelationshipActKind> ParseActKind(std::string_view t) noexcept
 std::string StrField(const JsonValue& o, std::string_view k) { const auto* v = o.Find(k); return v && v->IsString() ? v->String : std::string{}; }
 std::int32_t IntField(const JsonValue& o, std::string_view k, std::int32_t fb = 0) { const auto* v = o.Find(k); return v && v->Integer ? static_cast<std::int32_t>(*v->Integer) : fb; }
 bool BoolField(const JsonValue& o, std::string_view k, bool fb = false) { const auto* v = o.Find(k); return v && v->Type == JsonValue::Kind::Bool ? v->Bool : fb; }
+bool ThreadTemplateHasEvent(const ThreadTemplate& templ, std::string_view eventType)
+{
+    for (const ThreadTrigger& tr : templ.Triggers)
+        for (const ThreadCondition& c : tr.Conditions) if (c.Kind == ThreadConditionKind::Event && c.EventType == eventType) return true;
+    return false;
+}
 bool CalendarHasSpan(const SchoolCalendar& cal, std::string_view id)
 {
-    for (const auto& a : cal.Assessments) if (a.Id == id) return true;
-    for (const auto& e : cal.Events) if (e.Id == id) return true;
-    for (const auto& h : cal.Holidays) if (h.Id == id) return true;
-    for (const auto& b : cal.Breaks) if (b.Id == id) return true;
-    return false;
+    const auto has = [&](const auto& list) { return std::any_of(list.begin(), list.end(), [&](const auto& x) { return x.Id == id; }); };
+    return has(cal.Assessments) || has(cal.Events) || has(cal.Holidays) || has(cal.Breaks);
 }
 } // namespace
 
@@ -95,11 +98,11 @@ std::string ValidateObjectShape(const JsonValue& object, const TypeSchema& schem
             {
                 const ContentRecord* target = db->Find(val.String);
                 if (target == nullptr) return "field \"" + name + "\" names " + val.String + ", which does not exist";
-                if (target->Type != spec->RefTarget)
-                    return "field \"" + name + "\" names " + val.String + " (" + target->Type + "), but needs a " + spec->RefTarget;
+                if (target->Type != spec->RefType)
+                    return "field \"" + name + "\" names " + val.String + " (" + target->Type + "), but needs a " + spec->RefType;
             }
         }
-        else if (spec->Kind == FieldKind::Enum && (!val.IsString() || std::find(spec->Allowed.begin(), spec->Allowed.end(), val.String) == spec->Allowed.end()))
+        else if (spec->Kind == FieldKind::Enum && (!val.IsString() || std::find(spec->Values.begin(), spec->Values.end(), val.String) == spec->Values.end()))
             return "field \"" + name + "\" has an unknown value";
         else if (spec->Kind == FieldKind::Int && (val.Type != JsonValue::Kind::Number || !val.Integer || *val.Integer < spec->Min || *val.Integer > spec->Max))
             return "field \"" + name + "\" is outside " + std::to_string(spec->Min) + ".." + std::to_string(spec->Max);
@@ -127,10 +130,10 @@ std::string ValidateObjectShape(const JsonValue& object, const TypeSchema& schem
 
 const TypeSchema& SchoolSceneSchema()
 {
-    static const TypeSchema castS{"school_scene_cast", "", {Str("person", true), OneOf("role", true, {"teacher", "classmate", "family_adult", "care_adult"}), OneOf("originVariant", true, {"both", "family", "care_home"}), Bool("proposedNewCast", true)}};
-    static const TypeSchema schedS{"school_scene_schedule", "", {OneOf("slotKind", true, {"assembly", "timetable_period", "school_break", "after_school", "care_handover", "home_evening"}), Ref("bellSchedule", false, "bell_schedule"), Int("periodIndex", false, -1, 7), Str("subject", false), Str("zone", true), Int("startMinute", true, 0, 1439), Int("endMinute", true, 1, 1440)}};
+    static const TypeSchema castS{"school_scene_cast", "", {Str("person", true), OneOf("role", true, {"teacher", "classmate", "family_adult", "care_adult"}), OneOf("originVariant", true, {"both", "family", "care_home"}), Flag("proposedNewCast", true)}};
+    static const TypeSchema schedS{"school_scene_schedule", "", {OneOf("slotKind", true, {"assembly", "timetable_period", "school_break", "after_school", "care_handover", "home_evening"}), Str("bellSchedule", false), Int("periodIndex", false, -1, 7), Str("subject", false), Str("zone", true), Int("startMinute", true, 0, 1439), Int("endMinute", true, 1, 1440)}};
     static const TypeSchema consS{"school_scene_consequence", "", {Str("targetPerson", true), OneOf("relationshipAct", true, {"help", "gift", "confide", "defend", "apologise", "share_time", "insult", "betray", "bereave"}), Str("relationshipEvent", true), Str("threadEvent", false), Str("factSet", true), Str("factCleared", false), Str("journalAgreementFact", false)}};
-    static const TypeSchema choiceS{"school_scene_choice", "", {Str("id", true), Str("labelKey", true), Str("outcomeKey", true), Int("costMinutes", true, 0, 240), Bool("isRefusal", true), Bool("humiliating", true), Str("nextScene", false), Str("resolution", false), Obj("consequence", true, &consS, false)}};
+    static const TypeSchema choiceS{"school_scene_choice", "", {Str("id", true), Str("labelKey", true), Str("outcomeKey", true), Int("costMinutes", true, 0, 240), Flag("isRefusal", true), Flag("humiliating", true), Str("nextScene", false), Str("resolution", false), Obj("consequence", true, &consS, false)}};
     static const TypeSchema nodeS{"school_scene_node", "", {Str("id", true), Str("titleKey", true), Str("promptKey", true), Str("speaker", true), OneOf("originVariant", true, {"both", "family", "care_home"}), Obj("schedule", true, &schedS, false), Str("conversationTopic", false), Obj("choices", true, &choiceS, true)}};
     static const TypeSchema s{std::string(SchoolSceneTypeName), std::string(SchoolSceneIdPrefix), Base({OneOf("arcKind", true, {"changing_friendship", "group_project", "household_responsibility"}), Str("titleKey", true), Str("summaryKey", true), Ref("institution", true, "institution"), Ref("calendar", true, "calendar"), Str("term", true), Str("calendarSpan", false), Ref("threadTemplate", true, "thread_template"), Str("entryScene", true), Obj("cast", true, &castS, true), Obj("scenes", true, &nodeS, true), Strs("resolutions", true)})};
     return s;
@@ -194,7 +197,7 @@ SchoolSceneArc ParseSchoolSceneRecord(const ContentRecord& record, std::vector<s
             if (const JsonValue* choicesArr = item.Find("choices"); choicesArr != nullptr && choicesArr->IsArray())
                 for (const JsonValue& ch : choicesArr->Array)
                 {
-                    SchoolSceneChoice choice{StrField(ch, "id"), StrField(ch, "labelKey"), StrField(ch, "outcomeKey"),
+                    SchoolSceneNodeChoice choice{StrField(ch, "id"), StrField(ch, "labelKey"), StrField(ch, "outcomeKey"),
                                              IntField(ch, "costMinutes", 0), BoolField(ch, "isRefusal", false),
                                              BoolField(ch, "humiliating", false), StrField(ch, "nextScene"),
                                              StrField(ch, "resolution"), {}};
@@ -237,7 +240,7 @@ std::vector<std::string> ValidateSchoolSceneArc(const SchoolSceneArc& arc, const
             errs.push_back("calendar '" + arc.CalendarId + "' has no span '" + arc.CalendarSpanId + "'");
     }
 
-    const ThreadTemplate* tmpl = threads.Set.FindById(arc.ThreadTemplateId);
+    const ThreadTemplate* tmpl = threads.Set.Find(arc.ThreadTemplateId);
     if (tmpl == nullptr) errs.push_back("arc names threadTemplate '" + arc.ThreadTemplateId + "', which does not exist");
 
     std::set<std::string> castIds;
@@ -259,7 +262,7 @@ std::vector<std::string> ValidateSchoolSceneArc(const SchoolSceneArc& arc, const
     if (resSet.size() != arc.Resolutions.size() || resSet.empty()) errs.push_back("arc resolutions must be unique and non-empty");
     if (tmpl != nullptr)
         for (const std::string& r : arc.Resolutions)
-            if (tmpl->FindResolution(r) == nullptr)
+            if (ThreadFindResolution(*tmpl, r) == nullptr)
                 errs.push_back("resolution '" + r + "' is not declared by threadTemplate '" + arc.ThreadTemplateId + "'");
 
     std::set<std::string> sceneIds;
@@ -307,7 +310,7 @@ std::vector<std::string> ValidateSchoolSceneArc(const SchoolSceneArc& arc, const
         if (s.Choices.size() < 2) errs.push_back("scene '" + s.Id + "' needs at least 2 choices");
         bool hasRefusal = false;
         std::set<std::string> choiceIds;
-        for (const SchoolSceneChoice& ch : s.Choices)
+        for (const SchoolSceneNodeChoice& ch : s.Choices)
         {
             if (!choiceIds.insert(ch.Id).second) errs.push_back("scene '" + s.Id + "' has duplicate choice '" + ch.Id + "'");
             if (ch.bRefusal) hasRefusal = true;
@@ -323,8 +326,7 @@ std::vector<std::string> ValidateSchoolSceneArc(const SchoolSceneArc& arc, const
             if (!IsRelationshipEventTypeFair(ch.Consequence.RelationshipEventType))
                 errs.push_back("choice '" + ch.Id + "' relationshipEvent '" + ch.Consequence.RelationshipEventType + "' is not fair");
             if (!ch.Consequence.ThreadEventType.empty() && tmpl != nullptr &&
-                std::none_of(tmpl->Triggers.begin(), tmpl->Triggers.end(),
-                             [&](const ThreadEventTrigger& tr) { return tr.EventType == ch.Consequence.ThreadEventType; }))
+                !ThreadTemplateHasEvent(*tmpl, ch.Consequence.ThreadEventType))
                 errs.push_back("choice '" + ch.Id + "' threadEvent '" + ch.Consequence.ThreadEventType + "' is not in threadTemplate");
         }
         if (!hasRefusal) errs.push_back("scene '" + s.Id + "' has no refusal choice");
@@ -344,7 +346,7 @@ std::vector<std::string> ValidateSchoolSceneArc(const SchoolSceneArc& arc, const
                 for (const SchoolSceneNode& s : arc.Scenes)
                 {
                     if (reachable.count(s.Id) == 0) continue;
-                    for (const SchoolSceneChoice& ch : s.Choices)
+                    for (const SchoolSceneNodeChoice& ch : s.Choices)
                     {
                         if (!ch.ResolutionId.empty()) reachedRes.insert(ch.ResolutionId);
                         if (!ch.NextSceneId.empty())
@@ -444,7 +446,7 @@ std::vector<std::string> ValidateSchoolSceneTextCoverage(const SchoolSceneCatalo
         for (const SchoolSceneNode& s : arc.Scenes)
         {
             req(s.TitleKey, s.Id); req(s.PromptKey, s.Id);
-            for (const SchoolSceneChoice& ch : s.Choices)
+            for (const SchoolSceneNodeChoice& ch : s.Choices)
             {
                 req(ch.LabelKey, ch.Id); req(ch.OutcomeKey, ch.Id);
                 if (!ch.Consequence.JournalAgreementFact.empty()) req("journal.agreement." + ch.Consequence.JournalAgreementFact, ch.Id);
@@ -480,7 +482,7 @@ SchoolLifeOutcome ResolveSchoolSceneChoice(const SchoolSceneCatalogue& catalogue
     if (arc == nullptr) return out.Error = "unknown arc", out;
     const SchoolSceneNode* node = arc->FindScene(sceneId);
     if (node == nullptr || !SchoolOriginMatches(node->Origin, bGrewUpInCare)) return out.Error = "unavailable scene", out;
-    for (const SchoolSceneChoice& ch : node->Choices)
+    for (const SchoolSceneNodeChoice& ch : node->Choices)
     {
         if (ch.Id != choiceId) continue;
         if (!ch.NextSceneId.empty())

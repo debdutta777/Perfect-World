@@ -61,7 +61,7 @@
         "bellSchedule": "bell_schedule.nabapara_xi_science",
         "periodIndex": 2,
         "subject": "chemistry",
-        "zone": "nhss.lab_phys",
+        "zone": "nhss.room_xi_science",
         "startMinute": 720,
         "endMinute": 765
       },
@@ -237,7 +237,7 @@
         "bellSchedule": "bell_schedule.nabapara_xi_commerce",
         "periodIndex": 3,
         "subject": "english",
-        "zone": "nhss.xi_b",
+        "zone": "nhss.room_xi_commerce",
         "startMinute": 805,
         "endMinute": 850
       },

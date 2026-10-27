@@ -141,7 +141,7 @@ struct SchoolSceneConsequence
 };
 
 /** One player choice inside a `school_scene` node. */
-struct SchoolSceneChoice
+struct SchoolSceneNodeChoice
 {
     std::string Id;
     std::string LabelKey;
@@ -157,7 +157,7 @@ struct SchoolSceneChoice
     std::string ResolutionId;
     SchoolSceneConsequence Consequence;
 
-    friend bool operator==(const SchoolSceneChoice&, const SchoolSceneChoice&) = default;
+    friend bool operator==(const SchoolSceneNodeChoice&, const SchoolSceneNodeChoice&) = default;
 };
 
 /** One scene node in a bounded `school_scene` arc. */
@@ -171,7 +171,7 @@ struct SchoolSceneNode
     SchoolSceneScheduleBinding Schedule;
     /** Optional conversation topic ID that surfaces this scene in `Conversation.h`. */
     std::string ConversationTopicId;
-    std::vector<SchoolSceneChoice> Choices;
+    std::vector<SchoolSceneNodeChoice> Choices;
 
     friend bool operator==(const SchoolSceneNode&, const SchoolSceneNode&) = default;
 };
