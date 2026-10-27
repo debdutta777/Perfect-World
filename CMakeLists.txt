@@ -886,3 +886,10 @@ add_executable(PerfectWorldTowerScenarioContentTests Tests/TowerScenarioContentT
 target_link_libraries(PerfectWorldTowerScenarioContentTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldTowerScenarioContentTests COMMAND PerfectWorldTowerScenarioContentTests
     ${CMAKE_SOURCE_DIR}/Data/Content/tower_scenario ${CMAKE_SOURCE_DIR}/Data/Text/en/phase2_a7.json)
+
+# A8: playable follow-ups after every tower outcome (school_followup content).
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/SchoolFollowupContent.cpp)
+add_executable(PerfectWorldSchoolFollowupContentTests Tests/SchoolFollowupContentTests.cpp)
+target_link_libraries(PerfectWorldSchoolFollowupContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSchoolFollowupContentTests
+    COMMAND PerfectWorldSchoolFollowupContentTests ${CMAKE_SOURCE_DIR}/Data/Content)
