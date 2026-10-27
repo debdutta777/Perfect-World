@@ -243,6 +243,8 @@ protected:
     /** F3: opens the quest window (J and D-pad Right by default; the key bindings store owns the keys). */
     UPROPERTY()
     TObjectPtr<UInputAction> QuestsAction;
+    UPROPERTY()
+    TObjectPtr<UInputAction> InventoryAction; // R88
     /** F2: opens and closes the full world map (M and D-pad Left by default; the key bindings store owns the keys). */
     UPROPERTY()
     TObjectPtr<UInputAction> MapAction;
@@ -269,6 +271,7 @@ private:
     void OnInteractStarted();
     void OnCycleTargetStarted();
     void OnToggleMapStarted();
+    void OnInventoryStarted(); // R88
     /** Tells the world map which keys close it from inside Slate: the player's own map keys. */
     void PushMapCloseKeys() const;
     bool WantsEnhancedInput() const;

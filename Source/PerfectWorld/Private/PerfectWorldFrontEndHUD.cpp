@@ -16,6 +16,7 @@
 #include "PerfectWorldLaneLifePersistence.h"
 #include "PerfectWorldPresentationSettings.h"
 #include "PerfectWorldTitleView.h"
+#include "PerfectWorldBuyPresenter.h" // R88
 #include "UI/PWDelegates.h"
 #include "UI/PWStartAcknowledgement.h"
 #include "UI/PWQuestText.h"
@@ -135,6 +136,11 @@ void APerfectWorldFrontEndHUD::OpenQuestWindow()
 
 void APerfectWorldFrontEndHUD::ToggleInWorldMenu()
 {
+    if (UPWBuyPresenter::IsOpenIn(this)) // R88: Back closes the service before any pause menu
+    {
+        UPWBuyPresenter::Get(this)->Close();
+        return;
+    }
     if (!Root.IsValid())
     {
         return;
@@ -154,6 +160,14 @@ void APerfectWorldFrontEndHUD::ToggleInWorldMenu()
     {
         ResumeGame();
     }
+}
+
+void APerfectWorldFrontEndHUD::OpenInventoryWindow()
+{
+    // R88: the menu must construct its Inventory panel inside the normal pause/input lifecycle.
+    if (Mode != EFrontEndMode::Playing || UPWBuyPresenter::IsOpenIn(this) || !Root.IsValid()) return;
+    bR88InventoryRequested = true;
+    ToggleInWorldMenu();
 }
 
 void APerfectWorldFrontEndHUD::BeginNewCreation()

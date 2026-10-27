@@ -5,6 +5,8 @@
 // SButton::SimulateClick, and keys are delivered straight to the widgets that handle them. The store is a private one on a temporary file.
 // What needs a real window (focus moving to the prompt and back, a real mouse click) is for a play session.
 
+#include "PerfectWorldKeyBindings.h" // R88: tested interface first
+
 #include "Misc/AutomationTest.h"
 
 #if WITH_DEV_AUTOMATION_TESTS && !UE_BUILD_SHIPPING
@@ -14,7 +16,6 @@
 #include "InputCoreTypes.h"
 #include "Misc/Guid.h"
 #include "Misc/Paths.h"
-#include "PerfectWorldKeyBindings.h"
 #include "UI/SPWControlsSection.h"
 #include "UI/SPWKeyCapture.h"
 #include "UI/SPWSettingsPanel.h"
@@ -354,7 +355,7 @@ bool FKbpResetTest::RunTest(const FString& Parameters)
     if (!TestTrue(TEXT("the Controls section exists"), Section.IsValid())) return false;
 
     Store.Rebind(EKbAction::Jump, EKbDevice::Keyboard, EKeys::Y, false);
-    Store.Rebind(EKbAction::Jump, EKbDevice::Gamepad, EKeys::Gamepad_LeftShoulder, false);
+    Store.Rebind(EKbAction::Jump, EKbDevice::Gamepad, EKeys::Gamepad_Special_Left, false); // R88: LB now zooms out
     Store.Rebind(EKbAction::Run, EKbDevice::Keyboard, EKeys::R, false);
     TestTrue(TEXT("the list shows the new key at once"), KbpHasText(Panel, TEXT("Y")) && KbpHasText(Panel, TEXT("LB / L1")));
 

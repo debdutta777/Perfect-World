@@ -30,6 +30,7 @@ enum class EKbAction : uint8
     Map,
     Quests,
     Pause,
+    Inventory, // R88: append, preserving existing numeric action values and saved string ids
     Count
 };
 

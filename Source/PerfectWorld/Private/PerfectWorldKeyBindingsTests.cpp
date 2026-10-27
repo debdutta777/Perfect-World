@@ -4,6 +4,8 @@
 // temporary file, and a real Enhanced Input mapping context; no world or player is needed. That the walking player rebuilds its own live
 // context when the store changes is the listener in PerfectWorldPlayerCharacterInput.cpp, proved by playing, not here.
 
+#include "PerfectWorldKeyBindings.h" // R88: tested interface first
+
 #include "Misc/AutomationTest.h"
 
 #if WITH_DEV_AUTOMATION_TESTS && !UE_BUILD_SHIPPING
@@ -15,7 +17,6 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Guid.h"
 #include "Misc/Paths.h"
-#include "PerfectWorldKeyBindings.h"
 #include "PerfectWorldKeyBindingsContext.h"
 #include "UObject/Package.h"
 
@@ -80,6 +81,7 @@ struct FKbtContext
         {
             Actions.Map = Make(TEXT("IA_Map"), EInputActionValueType::Boolean);
             Actions.Quests = Make(TEXT("IA_Quests"), EInputActionValueType::Boolean);
+            Actions.Inventory = Make(TEXT("IA_Inventory"), EInputActionValueType::Boolean); // R88
         }
     }
     TSet<FString> Build(const FKbBindingSet& Set) const
@@ -98,7 +100,7 @@ TSet<FString> KbtOldMappings()
         TEXT("IA_Run|LeftShift|"), TEXT("IA_Run|Gamepad_LeftThumbstick|"),
         TEXT("IA_Jump|SpaceBar|"), TEXT("IA_Jump|Gamepad_FaceButton_Bottom|"),
         TEXT("IA_ToggleCamera|V|"), TEXT("IA_ToggleCamera|Gamepad_FaceButton_Top|"),
-        TEXT("IA_ZoomWheel|MouseWheelAxis|"), TEXT("IA_ZoomHeld|Gamepad_DPad_Up|"), TEXT("IA_ZoomHeld|Gamepad_DPad_Down|N"),
+        TEXT("IA_ZoomWheel|MouseWheelAxis|"), TEXT("IA_ZoomHeld|Gamepad_DPad_Up|"), TEXT("IA_ZoomHeld|Gamepad_LeftShoulder|N"), // R88
         TEXT("IA_Interact|E|"), TEXT("IA_Interact|Gamepad_FaceButton_Left|"),
         TEXT("IA_CycleTarget|Tab|"), TEXT("IA_CycleTarget|Gamepad_RightShoulder|")});
 }
@@ -116,9 +118,10 @@ bool FKbtDefaultsTest::RunTest(const FString& Parameters)
         {EKbAction::Run, TEXT("LeftShift"), TEXT("Gamepad_LeftThumbstick")}, {EKbAction::Jump, TEXT("SpaceBar"), TEXT("Gamepad_FaceButton_Bottom")},
         {EKbAction::Interact, TEXT("E"), TEXT("Gamepad_FaceButton_Left")}, {EKbAction::CycleTarget, TEXT("Tab"), TEXT("Gamepad_RightShoulder")},
         {EKbAction::ToggleCamera, TEXT("V"), TEXT("Gamepad_FaceButton_Top")}, {EKbAction::ZoomIn, TEXT("MouseScrollUp"), TEXT("Gamepad_DPad_Up")},
-        {EKbAction::ZoomOut, TEXT("MouseScrollDown"), TEXT("Gamepad_DPad_Down")},
+        {EKbAction::ZoomOut, TEXT("MouseScrollDown"), TEXT("Gamepad_LeftShoulder")}, // R88
         {EKbAction::Map, TEXT("M"), TEXT("Gamepad_DPad_Left")}, {EKbAction::Quests, TEXT("J"), TEXT("Gamepad_DPad_Right")},
-        {EKbAction::Pause, TEXT("Escape"), TEXT("Gamepad_Special_Right")}};
+        {EKbAction::Pause, TEXT("Escape"), TEXT("Gamepad_Special_Right")},
+        {EKbAction::Inventory, TEXT("I"), TEXT("Gamepad_DPad_Down")}}; // R88
     for (const FOld& Row : Old)
     {
         const FString Name = KbInfo(Row.Action).Id;
@@ -139,9 +142,11 @@ bool FKbtDefaultsTest::RunTest(const FString& Parameters)
     // The two new actions, when they exist, take M and J on the keyboard.
     const FKbtContext WithMenus(true);
     const TSet<FString> More = WithMenus.Build(Defaults);
-    TestEqual(TEXT("four more mappings for Map and Quests"), More.Num(), 24);
+    TestEqual(TEXT("six mappings for Map, Quests and Inventory"), More.Num(), Built.Num() + 6); // R88
     TestTrue(TEXT("M opens the map"), More.Contains(TEXT("IA_Map|M|")));
     TestTrue(TEXT("J opens the quests"), More.Contains(TEXT("IA_Quests|J|")));
+    TestTrue(TEXT("Inventory maps both devices"), More.Contains(TEXT("IA_Inventory|I|")) &&
+        More.Contains(TEXT("IA_Inventory|Gamepad_DPad_Down|"))); // R88
     return true;
 }
 
@@ -381,13 +386,13 @@ bool FKbtRebuildTest::RunTest(const FString& Parameters)
 
     // The same context object, rebuilt after a change, as the live player does.
     Set.Set(EKbAction::Jump, EKbDevice::Keyboard, EKeys::Y, false);
-    Set.Set(EKbAction::Jump, EKbDevice::Gamepad, EKeys::Gamepad_LeftShoulder, false);
+    Set.Set(EKbAction::Jump, EKbDevice::Gamepad, EKeys::Gamepad_Special_Left, false); // R88: LB now zooms out
     Set.Set(EKbAction::MoveForward, EKbDevice::Keyboard, EKeys::Up, false);
     Set.Set(EKbAction::Map, EKbDevice::Keyboard, EKeys::N, false);
     Set.Clear(EKbAction::Quests, EKbDevice::Keyboard);
     const TSet<FString> After = Walking.Build(Set);
     TestTrue(TEXT("Y jumps"), After.Contains(TEXT("IA_Jump|Y|")));
-    TestTrue(TEXT("so does the new pad key"), After.Contains(TEXT("IA_Jump|Gamepad_LeftShoulder|")));
+    TestTrue(TEXT("so does the new pad key"), After.Contains(TEXT("IA_Jump|Gamepad_Special_Left|"))); // R88
     TestFalse(TEXT("Space no longer does"), After.Contains(TEXT("IA_Jump|SpaceBar|")));
     TestFalse(TEXT("nor the old pad key"), After.Contains(TEXT("IA_Jump|Gamepad_FaceButton_Bottom|")));
     TestTrue(TEXT("Up walks forward, with the forward modifiers"), After.Contains(TEXT("IA_Move|Up|S")));

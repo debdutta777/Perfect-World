@@ -32,10 +32,11 @@ const TArray<FKbActionInfo>& KbTable()
         Add(EKbAction::CycleTarget, TEXT("cycle_target"), EKbGroup::Actions, EKeys::Tab, EKeys::Gamepad_RightShoulder, true, true);
         Add(EKbAction::ToggleCamera, TEXT("toggle_camera"), EKbGroup::Camera, EKeys::V, EKeys::Gamepad_FaceButton_Top, true, true);
         Add(EKbAction::ZoomIn, TEXT("zoom_in"), EKbGroup::Camera, EKeys::MouseScrollUp, EKeys::Gamepad_DPad_Up, true, true);
-        Add(EKbAction::ZoomOut, TEXT("zoom_out"), EKbGroup::Camera, EKeys::MouseScrollDown, EKeys::Gamepad_DPad_Down, true, true);
+        Add(EKbAction::ZoomOut, TEXT("zoom_out"), EKbGroup::Camera, EKeys::MouseScrollDown, EKeys::Gamepad_LeftShoulder, true, true); // R88: Down opens Inventory
         Add(EKbAction::Map, TEXT("map"), EKbGroup::Interface, EKeys::M, EKeys::Gamepad_DPad_Left, true, true);
         Add(EKbAction::Quests, TEXT("quests"), EKbGroup::Interface, EKeys::J, EKeys::Gamepad_DPad_Right, true, true);
         Add(EKbAction::Pause, TEXT("pause"), EKbGroup::Interface, EKeys::Escape, EKeys::Gamepad_Special_Right, false, false);
+        Add(EKbAction::Inventory, TEXT("inventory"), EKbGroup::Interface, EKeys::I, EKeys::Gamepad_DPad_Down, true, true); // R88
         return Built;
     }();
     return Table;

@@ -15,6 +15,7 @@
 #include "NpcBehaviour.h"
 #include "PerfectWorldNpcPresenceSubsystem.h"
 #include "PerfectWorldReadingPresenter.h"
+#include "PerfectWorldCommerceBridge.h" // R88
 
 DEFINE_LOG_CATEGORY(LogPWLaneLife);
 
@@ -123,6 +124,7 @@ void UPWLaneLifeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     // Scheduled people (LL-02) are presented by their own subsystem, which must exist before the clock first moves.
     UPWNpcPresenceSubsystem* NpPresence = Collection.InitializeDependency<UPWNpcPresenceSubsystem>();
     BuildWorld();
+    R88InstallCommerce(); // R88
     if (NpPresence != nullptr)
     {
         NpPresence->Reconcile(GetNow());
@@ -159,6 +161,7 @@ void UPWLaneLifeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UPWLaneLifeSubsystem::Deinitialize()
 {
+    PWCommerce::CmBridge::Remove(GetWorld()); // R88
     RemoveClockReadout();
     DoorInsideSides.Reset();
     KnockedDoors.Reset();

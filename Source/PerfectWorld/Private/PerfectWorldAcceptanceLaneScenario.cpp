@@ -1,4 +1,5 @@
 #include "PerfectWorldAcceptanceSubsystem.h"
+#include "PerfectWorldAcceptanceCommerce.h" // R88
 #include "PerfectWorldAcceptanceFrontages.h"
 #include "PerfectWorldAcceptanceScaleR4.h"
 #include "PerfectWorldAcceptanceMahua.h"
@@ -434,126 +435,45 @@ void AwAppendBootWalkInteract(TArray<FStepDef>& Out)
 bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps)
 {
     OutSteps.Reset();
-    if (Name == TEXT("boot_walk_interact"))
+    if (Name == TEXT("commerce_round8")) // R88
     {
-        AwAppendBootWalkInteract(OutSteps);
+        R88AppendCommerceSteps(OutSteps);
         return true;
     }
-    if (Name == TEXT("save_restart"))
+    if (Name == TEXT("commerce_shanti_round8")) // R88: executable target matching current authored content
     {
-        AppendSaveRestartSteps(OutSteps);
+        R88AppendCommerceSteps(OutSteps, true);
         return true;
     }
-    if (Name == TEXT("doors_knock"))
-    {
-        AppendDoorsKnockSteps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("anindita_mira"))
-    {
-        AppendAninditaMiraSteps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("origins_seating_cameras"))
-    {
-        AppendOriginsSeatingCamerasSteps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("resident_homes"))
-    {
-        AppendResidentHomesSteps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("frontage_three"))
-    {
-        AppendFrontageThreeSteps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("tall_flats_upstairs"))
-    {
-        AppendTallFlatsUpstairsSteps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("ambient_lane"))
-    {
-        AppendAmbientLaneSteps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("scale_round4"))
-    {
-        AppendScaleRound4Steps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("proprietors_workday"))
-    {
-        AppendProprietorsWorkdaySteps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("frontages_round4"))
-    {
-        AppendFrontagesRound4Steps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("journal_state"))
-    {
-        AppendJournalStateSteps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("journal_today"))
-    {
-        AppendJournalTodaySteps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("homes_round5"))
-    {
-        AppendHomesRound5Steps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("frontages_round5"))
-    {
-        AppendFrontagesRound5Steps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("mahua_workday"))
-    {
-        AppendMahuaWorkdaySteps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("tailor_workday"))
-    {
-        AppendTailorWorkdaySteps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("streets_round7"))
-    {
-        AppendStreetsRound7Steps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("school_round7"))
-    {
-        AppendSchoolRound7Steps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("school_round7_late"))
-    {
-        AppendSchoolRound7LateSteps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("traffic_round7"))
-    {
-        AppendTrafficRound7Steps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("crowd_round7"))
-    {
-        AppendCrowdRound7Steps(OutSteps);
-        return true;
-    }
-    if (Name == TEXT("stationery_shift"))
-    {
-        AppendStationeryShiftSteps(OutSteps);
-        return true;
-    }
+    // R88: same existing registrations in a table, keeping this aggregation file below 500 lines.
+    struct FR88ScenarioRow { const TCHAR* Name; void (*Append)(TArray<FStepDef>&); };
+    const FR88ScenarioRow R88Scenarios[] = {
+        {TEXT("boot_walk_interact"), AwAppendBootWalkInteract},
+        {TEXT("save_restart"), AppendSaveRestartSteps},
+        {TEXT("doors_knock"), AppendDoorsKnockSteps},
+        {TEXT("anindita_mira"), AppendAninditaMiraSteps},
+        {TEXT("origins_seating_cameras"), AppendOriginsSeatingCamerasSteps},
+        {TEXT("resident_homes"), AppendResidentHomesSteps},
+        {TEXT("frontage_three"), AppendFrontageThreeSteps},
+        {TEXT("tall_flats_upstairs"), AppendTallFlatsUpstairsSteps},
+        {TEXT("ambient_lane"), AppendAmbientLaneSteps},
+        {TEXT("scale_round4"), AppendScaleRound4Steps},
+        {TEXT("proprietors_workday"), AppendProprietorsWorkdaySteps},
+        {TEXT("frontages_round4"), AppendFrontagesRound4Steps},
+        {TEXT("journal_state"), AppendJournalStateSteps},
+        {TEXT("journal_today"), AppendJournalTodaySteps},
+        {TEXT("homes_round5"), AppendHomesRound5Steps},
+        {TEXT("frontages_round5"), AppendFrontagesRound5Steps},
+        {TEXT("mahua_workday"), AppendMahuaWorkdaySteps},
+        {TEXT("tailor_workday"), AppendTailorWorkdaySteps},
+        {TEXT("streets_round7"), AppendStreetsRound7Steps},
+        {TEXT("school_round7"), AppendSchoolRound7Steps},
+        {TEXT("school_round7_late"), AppendSchoolRound7LateSteps},
+        {TEXT("traffic_round7"), AppendTrafficRound7Steps},
+        {TEXT("crowd_round7"), AppendCrowdRound7Steps},
+        {TEXT("stationery_shift"), AppendStationeryShiftSteps}};
+    for (const auto& R88Scenario : R88Scenarios)
+        if (Name == R88Scenario.Name) { R88Scenario.Append(OutSteps); return true; }
     return false;
 }
 } // namespace PWAcceptance
