@@ -52,6 +52,12 @@ struct CrowdSchoolTiming
 };
 /** Derives the commute windows from an authored bell schedule (gates open, first bell, last bell). */
 [[nodiscard]] PERFECTWORLDCORE_API CrowdSchoolTiming CrowdSchoolTimingFromBell(const BellSchedule& schedule);
+/** An anonymous person's one-line exchange: `ambient.exchange.<cohort>.<band>.<1..3>` chosen by the daily seed, or now
+ * and then a passer-by or elder giving directions. Every key is authored in Data/Text/en/ambient.crowd.json. */
+[[nodiscard]] PERFECTWORLDCORE_API std::string CrowdExchangeTextKey(CrowdCohort cohort, CrowdTimeBand band,
+                                                                     std::uint64_t seed);
+/** Every key CrowdExchangeTextKey can return. */
+[[nodiscard]] PERFECTWORLDCORE_API std::vector<std::string> CrowdExchangeTextKeys();
 
 struct CrowdRouteSegment
 {

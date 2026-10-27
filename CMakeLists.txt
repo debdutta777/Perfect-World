@@ -859,3 +859,8 @@ add_executable(PerfectWorldTutorialContentTests Tests/TutorialContentTests.cpp)
 target_link_libraries(PerfectWorldTutorialContentTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldTutorialContentTests COMMAND PerfectWorldTutorialContentTests
     ${CMAKE_SOURCE_DIR}/Data/Content ${CMAKE_SOURCE_DIR}/Data/Text/en/tutorial.awakening.json)
+
+# Crowd voices: every anonymous exchange key is authored in Data/Text/en/ambient.crowd.json.
+add_executable(PerfectWorldCrowdVoicesTests Tests/CrowdVoicesTests.cpp)
+target_link_libraries(PerfectWorldCrowdVoicesTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldCrowdVoicesTests COMMAND PerfectWorldCrowdVoicesTests ${CMAKE_SOURCE_DIR}/Data/Text/en/ambient.crowd.json)

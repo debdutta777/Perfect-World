@@ -156,8 +156,9 @@ void R75Day(const AmbientCrowd& crowd, const NeighbourhoodPlan& plan, CalendarDa
                 ++students;
                 R75Expect(person.Outfit == CrowdOutfit::WhiteShirtBlueTrousers ||
                     person.Outfit == CrowdOutfit::WhiteShirtBlueSkirt, "white and blue student uniforms");
-                R75Expect(person.ShortExchangeTextKey == (minute < R75ArriveEnd ? "ambient.exchange.heading_to_school" :
-                    "ambient.exchange.greeting"), "student exchange key matches arrival/departure");
+                R75Expect(person.ShortExchangeTextKey == CrowdExchangeTextKey(CrowdCohort::Student, target.Band,
+                    person.AppearanceSeed) && person.ShortExchangeTextKey.starts_with("ambient.exchange.student."),
+                    "student exchange key follows the cohort and time band");
             }
             R75Expect(!person.RecordsJournalFacts && !person.ShortExchangeTextKey.empty(), "exchanges cannot record facts");
             const auto slot = std::find_if(crowd.RouteSlots().begin(), crowd.RouteSlots().end(), [&](const auto& candidate) {
