@@ -1,8 +1,10 @@
 #include "ContentSchemas.h"
 
 #include "CharacterCreation.h"
+#include "CommerceContent.h"
 #include "ContentSchemaBuilders.h"
 #include "FaridaSchedule.h"
+#include "TutorialContent.h"
 
 #include <algorithm>
 #include <array>
@@ -168,6 +170,49 @@ std::string StringField(const ContentRecord& record, std::string_view name)
 }
 } // namespace
 
+namespace
+{
+const TypeSchema& R82OpeningSchema()
+{
+    static const TypeSchema s{"commerce_opening", "", {
+        Int("days", true, 1, 127), Int("start", true, 0, 1439), Int("end", true, 1, 1440)}};
+    return s;
+}
+const TypeSchema& R82KeeperSchema()
+{
+    // People and spatial anchors belong to the lane registries, not ContentDb.
+    static const TypeSchema s{"commerce_keeper", "", {Str("person", true), Str("counterAnchor", true)}};
+    return s;
+}
+const TypeSchema& R82EntrySchema()
+{
+    static const TypeSchema s{"commerce_entry", "", {
+        Ref("item", true, "commerce_item"), Int("unitPricePaise", true, 1, INT64_MAX)}};
+    return s;
+}
+}
+const TypeSchema& R82CommerceItemSchema()
+{
+    static const TypeSchema s{"commerce_item", "item.", Base({
+        Str("name", true), Str("unit", true), Int("stackLimit", true, 10, 10),
+        OneOf("effect", true, {"none", "tea", "food", "unsupported_supply"}), Int("hungerRelief", true, 0, 5000)})};
+    return s;
+}
+const TypeSchema& R82CommerceShopSchema()
+{
+    static const TypeSchema s{"commerce_shop", "shop.", Base({
+        Str("name", true), Str("counterAnchor", true), Obj("keepers", true, &R82KeeperSchema(), true),
+        Obj("opening", true, &R82OpeningSchema(), true), Obj("entries", true, &R82EntrySchema(), true)})};
+    return s;
+}
+const TypeSchema& R82CommerceFundingSchema()
+{
+    static const TypeSchema s{"commerce_funding", "commerce_funding.", Base({
+        Ref("stratum", true, "stratum"), Int("householdResourcesRank", true, 0, 4),
+        Int("startingWalletPaise", true, 1, INT64_MAX), Int("weeklyAllowancePaise", true, 1, INT64_MAX)})};
+    return s;
+}
+
 const std::vector<const TypeSchema*>& TopLevelSchemas()
 {
     static const std::vector<const TypeSchema*> all = {&Nation(), &RealmRegion(), &City(), &Institution(), &EducationStage(),
@@ -177,7 +222,9 @@ const std::vector<const TypeSchema*>& TopLevelSchemas()
                                                        &ExplainCaseSchema(), &InvestigateFamilySchema(), &InvestigateCaseSchema(),
                                                        &CoordinateFamilySchema(), &CoordinateCaseSchema(), &CalendarSchema(),
                                                        &AssessmentPaperSchema(), &AbilityRecipeSchema(),
-                                                       &ThreadTemplateSchema(), &NpcScheduleSchema()};
+                                                       &ThreadTemplateSchema(), &NpcScheduleSchema(),
+                                                       &R82CommerceItemSchema(), &R82CommerceShopSchema(), &R82CommerceFundingSchema(),
+                                                       &R93TutorialSchema()};
     return all;
 }
 
@@ -244,6 +291,8 @@ void CheckSemantics(const ContentDb& db, std::vector<ContentIssue>& issues)
     CheckAbilitySemantics(db, issues);
     CheckThreadSemantics(db, issues);
     ValidateNpcScheduleSemantics(db, issues);
+    ValidateCommerceContentSemantics(db, issues);
+    ValidateTutorialContentSemantics(db, issues);
     for (const ContentRecord* skill : db.OfType("skill"))
         SeedCheck(issues, *skill, "xpByRank");
     const std::vector<const ContentRecord*> attributes = db.OfType("attribute");

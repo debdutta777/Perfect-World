@@ -807,3 +807,55 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/Neighbou
 add_executable(PerfectWorldNeighbourhoodTrafficTests Tests/NeighbourhoodTrafficTests.cpp)
 target_link_libraries(PerfectWorldNeighbourhoodTrafficTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldNeighbourhoodTrafficTests COMMAND PerfectWorldNeighbourhoodTrafficTests)
+
+# R83: reducer commerce/service inputs, every time path and atomic refusals; save/hash remain R8-04's.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldCommerce.cpp)
+add_executable(PerfectWorldWorldCommerceTests Tests/WorldCommerceTests.cpp)
+target_link_libraries(PerfectWorldWorldCommerceTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldCommerceTests COMMAND PerfectWorldWorldCommerceTests)
+
+# R82: authored commerce items, catalogues, funding and soft keeper unavailability.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/CommerceContent.cpp)
+add_executable(PerfectWorldCommerceContentTests Tests/CommerceContentTests.cpp)
+target_link_libraries(PerfectWorldCommerceContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldCommerceContentTests COMMAND PerfectWorldCommerceContentTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# R84: commerce persistence (pw.commerce/1, schema 10, hash 7), legacy authentication and household migration.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldSaveCommerce.cpp)
+add_executable(PerfectWorldWorldSaveCommerceTests Tests/WorldSaveCommerceTests.cpp Tests/WorldSaveCommerceFixtureTests.cpp)
+target_link_libraries(PerfectWorldWorldSaveCommerceTests PRIVATE PerfectWorldCore)
+target_compile_definitions(PerfectWorldWorldSaveCommerceTests PRIVATE PW_COMMERCE_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
+add_test(NAME PerfectWorldWorldSaveCommerceTests COMMAND PerfectWorldWorldSaveCommerceTests)
+add_executable(PerfectWorldWorldHashCommerceTests Tests/WorldHashCommerceTests.cpp)
+target_link_libraries(PerfectWorldWorldHashCommerceTests PRIVATE PerfectWorldCore)
+target_compile_definitions(PerfectWorldWorldHashCommerceTests PRIVATE PW_COMMERCE_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
+add_test(NAME PerfectWorldWorldHashCommerceTests COMMAND PerfectWorldWorldHashCommerceTests)
+
+# S01: deterministic content manifest, diffing and pwcontent check-manifest gate.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ContentManifest.cpp)
+add_executable(PerfectWorldContentManifestTests Tests/ContentManifestTests.cpp)
+target_link_libraries(PerfectWorldContentManifestTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldContentManifestTests COMMAND PerfectWorldContentManifestTests ${CMAKE_SOURCE_DIR}/Data/Content)
+add_test(NAME PerfectWorldContentManifestData COMMAND pwcontent check-manifest ${CMAKE_SOURCE_DIR}/Data/Content)
+
+
+# R91: frozen Awakening inputs/state contract and exactly-once genuine activity credits.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/AwakeningInputs.cpp)
+add_executable(PerfectWorldAwakeningInputsTests Tests/AwakeningInputsTests.cpp)
+target_link_libraries(PerfectWorldAwakeningInputsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldAwakeningInputsTests COMMAND PerfectWorldAwakeningInputsTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# R92: supervised tutorial situations, recovery, safe withdrawal, make-up and atomic grant.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/TutorialDungeon.cpp)
+add_executable(PerfectWorldTutorialDungeonTests Tests/TutorialDungeonTests.cpp)
+target_link_libraries(PerfectWorldTutorialDungeonTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldTutorialDungeonTests COMMAND PerfectWorldTutorialDungeonTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# R93: authored tutorial content, registry schema and complete text-reference validation.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/ContentTutorialSchemas.cpp
+    Source/PerfectWorldCore/Private/TutorialContent.cpp)
+add_executable(PerfectWorldTutorialContentTests Tests/TutorialContentTests.cpp)
+target_link_libraries(PerfectWorldTutorialContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldTutorialContentTests COMMAND PerfectWorldTutorialContentTests
+    ${CMAKE_SOURCE_DIR}/Data/Content ${CMAKE_SOURCE_DIR}/Data/Text/en/tutorial.awakening.json)

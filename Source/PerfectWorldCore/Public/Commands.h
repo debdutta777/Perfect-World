@@ -180,9 +180,47 @@ struct SchoolArrive
     static constexpr std::string_view TypeId = "school.arrive";
 };
 
+/** Physical approach is explicit replay input. Pending requests keep time running until the safe pause. */
+struct CommerceServiceRequest
+{
+    static constexpr std::string_view TypeId = "commerce.service_request";
+    std::string ShopId;
+    std::string CounterAnchorId;
+};
+
+/** Closing/leaving the counter releases its interruption. Reload also starts with no service. */
+struct CommerceServiceClose
+{
+    static constexpr std::string_view TypeId = "commerce.service_close";
+    std::string ShopId;
+};
+
+struct CommerceBuy
+{
+    static constexpr std::string_view TypeId = "commerce.buy";
+    std::string ShopId;
+    std::string ItemId;
+    std::int32_t Quantity = 1;
+    std::uint64_t ExpectedRevision = 0;
+};
+
+struct InventoryConsume
+{
+    static constexpr std::string_view TypeId = "inventory.consume";
+    std::string ItemId;
+};
+
+/** Existing portable day rules through WorldSim: sleep, activity completion/cancel and passes share settlement. */
+struct WorldDayCommand
+{
+    static constexpr std::string_view TypeId = "day.apply";
+    DayCommand Day;
+};
+
 using CommandPayload = std::variant<AdvanceTime, ScheduleWorldEvent, SetWorldFlag, GateRegister, GateScheduleOnset, GateContain, GateSeal,
                                     SettleDueEvents, ConversationOpen, ConversationChoose, ConversationLeave, DoorSet, DoorSettle,
-                                    SchoolPlanDay, SchoolArrive>;
+                                    SchoolPlanDay, SchoolArrive, CommerceServiceRequest, CommerceServiceClose,
+                                    CommerceBuy, InventoryConsume, WorldDayCommand>;
 
 struct Command
 {

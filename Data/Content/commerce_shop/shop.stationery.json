@@ -1,0 +1,39 @@
+{
+  "type": "commerce_shop",
+  "id": "shop.stationery",
+  "name": "Stationery shop",
+  "counterAnchor": "anchor.stationery.counter",
+  "keepers": [
+    {
+      "person": "person.anindita_sen",
+      "counterAnchor": "anchor.stationery.counter"
+    }
+  ],
+  "opening": [
+    {
+      "days": 127,
+      "start": 480,
+      "end": 780
+    },
+    {
+      "days": 127,
+      "start": 900,
+      "end": 1170
+    }
+  ],
+  "entries": [
+    {
+      "item": "item.pen",
+      "unitPricePaise": 2000
+    },
+    {
+      "item": "item.notebook",
+      "unitPricePaise": 6000
+    },
+    {
+      "item": "item.geometry_box",
+      "unitPricePaise": 22000
+    }
+  ],
+  "note": "Fictional 2042 balance prices in integer paise, per displayed unit. Authored split opening hours are authoritative. Registration alone never authorizes sales; schedule presence and a safe pause are required."
+}

@@ -2263,3 +2263,54 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 - **Blocked on the owner:** the streets' counters are solid across each keeper's axis. A 120 cm service-flap patch (`D:\PWWork\r74_shoplots.diff`, `r74_stalls.diff`) was refused to the agent by the permission system and awaits the owner's decision.
 
 **R8-01 (commerce contract)** waits for the ChatGPT usage reset.
+
+## Checkpoint — v0.6.0-alpha published (crowds and traffic); R8-01 merged, 2026-10-23
+
+**Released as `v0.6.0-alpha` (prerelease):**
+- Tag on `25a1931`: https://github.com/debdutta777/Perfect-World/releases/tag/v0.6.0-alpha
+- Asset: 415,549,584 bytes, sha256 `789d2f7cb75bc6e01fa79279de4a2561b26fc022a1fab30952375947dc962452`.
+- **Verification:**
+  - Rung 1: 198/198.
+  - The editor and game targets compiled.
+  - Package exit 0.
+  - Not run: automation, acceptance, and a boot test.
+
+**R8-01 (gpt-6.1-sol), the portable commerce contract, is merged:**
+- a wallet in paise;
+- a household-rank allowance;
+- inventory;
+- quotes and purchase refusals;
+- atomic purchases with receipts;
+- consumption.
+- Rung 1: 199/199. No save-format change.
+
+**In flight:**
+- R8-02 content and R8-03 reducer integration (gpt-6.1-sol).
+- R8-05 Buy panel, wallet and inventory UI (Claude Sonnet).
+- R8-04, the save migration to schema 10 and hash 7, follows R8-03 (Claude deep-work).
+- The staffed shops (R7-04) still wait on the owner's decision about the counter patch.
+
+## Checkpoint — first runtime evidence; v0.6.1-alpha hotfix published, 2026-10-25
+
+**The first boot smoke test ever run on a package** (`boot_walk_interact`, offscreen, while the owner's apps were closed) found that **v0.4.0–v0.6.0 crash a few frames after entering the world**.
+- The cause is `Array.Add(Array[0])` in the minimap painter (`PWMapPainter.cpp`) and the trait radar (`SPWAttributeRadarPaint.cpp`); Unreal asserts on it.
+- Fixed at `1b49712`.
+- The rerun on the fixed package boots, enters the world, walks and renders: a screenshot with the minimap and clock.
+- It then **fails one step**: `walk_to_table_chair` is blocked 45 cm short of the chair. Still to investigate.
+
+**Released `v0.6.1-alpha`:**
+- https://github.com/debdutta777/Perfect-World/releases/tag/v0.6.1-alpha
+- sha256 `8845cc6b41b177b4dbaaed7f3e00cc9859a90b1b02d5edab659fb135a348a541`.
+- v0.4.0–v0.6.0 now carry a known-crash note.
+
+**New tooling:**
+- The Antigravity CLI (`agy.exe`) runs **Gemini 4 Argon Medium** as an edit-only subagent through `D:\PWWork\run_agy.ps1`.
+- The Gemini CLI's Google sign-in is refused for personal accounts.
+
+**Gemini's first two orders, done on their branches:**
+- R9-07: the Awakening result and countdown panels.
+- S01: a content manifest. Its build and tests are running.
+
+**Phase 2** (`Docs/PHASE2_PLAN_2026-10-25.md`, gpt-6-astra) is under way:
+- the school contracts (gpt-6.1-sol);
+- A4 school-life content and A7 tower scenarios (Gemini 4 Argon Medium).
