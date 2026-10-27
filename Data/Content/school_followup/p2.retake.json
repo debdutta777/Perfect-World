@@ -1,0 +1,14 @@
+{
+  "type": "school_followup",
+  "id": "school_followup.p2.retake",
+  "outcome": "all",
+  "offerId": "offer.tower.retake",
+  "appointmentId": "appointment.p2.retake",
+  "kind": "appointment",
+  "titleTextKey": "phase2.a8.retake.title",
+  "briefTextKey": "phase2.a8.retake.brief",
+  "destination": "place.school",
+  "dayOffset": 6,
+  "minute": 960,
+  "durationMinutes": 15
+}

@@ -1,0 +1,14 @@
+{
+  "type": "school_followup",
+  "id": "school_followup.p2.community_practice",
+  "outcome": "all",
+  "offerId": "offer.tower.community_practice",
+  "appointmentId": "appointment.p2.community_practice",
+  "kind": "appointment",
+  "titleTextKey": "phase2.a8.community_practice.title",
+  "briefTextKey": "phase2.a8.community_practice.brief",
+  "destination": "place.school",
+  "dayOffset": 3,
+  "minute": 960,
+  "durationMinutes": 15
+}

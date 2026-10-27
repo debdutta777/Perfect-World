@@ -1,0 +1,14 @@
+{
+  "type": "school_followup",
+  "id": "school_followup.p2.declined",
+  "outcome": "declined",
+  "offerId": "",
+  "appointmentId": "appointment.p2.declined",
+  "kind": "appointment",
+  "titleTextKey": "phase2.a8.declined.title",
+  "briefTextKey": "phase2.a8.declined.brief",
+  "destination": "place.school",
+  "dayOffset": 1,
+  "minute": 960,
+  "durationMinutes": 15
+}
