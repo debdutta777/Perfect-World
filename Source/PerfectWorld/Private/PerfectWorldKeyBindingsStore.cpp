@@ -31,6 +31,7 @@ FText KbActionLabel(EKbAction Action)
     case EKbAction::ZoomOut: return LOCTEXT("ZoomOut", "Zoom out");
     case EKbAction::Map: return LOCTEXT("Map", "Map");
     case EKbAction::Quests: return LOCTEXT("Quests", "Quests");
+    case EKbAction::Inventory: return LOCTEXT("Inventory", "Inventory"); // R88
     case EKbAction::Pause: return LOCTEXT("Pause", "Pause menu");
     default: return FText::GetEmpty();
     }

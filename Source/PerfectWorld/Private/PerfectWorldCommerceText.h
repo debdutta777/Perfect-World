@@ -29,7 +29,8 @@ FText CmHudWalletText(const UWorld* World);
 FText CmPauseWalletValue(const UWorld* World);
 
 /** One sentence for a core refusal. ShopName (may be empty) is used where it reads naturally ("Shanti Chai is closed"). None gives empty. */
-FText CmRefusalText(PerfectWorld::CommerceError Error, const FText& ShopName = FText::GetEmpty());
+FText CmRefusalText(PerfectWorld::CommerceError Error, const FText& ShopName = FText::GetEmpty(),
+    const FString& CoreCode = FString()); // R88: retain lifecycle refusal wording too
 
 /** "Not enough money: you need ₹5 more." from the quote's wallet-after (negative), or the plain refusal when it is not short. */
 FText CmShortfallText(int64 WalletAfterPaise);

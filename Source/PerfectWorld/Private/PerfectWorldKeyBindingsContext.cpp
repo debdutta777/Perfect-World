@@ -84,6 +84,7 @@ void KbPopulateWalkingContext(UInputMappingContext& Context, const FKbContextAct
         Mapper.Map(Actions.CycleTarget, Key(EKbAction::CycleTarget));
         Mapper.Map(Actions.Map, Key(EKbAction::Map));
         Mapper.Map(Actions.Quests, Key(EKbAction::Quests));
+        Mapper.Map(Actions.Inventory, Key(EKbAction::Inventory)); // R88
     }
 
     // Zoom. The usual wheel (up closer, down further) is the wheel axis itself, which can deliver several notches in a frame; a wheel

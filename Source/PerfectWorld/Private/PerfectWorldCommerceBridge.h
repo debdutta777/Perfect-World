@@ -48,6 +48,10 @@ struct FCmServiceView
     /** The revision the quotes below were made at; a confirmation carries the quote's own revision, never this one. */
     uint64 Revision = 0;
     TArray<FCmGood> Goods;
+    /** R88: original reducer code, including service lifecycle refusals outside CommerceError. */
+    FString Code;
+    /** R88: accepted service request awaiting the core's safe pause; keep game time running. */
+    bool bPending = false;
     bool Ok() const { return Error == PerfectWorld::CommerceError::None; }
 };
 
@@ -69,6 +73,7 @@ struct FCmBuyResult
     PerfectWorld::CommerceReceipt Receipt;
     FText ItemName;
     FText ShopName;
+    FString Code; // R88: unmodified reducer refusal
 };
 
 struct FCmStackView
@@ -107,6 +112,7 @@ struct FCmUseResult
     bool bAccepted = false;
     PerfectWorld::CommerceError Error = PerfectWorld::CommerceError::None;
     FText ItemName;
+    FString Code; // R88: unmodified reducer refusal
 };
 
 class ICmCommerceWorld

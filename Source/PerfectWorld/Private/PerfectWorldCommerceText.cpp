@@ -69,8 +69,15 @@ FText CmPauseWalletValue(const UWorld* World)
     return Wallet.IsSet() ? FText::FromString(CmFormatPaise(Wallet.GetValue())) : LOCTEXT("WalletUnavailable", "Unavailable");
 }
 
-FText CmRefusalText(const PerfectWorld::CommerceError Error, const FText& ShopName)
+FText CmRefusalText(const PerfectWorld::CommerceError Error, const FText& ShopName, const FString& CoreCode)
 {
+    // R88: lifecycle codes are returned verbatim by WorldSim, outside CommerceError.
+    if (CoreCode == TEXT("commerce.service_active"))
+        return LOCTEXT("ServiceActive", "Finish at the other counter first.");
+    if (CoreCode == TEXT("commerce.service_history_full"))
+        return LOCTEXT("ServiceHistoryFull", "The keeper needs to finish this work. Come back after a while.");
+    if (CoreCode == TEXT("commerce.service_not_open"))
+        return LOCTEXT("ServiceNotOpen", "Step up to the counter again to buy.");
     using PerfectWorld::CommerceError;
     switch (Error)
     {

@@ -31,6 +31,7 @@
 #include "PerfectWorldTrafficPresenter.h"
 #include "PerfectWorldCrowdPresenter.h"
 #include "PerfectWorldSubrataBindings.h"
+#include "PerfectWorldCommerceLive.h" // R88
 
 namespace PWLane
 {
@@ -323,6 +324,7 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     SpawnMahua(World, Scene);
     R66SpawnTailor(World, Scene);
     SpawnKitShopDisplays(World, Scene); // R4-01: the browse actors and posted hours of market_stalls_a, market_stalls_b and end_shop
+    PWCommerce::R88SpawnLiveCounters(World); // R88: content catalogues + registered spatial anchors
     if (Scene.bOpeningHomeBuilt)
     {
         SpawnHouseholdAdult(World);

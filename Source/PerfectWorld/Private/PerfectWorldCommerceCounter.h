@@ -47,6 +47,8 @@ class PERFECTWORLD_API APWCounterBuyActor : public AActor, public IPWInteractabl
 
 public:
     APWCounterBuyActor();
+    virtual void Tick(float DeltaSeconds) override; // R88: deferred core service
+    virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 
     /** InTag becomes an actor tag; PointWorld is the interaction point. */
     void Configure(FName InShopId, FName InTag, const FText& InVerb, const FVector& PointWorld);
@@ -75,4 +77,6 @@ private:
     PerfectWorld::CommerceError LastError = PerfectWorld::CommerceError::None;
     bool bOpenedPanel = false;
     FText LastNotice;
+    bool bR88Pending = false;
+    TWeakObjectPtr<APawn> R88Customer;
 };

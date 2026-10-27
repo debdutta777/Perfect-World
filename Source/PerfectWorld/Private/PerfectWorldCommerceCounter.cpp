@@ -2,6 +2,7 @@
 
 #include "Components/SceneComponent.h"
 #include "Engine/World.h"
+#include "GameFramework/Pawn.h" // R88
 #include "PerfectWorldBuyPresenter.h"
 #include "PerfectWorldCommerceText.h"
 #include "PerfectWorldInteractionComponent.h"
@@ -36,7 +37,9 @@ int32 SpawnCommerceCounters(UWorld& World, const TArray<FCmCounterSpec>& Specs)
 
 APWCounterBuyActor::APWCounterBuyActor()
 {
-    PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bCanEverTick = true; // R88: only enabled while awaiting a safe pause
+    PrimaryActorTick.bStartWithTickEnabled = false;
+    PrimaryActorTick.TickInterval = 0.1f; // R88
     Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
     Root->SetMobility(EComponentMobility::Movable);
     SetRootComponent(Root);
@@ -96,9 +99,17 @@ void APWCounterBuyActor::Interact(APawn* By)
     {
         // The core's reason, in words: closed, keeper away, finishing a step, not enough money, bag full.
         LastError = Offer.Error;
-        Say(By, PWCommerce::CmRefusalText(Offer.Error, Offer.ShopName));
+        Say(By, PWCommerce::CmRefusalText(Offer.Error, Offer.ShopName, Offer.Code)); // R88
+        // R88: an accepted pending request advances naturally; retrying queries the same core service.
+        bR88Pending = Offer.bPending;
+        R88Customer = bR88Pending ? By : nullptr;
+        SetActorTickEnabled(bR88Pending);
+        if (!bR88Pending) Bridge->EndService(ShopId);
         return;
     }
+    bR88Pending = false; // R88
+    R88Customer.Reset();
+    SetActorTickEnabled(false);
     UPWBuyPresenter* Presenter = UPWBuyPresenter::Get(this);
     if (Presenter == nullptr || !Presenter->Open(Bridge.ToSharedRef(), Offer))
     {
@@ -108,6 +119,30 @@ void APWCounterBuyActor::Interact(APawn* By)
         return;
     }
     bOpenedPanel = true;
+}
+
+void APWCounterBuyActor::Tick(const float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
+    APawn* By = R88Customer.Get();
+    if (!bR88Pending) return;
+    if (By == nullptr || UPWInteractionComponent::IsWorldInputBlocked(By) ||
+        FVector::Dist2D(By->GetActorLocation(), GetInteractionPoint()) > PWInteraction::ReachCm)
+    {
+        if (const auto Bridge = PWCommerce::CmBridge::Resolve(GetWorld())) Bridge->EndService(ShopId);
+        bR88Pending = false;
+        R88Customer.Reset();
+        SetActorTickEnabled(false);
+        return;
+    }
+    Interact(By);
+}
+
+void APWCounterBuyActor::EndPlay(const EEndPlayReason::Type Reason)
+{
+    if (bR88Pending)
+        if (const auto Bridge = PWCommerce::CmBridge::Resolve(GetWorld())) Bridge->EndService(ShopId);
+    Super::EndPlay(Reason);
 }
 
 #undef LOCTEXT_NAMESPACE
