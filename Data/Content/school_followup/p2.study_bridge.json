@@ -1,0 +1,14 @@
+{
+  "type": "school_followup",
+  "id": "school_followup.p2.study_bridge",
+  "outcome": "all",
+  "offerId": "offer.tower.study_bridge",
+  "appointmentId": "appointment.p2.study_bridge",
+  "kind": "appointment",
+  "titleTextKey": "phase2.a8.study_bridge.title",
+  "briefTextKey": "phase2.a8.study_bridge.brief",
+  "destination": "place.school",
+  "dayOffset": 2,
+  "minute": 960,
+  "durationMinutes": 15
+}
