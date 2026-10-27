@@ -1,0 +1,81 @@
+{
+  "type": "school_lesson",
+  "id": "p2.humanities",
+  "scope": "humanities",
+  "bellSchedule": "bell_schedule.nabapara_xi_humanities",
+  "lessons": [
+    {
+      "id": "school.lesson.humanities.p0_history",
+      "period": 0,
+      "subject": "history",
+      "structure": "explain",
+      "family": "explain_family.xi_claim_evidence_limit",
+      "familySubject": "history",
+      "role": "researcher",
+      "titleKey": "phase2.a1.lesson.humanities.p0_history.title",
+      "briefKey": "phase2.a1.lesson.humanities.p0_history.brief",
+      "roleKey": "phase2.a1.lesson.humanities.p0_history.role"
+    },
+    {
+      "id": "school.lesson.humanities.p1_geography",
+      "period": 1,
+      "subject": "geography",
+      "structure": "model",
+      "family": "problem_family.xi_stock_and_flow",
+      "familySubject": "geography",
+      "role": "experimenter",
+      "titleKey": "phase2.a1.lesson.humanities.p1_geography.title",
+      "briefKey": "phase2.a1.lesson.humanities.p1_geography.brief",
+      "roleKey": "phase2.a1.lesson.humanities.p1_geography.role"
+    },
+    {
+      "id": "school.lesson.humanities.p2_political_science",
+      "period": 2,
+      "subject": "political_science",
+      "structure": "coordinate",
+      "family": "coordinate_family.xi_group_work",
+      "familySubject": "debate",
+      "role": "mediator",
+      "titleKey": "phase2.a1.lesson.humanities.p2_political_science.title",
+      "briefKey": "phase2.a1.lesson.humanities.p2_political_science.brief",
+      "roleKey": "phase2.a1.lesson.humanities.p2_political_science.role"
+    },
+    {
+      "id": "school.lesson.humanities.p3_english",
+      "period": 3,
+      "subject": "english",
+      "structure": "explain",
+      "family": "explain_family.xi_claim_evidence_limit",
+      "familySubject": "interpretation",
+      "role": "recorder",
+      "titleKey": "phase2.a1.lesson.humanities.p3_english.title",
+      "briefKey": "phase2.a1.lesson.humanities.p3_english.brief",
+      "roleKey": "phase2.a1.lesson.humanities.p3_english.role"
+    },
+    {
+      "id": "school.lesson.humanities.p4_sociology",
+      "period": 4,
+      "subject": "sociology",
+      "structure": "coordinate",
+      "family": "coordinate_family.xi_group_work",
+      "familySubject": "projects",
+      "role": "chair",
+      "titleKey": "phase2.a1.lesson.humanities.p4_sociology.title",
+      "briefKey": "phase2.a1.lesson.humanities.p4_sociology.brief",
+      "roleKey": "phase2.a1.lesson.humanities.p4_sociology.role"
+    },
+    {
+      "id": "school.lesson.humanities.p5_bengali",
+      "period": 5,
+      "subject": "bengali",
+      "structure": "explain",
+      "family": "explain_family.xi_claim_evidence_limit",
+      "familySubject": "literature",
+      "role": "author",
+      "titleKey": "phase2.a1.lesson.humanities.p5_bengali.title",
+      "briefKey": "phase2.a1.lesson.humanities.p5_bengali.brief",
+      "roleKey": "phase2.a1.lesson.humanities.p5_bengali.role"
+    }
+  ],
+  "note": "Phase 2 A1: one lesson binding for every period of this stream's bell schedule. The subject repeats the schedule's so a re-ordered timetable is refused. familySubject and role name a subject and role that an authored case of the family really has; the case itself is chosen by the structure runner."
+}

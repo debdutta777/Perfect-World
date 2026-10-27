@@ -832,3 +832,11 @@ foreach(P2C_SYSTEM SchoolSessions SchoolWork SchoolLife SchoolWeek TowerSession)
     target_link_libraries(PerfectWorld${P2C_SYSTEM}Tests PRIVATE PerfectWorldCore)
     add_test(NAME PerfectWorld${P2C_SYSTEM}Tests COMMAND PerfectWorld${P2C_SYSTEM}Tests ${CMAKE_SOURCE_DIR}/Data/Content)
 endforeach()
+
+# P2 A1: the timetable and lesson catalogue (school_lesson content kind, today's school-day projection).
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/SchoolLessonContent.cpp
+    Source/PerfectWorldCore/Private/SchoolLessonDayView.cpp)
+add_executable(PerfectWorldSchoolLessonContentTests Tests/SchoolLessonContentTests.cpp)
+target_link_libraries(PerfectWorldSchoolLessonContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSchoolLessonContentTests COMMAND PerfectWorldSchoolLessonContentTests ${CMAKE_SOURCE_DIR}/Data/Content ${CMAKE_SOURCE_DIR}/Data/Text/en/phase2_a1.json)
