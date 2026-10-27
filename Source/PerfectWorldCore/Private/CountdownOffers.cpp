@@ -195,6 +195,14 @@ std::vector<CountdownOffer> CountdownOffers(const WorldState& world, const Count
         offer.Contact = assessed.Contact;
         offer.Relation = assessed.Relation;
         offer.Odds = CountdownOddsFor(def, assessed.Relation);
+        // R95: a committed offer displays the stored contact and odds, even
+        // after relationships change. Viewing cannot suggest a fresh roll.
+        if (const auto* stored = CountdownFindCommitment(state, def.Id))
+        {
+            offer.Contact = stored->Contact;
+            offer.Relation = CountdownRelationValue(context, stored->Contact, def.Relation);
+            offer.Odds = stored->Odds;
+        }
         for (std::size_t i = 0; i < CountdownOutcomeCount; ++i)
             offer.Bands[i] = CountdownBandOf(offer.Odds[i]);
         // What taking it closes: the rest of its group that has not been committed and whose window has not passed.
@@ -285,6 +293,19 @@ std::vector<CountdownProposalOffer> CountdownProposals(const WorldState& world, 
     CountdownProposalClosed(world, *record, decline);
     decline.Available = decline.Unavailable.empty();
     offers.push_back(std::move(decline));
+    // R95: the used proposal is a record of the one attempt, including after
+    // reload or changed relationships. Its displayed chance cannot drift.
+    if (record->Negotiated)
+    {
+        for (auto& offer : offers)
+        {
+            if (offer.Proposal != record->Attempt)
+                continue;
+            offer.AcceptPermille = record->AcceptPermille;
+            offer.Band = CountdownBandOf(record->AcceptPermille);
+            offer.Helper = record->Helper;
+        }
+    }
     return offers;
 }
 

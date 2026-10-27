@@ -825,3 +825,9 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/Awakenin
 add_executable(PerfectWorldAwakeningInputsTests Tests/AwakeningInputsTests.cpp)
 target_link_libraries(PerfectWorldAwakeningInputsTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldAwakeningInputsTests COMMAND PerfectWorldAwakeningInputsTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# R95: scheduled countdown boundary, fixed-deadline make-up handoff and optional practice.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldCountdown.cpp)
+add_executable(PerfectWorldWorldCountdownTests Tests/WorldCountdownTests.cpp)
+target_link_libraries(PerfectWorldWorldCountdownTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldCountdownTests COMMAND PerfectWorldWorldCountdownTests ${CMAKE_SOURCE_DIR}/Data/Content)
