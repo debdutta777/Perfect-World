@@ -306,7 +306,7 @@ void PcSaveMidSession(const PcCase& c, std::uint64_t seed)
     const std::string person(c.Person);
     const std::string promise = PcChoice(c, c.PromiseShort);
     const std::string paid = PcChoice(c, c.PaidShort);
-    WorldSim live(seed);
+    const auto creation = MakeCreation("parent_household"); WorldSim live(seed, CreatorOf(creation));
     // Monday 06:00 plus 640 minutes is 16:40, inside the afternoon business window of both shops.
     Check(live.Submit({CommandSource::Player, AdvanceTime{640}}).Accepted, "advance to the afternoon (16:40)");
     Check(live.Submit({CommandSource::Player, ConversationOpen{person, PersonAvailability::Awake}}).Accepted, "open the first session");
@@ -326,7 +326,7 @@ void PcSaveMidSession(const PcCase& c, std::uint64_t seed)
     Check(!live.Submit({CommandSource::Player, ConversationChoose{person, paid, 2}}).Accepted, "a duplicate charge is refused");
     Check(live.State().Clock.Now() == clockAfter, "a refused duplicate costs nothing");
 
-    WorldSaveData data = SaveOf(live, MakeCreation("parent_household"));
+    WorldSaveData data = SaveOf(live, creation);
     WorldSaveData loaded;
     const auto result = DeserializeWorldSave(SerializeWorldSave(data), loaded);
     Check(result.Succeeded() && result.SourceVersion == WorldSaveSchemaVersion && result.HashVerified, "current-schema mid-session round trip is certified");
@@ -344,7 +344,7 @@ void PcSaveMidSession(const PcCase& c, std::uint64_t seed)
         Check(sim->Submit({CommandSource::Player, ConversationLeave{person}}).Accepted, "leave again");
     }
     Check(HashWorldState(live.State()) == HashWorldState(resumed.State()), "reload continuation equals the uninterrupted run");
-    const auto replay = ReplayCommandLog(seed, live.Log());
+    const auto replay = ReplayLife(seed, creation, live.Log());
     Check(replay.Complete && replay.Hash == HashWorldState(live.State()), "command replay is equivalent");
 }
 
@@ -376,7 +376,7 @@ void PcSaveClosedSession(const PcCase& c, std::uint64_t seed, std::string_view o
 
 void PcBothInOneWorld()
 {
-    WorldSim live(131);
+    const auto creation = MakeCreation("parent_household"); WorldSim live(131, CreatorOf(creation));
     Check(live.Submit({CommandSource::Player, AdvanceTime{640}}).Accepted, "advance to 16:40");
     for (const std::string_view person : {std::string_view("person.debashis_pal"), std::string_view("person.mahua_saha")})
     {
@@ -388,7 +388,7 @@ void PcBothInOneWorld()
     Check(live.Submit({CommandSource::Player, ConversationOpen{"person.debashis_pal", PersonAvailability::Awake}}).Accepted, "reopen the first");
     Check(!live.Submit({CommandSource::Player, ConversationOpen{"person.mahua_saha", PersonAvailability::Awake}}).Accepted, "only one conversation is open at a time");
     Check(live.Submit({CommandSource::Player, ConversationLeave{"person.debashis_pal"}}).Accepted, "leave the first");
-    WorldSaveData data = SaveOf(live, MakeCreation("parent_household"));
+    WorldSaveData data = SaveOf(live, creation);
     WorldSaveData loaded;
     Check(DeserializeWorldSave(SerializeWorldSave(data), loaded).HashVerified, "both agreements round trip certified");
     CheckSame(data, loaded, "both agreements survive together");

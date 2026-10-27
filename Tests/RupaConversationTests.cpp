@@ -247,7 +247,7 @@ void RgConversationText()
 
 void RgSaveMidSession()
 {
-    WorldSim live(97);
+    const auto creation = MakeCreation("parent_household"); WorldSim live(97, CreatorOf(creation));
     const std::string person(RgPerson);
     // Monday 06:00 plus 640 minutes is 16:40, inside the quiet hour before supper.
     Check(live.Submit({CommandSource::Player, AdvanceTime{640}}).Accepted, "advance to the afternoon (16:40)");
@@ -268,7 +268,7 @@ void RgSaveMidSession()
     Check(!live.Submit({CommandSource::Player, ConversationChoose{person, std::string(RgSitId), 2}}).Accepted, "a duplicate charge is refused");
     Check(live.State().Clock.Now() == clockAfter, "a refused duplicate costs nothing");
 
-    WorldSaveData data = SaveOf(live, MakeCreation("parent_household"));
+    WorldSaveData data = SaveOf(live, creation);
     WorldSaveData loaded;
     const auto result = DeserializeWorldSave(SerializeWorldSave(data), loaded);
     Check(result.Succeeded() && result.SourceVersion == WorldSaveSchemaVersion && result.HashVerified, "current-schema mid-session round trip with Rupa is certified");
@@ -286,7 +286,7 @@ void RgSaveMidSession()
         Check(sim->Submit({CommandSource::Player, ConversationLeave{person}}).Accepted, "leave again");
     }
     Check(HashWorldState(live.State()) == HashWorldState(resumed.State()), "reload continuation equals the uninterrupted run");
-    const auto replay = ReplayCommandLog(97, live.Log());
+    const auto replay = ReplayLife(97, creation, live.Log());
     Check(replay.Complete && replay.Hash == HashWorldState(live.State()), "command replay is equivalent");
 }
 

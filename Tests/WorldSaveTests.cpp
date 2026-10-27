@@ -116,9 +116,10 @@ void TestCorruption()
           "a changed Gate field that still parses fails the hash check");
     Check(ErrorOf(ReplaceOnce(text, "\"seq\": \"0x", "\"seq\": \"0x1")) == WorldSaveError::Malformed, "a hex value of the wrong length is refused");
     Check(ErrorOf(ReplaceOnce(text, "\"0x", "\"0X")) == WorldSaveError::Malformed, "hex digits must be lowercase with a 0x prefix");
-    Check(ErrorOf(ReplaceOnce(text, "\"schemaVersion\": 9", "\"schemaVersion\": 10")) == WorldSaveError::UnsupportedVersion, "a newer envelope is refused as unsupported");
-    Check(ErrorOf(ReplaceOnce(text, "\"schemaVersion\": 9", "\"schemaVersion\": 5")) == WorldSaveError::UnsupportedVersion, "an envelope version never written is refused");
-    Check(ErrorOf(ReplaceOnce(text, "\"schemaVersion\": 9", "\"schemaVersion\": 6")) == WorldSaveError::Malformed, "a v6 record that carries a day loop has an unexpected key");
+    const std::string currentSchema = "\"schemaVersion\": " + std::to_string(WorldSaveSchemaVersion);
+    Check(ErrorOf(ReplaceOnce(text, currentSchema, "\"schemaVersion\": " + std::to_string(WorldSaveSchemaVersion + 1))) == WorldSaveError::UnsupportedVersion, "a newer envelope is refused as unsupported");
+    Check(ErrorOf(ReplaceOnce(text, currentSchema, "\"schemaVersion\": 5")) == WorldSaveError::UnsupportedVersion, "an envelope version never written is refused");
+    Check(ErrorOf(ReplaceOnce(text, currentSchema, "\"schemaVersion\": 6")) == WorldSaveError::Malformed, "a v6 record that carries a day loop has an unexpected key");
     Check(ErrorOf(ReplaceOnce(text, "perfectworld.save", "other.save")) == WorldSaveError::Malformed, "a different format is refused");
     Check(ErrorOf(ReplaceOnce(text, "\"hashVersion\"", "\"hashVersionX\"")) == WorldSaveError::Malformed, "an unknown top-level key is refused");
     Check(ErrorOf(ReplaceOnce(text, "\"seq\": ", "\"seed\": \"0x0000000000000000\", \"seq\": ")) == WorldSaveError::Malformed, "a duplicate key is refused");
@@ -347,7 +348,7 @@ void TestRandomSequences()
     {
         std::mt19937_64 random(7'000'003ULL * static_cast<std::uint64_t>(index + 1));
         const std::uint64_t seed = random();
-        WorldSim sim(seed);
+        WorldSim sim(seed, CreatorOf(creation));
         const int length = 10 + static_cast<int>(random() % 50);
         for (int i = 0; i < length; ++i)
         {
@@ -368,7 +369,7 @@ void TestRandomSequences()
         WorldSaveData endSave = SaveOf(sim, creation);
         WorldSaveData endLoaded = Sentinel();
         Check(DeserializeWorldSave(SerializeWorldSave(endSave), endLoaded).Succeeded(), "the final save loads");
-        Check(HashWorldState(endLoaded.World) == ReplayCommandLog(seed, sim.Log()).Hash, "the loaded hash equals the replayed hash");
+        Check(HashWorldState(endLoaded.World) == ReplayLife(seed, creation, sim.Log()).Hash, "the loaded hash equals the replayed hash");
 
         // With streams drawn from, the load continues each sequence exactly where the save left it.
         DrawFromStreams(endSave.World, random);

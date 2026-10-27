@@ -2289,3 +2289,28 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 - R8-05 Buy panel, wallet and inventory UI (Claude Sonnet).
 - R8-04, the save migration to schema 10 and hash 7, follows R8-03 (Claude deep-work).
 - The staffed shops (R7-04) still wait on the owner's decision about the counter patch.
+
+## Checkpoint — first runtime evidence; v0.6.1-alpha hotfix published, 2026-10-25
+
+**The first boot smoke test ever run on a package** (`boot_walk_interact`, offscreen, while the owner's apps were closed) found that **v0.4.0–v0.6.0 crash a few frames after entering the world**.
+- The cause is `Array.Add(Array[0])` in the minimap painter (`PWMapPainter.cpp`) and the trait radar (`SPWAttributeRadarPaint.cpp`); Unreal asserts on it.
+- Fixed at `1b49712`.
+- The rerun on the fixed package boots, enters the world, walks and renders: a screenshot with the minimap and clock.
+- It then **fails one step**: `walk_to_table_chair` is blocked 45 cm short of the chair. Still to investigate.
+
+**Released `v0.6.1-alpha`:**
+- https://github.com/debdutta777/Perfect-World/releases/tag/v0.6.1-alpha
+- sha256 `8845cc6b41b177b4dbaaed7f3e00cc9859a90b1b02d5edab659fb135a348a541`.
+- v0.4.0–v0.6.0 now carry a known-crash note.
+
+**New tooling:**
+- The Antigravity CLI (`agy.exe`) runs **Gemini 4 Argon Medium** as an edit-only subagent through `D:\PWWork\run_agy.ps1`.
+- The Gemini CLI's Google sign-in is refused for personal accounts.
+
+**Gemini's first two orders, done on their branches:**
+- R9-07: the Awakening result and countdown panels.
+- S01: a content manifest. Its build and tests are running.
+
+**Phase 2** (`Docs/PHASE2_PLAN_2026-10-25.md`, gpt-6-astra) is under way:
+- the school contracts (gpt-6.1-sol);
+- A4 school-life content and A7 tower scenarios (Gemini 4 Argon Medium).
