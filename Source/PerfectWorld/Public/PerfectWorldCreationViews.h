@@ -9,6 +9,116 @@
  * and the UI only displays what these hold.
  */
 
+/** Resolved from the portable origin catalogue, for drafts and loaded lives alike. */
+USTRUCT(BlueprintType)
+struct FPWLaneOriginView
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") bool bResolved = false;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FName HomeLocationId;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FName CounterpartPersonId;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText CounterpartLabel;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") bool bGrewUpInCare = false;
+};
+
+USTRUCT(BlueprintType)
+struct FPWTraitRankView
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 Rank = 0;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 CumulativeCost = 0;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText Meaning;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") TArray<FText> EffectLines;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText AvailabilityNote;
+};
+
+USTRUCT(BlueprintType)
+struct FPWTraitDefinitionView
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FName Id;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText DisplayName;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FName GroupId;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText ShortDescription;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") TArray<FPWTraitRankView> Ranks;
+};
+
+USTRUCT(BlueprintType)
+struct FPWTraitGroupView
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FName Id;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText DisplayName;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 DisplayOrder = 0;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 AllocatedPoints = 0;
+};
+
+USTRUCT(BlueprintType)
+struct FPWTraitChangePreview
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FName TraitId;
+    /** Exact core save snapshot, including household/identity/start state; never displayed. */
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FString SourceDraftSnapshot;
+    /** Ledger snapshot to compare before applying because core has no draft revision yet. */
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") TArray<int32> SourceRanks;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 CurrentRank = 0;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 ProposedRank = 0;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 CurrentCost = 0;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 ProposedCost = 0;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 Charge = 0;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 Refund = 0;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") bool bCanApply = false;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 ErrorCode = 0;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FName MessageCode;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") TMap<FName, FText> MessageArgs;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText Message;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText OpeningHome;
+};
+
+USTRUCT(BlueprintType)
+struct FPWAllocationChangeView
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FName TraitId;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText DisplayName;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 BeforeRank = 0;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 AfterRank = 0;
+};
+
+USTRUCT(BlueprintType)
+struct FPWAllocationPreview
+{
+    GENERATED_BODY()
+    /** TODO(core): no draft revision is exposed yet, so the adapter does not invent one. */
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") bool bDraftRevisionUnavailableFromCore = true;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FName PresetId;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FString SourceDraftSnapshot;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") TArray<int32> SourceRanks;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") TArray<FPWAllocationChangeView> Changes;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") TArray<FPWAllocationChangeView> StrongestTraits;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 Spent = 0;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 TotalBudget = 0;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 Remaining = 0;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 RankFourCount = 0;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 MaxRankFour = 0;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") bool bCanApply = false;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") int32 ErrorCode = 0;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FName MessageCode;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") TMap<FName, FText> MessageArgs;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText Message;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText OpeningHome;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") bool bGrewUpInCare = false;
+};
+
+USTRUCT(BlueprintType)
+struct FPWAllocationHistory
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") bool bCanUndo = false;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") bool bCanRedo = false;
+};
+
 /** One verified starting allocation (Docs/CHARACTER_CREATION.md, "Verified presets"). */
 USTRUCT(BlueprintType)
 struct FPWPresetView
@@ -28,6 +138,14 @@ struct FPWPresetView
 
 /** One of the authored school streams. A stream sets a timetable, not a destiny. */
 USTRUCT(BlueprintType)
+struct FPWStreamSampleDayView
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText Label;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText Description;
+};
+
+USTRUCT(BlueprintType)
 struct FPWStreamView
 {
     GENERATED_BODY()
@@ -40,6 +158,23 @@ struct FPWStreamView
 
     UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
     FText TimetableSummary;
+
+    /** The one-sentence summary on the stream card, from the core's stream presentation. */
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
+    FText CardSummary;
+
+    /** True only if the core published no sample day for this stream; the screen then shows none. */
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
+    bool bSampleDayUnavailableFromCore = true;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
+    TArray<FPWStreamSampleDayView> SampleDay;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText SampleDayCaption;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText ClosingCaption;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText RouteHeading;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText RouteFlexibilityText;
+    UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation") FText EqualStartingXPText;
 
     UPROPERTY(BlueprintReadOnly, Category = "Perfect World|Creation")
     bool bSelected = false;

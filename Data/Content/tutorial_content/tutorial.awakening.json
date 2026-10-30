@@ -1,0 +1,91 @@
+{
+  "type": "tutorial_content",
+  "id": "tutorial.awakening",
+  "note": "R93. Existing cast: Arup Ghosh is m_arup in coordinate_case.xi_debate_hall; Mira Sen has her established schedule. Actor IDs are content aliases, not newly registered persistent people. Bind the familiar class teacher, the player's family member, or the on-duty evening care staff at presentation time. No new student identities are proposed. Situations and choices are unconditional, untimed action offers; choosing text alone is not completed conduct. R9-02 records only the resolved action. Withdrawal ends the supervised session with Awakening, without claiming unplayed choices. Recovery and accessibility never add conduct. Stakes are shared by every choice in a situation.",
+  "school": "institution.nabapara_vidyalaya",
+  "announcement": "scene.awakening.announcement",
+  "familyEvening": "scene.awakening.evening_family",
+  "careEvening": "scene.awakening.evening_care",
+  "actors": [
+    { "id": "actor.awakening.teacher", "role": "class_teacher", "nameKey": "text.awakening.actor.teacher" },
+    { "id": "actor.awakening.arup", "role": "classmate", "nameKey": "text.awakening.actor.arup", "classroom": "coordinate_case.xi_debate_hall", "member": "m_arup" },
+    { "id": "actor.awakening.mira", "role": "classmate", "nameKey": "text.awakening.actor.mira", "schedule": "npc_schedule.mira_sen" },
+    { "id": "actor.awakening.family", "role": "family_member", "nameKey": "text.awakening.actor.family" },
+    { "id": "actor.awakening.care", "role": "evening_care_staff", "nameKey": "text.awakening.actor.care" }
+  ],
+  "scenes": [
+    {
+      "id": "scene.awakening.announcement",
+      "lines": [
+        { "actor": "actor.awakening.teacher", "textKey": "text.awakening.announcement.familiar" },
+        { "actor": "actor.awakening.teacher", "textKey": "text.awakening.announcement.date" },
+        { "actor": "actor.awakening.teacher", "textKey": "text.awakening.announcement.safety" },
+        { "actor": "actor.awakening.teacher", "textKey": "text.awakening.announcement.access" },
+        { "actor": "actor.awakening.teacher", "textKey": "text.awakening.announcement.appointment" },
+        { "actor": "actor.awakening.arup", "textKey": "text.awakening.announcement.arup" },
+        { "actor": "actor.awakening.mira", "textKey": "text.awakening.announcement.mira" },
+        { "actor": "actor.awakening.teacher", "textKey": "text.awakening.announcement.makeup" },
+        { "actor": "actor.awakening.teacher", "textKey": "text.awakening.announcement.optional" }
+      ]
+    },
+    {
+      "id": "scene.awakening.evening_family",
+      "lines": [
+        { "actor": "actor.awakening.family", "textKey": "text.awakening.evening.family.meal" },
+        { "actor": "actor.awakening.family", "textKey": "text.awakening.evening.family.listen" },
+        { "actor": "actor.awakening.family", "textKey": "text.awakening.evening.family.arrange" },
+        { "actor": "actor.awakening.family", "textKey": "text.awakening.evening.family.ordinary" }
+      ]
+    },
+    {
+      "id": "scene.awakening.evening_care",
+      "lines": [
+        { "actor": "actor.awakening.care", "textKey": "text.awakening.evening.care.meal" },
+        { "actor": "actor.awakening.care", "textKey": "text.awakening.evening.care.listen" },
+        { "actor": "actor.awakening.care", "textKey": "text.awakening.evening.care.arrange" },
+        { "actor": "actor.awakening.care", "textKey": "text.awakening.evening.care.ordinary" }
+      ]
+    }
+  ],
+  "situations": [
+    {
+      "id": "situation.awakening.crossing",
+      "promptKey": "text.awakening.crossing.prompt",
+      "recoveryKey": "text.awakening.crossing.recovery",
+      "stakes": 1,
+      "actors": ["actor.awakening.teacher", "actor.awakening.arup", "actor.awakening.mira"],
+      "choices": [
+        { "id": "choice.awakening.crossing.assist", "action": "assist", "labelKey": "text.awakening.crossing.assist.label", "actionKey": "text.awakening.crossing.assist.action", "consequenceKey": "text.awakening.crossing.assist.consequence" },
+        { "id": "choice.awakening.crossing.observe", "action": "observe", "labelKey": "text.awakening.crossing.observe.label", "actionKey": "text.awakening.crossing.observe.action", "consequenceKey": "text.awakening.crossing.observe.consequence" },
+        { "id": "choice.awakening.crossing.hold", "action": "hold", "labelKey": "text.awakening.crossing.hold.label", "actionKey": "text.awakening.crossing.hold.action", "consequenceKey": "text.awakening.crossing.hold.consequence" },
+        { "id": "choice.awakening.crossing.withdraw", "action": "withdraw", "labelKey": "text.awakening.crossing.withdraw.label", "actionKey": "text.awakening.crossing.withdraw.action", "consequenceKey": "text.awakening.crossing.withdraw.consequence" }
+      ]
+    },
+    {
+      "id": "situation.awakening.corridor",
+      "promptKey": "text.awakening.corridor.prompt",
+      "recoveryKey": "text.awakening.corridor.recovery",
+      "stakes": 1,
+      "actors": ["actor.awakening.teacher", "actor.awakening.arup", "actor.awakening.mira"],
+      "choices": [
+        { "id": "choice.awakening.corridor.hold", "action": "hold", "labelKey": "text.awakening.corridor.hold.label", "actionKey": "text.awakening.corridor.hold.action", "consequenceKey": "text.awakening.corridor.hold.consequence" },
+        { "id": "choice.awakening.corridor.improvise", "action": "improvise", "labelKey": "text.awakening.corridor.improvise.label", "actionKey": "text.awakening.corridor.improvise.action", "consequenceKey": "text.awakening.corridor.improvise.consequence" },
+        { "id": "choice.awakening.corridor.evade", "action": "evade", "labelKey": "text.awakening.corridor.evade.label", "actionKey": "text.awakening.corridor.evade.action", "consequenceKey": "text.awakening.corridor.evade.consequence" },
+        { "id": "choice.awakening.corridor.withdraw", "action": "withdraw", "labelKey": "text.awakening.corridor.withdraw.label", "actionKey": "text.awakening.corridor.withdraw.action", "consequenceKey": "text.awakening.corridor.withdraw.consequence" }
+      ]
+    },
+    {
+      "id": "situation.awakening.delivery",
+      "promptKey": "text.awakening.delivery.prompt",
+      "recoveryKey": "text.awakening.delivery.recovery",
+      "stakes": 1,
+      "actors": ["actor.awakening.teacher", "actor.awakening.arup", "actor.awakening.mira"],
+      "choices": [
+        { "id": "choice.awakening.delivery.assist", "action": "assist", "labelKey": "text.awakening.delivery.assist.label", "actionKey": "text.awakening.delivery.assist.action", "consequenceKey": "text.awakening.delivery.assist.consequence" },
+        { "id": "choice.awakening.delivery.observe", "action": "observe", "labelKey": "text.awakening.delivery.observe.label", "actionKey": "text.awakening.delivery.observe.action", "consequenceKey": "text.awakening.delivery.observe.consequence" },
+        { "id": "choice.awakening.delivery.evade", "action": "evade", "labelKey": "text.awakening.delivery.evade.label", "actionKey": "text.awakening.delivery.evade.action", "consequenceKey": "text.awakening.delivery.evade.consequence" },
+        { "id": "choice.awakening.delivery.withdraw", "action": "withdraw", "labelKey": "text.awakening.delivery.withdraw.label", "actionKey": "text.awakening.delivery.withdraw.action", "consequenceKey": "text.awakening.delivery.withdraw.consequence" }
+      ]
+    }
+  ]
+}

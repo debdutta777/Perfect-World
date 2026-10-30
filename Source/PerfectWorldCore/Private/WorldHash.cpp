@@ -142,44 +142,97 @@ void WorldHashAddSection(std::vector<WorldSectionHash>& sections, const char* na
 {
     sections.push_back(WorldSectionHash{name, hash});
 }
-} // namespace
 
-std::vector<WorldSectionHash> HashWorldSections(const WorldState& state)
-{
-    std::vector<WorldSectionHash> sections;
-    // ADDING A SECTION: every slice of WorldState must be hashed here, or a
-    // change to it goes unnoticed by replay checks and desync detection.
-    //  1. Write a WorldHash<Name>Section(const WorldState&) above that encodes
-    //     every field with the tagged WorldHashWriter calls, collections in a
-    //     deterministic order, each collection prefixed by Count().
-    //  2. Add exactly one WorldHashAddSection line below, at the end of the list.
-    //  3. Bump WorldHashVersion in WorldHash.h and re-pin the golden hashes.
-    //  4. Add single-field edits for the new slice to Tests/WorldHashTests.cpp.
-    WorldHashAddSection(sections, "meta", WorldHashMetaSection(state));
-    WorldHashAddSection(sections, "clock", WorldHashClockSection(state));
-    WorldHashAddSection(sections, "flags", WorldHashFlagsSection(state));
-    WorldHashAddSection(sections, "gates", WorldHashGatesSection(state));
-    WorldHashAddSection(sections, "rng", WorldHashRngSection(state));
-    WorldHashAddSection(sections, "dayloop", WorldHashDayLoopSection(state));
-    return sections;
-}
-
-std::uint64_t HashWorldState(const WorldState& state)
+std::uint64_t WorldHashConversationsSection(const WorldState& state)
 {
     WorldHashWriter out;
-    out.Unsigned(WorldHashVersion);
-    for (const WorldSectionHash& section : HashWorldSections(state))
+    out.Count(state.Conversations.size());
+    for (const auto& [person, conversation] : state.Conversations)
     {
-        out.Text(section.Name);
-        out.Unsigned(section.Hash);
+        out.Text(person);
+        const auto catalogue = ConversationCatalogueForPerson(person);
+        out.Text(catalogue ? SerialiseConversationState(*catalogue, conversation) : std::string{});
     }
     return out.Result();
 }
 
-ReplayResult ReplayCommandLog(std::uint64_t worldSeed, const std::vector<Command>& log, const ReplayOptions& options)
+std::uint64_t WorldHashDoorsSection(const WorldState& state)
+{
+    WorldHashWriter out;
+    out.Text(SerialiseDoorState(state.Doors));
+    return out.Result();
+}
+
+std::uint64_t R4JHashSection(const WorldState& state)
+{
+    WorldHashWriter out;
+    out.Count(state.Journal.Encounters.size());
+    for (const auto& row : state.Journal.Encounters)
+    {
+        out.Signed(row.Day);
+        out.Text(row.PersonId);
+        out.Signed(row.FirstMetMinute);
+    }
+    return out.Result();
+}
+
+/**
+ * pw.commerce/1 authority (Commerce.h's R8-04 contract): every CommerceState field in declaration order. All twelve
+ * inventory slots are written, empty ones included; receipts oldest first, each kind by its stable name.
+ */
+std::uint64_t R84HashCommerceSection(const WorldState& state)
+{
+    const CommerceState& commerce = state.Commerce;
+    WorldHashWriter out;
+    out.Signed(commerce.WalletPaise);
+    out.Count(commerce.Inventory.size());
+    for (const CommerceStack& stack : commerce.Inventory)
+    {
+        out.Text(stack.ItemId);
+        out.Signed(stack.Quantity);
+    }
+    out.Signed(commerce.Funding.HouseholdResourcesRank);
+    out.Signed(commerce.Funding.StartingWalletPaise);
+    out.Signed(commerce.Funding.WeeklyAllowancePaise);
+    out.Signed(commerce.InitialisedAt);
+    out.Signed(commerce.AllowanceSettledThrough);
+    out.Signed(commerce.NextAllowanceDue);
+    out.Unsigned(commerce.TransactionRevision);
+    out.Count(commerce.RecentReceipts.size());
+    for (const CommerceReceipt& receipt : commerce.RecentReceipts)
+    {
+        out.Text(receipt.Kind == CommerceReceiptKind::Allowance ? "allowance"
+                 : receipt.Kind == CommerceReceiptKind::Purchase ? "purchase"
+                                                                  : "");
+        out.Unsigned(receipt.Revision);
+        out.Signed(receipt.At);
+        out.Text(receipt.ShopId);
+        out.Text(receipt.ItemId);
+        out.Signed(receipt.Quantity);
+        out.Signed(receipt.UnitPricePaise);
+        out.Signed(receipt.TotalPaise);
+        out.Signed(receipt.BalanceBeforePaise);
+        out.Signed(receipt.BalanceAfterPaise);
+    }
+    out.Unsigned(commerce.FoldedReceiptCount);
+    out.Unsigned(commerce.FoldedThroughRevision);
+    out.Signed(commerce.FoldedCreditsPaise);
+    out.Signed(commerce.FoldedDebitsPaise);
+    out.Signed(commerce.NextTeaEligibleAt);
+    out.Signed(commerce.NextConsumptionEligibleAt);
+    return out.Result();
+}
+
+/** Sections a historical hash version did not have: v5 predates journal and commerce, v6 predates commerce. */
+bool R84SectionAbsentIn(std::uint32_t hashVersion, std::string_view section)
+{
+    return (hashVersion == 5 && (section == "journal" || section == "commerce")) || (hashVersion == 6 && section == "commerce");
+}
+
+template <typename Sim>
+ReplayResult R84Replay(Sim& sim, const std::vector<Command>& log, const ReplayOptions& options)
 {
     ReplayResult replay;
-    WorldSim sim(worldSeed, options.EventCap);
     replay.Complete = true;
     for (const Command& command : log)
     {
@@ -200,5 +253,70 @@ ReplayResult ReplayCommandLog(std::uint64_t worldSeed, const std::vector<Command
     }
     replay.Hash = HashWorldState(sim.State());
     return replay;
+}
+} // namespace
+
+std::vector<WorldSectionHash> HashWorldSections(const WorldState& state)
+{
+    std::vector<WorldSectionHash> sections;
+    // ADDING A SECTION: every slice of WorldState must be hashed here, or a
+    // change to it goes unnoticed by replay checks and desync detection.
+    //  1. Write a WorldHash<Name>Section(const WorldState&) above that encodes
+    //     every field with the tagged WorldHashWriter calls, collections in a
+    //     deterministic order, each collection prefixed by Count().
+    //  2. Add exactly one WorldHashAddSection line below, at the end of the list.
+    //  3. Bump WorldHashVersion in WorldHash.h and re-pin the golden hashes.
+    //  4. Add single-field edits for the new slice to Tests/WorldHashTests.cpp.
+    WorldHashAddSection(sections, "meta", WorldHashMetaSection(state));
+    WorldHashAddSection(sections, "clock", WorldHashClockSection(state));
+    WorldHashAddSection(sections, "flags", WorldHashFlagsSection(state));
+    WorldHashAddSection(sections, "gates", WorldHashGatesSection(state));
+    WorldHashAddSection(sections, "rng", WorldHashRngSection(state));
+    WorldHashAddSection(sections, "dayloop", WorldHashDayLoopSection(state));
+    WorldHashAddSection(sections, "conversations", WorldHashConversationsSection(state));
+    WorldHashAddSection(sections, "doors", WorldHashDoorsSection(state));
+    WorldHashAddSection(sections, "journal", R4JHashSection(state));
+    WorldHashAddSection(sections, "commerce", R84HashCommerceSection(state));
+    return sections;
+}
+
+std::uint64_t HashWorldState(const WorldState& state)
+{
+    WorldHashWriter out;
+    out.Unsigned(WorldHashVersion);
+    for (const WorldSectionHash& section : HashWorldSections(state))
+    {
+        out.Text(section.Name);
+        out.Unsigned(section.Hash);
+    }
+    return out.Result();
+}
+
+std::uint64_t HashWorldStateWithDoorsText(const WorldState& state, std::string_view doorsText, std::uint32_t hashVersion)
+{
+    WorldHashWriter doors;
+    doors.Text(std::string(doorsText));
+    const std::uint64_t doorsHash = doors.Result();
+    WorldHashWriter out;
+    out.Unsigned(hashVersion);
+    for (const WorldSectionHash& section : HashWorldSections(state))
+    {
+        if (R84SectionAbsentIn(hashVersion, section.Name)) continue;
+        out.Text(section.Name);
+        out.Unsigned(section.Name == "doors" ? doorsHash : section.Hash);
+    }
+    return out.Result();
+}
+
+ReplayResult ReplayCommandLog(std::uint64_t worldSeed, const std::vector<Command>& log, const ReplayOptions& options)
+{
+    WorldSim sim(worldSeed, options.EventCap, options.School, options.Commerce);
+    return R84Replay(sim, log, options);
+}
+
+ReplayResult ReplayCommandLogFromSnapshot(const WorldState& initial, const std::vector<Command>& log, const ReplayOptions& options)
+{
+    WorldSim sim(initial, options.EventCap, options.School, options.Commerce);
+    return R84Replay(sim, log, options);
 }
 } // namespace PerfectWorld

@@ -94,8 +94,44 @@ std::vector<std::pair<std::string, std::uint64_t>> RefSections(const WorldState&
     // dayloop: one unsigned field, the hash the day loop's own envelope stores (the "hash" line before "end").
     RefBytes dayloop;
     dayloop.U(RefEnvelopeHash(w.DayLoop));
+    RefBytes conversations;
+    conversations.N(w.Conversations.size());
+    for (const auto& [person, state] : w.Conversations)
+    {
+        conversations.S(person);
+        const auto catalogue = ConversationCatalogueForPerson(person);
+        conversations.S(catalogue ? SerialiseConversationState(*catalogue, state) : std::string{});
+    }
+    RefBytes doors;
+    doors.S(SerialiseDoorState(w.Doors));
+    RefBytes R4JJournal;
+    R4JJournal.N(w.Journal.Encounters.size());
+    for (const auto& row : w.Journal.Encounters)
+        R4JJournal.I(row.Day), R4JJournal.S(row.PersonId), R4JJournal.I(row.FirstMetMinute);
+    // R8-04 commerce: every CommerceState field in declaration order; all twelve slots; receipt kinds by stable name.
+    const CommerceState& c = w.Commerce;
+    RefBytes R84Commerce;
+    R84Commerce.I(c.WalletPaise);
+    R84Commerce.N(c.Inventory.size());
+    for (const CommerceStack& slot : c.Inventory)
+        R84Commerce.S(slot.ItemId), R84Commerce.I(slot.Quantity);
+    R84Commerce.I(c.Funding.HouseholdResourcesRank), R84Commerce.I(c.Funding.StartingWalletPaise), R84Commerce.I(c.Funding.WeeklyAllowancePaise);
+    R84Commerce.I(c.InitialisedAt), R84Commerce.I(c.AllowanceSettledThrough), R84Commerce.I(c.NextAllowanceDue);
+    R84Commerce.U(c.TransactionRevision);
+    R84Commerce.N(c.RecentReceipts.size());
+    for (const CommerceReceipt& r : c.RecentReceipts)
+    {
+        R84Commerce.S(r.Kind == CommerceReceiptKind::Allowance ? "allowance" : "purchase");
+        R84Commerce.U(r.Revision), R84Commerce.I(r.At), R84Commerce.S(r.ShopId), R84Commerce.S(r.ItemId), R84Commerce.I(r.Quantity);
+        R84Commerce.I(r.UnitPricePaise), R84Commerce.I(r.TotalPaise), R84Commerce.I(r.BalanceBeforePaise), R84Commerce.I(r.BalanceAfterPaise);
+    }
+    R84Commerce.U(c.FoldedReceiptCount), R84Commerce.U(c.FoldedThroughRevision);
+    R84Commerce.I(c.FoldedCreditsPaise), R84Commerce.I(c.FoldedDebitsPaise);
+    R84Commerce.I(c.NextTeaEligibleAt), R84Commerce.I(c.NextConsumptionEligibleAt);
     return {{"meta", RefFnv1a(meta.Data)},   {"clock", RefFnv1a(clock.Data)}, {"flags", RefFnv1a(flags.Data)},
-            {"gates", RefFnv1a(gates.Data)}, {"rng", RefFnv1a(rng.Data)},     {"dayloop", RefFnv1a(dayloop.Data)}};
+            {"gates", RefFnv1a(gates.Data)}, {"rng", RefFnv1a(rng.Data)},     {"dayloop", RefFnv1a(dayloop.Data)},
+            {"conversations", RefFnv1a(conversations.Data)}, {"doors", RefFnv1a(doors.Data)}, {"journal", RefFnv1a(R4JJournal.Data)},
+            {"commerce", RefFnv1a(R84Commerce.Data)}};
 }
 
 std::uint64_t RefWorld(const WorldState& w)
@@ -170,11 +206,42 @@ WorldState EdgeWorld()
     return w;
 }
 
-// Pinned on 2026-10-11 for WorldHashVersion 4 (dayloop section added; both worlds carry the fresh day,
-// whose hash is 0x061523ec1fb41931). Derived from the independent reference encoder above
-// (PW_PRINT_GOLDEN=1 prints RefWorld, after the library has been checked equal to it) and cross-checked
-// by a separate Python implementation of the byte layout, which also rederives the day loop's hash from
-// the sections of its printed envelope. A change here means the encoding changed.
-constexpr std::uint64_t GoldenHandBuilt = 0x6172068cb2eb0ae3ULL;
-constexpr std::uint64_t GoldenEdge = 0xa26bab6e23ab1fbfULL;
+// Re-pinned 2026-10-17 for WorldHashVersion 5 using RefWorld after section-by-section agreement.
+// HandBuilt: 0x6172068cb2eb0ae3 -> 0x154c24e70f8c58f2.
+// Edge:      0xa26bab6e23ab1fbf -> 0x8046b352035ccc96.
+// Both change solely because the world version becomes 5 and the conversations and doors sections
+// are appended (empty conversation map and authored door defaults). The original six section encodings
+// and both fixture worlds remain unchanged; the fresh day hash remains 0x061523ec1fb41931.
+// Re-pinned again 2026-10-17 (LL-02 submission 2a), from RefWorld, with WorldHashVersion still 5:
+// HandBuilt: 0x154c24e70f8c58f2 -> 0xc297c3f404fb502d.
+// Edge:      0x8046b352035ccc96 -> 0xe052cb39e28ac341.
+// Both change solely because the authored door set gains door.nabapara.stationery_front (closed), so the doors
+// section's default text has an eleventh entry. The encoding is unchanged; older ten-door saves migrate on load.
+// Re-pinned again 2026-10-18 (NL-01), with PW_PRINT_GOLDEN=1, WorldHashVersion still 5:
+// HandBuilt: 0xc297c3f404fb502d -> 0x5521896d0168b7a4.
+// Edge:      0xe052cb39e28ac341 -> 0x9352f41c5cee3cf8.
+// Both change solely because the authored door set gains five closed frontage doors (caretaker_flat_front,
+// tall_flats_front, tall_flats_unit_a, tall_flats_unit_b, tea_row_house_front), so the doors section's default text
+// holds sixteen entries. The encoding is unchanged; ten- and eleven-door v8 saves migrate on load.
+// Re-pinned again 2026-10-19 (doors 20), with PW_PRINT_GOLDEN=1 (RefWorld), WorldHashVersion still 5:
+// HandBuilt: 0x5521896d0168b7a4 -> 0x540ed03f566f3fa5.
+// Edge:      0x9352f41c5cee3cf8 -> 0xbdccb8ad9193f219.
+// Both change solely because the authored door set gains four closed doors (repair_workshop_front,
+// hardware_store_front, old_house_front, tall_flats_upper_a), so the doors section's default text holds twenty
+// entries. The encoding is unchanged; ten-, eleven- and sixteen-door v8 saves migrate on load.
+// R4-01 re-pin (was 0x540ed03f566f3fa5 and 0xbdccb8ad9193f219): the only change is three appended closed doors
+// (market_stalls_a_front, market_stalls_b_front, end_shop_front), 20 -> 23; WorldHashVersion remains 5.
+// R4-04 re-pin 2026-10-19 with PW_PRINT_GOLDEN=1 (RefWorld agreed): WorldHashVersion 6 appends the journal section,
+// even when empty. HandBuilt 0xd7bd9e09459dd02f -> 0x9402a4985db02ae2; Edge 0x2e57d3e0f62ad53 -> 0x843e5c4d1eabf786.
+// R5-03 re-pin 2026-10-20 with PW_PRINT_GOLDEN=1 (RefWorld agreed): only three appended closed doors (cloth_merchant_front,
+// narrow_shop_front, tailor_shop_front), 23 -> 26; hash v6, schema 9. HandBuilt 0x9402a4985db02ae2 -> 0x832d0686a39d0654;
+// Edge 0x843e5c4d1eabf786 -> 0x978f919032309840.
+// R6-01 re-pin 2026-10-20 with PW_PRINT_GOLDEN=1 (RefWorld agreed): only three appended closed doors (alley_house_front,
+// stair_flats_front, corner_stalls_front), 26 -> 29; hash v6, schema 9. HandBuilt 0x832d0686a39d0654 -> 0x31c97d2112adf354;
+// Edge 0x978f919032309840 -> 0xbf05781049342e08.
+// R8-04 re-pin 2026-10-24 with PW_PRINT_GOLDEN=1 (RefWorld agreed section by section first): WorldHashVersion 7 appends the
+// commerce section (the default CommerceState of both hand-built worlds), schema 10. HandBuilt 0x31c97d2112adf354 ->
+// 0x4669aa0cccdecff5; Edge 0xbf05781049342e08 -> 0x69bf838b3ba0a9e9. The nine earlier section encodings are unchanged.
+constexpr std::uint64_t GoldenHandBuilt = 0x4669aa0cccdecff5ULL;
+constexpr std::uint64_t GoldenEdge = 0x69bf838b3ba0a9e9ULL;
 } // namespace

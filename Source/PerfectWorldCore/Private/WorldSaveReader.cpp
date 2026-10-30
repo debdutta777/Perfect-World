@@ -347,11 +347,15 @@ std::string_view WorldSaveCreationSpan(std::string_view text)
     }
 }
 
-WorldSaveResult WorldSaveReadWorld(const JsonValue& value, WorldState& world, bool withDayLoop)
+WorldSaveResult WorldSaveReadWorld(const JsonValue& value, WorldState& world, std::int32_t version)
 {
+    const bool withDayLoop = version > WorldSaveLastWithoutDayLoopVersion;
     std::string error;
     const JsonValue* clock = value.IsObject() ? value.Find("clock") : nullptr;
-    const bool keys = withDayLoop ? WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng", "dayloop"})
+    const bool keys = version >= 10 ? WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng", "dayloop", "conversations", "doors", "journal", "commerce"})
+                     : version >= 9 ? WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng", "dayloop", "conversations", "doors", "journal"})
+                     : version >= 8 ? WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng", "dayloop", "conversations", "doors"})
+                     : withDayLoop ? WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng", "dayloop"})
                                   : WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng"});
     if (!keys || clock == nullptr || !WorldSaveAsHex(value.Find("seed"), world.WorldSeed) || !WorldSaveAsHex(value.Find("seq"), world.Seq))
         return WorldSaveMalformed("the world record is incomplete.");
@@ -360,7 +364,11 @@ WorldSaveResult WorldSaveReadWorld(const JsonValue& value, WorldState& world, bo
         !WorldSaveReaderGates(*value.Find("gates"), world, error) || !WorldSaveReaderRng(*value.Find("rng"), world, error) ||
         !(withDayLoop ? WorldSaveReaderDayLoop(*value.Find("dayloop"), world, error) : WorldSaveReaderFreshDay(world, error)))
         return WorldSaveInvalid(error);
-    return {};
+    // Older files contain no evidence of conversations or door mutations.
+    world.Conversations.clear();
+    world.Journal = {};
+    world.Doors = MakeInitialDoorState();
+    return version >= 8 ? WorldSaveReadLane(value, world) : WorldSaveResult{};
 }
 
 WorldSaveResult WorldSaveReadPlayer(const JsonValue& value, PlayerPlacement& player)

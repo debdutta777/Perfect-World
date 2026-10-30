@@ -4,6 +4,7 @@
 #include "HAL/FileManager.h"
 #include "Misc/DateTime.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
+#include "StreamPresentation.h"
 
 #define LOCTEXT_NAMESPACE "PerfectWorldCreationFlow"
 
@@ -44,6 +45,8 @@ void UPerfectWorldCharacterCreatorSubsystem::BeginNewCreation()
     PerfectWorld::IdentityProfile Identity = Creator.Identity();
     Identity.HomeCity = "Kolkata";
     RecordResult(Creator.SetIdentity(MoveTemp(Identity)));
+    // Bootstrap defaults are not a player allocation edit. Restoring the same core record clears history.
+    RecordResult(Creator.RestoreSave(Creator.CaptureSave()));
     LastError = EPWCreationError::None;
     LastErrorMessage = FText::GetEmpty();
 }
@@ -137,6 +140,22 @@ TArray<FPWStreamView> UPerfectWorldCharacterCreatorSubsystem::GetSchoolStreams()
         View.Id = FName(PWCreatorFlow::FromUtf8(Stream.Id));
         View.DisplayName = FText::FromString(PWCreatorFlow::FromUtf8(Stream.DisplayName));
         View.TimetableSummary = FText::FromString(PWCreatorFlow::FromUtf8(Stream.TimetableSummary));
+        if (const PerfectWorld::StreamPresentationEntry* Presentation = PerfectWorld::StreamPresentation(Stream.Id))
+        {
+            View.CardSummary = FText::FromString(PWCreatorFlow::FromUtf8(Presentation->CardSummary));
+            for (const PerfectWorld::StreamSampleRow& Row : Presentation->SampleDay)
+            {
+                FPWStreamSampleDayView& Sample = View.SampleDay.AddDefaulted_GetRef();
+                Sample.Label = FText::FromString(PWCreatorFlow::FromUtf8(Row.Label));
+                Sample.Description = FText::FromString(PWCreatorFlow::FromUtf8(Row.Description));
+            }
+            View.bSampleDayUnavailableFromCore = View.SampleDay.IsEmpty();
+            View.SampleDayCaption = FText::FromString(PWCreatorFlow::FromUtf8(Presentation->SampleDayCaption));
+            View.ClosingCaption = FText::FromString(PWCreatorFlow::FromUtf8(Presentation->ClosingCaption));
+            View.RouteHeading = FText::FromString(PWCreatorFlow::FromUtf8(Presentation->RouteHeading));
+            View.RouteFlexibilityText = FText::FromString(PWCreatorFlow::FromUtf8(Presentation->RouteFlexibilityText));
+            View.EqualStartingXPText = FText::FromString(PWCreatorFlow::FromUtf8(Presentation->EqualStartingXPText));
+        }
         View.bSelected = Stream.Id == Creator.School().StreamId;
     }
     return Result;
@@ -149,6 +168,7 @@ FString UPerfectWorldCharacterCreatorSubsystem::GetSchoolReason() const
 
 bool UPerfectWorldCharacterCreatorSubsystem::SetSchoolStream(FName StreamId, const FString& Reason)
 {
+    // TODO(core reason validation metadata): expose grapheme limits. The core's byte limit remains authoritative.
     return RecordResult(Creator.SetSchoolStream(PWCreatorFlow::ToUtf8(StreamId.ToString()), PWCreatorFlow::ToUtf8(Reason)));
 }
 
@@ -205,7 +225,7 @@ FPWCreationSummary UPerfectWorldCharacterCreatorSubsystem::GetCreationSummary() 
 
     Summary.bGrewUpInCare = Home.bGrewUpInCare;
     Summary.HouseholdName = Home.HouseholdName;
-    Summary.GuardianText = Home.bGrewUpInCare ? LOCTEXT("CareGuardian", "A children's-home staff caregiver")
+    Summary.GuardianText = Home.bGrewUpInCare ? LOCTEXT("CareGuardian", "A staff caregiver")
                                               : FText::FromString(PWCreatorFlow::FromUtf8(Creator.Household().GuardianExamples));
     Summary.OpeningHomeText = FText::Format(LOCTEXT("OpeningHomeFmt", "{0} ({1}). {2}"), Home.HomeKitName,
                                             Home.DressingTierName, Home.DressingDescription);
@@ -225,10 +245,9 @@ FPWCreationSummary UPerfectWorldCharacterCreatorSubsystem::GetCreationSummary() 
 
     if (Home.bGrewUpInCare)
     {
-        Summary.CareNote = LOCTEXT("CareWarning",
-            "Household Resources rank 0: you grew up in institutional care, in a children's home with no family guardian. "
-            "Raise that trait to live with the household you chose instead.");
-        Summary.Warnings.Add(Summary.CareNote);
+        Summary.CareNote = LOCTEXT("CareInformation",
+            "Household Resources is rank 0. Your opening home is a children's home. "
+            "Your household choice is remembered for ranks 1–4.");
     }
     if (Given.IsEmpty())
     {

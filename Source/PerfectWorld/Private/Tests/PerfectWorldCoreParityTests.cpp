@@ -10,6 +10,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "AwakenedProgression.h"
+#include "ContentManifest.h"
 #include "ContentRegistry.h"
 #include "HAL/FileManager.h"
 #include "Misc/FileHelper.h"
@@ -122,14 +123,32 @@ bool FPerfectWorldContentParityTest::RunTest(const FString& Parameters)
     std::vector<ContentFile> Files;
     for (const FString& Path : Paths)
     {
+        FString Relative = Path;
+        FPaths::MakePathRelativeTo(Relative, *(Root + TEXT("/")));
+        const std::string RelativePath = std::string("/") + TCHAR_TO_UTF8(*Relative);
+        if (IsContentManifestPath(RelativePath))
+        {
+            continue;
+        }
         FString Text;
         if (!TestTrue(FString::Printf(TEXT("read %s"), *Path), FFileHelper::LoadFileToString(Text, *Path)))
         {
             return false;
         }
-        FString Relative = Path;
-        FPaths::MakePathRelativeTo(Relative, *(Root + TEXT("/")));
-        Files.push_back({std::string("/") + TCHAR_TO_UTF8(*Relative), std::string(TCHAR_TO_UTF8(*Text))});
+        Files.push_back({RelativePath, std::string(TCHAR_TO_UTF8(*Text))});
+    }
+
+    const FString ManifestPath = Root / TEXT("manifest.json");
+    FString ManifestText;
+    if (!TestTrue(TEXT("read Data/Content/manifest.json"), FFileHelper::LoadFileToString(ManifestText, *ManifestPath)))
+    {
+        return false;
+    }
+    const ContentManifestParseResult ParsedManifest = ParseContentManifestJson(std::string(TCHAR_TO_UTF8(*ManifestText)));
+    if (!ParsedManifest.Ok())
+    {
+        AddError(FString::Printf(TEXT("Data/Content/manifest.json: %s"), UTF8_TO_TCHAR(ParsedManifest.Error.c_str())));
+        return false;
     }
 
     const ContentLoadResult Result = LoadContent(Files);
@@ -139,8 +158,17 @@ bool FPerfectWorldContentParityTest::RunTest(const FString& Parameters)
                                  UTF8_TO_TCHAR(Issue.Message.c_str())));
     }
     TestTrue(TEXT("Data/Content validates inside Unreal"), Result.Ok());
-    TestEqual(TEXT("140 content files, as pwcontent reports"), static_cast<int32>(Files.size()), 140);
-    TestEqual(TEXT("176 records, as pwcontent reports"), static_cast<int32>(Result.Db.Count()), 176);
+    TestEqual(TEXT("content file count matches Data/Content/manifest.json"), static_cast<int32>(Files.size()),
+              static_cast<int32>(ParsedManifest.Manifest->FileCount()));
+    TestEqual(TEXT("content record count matches Data/Content/manifest.json"), static_cast<int32>(Result.Db.Count()),
+              static_cast<int32>(ParsedManifest.Manifest->RecordCount()));
+    const ContentManifest LoadedManifest = BuildContentManifest(Files);
+    const ContentManifestDiff Diff = DiffContentManifests(*ParsedManifest.Manifest, LoadedManifest);
+    if (!Diff.Empty())
+    {
+        AddError(FString::Printf(TEXT("manifest diff:\n%s"), UTF8_TO_TCHAR(FormatContentManifestDiff(Diff).c_str())));
+    }
+    TestTrue(TEXT("loaded content matches Data/Content/manifest.json"), Diff.Empty());
     return true;
 }
 

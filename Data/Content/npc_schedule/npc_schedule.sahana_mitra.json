@@ -1,0 +1,48 @@
+{
+  "type": "npc_schedule",
+  "id": "npc_schedule.sahana_mitra",
+  "note": "Sahana Mitra lives exclusively in tall-flats unit B and keeps a home-based tailoring trade; her rhythm is a late riser's and a late sewer's, unlike unit A's. Every day she sleeps 23:00-06:30, washes and dresses, cooks breakfast (07:00-07:30) and eats it (07:30-08:00). Monday to Friday she sews at home 08:00-12:30, takes a midday break until 13:15, readies herself, and leaves at 13:44 for an off-lane errand to a cloth and thread supplier, 14:00-15:30; she is back at 15:46, rests, and cooks supper from 16:30. On Saturday she sews 08:00-10:14, leaves for the same errand 10:30-12:00, is back at 12:16, breaks for a midday meal, sews again 13:00-15:00, rests and cooks from 16:30. On Sunday there is no errand and no sewing before evening: she is at home, reads, cooks a midday meal, and rests. Every evening she sees visitors about fittings 17:00-18:00, has supper 18:00-19:00, reads 19:00-20:30 and then does her late sewing 20:30-21:30 before resting until sleep. She is therefore home and Awake throughout the door's 17:00-20:30 visiting window all seven days; between 20:30 and 21:30 she is at her sewing and busy. Her home is off-lane behind the unit B door inside the shared passage; the visible 500 cm route ceiling joins its doorstep to the public front threshold, and the remaining 1680 cm errand route is off-lane. She never uses unit A. Travel is ceil(total route length / 140): 4 minutes doorstep to threshold, 12 minutes threshold to errand, 16 minutes each way in all.",
+  "person": "person.sahana_mitra",
+  "home": "location.nabapara.tall_flats_unit_b",
+  "workplace": "location.nabapara.sahana_errand",
+  "door": "door.nabapara.tall_flats_unit_b",
+  "speedCmPerMinute": 140,
+  "routine": [
+    { "days": 127, "start": 0, "end": 390, "zone": "location.nabapara.tall_flats_unit_b", "role": "sleeping" },
+    { "days": 127, "start": 390, "end": 420, "zone": "location.nabapara.tall_flats_unit_b", "role": "at_home" },
+    { "days": 127, "start": 420, "end": 450, "zone": "location.nabapara.tall_flats_unit_b", "role": "cooking" },
+    { "days": 127, "start": 450, "end": 480, "zone": "location.nabapara.tall_flats_unit_b", "role": "break" },
+    { "days": 62, "start": 480, "end": 750, "zone": "location.nabapara.tall_flats_unit_b", "role": "repairing" },
+    { "days": 62, "start": 750, "end": 795, "zone": "location.nabapara.tall_flats_unit_b", "role": "break" },
+    { "days": 62, "start": 795, "end": 824, "zone": "location.nabapara.tall_flats_unit_b", "role": "at_home" },
+    { "days": 62, "start": 840, "end": 930, "zone": "location.nabapara.sahana_errand", "role": "inspecting" },
+    { "days": 62, "start": 946, "end": 990, "zone": "location.nabapara.tall_flats_unit_b", "role": "resting" },
+    { "days": 64, "start": 480, "end": 614, "zone": "location.nabapara.tall_flats_unit_b", "role": "repairing" },
+    { "days": 64, "start": 630, "end": 720, "zone": "location.nabapara.sahana_errand", "role": "inspecting" },
+    { "days": 64, "start": 736, "end": 780, "zone": "location.nabapara.tall_flats_unit_b", "role": "break" },
+    { "days": 64, "start": 780, "end": 900, "zone": "location.nabapara.tall_flats_unit_b", "role": "repairing" },
+    { "days": 64, "start": 900, "end": 990, "zone": "location.nabapara.tall_flats_unit_b", "role": "resting" },
+    { "days": 1, "start": 480, "end": 600, "zone": "location.nabapara.tall_flats_unit_b", "role": "at_home" },
+    { "days": 1, "start": 600, "end": 720, "zone": "location.nabapara.tall_flats_unit_b", "role": "reading" },
+    { "days": 1, "start": 720, "end": 780, "zone": "location.nabapara.tall_flats_unit_b", "role": "cooking" },
+    { "days": 1, "start": 780, "end": 840, "zone": "location.nabapara.tall_flats_unit_b", "role": "break" },
+    { "days": 1, "start": 840, "end": 960, "zone": "location.nabapara.tall_flats_unit_b", "role": "resting" },
+    { "days": 1, "start": 960, "end": 990, "zone": "location.nabapara.tall_flats_unit_b", "role": "at_home" },
+    { "days": 127, "start": 990, "end": 1020, "zone": "location.nabapara.tall_flats_unit_b", "role": "cooking" },
+    { "days": 127, "start": 1020, "end": 1080, "zone": "location.nabapara.tall_flats_unit_b", "role": "serving" },
+    { "days": 127, "start": 1080, "end": 1140, "zone": "location.nabapara.tall_flats_unit_b", "role": "break" },
+    { "days": 127, "start": 1140, "end": 1230, "zone": "location.nabapara.tall_flats_unit_b", "role": "reading" },
+    { "days": 127, "start": 1230, "end": 1290, "zone": "location.nabapara.tall_flats_unit_b", "role": "repairing" },
+    { "days": 127, "start": 1290, "end": 1380, "zone": "location.nabapara.tall_flats_unit_b", "role": "resting" },
+    { "days": 127, "start": 1380, "end": 1440, "zone": "location.nabapara.tall_flats_unit_b", "role": "sleeping" }
+  ],
+  "routes": [
+    { "id": "route.sahana.unit_to_front", "from": "location.nabapara.tall_flats_unit_b", "to": "anchor.sahana.tall_flats_front", "lengthCm": 500 },
+    { "id": "route.sahana.front_to_errand", "from": "anchor.sahana.tall_flats_front", "to": "location.nabapara.sahana_errand", "lengthCm": 1680 }
+  ],
+  "travel": [
+    { "from": "anchor.sahana.tall_flats_front", "to": "location.nabapara.sahana_errand", "minutes": 12, "routes": ["route.sahana.front_to_errand"] },
+    { "from": "location.nabapara.tall_flats_unit_b", "to": "anchor.sahana.tall_flats_front", "minutes": 4, "routes": ["route.sahana.unit_to_front"] },
+    { "from": "location.nabapara.tall_flats_unit_b", "to": "location.nabapara.sahana_errand", "minutes": 16, "routes": ["route.sahana.unit_to_front", "route.sahana.front_to_errand"] }
+  ]
+}

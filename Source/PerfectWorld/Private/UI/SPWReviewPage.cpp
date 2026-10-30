@@ -1,15 +1,97 @@
 #include "UI/SPWReviewPage.h"
 
+#include "GameClock.h"
+#include "PerfectWorldLaneLifeSubsystem.h"
 #include "UI/PWCreationModel.h"
 #include "UI/PWStyle.h"
 #include "UI/PWWidgets.h"
+#include "UI/SPWAwakeningSigil.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
-#include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
 
 #define LOCTEXT_NAMESPACE "PerfectWorldReviewPage"
+
+namespace
+{
+float CpReviewWidthOverride = 0.0f;
+}
+
+// Rules the review page follows, linked by name so the PerfectWorld.CreationPause automation can exercise them without a
+// header (UP-06). Widths are the page's own logical width.
+namespace PWCreationPause
+{
+/** Below 1100 units the background panel drops under the other sections instead of squeezing them beside it. */
+bool ReviewStackTraits(const float Width)
+{
+    return Width < 1100.0f;
+}
+
+/** The hero's aperture: 160 where there is room, smaller as the window narrows. */
+float ReviewHeroDiameter(const float Width)
+{
+    return Width >= 1440.0f ? 160.0f : (Width >= 1100.0f ? 120.0f : 88.0f);
+}
+
+/** When play opens, from the core's own campaign constants: for example "Monday 2 June 2042, 07:30". */
+FText ReviewFirstMorningStamp()
+{
+    const PerfectWorld::GameInstant Start = PerfectWorld::GameClock::FromCalendar(
+        PerfectWorld::CampaignStartYear, PerfectWorld::CampaignStartMonth, PerfectWorld::CampaignStartDay,
+        PWLaneLife::CampaignStartMinuteOfDay / 60, PWLaneLife::CampaignStartMinuteOfDay % 60);
+    const PerfectWorld::CalendarTime Calendar = PerfectWorld::GameClock::ToCalendar(Start);
+    static const TCHAR* const Months[12] = {TEXT("January"), TEXT("February"), TEXT("March"), TEXT("April"), TEXT("May"),
+        TEXT("June"), TEXT("July"), TEXT("August"), TEXT("September"), TEXT("October"), TEXT("November"), TEXT("December")};
+    const FString Weekday(UTF8_TO_TCHAR(std::string(PerfectWorld::WeekdayName(Calendar.DayOfWeek)).c_str()));
+    return FText::FromString(FString::Printf(TEXT("%s %d %s %d, %02d:%02d"), *Weekday, Calendar.Day, Months[FMath::Clamp(Calendar.Month - 1, 0, 11)], Calendar.Year, Calendar.Hour, Calendar.Minute));
+}
+
+void SetReviewWidthForTest(const float Width)
+{
+    CpReviewWidthOverride = Width;
+}
+} // namespace PWCreationPause
+
+namespace
+{
+/** The page's own width; before the first layout it reports a roomy window so nothing starts squeezed. */
+float CpReviewWidth(const SWidget& Page)
+{
+    if (CpReviewWidthOverride > 0.0f)
+    {
+        return CpReviewWidthOverride;
+    }
+    const float Width = static_cast<float>(Page.GetCachedGeometry().GetLocalSize().X);
+    return Width > 1.0f ? Width : 1920.0f;
+}
+
+/** One beat of the first morning: a seal, a line, and a quieter line beneath it that collapses when empty. */
+TSharedRef<SWidget> CpMakeMorningBeat(const EPWSigilPictogram Pictogram, const TAttribute<FText>& Line, const TAttribute<FText>& Sub)
+{
+    const PWUI::FStyle& Style = PWUI::FStyle::Get();
+    const TSharedRef<STextBlock> SubText = PWUI::MakeText(Sub, 15, Style.TextSecondary, false, true);
+    SubText->SetVisibility(TAttribute<EVisibility>::CreateLambda(
+        [Sub]() { return Sub.Get(FText::GetEmpty()).IsEmpty() ? EVisibility::Collapsed : EVisibility::HitTestInvisible; }));
+    return SNew(SHorizontalBox)
+        + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Top).Padding(0.0f, 2.0f, 14.0f, 0.0f)
+        [
+            SNew(SPWAwakeningSigil).SizeClass(EPWSigilSizeClass::Seal).Diameter(36).Pictogram(Pictogram)
+        ]
+        + SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Top)
+        [
+            SNew(SVerticalBox)
+            + SVerticalBox::Slot().AutoHeight()
+            [
+                PWUI::MakeText(Line, 18, Style.TextPrimary, true, true)
+            ]
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 2.0f, 0.0f, 0.0f)
+            [
+                SubText
+            ]
+        ];
+}
+} // namespace
 
 void SPWReviewPage::Construct(const FArguments& InArgs, const TSharedRef<FPWCreationModel>& InModel)
 {
@@ -87,6 +169,89 @@ void SPWReviewPage::Construct(const FArguments& InArgs, const TSharedRef<FPWCrea
             ReasonText
         ];
 
+    // The first morning: what the core's summary already says, told as the day it opens on. Nothing here is added to it.
+    const TSharedRef<FPWCreationModel> Data = InModel;
+    const TSharedRef<SWidget> MorningBeats =
+        SNew(SVerticalBox)
+        + SVerticalBox::Slot().AutoHeight()
+        [
+            PWUI::MakeText(LOCTEXT("FirstMorning", "Your first morning"), 24, Style.TextPrimary, true, true)
+        ]
+        + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 2.0f, 0.0f, 12.0f)
+        [
+            SNew(STextBlock)
+            .Tag(TEXT("CpMorningStamp"))
+            .Text(PWCreationPause::ReviewFirstMorningStamp())
+            .Font(PWUI::Font(17, true))
+            .ColorAndOpacity(FSlateColor(Style.Accent))
+        ]
+        + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 10.0f)
+        [
+            CpMakeMorningBeat(EPWSigilPictogram::Person,
+                TAttribute<FText>::CreateLambda([Data]()
+                {
+                    return FText::Format(LOCTEXT("BeatWhoFmt", "You are {0}, {1}."), Data->Summary.FullName,
+                                         FText::AsNumber(Data->Summary.AgeOnCampaignStart));
+                }),
+                TAttribute<FText>::CreateLambda([Data]()
+                {
+                    return Data->Summary.HomeCityText.IsEmpty() ? FText::GetEmpty()
+                        : FText::Format(LOCTEXT("BeatWhoSubFmt", "Home city: {0}"), Data->Summary.HomeCityText);
+                }))
+        ]
+        + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 10.0f)
+        [
+            CpMakeMorningBeat(EPWSigilPictogram::Doorway,
+                TAttribute<FText>::CreateLambda([Data]()
+                {
+                    return FText::Format(LOCTEXT("BeatWakeFmt", "You wake at {0}."), Data->Summary.HouseholdName);
+                }),
+                TAttribute<FText>::CreateLambda([Data]()
+                {
+                    const FText Guardian = Data->Summary.GuardianText.IsEmpty() ? FText::GetEmpty()
+                        : FText::Format(LOCTEXT("BeatGuardianFmt", "Guardian: {0}"), Data->Summary.GuardianText);
+                    if (Data->Summary.bGrewUpInCare && !Data->Summary.CareNote.IsEmpty())
+                    {
+                        return Guardian.IsEmpty() ? Data->Summary.CareNote
+                            : FText::Format(LOCTEXT("BeatCareFmt", "{0}  {1}"), Guardian, Data->Summary.CareNote);
+                    }
+                    return Guardian;
+                }))
+        ]
+        + SVerticalBox::Slot().AutoHeight()
+        [
+            CpMakeMorningBeat(EPWSigilPictogram::Paths,
+                TAttribute<FText>::CreateLambda([Data]()
+                {
+                    return FText::Format(LOCTEXT("BeatStreamFmt", "Your stream is {0}."), Data->Summary.StreamName);
+                }),
+                TAttribute<FText>::CreateLambda([Data]()
+                {
+                    return Data->Summary.StreamReason.IsEmpty() ? FText::GetEmpty()
+                        : FText::Format(LOCTEXT("ReasonFmt2", "Your reason: {0}"), Data->Summary.StreamReason);
+                }))
+        ];
+
+    const TSharedRef<SWidget> FirstMorning = PWUI::MakeBracketPanel(
+        SNew(SHorizontalBox)
+        + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0.0f, 0.0f, 24.0f, 0.0f)
+        [
+            SNew(SPWAwakeningSigil).Diameter_Lambda([this]() { return PWCreationPause::ReviewHeroDiameter(CpReviewWidth(*this)); })
+                .Pictogram(EPWSigilPictogram::FirstMorning)
+                .FitRing_Lambda([this]() { return CpReviewWidth(*this) < 1440.0f; })
+                .Motes_Lambda([this]() { return CpReviewWidth(*this) >= 1440.0f; })
+        ]
+        + SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Center)
+        [
+            MorningBeats
+        ],
+        FMargin(24.0f, 18.0f));
+
+    const auto StackedVisibility = [this](const bool bWhenStacked) -> EVisibility
+    {
+        return PWCreationPause::ReviewStackTraits(CpReviewWidth(*this)) == bWhenStacked ? EVisibility::Visible : EVisibility::Collapsed;
+    };
+
     ChildSlot
     [
         SNew(SVerticalBox)
@@ -94,18 +259,19 @@ void SPWReviewPage::Construct(const FArguments& InArgs, const TSharedRef<FPWCrea
         [
             PWUI::MakeText(LOCTEXT("Title", "Ready to begin?"), 32, Style.TextPrimary, true)
         ]
+        // The core's verdict comes first: it is what the player needs before anything else on this page.
         + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 14.0f, 0.0f, 14.0f)
         [
             BuildVerdict()
         ]
-        + SVerticalBox::Slot().FillHeight(1.0f)
+        + SVerticalBox::Slot().AutoHeight()
         [
-            SNew(SScrollBox)
-            .ScrollBarStyle(&Style.ScrollBar)
-            .AllowOverscroll(EAllowOverscroll::No)
-            .NavigationDestination(EDescendantScrollDestination::IntoView)
-            .ScrollWhenFocusChanges(EScrollWhenFocusChanges::AnimatedScroll)
-            + SScrollBox::Slot().Padding(0.0f, 0.0f, 12.0f, 0.0f)
+            FirstMorning
+        ]
+        + SVerticalBox::Slot().FillHeight(1.0f).Padding(0.0f, 14.0f, 0.0f, 0.0f)
+        [
+            SNew(SVerticalBox)
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 12.0f, 0.0f)
             [
                 SNew(SHorizontalBox)
                 + SHorizontalBox::Slot().FillWidth(1.0f).Padding(0.0f, 0.0f, 14.0f, 0.0f)
@@ -127,10 +293,21 @@ void SPWReviewPage::Construct(const FArguments& InArgs, const TSharedRef<FPWCrea
                 + SHorizontalBox::Slot().AutoWidth()
                 [
                     SNew(SBox)
+                    .Tag(TEXT("CpTraitsBeside"))
                     .WidthOverride(560.0f)
+                    .Visibility_Lambda([StackedVisibility]() { return StackedVisibility(false); })
                     [
                         BuildTraitsPanel()
                     ]
+                ]
+            ]
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 14.0f, 12.0f, 0.0f)
+            [
+                SNew(SBox)
+                .Tag(TEXT("CpTraitsBelow"))
+                .Visibility_Lambda([StackedVisibility]() { return StackedVisibility(true); })
+                [
+                    BuildTraitsPanel()
                 ]
             ]
         ]
@@ -156,7 +333,7 @@ TSharedRef<SWidget> SPWReviewPage::BuildVerdict()
         TAttribute<FText>::CreateLambda([this]()
         {
             return FText::Join(FText::FromString(TEXT("\n\n")), Model->Summary.Warnings);
-        }), 16, Style.Warn, false, true);
+        }), 16, Style.TextSecondary, false, true);
     Warnings->SetVisibility(TAttribute<EVisibility>::CreateLambda(
         [this]() { return Model->Summary.Warnings.Num() > 0 ? EVisibility::Visible : EVisibility::Collapsed; }));
 

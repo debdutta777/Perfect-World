@@ -1,0 +1,9 @@
+{
+  "type": "commerce_item",
+  "id": "item.rasgulla",
+  "name": "Rasgulla",
+  "unit": "piece",
+  "stackLimit": 10,
+  "effect": "food",
+  "hungerRelief": 1000
+}

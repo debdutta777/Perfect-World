@@ -23,6 +23,7 @@ void SPWLoadPanel::Construct(const FArguments& InArgs, UPerfectWorldCharacterCre
     {
         const bool bOccupied = UPerfectWorldCharacterCreatorSubsystem::IsSaveSlotOccupied(Slot);
         Occupied.Add(bOccupied);
+        // R62: DescribeSaveSlot composes the title model's summary, including age, calendar and authored zone name.
         Descriptions.Add(InCreator != nullptr ? InCreator->DescribeSaveSlot(Slot) : LOCTEXT("NoCreator", "Unavailable"));
 
         const TSharedRef<SWidget> Content =
@@ -98,6 +99,11 @@ void SPWLoadPanel::Construct(const FArguments& InArgs, UPerfectWorldCharacterCre
 
 FReply SPWLoadPanel::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent)
 {
+    // A held key auto-repeats; menus react to the first press only.
+    if (InKeyEvent.IsRepeat())
+    {
+        return FReply::Handled();
+    }
     if (InKeyEvent.GetKey() == EKeys::Escape || InKeyEvent.GetKey() == EKeys::Gamepad_FaceButton_Right)
     {
         OnBack.ExecuteIfBound();

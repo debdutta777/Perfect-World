@@ -33,6 +33,8 @@ constexpr std::int32_t CreationBudget = 1000;
 constexpr std::int32_t SaveSchemaVersion = 5;
 constexpr std::int32_t MinSupportedSaveVersion = 1;
 constexpr std::size_t TraitCount = 20;
+/** The doc's seven trait domains; the groups themselves are in CreationPresentation.h. */
+constexpr std::size_t TraitGroupCount = 7;
 constexpr std::size_t HouseholdTemplateCount = 5;
 constexpr std::size_t HomeDressingTierCount = 5;
 constexpr std::string_view HouseholdResourcesTraitId = "household_resources";
@@ -239,6 +241,10 @@ struct AllocationPreview
     /** The opening home the previewed allocation resolves to, so a preset that
      *  leaves Household Resources at rank 0 shows institutional care up front. */
     OpeningHomePlan Home;
+    /** Points the previewed allocation spends in each trait group, in group display order; sums to Review.Spent. */
+    std::array<std::int32_t, TraitGroupCount> GroupTotals{};
+    /** The previewed allocation's strongest traits (StrongestTraitCount of them at most), best first. */
+    std::vector<std::string_view> StrongestTraits;
 };
 
 class PERFECTWORLDCORE_API CharacterCreator

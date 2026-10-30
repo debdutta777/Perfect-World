@@ -5,75 +5,49 @@
 #include "Styling/SlateBrush.h"
 #include "Styling/SlateTypes.h"
 
-/**
- * The look of the front end: a dark navy and charcoal palette with a saffron
- * accent, all built in code so the style is diffable and needs no binary assets.
- * Brushes are owned by one function-local singleton because Slate widgets keep
- * pointers to the brushes and styles they are given.
- */
 namespace PWUI
 {
-/** sRGB bytes to the linear colour Slate expects. */
+namespace Spacing
+{
+inline constexpr float XSmall = 4.0f;
+inline constexpr float Small = 8.0f;
+inline constexpr float Compact = 12.0f;
+inline constexpr float Medium = 16.0f;
+inline constexpr float Large = 24.0f;
+inline constexpr float XLarge = 32.0f;
+inline constexpr float Huge = 48.0f;
+inline constexpr float Massive = 64.0f;
+}
 FLinearColor Srgb(uint8 R, uint8 G, uint8 B, uint8 A = 255);
 
-/** The engine's default font at a size. Bold uses the Bold face. */
-FSlateFontInfo Font(int32 Size, bool bBold = false);
+enum class EFontWeight : uint8 { Regular, Medium, SemiBold, Bold };
+enum class ETextRole : uint8 { Title, PageHeading, SectionHeading, Section = SectionHeading, Body, Control, Meta };
+
+FSlateFontInfo Font(int32 Size, EFontWeight Weight = EFontWeight::Regular);
+FSlateFontInfo Font(int32 Size, bool bBold);
+FSlateFontInfo Font(ETextRole Role);
 
 struct FStyle
 {
-    // Colours.
-    FLinearColor Scrim;
-    FLinearColor SideShade;
-    FLinearColor TextPrimary;
-    FLinearColor TextSecondary;
-    FLinearColor TextMuted;
-    FLinearColor Accent;
-    FLinearColor AccentHot;
-    FLinearColor Good;
-    FLinearColor Warn;
-    FLinearColor Danger;
-    FLinearColor OnAccent;
+    FLinearColor Background, Panel, Raised, Divider;
+    FLinearColor TextPrimary, TextSecondary, Accent, OnAccent, Focus, Success, Error, TextMuted;
+    FLinearColor Good, Warn, Danger;
 
-    // Panels and cards.
-    FSlateBrush BrushPanel;
-    FSlateBrush BrushInset;
-    FSlateBrush BrushCard;
-    FSlateBrush BrushCardHover;
-    FSlateBrush BrushCardSelected;
-    FSlateBrush BrushCardSelectedHover;
-    FSlateBrush BrushFocusRing;
-    FSlateBrush BrushCardDisabled;
+    FSlateBrush BrushPanel, BrushInset, BrushDialog, BrushDialogShadow;
+    FSlateBrush BrushCard, BrushCardHover, BrushCardPressed, BrushCardSelected, BrushCardSelectedHover, BrushCardDisabled;
+    FSlateBrush BrushTextRow, BrushTextRowHover, BrushTextRowPressed, BrushFocusRing;
+    FSlateBrush BrushPrimary, BrushPrimaryHover, BrushPrimaryPressed;
+    FSlateBrush BrushSecondary, BrushSecondaryHover, BrushSecondaryPressed, BrushDisabled;
+    FSlateBrush BrushTrack, BrushFillAccent, BrushFillGood, BrushFillDanger, BrushPipOff, BrushPipOn;
+    FSlateBrush BrushRule, BrushAccentRule, BrushScrim, BrushSideShade, BrushToast;
 
-    // Buttons.
-    FSlateBrush BrushPrimary;
-    FSlateBrush BrushPrimaryHover;
-    FSlateBrush BrushPrimaryPressed;
-    FSlateBrush BrushSecondary;
-    FSlateBrush BrushSecondaryHover;
-    FSlateBrush BrushSecondaryPressed;
-    FSlateBrush BrushDisabled;
-
-    // Bars and rules.
-    FSlateBrush BrushTrack;
-    FSlateBrush BrushFillAccent;
-    FSlateBrush BrushFillGood;
-    FSlateBrush BrushFillDanger;
-    FSlateBrush BrushPipOff;
-    FSlateBrush BrushPipOn;
-    FSlateBrush BrushRule;
-    FSlateBrush BrushAccentRule;
-    FSlateBrush BrushScrim;
-    FSlateBrush BrushSideShade;
-    FSlateBrush BrushToast;
-
-    // Widget styles.
     FButtonStyle NoButton;
     FSliderStyle Slider;
     FEditableTextBoxStyle TextBox;
     FScrollBarStyle ScrollBar;
+    TSharedPtr<const FCompositeFont> CompositeFont;
 
     static const FStyle& Get();
-
 private:
     FStyle();
 };

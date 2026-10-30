@@ -32,9 +32,17 @@ std::string_view WorldSaveCreationSpan(std::string_view text);
 
 /**
  * Reads the "world" and "player" objects. Success leaves the result default; a failure carries the refusal.
- * `withDayLoop` is true for the v7 record (a "dayloop" key is required) and false for v6 (the key is refused
- * and the world gets a fresh day).
+ * v6 gets a fresh day; v7 requires dayloop; v8 also requires conversations and doors; v9 journal; v10 commerce (read separately).
+ * Every version refuses keys from later versions.
  */
-WorldSaveResult WorldSaveReadWorld(const JsonValue& value, WorldState& world, bool withDayLoop);
+WorldSaveResult WorldSaveReadWorld(const JsonValue& value, WorldState& world, std::int32_t version);
+/** Canonical lane sections, including their module text envelopes. Empty for invalid lane authority. */
+std::string WorldSaveWriteLane(const WorldState& world);
+WorldSaveResult WorldSaveReadLane(const JsonValue& value, WorldState& world);
+std::string WorldSaveQuoted(std::string_view value);
 WorldSaveResult WorldSaveReadPlayer(const JsonValue& value, PlayerPlacement& player);
+/** R8-04 (WorldSaveCommerce.cpp): the writer's "commerce" member text, or empty when commerce cannot be saved with this creation. */
+std::string WorldSaveWriteCommerce(const WorldState& world, const CharacterCreationSave& creation);
+/** v10 reads and validates pw.commerce/1; v6 to v9 receive InitialiseCommerce(householdRank, saved instant) once. The clock must be read. */
+WorldSaveResult WorldSaveReadCommerce(const JsonValue& value, WorldState& world, std::int32_t version, std::int32_t householdRank);
 } // namespace PerfectWorld

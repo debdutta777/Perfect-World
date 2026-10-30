@@ -12,7 +12,19 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/CharacterCreation.cpp
     Source/PerfectWorldCore/Private/CreationPresets.cpp
     Source/PerfectWorldCore/Private/CreationEdits.cpp
+    Source/PerfectWorldCore/Private/WeekCompressionPlan.cpp
+    Source/PerfectWorldCore/Private/WeekCompressionRun.cpp
+    Source/PerfectWorldCore/Private/WeekCompressionCompare.cpp
+    Source/PerfectWorldCore/Private/CountdownContent.cpp
+    Source/PerfectWorldCore/Private/CountdownRules.cpp
+    Source/PerfectWorldCore/Private/CountdownProfile.cpp
+    Source/PerfectWorldCore/Private/CountdownOffers.cpp
+    Source/PerfectWorldCore/Private/CountdownRun.cpp
+    Source/PerfectWorldCore/Private/CountdownText.cpp
+    Source/PerfectWorldCore/Private/StateDiff.cpp
+    Source/PerfectWorldCore/Private/StateDiffLines.cpp
     Source/PerfectWorldCore/Private/CreationPresentation.cpp
+    Source/PerfectWorldCore/Private/StreamPresentation.cpp
     Source/PerfectWorldCore/Private/CreationSaveSerialization.cpp
     Source/PerfectWorldCore/Private/CreationIdentity.cpp
     Source/PerfectWorldCore/Private/CreationIdentityText.cpp
@@ -97,6 +109,7 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/AwakeningResolve.cpp
     Source/PerfectWorldCore/Private/AwakeningRecipes.cpp
     Source/PerfectWorldCore/Private/AwakeningProfile.cpp
+    Source/PerfectWorldCore/Private/Tower.cpp
     Source/PerfectWorldCore/Private/ContentThreadSchemas.cpp
     Source/PerfectWorldCore/Private/ThreadTemplates.cpp
     Source/PerfectWorldCore/Private/ThreadTemplateRules.cpp
@@ -108,6 +121,14 @@ add_library(PerfectWorldCore STATIC
     Source/PerfectWorldCore/Private/TimeContractText.cpp
     Source/PerfectWorldCore/Private/TimeContractContent.cpp
     Source/PerfectWorldCore/Private/TimeContractEquivalence.cpp
+    Source/PerfectWorldCore/Private/Doors.cpp
+    Source/PerfectWorldCore/Private/Conversation.cpp
+    Source/PerfectWorldCore/Private/ConversationContent.cpp
+    Source/PerfectWorldCore/Private/ConversationText.cpp
+    Source/PerfectWorldCore/Private/NpcBehaviour.cpp
+    Source/PerfectWorldCore/Private/LaneOrigin.cpp
+    Source/PerfectWorldCore/Private/ConversationCareContent.cpp
+    Source/PerfectWorldCore/Private/ConversationFarida.cpp
 )
 target_include_directories(PerfectWorldCore PUBLIC Source/PerfectWorldCore/Public)
 target_compile_features(PerfectWorldCore PUBLIC cxx_std_20)
@@ -130,6 +151,10 @@ add_test(NAME PerfectWorldCreationPresetTests COMMAND PerfectWorldCreationPreset
 add_executable(PerfectWorldCreationPresentationTests Tests/CreationPresentationTests.cpp)
 target_link_libraries(PerfectWorldCreationPresentationTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldCreationPresentationTests COMMAND PerfectWorldCreationPresentationTests)
+
+add_executable(PerfectWorldStreamPresentationTests Tests/StreamPresentationTests.cpp)
+target_link_libraries(PerfectWorldStreamPresentationTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldStreamPresentationTests COMMAND PerfectWorldStreamPresentationTests)
 
 add_executable(PerfectWorldCreationIdentityTests Tests/CreationIdentityTests.cpp)
 target_link_libraries(PerfectWorldCreationIdentityTests PRIVATE PerfectWorldCore)
@@ -208,6 +233,10 @@ add_test(NAME PerfectWorldAssessmentTests COMMAND PerfectWorldAssessmentTests ${
 add_executable(PerfectWorldAwakeningTests Tests/AwakeningTests.cpp Tests/AwakeningPersonaTests.cpp Tests/AwakeningProfileTests.cpp)
 target_link_libraries(PerfectWorldAwakeningTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldAwakeningTests COMMAND PerfectWorldAwakeningTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+add_executable(PerfectWorldTowerTests Tests/TowerTests.cpp)
+target_link_libraries(PerfectWorldTowerTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldTowerTests COMMAND PerfectWorldTowerTests)
 
 add_executable(PerfectWorldThreadTests Tests/ThreadsTests.cpp Tests/ThreadsContentTests.cpp Tests/ThreadsRunTests.cpp
                Tests/ThreadsEquivalenceTests.cpp Tests/ThreadsSaveTests.cpp)
@@ -456,3 +485,382 @@ foreach(fixture_and_issue
     add_test(NAME PerfectWorldContentFixture_${fixture}_${rule}
              COMMAND pwcontent validate ${CMAKE_SOURCE_DIR}/Tests/Fixtures/Content/${fixture} --expect-issue "${issue}")
 endforeach()
+
+# Week compression and the persistent-state diff (ROADMAP M3-02). The tool is built first and its path is
+# the test's second argument, so the test can run the real command line.
+add_executable(pwstatediff Tools/StateDiff/main.cpp)
+target_link_libraries(pwstatediff PRIVATE PerfectWorldCore)
+add_executable(PerfectWorldWeekTests Tests/WeekCompressionTests.cpp Tests/WeekCompressionRefusalTests.cpp
+               Tests/WeekCompressionRulesTests.cpp Tests/WeekCompressionRandomTests.cpp Tests/StateDiffTests.cpp
+               Tests/StateDiffMutationTests.cpp Tests/StateDiffSaveTests.cpp)
+target_link_libraries(PerfectWorldWeekTests PRIVATE PerfectWorldCore)
+add_dependencies(PerfectWorldWeekTests pwstatediff)
+add_test(NAME PerfectWorldWeekTests COMMAND PerfectWorldWeekTests ${CMAKE_SOURCE_DIR}/Data/Content $<TARGET_FILE:pwstatediff>)
+
+# Doors and conversation: the portable rules the first enterable home and the first talkable adult need
+# (LANE_LIFE_IMPLEMENTATION stage 3 rows 3.1/3.3 and stage 5 rows 5.1/5.2, minimal slice).
+add_executable(PerfectWorldDoorsTests Tests/DoorsTests.cpp)
+target_link_libraries(PerfectWorldDoorsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldDoorsTests COMMAND PerfectWorldDoorsTests)
+
+add_executable(PerfectWorldConversationTests Tests/ConversationTests.cpp)
+target_link_libraries(PerfectWorldConversationTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldConversationTests COMMAND PerfectWorldConversationTests)
+
+add_executable(PerfectWorldNpcBehaviourTests Tests/NpcBehaviourTests.cpp)
+target_link_libraries(PerfectWorldNpcBehaviourTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldNpcBehaviourTests COMMAND PerfectWorldNpcBehaviourTests)
+add_executable(PerfectWorldConversationHouseholdTests Tests/ConversationHouseholdTests.cpp)
+target_link_libraries(PerfectWorldConversationHouseholdTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldConversationHouseholdTests COMMAND PerfectWorldConversationHouseholdTests)
+
+# The ten days (ROADMAP M4-03).
+add_executable(PerfectWorldCountdownTests Tests/CountdownTests.cpp Tests/CountdownRulesTests.cpp Tests/CountdownObligationTests.cpp
+               Tests/CountdownReloadTests.cpp Tests/CountdownStrategyTests.cpp)
+target_link_libraries(PerfectWorldCountdownTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldCountdownTests COMMAND PerfectWorldCountdownTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# Lane origin binding (order O); integrator may move the source into the core library list.
+add_executable(PerfectWorldLaneOriginTests Tests/LaneOriginTests.cpp)
+target_link_libraries(PerfectWorldLaneOriginTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneOriginTests COMMAND PerfectWorldLaneOriginTests)
+
+# Care worker conversation catalogue (order CC).
+add_executable(PerfectWorldConversationCareTests Tests/ConversationCareTests.cpp)
+target_link_libraries(PerfectWorldConversationCareTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldConversationCareTests COMMAND PerfectWorldConversationCareTests)
+# Farida Qadri's conversation (order CF).
+add_executable(PerfectWorldConversationFaridaTests Tests/ConversationFaridaTests.cpp)
+target_link_libraries(PerfectWorldConversationFaridaTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldConversationFaridaTests COMMAND PerfectWorldConversationFaridaTests)
+# Order S: shared content-schema dispatch remains owned by CAT.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/FaridaSchedule.cpp
+    Source/PerfectWorldCore/Private/ContentNpcScheduleSchemas.cpp)
+add_executable(PerfectWorldFaridaScheduleTests Tests/FaridaScheduleTests.cpp)
+target_include_directories(PerfectWorldFaridaScheduleTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldFaridaScheduleTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldFaridaScheduleTests COMMAND PerfectWorldFaridaScheduleTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.farida_qadri.json)
+
+# World lane transactions (orders CK+TX): conversation and door commands in the reducer, due-now draining, atomic charging.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldConversation.cpp)
+add_executable(PerfectWorldLaneTransactionsTests Tests/WorldLaneTransactionsTests.cpp)
+target_link_libraries(PerfectWorldLaneTransactionsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneTransactionsTests COMMAND PerfectWorldLaneTransactionsTests)
+
+# Generic NPC schedule loader and the care worker's duty schedule (order CT).
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/NpcScheduleContent.cpp)
+add_executable(PerfectWorldNpcScheduleContentTests Tests/NpcScheduleContentTests.cpp)
+target_include_directories(PerfectWorldNpcScheduleContentTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldNpcScheduleContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldNpcScheduleContentTests COMMAND PerfectWorldNpcScheduleContentTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.care_worker.json)
+
+# Order SV/HS/ST: world save v8 lane authority.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldLaneSave.cpp)
+target_sources(PerfectWorldWorldSaveTests PRIVATE Tests/WorldSaveLaneTests.cpp)
+
+# Order AN: Anindita Sen (stationery proprietor): schedule, conversation, world save v8 round trip.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationAnindita.cpp)
+add_executable(PerfectWorldAninditaScheduleTests Tests/AninditaScheduleTests.cpp)
+target_include_directories(PerfectWorldAninditaScheduleTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldAninditaScheduleTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldAninditaScheduleTests COMMAND PerfectWorldAninditaScheduleTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.anindita_sen.json)
+add_executable(PerfectWorldConversationAninditaTests Tests/ConversationAninditaTests.cpp)
+target_link_libraries(PerfectWorldConversationAninditaTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldConversationAninditaTests COMMAND PerfectWorldConversationAninditaTests)
+add_executable(PerfectWorldWorldSaveAninditaTests Tests/WorldSaveAninditaTests.cpp)
+target_link_libraries(PerfectWorldWorldSaveAninditaTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldSaveAninditaTests COMMAND PerfectWorldWorldSaveAninditaTests)
+
+# LL-03: parametric interior kit (portable layout: walls, rooms, anchors, clearances, lights, routes).
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/LaneInteriorLayout.cpp
+    Source/PerfectWorldCore/Private/LaneInteriorBuilder.cpp
+    Source/PerfectWorldCore/Private/LaneInteriorFurnish.cpp
+    Source/PerfectWorldCore/Private/LaneInteriorTwoRoom.cpp
+    Source/PerfectWorldCore/Private/LaneInteriorShared.cpp)
+add_executable(PerfectWorldLaneInteriorLayoutTests Tests/LaneInteriorLayoutTests.cpp)
+target_link_libraries(PerfectWorldLaneInteriorLayoutTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneInteriorLayoutTests COMMAND PerfectWorldLaneInteriorLayoutTests)
+
+# LL-02 submission 2a: built stationery door hours, egress and ten-door save migration.
+add_executable(PerfectWorldStationeryDoorTests Tests/StationeryDoorTests.cpp)
+target_link_libraries(PerfectWorldStationeryDoorTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldStationeryDoorTests COMMAND PerfectWorldStationeryDoorTests)
+
+# LL-03 submission 2: catalogue of kit-built frontages (pinned footprints, ids, variants) proved against the lane generator.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/LaneFrontageCatalogue.cpp)
+add_executable(PerfectWorldLaneFrontageCatalogueTests Tests/LaneFrontageCatalogueTests.cpp)
+target_link_libraries(PerfectWorldLaneFrontageCatalogueTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneFrontageCatalogueTests COMMAND PerfectWorldLaneFrontageCatalogueTests)
+
+# Review step 4: Mira Sen (Commerce classmate, Anindita's daughter): schedule, conversation, world save v8 round trip.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationMira.cpp)
+add_executable(PerfectWorldMiraScheduleTests Tests/MiraScheduleTests.cpp)
+target_include_directories(PerfectWorldMiraScheduleTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldMiraScheduleTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldMiraScheduleTests COMMAND PerfectWorldMiraScheduleTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.mira_sen.json
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.anindita_sen.json)
+add_executable(PerfectWorldConversationMiraTests Tests/ConversationMiraTests.cpp)
+target_link_libraries(PerfectWorldConversationMiraTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldConversationMiraTests COMMAND PerfectWorldConversationMiraTests)
+add_executable(PerfectWorldWorldSaveMiraTests Tests/WorldSaveMiraTests.cpp)
+target_link_libraries(PerfectWorldWorldSaveMiraTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldSaveMiraTests COMMAND PerfectWorldWorldSaveMiraTests)
+
+# NL-03: general-goods and workshop furniture sets for the two-room shop (portable core; tests live in LaneInteriorLayoutTests).
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/LaneInteriorShopFurniture.cpp)
+add_executable(PerfectWorldLaneInteriorShopFurnitureTests Tests/LaneInteriorShopFurnitureTests.cpp)
+target_link_libraries(PerfectWorldLaneInteriorShopFurnitureTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneInteriorShopFurnitureTests COMMAND PerfectWorldLaneInteriorShopFurnitureTests)
+
+# NL-01: sixteen-door roster, visiting access and the frozen historical v8 door fixtures (10 and 11 doors).
+target_compile_definitions(PerfectWorldWorldSaveTests PRIVATE PW_DOORS_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
+
+# UP-05: stair contract (flights, landings, slab openings, guards, headroom volumes) and its portable tests.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/LaneStairLayout.cpp)
+add_executable(PerfectWorldLaneStairLayoutTests Tests/LaneStairLayoutTests.cpp)
+target_link_libraries(PerfectWorldLaneStairLayoutTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneStairLayoutTests COMMAND PerfectWorldLaneStairLayoutTests)
+
+# UP-03a: Subrata Dey (lane caretaker): schedule test, then conversation and world save v8 round trip test.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationSubrata.cpp)
+add_executable(PerfectWorldSubrataLifeTests Tests/SubrataLifeTests.cpp)
+target_include_directories(PerfectWorldSubrataLifeTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldSubrataLifeTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSubrataLifeTests COMMAND PerfectWorldSubrataLifeTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.subrata_dey.json)
+add_executable(PerfectWorldSubrataConversationTests Tests/SubrataConversationTests.cpp)
+target_link_libraries(PerfectWorldSubrataConversationTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSubrataConversationTests COMMAND PerfectWorldSubrataConversationTests)
+
+# NR-02: Nirmal Bose, unit A life, conversation interruption and persisted memory/receipts.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationNirmal.cpp)
+add_executable(PerfectWorldNirmalLifeTests Tests/NirmalLifeTests.cpp)
+target_include_directories(PerfectWorldNirmalLifeTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldNirmalLifeTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldNirmalLifeTests COMMAND PerfectWorldNirmalLifeTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.nirmal_bose.json)
+
+# NR-01: Rupa Ghosh (tea row house resident): schedule and visiting-hours test, then conversation and world save v8 round trip test.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationRupa.cpp)
+add_executable(PerfectWorldRupaLifeTests Tests/RupaLifeTests.cpp)
+target_include_directories(PerfectWorldRupaLifeTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldRupaLifeTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldRupaLifeTests COMMAND PerfectWorldRupaLifeTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.rupa_ghosh.json)
+add_executable(PerfectWorldRupaConversationTests Tests/RupaConversationTests.cpp)
+target_link_libraries(PerfectWorldRupaConversationTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldRupaConversationTests COMMAND PerfectWorldRupaConversationTests)
+
+# NR-03: Sahana Mitra (tall-flats unit B resident): schedule, visiting hours, independence from unit A, conversation and world save round trip.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationSahana.cpp)
+add_executable(PerfectWorldSahanaLifeTests Tests/SahanaLifeTests.cpp)
+target_include_directories(PerfectWorldSahanaLifeTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldSahanaLifeTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSahanaLifeTests COMMAND PerfectWorldSahanaLifeTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.sahana_mitra.json
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.nirmal_bose.json)
+
+# NR-06: the tall flats' first real stair and upper dwelling (portable layout and tests).
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/LaneTallFlatsLayout.cpp)
+add_executable(PerfectWorldLaneTallFlatsLayoutTests Tests/LaneTallFlatsLayoutTests.cpp)
+target_link_libraries(PerfectWorldLaneTallFlatsLayoutTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneTallFlatsLayoutTests COMMAND PerfectWorldLaneTallFlatsLayoutTests)
+
+# Doors 20: NR-05's three frontage doors and NR-06's upper flat join the roster; pw.doors/2 sixteen-door saves migrate (frozen fixture world_v8_doors_16.json).
+add_executable(PerfectWorldDoorsRoster20Tests Tests/DoorsRoster20Tests.cpp)
+target_link_libraries(PerfectWorldDoorsRoster20Tests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldDoorsRoster20Tests COMMAND PerfectWorldDoorsRoster20Tests)
+
+# R4-01: three public browsing frontages and the explicit 20 -> 23 door-roster edition.
+add_executable(PerfectWorldDoorsRoster23Tests Tests/DoorsRoster23Tests.cpp)
+target_link_libraries(PerfectWorldDoorsRoster23Tests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldDoorsRoster23Tests COMMAND PerfectWorldDoorsRoster23Tests)
+
+# R4-03: talkable vendor/passers and shared authored ambient routes.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/LaneAmbient.cpp
+    Source/PerfectWorldCore/Private/ConversationAmbient.cpp)
+add_executable(PerfectWorldLaneAmbientTests Tests/LaneAmbientTests.cpp)
+target_link_libraries(PerfectWorldLaneAmbientTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneAmbientTests COMMAND PerfectWorldLaneAmbientTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# R4-02: the two working proprietors (Debashis Pal, repair workshop; Mahua Saha, hardware store): schedules, conversations and world save.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationDebashis.cpp
+                                        Source/PerfectWorldCore/Private/ConversationMahua.cpp)
+add_executable(PerfectWorldProprietorLifeTests Tests/ProprietorLifeTests.cpp)
+target_include_directories(PerfectWorldProprietorLifeTests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldProprietorLifeTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldProprietorLifeTests COMMAND PerfectWorldProprietorLifeTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.debashis_pal.json
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.mahua_saha.json)
+add_executable(PerfectWorldProprietorConversationTests Tests/ProprietorConversationTests.cpp)
+target_link_libraries(PerfectWorldProprietorConversationTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldProprietorConversationTests COMMAND PerfectWorldProprietorConversationTests)
+
+# R4-04: authoritative dated encounters and current-fact journal projection.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/LaneJournal.cpp)
+add_executable(PerfectWorldLaneJournalTests Tests/LaneJournalTests.cpp)
+target_link_libraries(PerfectWorldLaneJournalTests PRIVATE PerfectWorldCore)
+target_compile_definitions(PerfectWorldLaneJournalTests PRIVATE PW_JOURNAL_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
+add_test(NAME PerfectWorldLaneJournalTests COMMAND PerfectWorldLaneJournalTests)
+
+# R53: explicit 23 -> 26 roster migration and three more unstaffed frontages.
+add_executable(PerfectWorldDoorsRoster26Tests Tests/DoorsRoster26Tests.cpp)
+target_link_libraries(PerfectWorldDoorsRoster26Tests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldDoorsRoster26Tests COMMAND PerfectWorldDoorsRoster26Tests)
+
+# R5-01: old-house and upper-flat residents; shared registration snippets are in R5-01_notes.md.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationResidentsR5.cpp)
+add_executable(PerfectWorldResidentsR5Tests Tests/ResidentsR5Tests.cpp)
+target_include_directories(PerfectWorldResidentsR5Tests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldResidentsR5Tests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldResidentsR5Tests COMMAND PerfectWorldResidentsR5Tests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.prabir_chatterjee.json
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.ishita_banerjee.json)
+
+# R5-04: opt-in, transient work/needs decisions; legacy behaviour regression for every authored person.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/NpcBehaviourWork.cpp)
+add_executable(PerfectWorldNpcBehaviourWorkTests Tests/NpcBehaviourWorkTests.cpp)
+target_link_libraries(PerfectWorldNpcBehaviourWorkTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldNpcBehaviourWorkTests COMMAND PerfectWorldNpcBehaviourWorkTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.debashis_pal.json
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.mahua_saha.json)
+add_executable(PerfectWorldNpcBehaviourRegressionTests Tests/NpcBehaviourRegressionTests.cpp)
+target_link_libraries(PerfectWorldNpcBehaviourRegressionTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldNpcBehaviourRegressionTests COMMAND PerfectWorldNpcBehaviourRegressionTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule)
+
+# R71: deterministic authored neighbourhood overlay; no content registry, save or hash changes.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/NeighbourhoodPlan.cpp)
+add_executable(PerfectWorldNeighbourhoodPlanTests Tests/NeighbourhoodPlanTests.cpp)
+target_link_libraries(PerfectWorldNeighbourhoodPlanTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldNeighbourhoodPlanTests COMMAND PerfectWorldNeighbourhoodPlanTests)
+
+# R66: tailor dialogue and life/work coverage. Shared registrations are in R6-06_notes.md.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationTailor.cpp)
+add_executable(PerfectWorldTailorLifeTests Tests/TailorLifeTests.cpp)
+target_link_libraries(PerfectWorldTailorLifeTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldTailorLifeTests COMMAND PerfectWorldTailorLifeTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.satyajit_dutta.json)
+
+# R6-07: school planning/arrival through the world reducer; existing attendance/day-loop persistence.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldSchoolDay.cpp)
+add_executable(PerfectWorldWorldSchoolDayTests Tests/WorldSchoolDayTests.cpp)
+target_link_libraries(PerfectWorldWorldSchoolDayTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldSchoolDayTests COMMAND PerfectWorldWorldSchoolDayTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# R62: shared, read-only save-slot facts for title and load presentations.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/SaveSlotSummary.cpp)
+add_executable(PerfectWorldSaveSlotSummaryTests Tests/SaveSlotSummaryTests.cpp)
+target_link_libraries(PerfectWorldSaveSlotSummaryTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSaveSlotSummaryTests COMMAND PerfectWorldSaveSlotSummaryTests)
+
+# R61: the last three side frontages and explicit 26 -> 29 door migration.
+add_executable(PerfectWorldDoorsRoster29Tests Tests/DoorsRoster29Tests.cpp)
+target_link_libraries(PerfectWorldDoorsRoster29Tests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldDoorsRoster29Tests COMMAND PerfectWorldDoorsRoster29Tests)
+
+# F3: quest log projection (Today, Promises, Discoveries), derived from authoritative state; no new persisted state.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/QuestLog.cpp)
+add_executable(PerfectWorldQuestLogTests Tests/QuestLogTests.cpp)
+target_link_libraries(PerfectWorldQuestLogTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldQuestLogTests COMMAND PerfectWorldQuestLogTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# F5: the calling bell. Header-only portable rules (DoorBell.h) over the core's own knock and passage; no roster or save change.
+add_executable(PerfectWorldDoorBellTests Tests/DoorBellTests.cpp)
+target_link_libraries(PerfectWorldDoorBellTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldDoorBellTests COMMAND PerfectWorldDoorBellTests)
+
+# F2: the lane map projection and map view arithmetic behind the minimap and the full-screen map (portable; Unreal draws what these return).
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/LaneMap.cpp
+    Source/PerfectWorldCore/Private/LaneMapQuery.cpp
+    Source/PerfectWorldCore/Private/LaneMapView.cpp)
+add_executable(PerfectWorldLaneMapTests Tests/LaneMapTests.cpp)
+target_link_libraries(PerfectWorldLaneMapTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneMapTests COMMAND PerfectWorldLaneMapTests)
+add_executable(PerfectWorldLaneMapViewTests Tests/LaneMapViewTests.cpp)
+target_link_libraries(PerfectWorldLaneMapViewTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneMapViewTests COMMAND PerfectWorldLaneMapViewTests)
+
+# R81: frozen commerce contract, atomic rules and deterministic allowance/receipts.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/Commerce.cpp)
+add_executable(PerfectWorldCommerceTests Tests/CommerceTests.cpp)
+target_link_libraries(PerfectWorldCommerceTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldCommerceTests COMMAND PerfectWorldCommerceTests)
+
+# R75: transient calendar-driven ambient cohorts; no persistent RNG or save changes.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/AmbientCrowd.cpp)
+add_executable(PerfectWorldAmbientCrowdTests Tests/AmbientCrowdTests.cpp)
+target_link_libraries(PerfectWorldAmbientCrowdTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldAmbientCrowdTests COMMAND PerfectWorldAmbientCrowdTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/calendar/calendar.nabapara_2042_43.json)
+
+# R72: transient seeded Kolkata traffic, crossing/occupancy safety and fair junction service.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/NeighbourhoodTraffic.cpp)
+add_executable(PerfectWorldNeighbourhoodTrafficTests Tests/NeighbourhoodTrafficTests.cpp)
+target_link_libraries(PerfectWorldNeighbourhoodTrafficTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldNeighbourhoodTrafficTests COMMAND PerfectWorldNeighbourhoodTrafficTests)
+
+# R83: reducer commerce/service inputs, every time path and atomic refusals; save/hash remain R8-04's.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldCommerce.cpp)
+add_executable(PerfectWorldWorldCommerceTests Tests/WorldCommerceTests.cpp)
+target_link_libraries(PerfectWorldWorldCommerceTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldCommerceTests COMMAND PerfectWorldWorldCommerceTests)
+
+# R82: authored commerce items, catalogues, funding and soft keeper unavailability.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/CommerceContent.cpp)
+add_executable(PerfectWorldCommerceContentTests Tests/CommerceContentTests.cpp)
+target_link_libraries(PerfectWorldCommerceContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldCommerceContentTests COMMAND PerfectWorldCommerceContentTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# R84: commerce persistence (pw.commerce/1, schema 10, hash 7), legacy authentication and household migration.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldSaveCommerce.cpp)
+add_executable(PerfectWorldWorldSaveCommerceTests Tests/WorldSaveCommerceTests.cpp Tests/WorldSaveCommerceFixtureTests.cpp)
+target_link_libraries(PerfectWorldWorldSaveCommerceTests PRIVATE PerfectWorldCore)
+target_compile_definitions(PerfectWorldWorldSaveCommerceTests PRIVATE PW_COMMERCE_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
+add_test(NAME PerfectWorldWorldSaveCommerceTests COMMAND PerfectWorldWorldSaveCommerceTests)
+add_executable(PerfectWorldWorldHashCommerceTests Tests/WorldHashCommerceTests.cpp)
+target_link_libraries(PerfectWorldWorldHashCommerceTests PRIVATE PerfectWorldCore)
+target_compile_definitions(PerfectWorldWorldHashCommerceTests PRIVATE PW_COMMERCE_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
+add_test(NAME PerfectWorldWorldHashCommerceTests COMMAND PerfectWorldWorldHashCommerceTests)
+
+# S01: deterministic content manifest, diffing and pwcontent check-manifest gate.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ContentManifest.cpp)
+add_executable(PerfectWorldContentManifestTests Tests/ContentManifestTests.cpp)
+target_link_libraries(PerfectWorldContentManifestTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldContentManifestTests COMMAND PerfectWorldContentManifestTests ${CMAKE_SOURCE_DIR}/Data/Content)
+add_test(NAME PerfectWorldContentManifestData COMMAND pwcontent check-manifest ${CMAKE_SOURCE_DIR}/Data/Content)
+
+
+# R91: frozen Awakening inputs/state contract and exactly-once genuine activity credits.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/AwakeningInputs.cpp)
+add_executable(PerfectWorldAwakeningInputsTests Tests/AwakeningInputsTests.cpp)
+target_link_libraries(PerfectWorldAwakeningInputsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldAwakeningInputsTests COMMAND PerfectWorldAwakeningInputsTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# R92: supervised tutorial situations, recovery, safe withdrawal, make-up and atomic grant.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/TutorialDungeon.cpp)
+add_executable(PerfectWorldTutorialDungeonTests Tests/TutorialDungeonTests.cpp)
+target_link_libraries(PerfectWorldTutorialDungeonTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldTutorialDungeonTests COMMAND PerfectWorldTutorialDungeonTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# R93: authored tutorial content, registry schema and complete text-reference validation.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/ContentTutorialSchemas.cpp
+    Source/PerfectWorldCore/Private/TutorialContent.cpp)
+add_executable(PerfectWorldTutorialContentTests Tests/TutorialContentTests.cpp)
+target_link_libraries(PerfectWorldTutorialContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldTutorialContentTests COMMAND PerfectWorldTutorialContentTests
+    ${CMAKE_SOURCE_DIR}/Data/Content ${CMAKE_SOURCE_DIR}/Data/Text/en/tutorial.awakening.json)
+
+# Crowd voices: every anonymous exchange key is authored in Data/Text/en/ambient.crowd.json.
+add_executable(PerfectWorldCrowdVoicesTests Tests/CrowdVoicesTests.cpp)
+target_link_libraries(PerfectWorldCrowdVoicesTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldCrowdVoicesTests COMMAND PerfectWorldCrowdVoicesTests ${CMAKE_SOURCE_DIR}/Data/Text/en/ambient.crowd.json)
