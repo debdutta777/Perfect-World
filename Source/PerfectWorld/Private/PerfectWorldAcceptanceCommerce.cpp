@@ -185,7 +185,15 @@ void R88AppendCommerceSteps(TArray<FStepDef>& Out, const bool bShantiSmoke)
         if (Rt.Phase == 0)
         {
             Sub.FaceWorldPoint(Counter->GetInteractionPoint());
-            if (Interaction->GetTarget() != Counter) { Interaction->CycleTarget(); return FStepOutcome::Wait(); }
+            if (Interaction->GetTarget() != Counter)
+            {
+                const AActor* Held = Interaction->GetTarget();
+                Rt.Note = FString::Printf(TEXT("the Buy counter never became the target; held %s, player at %s, counter at %s"),
+                    Held != nullptr ? *Held->GetName() : TEXT("nothing"), *Sub.GetPawn()->GetActorLocation().ToCompactString(),
+                    *Counter->GetInteractionPoint().ToCompactString());
+                Interaction->CycleTarget();
+                return FStepOutcome::Wait();
+            }
             const auto Wallet = Bridge->ReadWallet();
             if (!Wallet.IsSet()) return FStepOutcome::Fail(TEXT("no live wallet"));
             State->WalletBefore = Wallet.GetValue(); State->Shop = Counter->GetShopId();
@@ -193,7 +201,11 @@ void R88AppendCommerceSteps(TArray<FStepDef>& Out, const bool bShantiSmoke)
             Rt.NextPhase();
         }
         auto* Buy = UPWBuyPresenter::Get(Sub.GetPlayWorld());
-        return Buy != nullptr && Buy->IsOpen() ? FStepOutcome::Pass(TEXT("real Buy interaction opened live panel after core service readiness")) : FStepOutcome::Wait();
+        if (Buy != nullptr && Buy->IsOpen()) return FStepOutcome::Pass(TEXT("real Buy interaction opened live panel after core service readiness"));
+        // A refusal never opens the panel, so name the core's answer rather than timing out in silence.
+        Rt.Note = FString::Printf(TEXT("the panel did not open; core said %s; notice '%s'"),
+            UTF8_TO_TCHAR(std::string(PerfectWorld::CommerceErrorCode(Counter->GetLastError())).c_str()), *Counter->GetLastNotice().ToString());
+        return FStepOutcome::Wait();
     }));
     Out.Add(R88Action(TEXT("commerce_buy_food_and_see_debit"), [State](UPWAcceptanceSubsystem& Sub, FStepRuntime& Rt)
     {
