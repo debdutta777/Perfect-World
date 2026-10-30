@@ -2316,7 +2316,7 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 - A4 school-life content and A7 tower scenarios (Gemini 4 Argon Medium).
 
 
-## Checkpoint â€” v0.7.0-alpha published, 2026-10-30
+## Checkpoint — v0.7.0-alpha published, 2026-10-30
 
 **Published:** `v0.7.0-alpha` prerelease at `33a55ea`: shop counters, wallet, Inventory, 108 crowd lines. sha256 `3e9cdf5224e4eff2c534c9437f07d08113f83bd4ccd1b5e2f1df331dd3d6d7f5`. The packaged exe is the one both scenarios ran (`2d582358...`).
 
