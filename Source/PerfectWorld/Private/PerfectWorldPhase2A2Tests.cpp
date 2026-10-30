@@ -1,8 +1,9 @@
-// Order A2: the model-a-system and construct-an-explanation lesson screens (SPWClassModel, SPWClassExplain). Run in the editor under
-// "PerfectWorld.Phase2A2". The widgets are the real ones, built without a window: SlatePrepass evaluates bound text and visibility and
-// buttons are pressed with SButton::SimulateClick. The world is the portable core itself (FCoreBridge over real SchoolSessions state and
-// the real Data/Content), so a price asserted here is the core's quote and a charge is the core's charge. Focus and the controller need
-// a real window and are not proved here. STATUS: written by an edit-only agent; NOT RUN.
+// Lessons (orders A2 + A3 consolidated): the model and explain screens, and the shared shell and words they sit on (SPWClassLesson). Run in
+// the editor under "PerfectWorld.Phase2A2". The widgets are the real ones, built without a window: SlatePrepass evaluates bound text and
+// visibility; buttons are pressed with SButton::SimulateClick or the shell's PressAction. The world is the portable core itself (FCoreBridge
+// over real SchoolSessions state and the real Data/Content), so a price asserted here is the core's quote and a charge is the core's charge.
+// Focus and the controller need a real window and are not proved here. The Investigate and Coordinate screens are in PerfectWorldPhase2A3Tests.cpp.
+// STATUS: written without a compiler; NOT RUN.
 
 #include "Misc/AutomationTest.h"
 
@@ -327,8 +328,8 @@ bool A2TPlayModel(FAutomationTestBase& Test, const TSharedRef<SPWClassModel>& Pa
 		{
 			const PerfectWorld::SchoolLessonQuote Quote = PerfectWorld::QuoteSchoolLessonAction(Sessions, Cats, Sessions.Active->Session, Quoted);
 			Test.TestTrue(TEXT("the screen shows the core's price for the worked example"),
-				A2THas(A2TShownTexts(Panel), PWClassLesson::QuoteText(Quote).ToString()));
-			Result = Panel->TriggerWorkedExample();
+				A2THas(A2TShownTexts(Panel), PWClassLesson::PriceText(Quote, Sessions.Model.Exposure.UnitsLeft).ToString()));
+			Result = Panel->ExecuteWorkedExample();
 			Test.TestEqual(TEXT("the worked example is charged at its quote"), Result.ChargedUnits, Quote.Units);
 			break;
 		}
@@ -339,10 +340,10 @@ bool A2TPlayModel(FAutomationTestBase& Test, const TSharedRef<SPWClassModel>& Pa
 				Panel->ToggleLink(FString(UTF8_TO_TCHAR(Id.c_str())));
 			}
 			const PerfectWorld::SchoolLessonQuote Quote = PerfectWorld::QuoteSchoolLessonAction(Sessions, Cats, Sessions.Active->Session, Quoted);
-			Panel->RefreshFromSession();
+			Panel->RefreshModel();
 			Test.TestTrue(TEXT("the screen shows the core's price for committing the links"),
-				A2THas(A2TShownTexts(Panel), PWClassLesson::QuoteText(Quote).ToString()));
-			Result = Panel->TriggerCommitModel();
+				A2THas(A2TShownTexts(Panel), PWClassLesson::PriceText(Quote, Sessions.Model.Exposure.UnitsLeft).ToString()));
+			Result = Panel->ExecuteCommitModel();
 			Test.TestEqual(TEXT("the model is charged at its quote"), Result.ChargedUnits, Quote.Units);
 			break;
 		}
@@ -350,7 +351,7 @@ bool A2TPlayModel(FAutomationTestBase& Test, const TSharedRef<SPWClassModel>& Pa
 		{
 			Panel->SelectInvestigation(Wanted.Investigation);
 			const PerfectWorld::SchoolLessonQuote Quote = PerfectWorld::QuoteSchoolLessonAction(Sessions, Cats, Sessions.Active->Session, Quoted);
-			Result = Panel->TriggerCommitInvestigation();
+			Result = Panel->ExecuteCommitInvestigation();
 			Test.TestEqual(TEXT("the check is charged at its quote"), Result.ChargedUnits, Quote.Units);
 			break;
 		}
@@ -359,7 +360,7 @@ bool A2TPlayModel(FAutomationTestBase& Test, const TSharedRef<SPWClassModel>& Pa
 			Panel->SelectClaim(Wanted.Claim);
 			Panel->SetExplain(Wanted.Explain);
 			const PerfectWorld::SchoolLessonQuote Quote = PerfectWorld::QuoteSchoolLessonAction(Sessions, Cats, Sessions.Active->Session, Quoted);
-			Result = Panel->TriggerPresentClaim();
+			Result = Panel->ExecutePresentClaim();
 			Test.TestEqual(TEXT("the claim is charged at its quote"), Result.ChargedUnits, Quote.Units);
 			break;
 		}
@@ -392,28 +393,28 @@ bool A2TPlayExplain(FAutomationTestBase& Test, const TSharedRef<SPWClassExplain>
 		switch (Wanted.Kind)
 		{
 		case PerfectWorld::ExplainActionKind::ModelParagraph:
-			Result = Panel->TriggerModelParagraph();
+			Result = Panel->ExecuteModelParagraph();
 			break;
 		case PerfectWorld::ExplainActionKind::ChooseClaim:
 			Panel->SelectClaim(FString(UTF8_TO_TCHAR(Wanted.Claim.c_str())));
-			Result = Panel->TriggerChooseClaim();
+			Result = Panel->ExecuteChooseClaim();
 			break;
 		case PerfectWorld::ExplainActionKind::PlaceEvidence:
 			for (const std::string& Id : Wanted.Evidence)
 			{
 				Panel->ToggleEvidence(FString(UTF8_TO_TCHAR(Id.c_str())));
 			}
-			Result = Panel->TriggerPlaceEvidence();
+			Result = Panel->ExecutePlaceEvidence();
 			break;
 		case PerfectWorld::ExplainActionKind::PlaceLimitation:
 			if (Wanted.Limitation.empty())
 			{
-				Result = Panel->TriggerStateNoLimitation();
+				Result = Panel->ExecuteStateNoLimitation();
 			}
 			else
 			{
 				Panel->SelectLimitation(FString(UTF8_TO_TCHAR(Wanted.Limitation.c_str())));
-				Result = Panel->TriggerPlaceLimitation();
+				Result = Panel->ExecutePlaceLimitation();
 			}
 			break;
 		}
@@ -485,35 +486,40 @@ public:
 
 // ---- Words ------------------------------------------------------------------------------------------------------------------------
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FA2TTextBundleTest, "PerfectWorld.Phase2A2.TextTableMatchesTheJsonBundle",
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FA2TTextBundleTest, "PerfectWorld.Phase2A2.TextTableMatchesTheJsonBundles",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FA2TTextBundleTest::RunTest(const FString& Parameters)
 {
-	const FString Path = FPaths::Combine(FPaths::ProjectDir(), TEXT("Data/Text/en/phase2_a2.json"));
-	FString Source;
-	if (!TestTrue(TEXT("the bundle file is readable"), FFileHelper::LoadFileToString(Source, *Path)))
-	{
-		return false;
-	}
-	const PerfectWorld::JsonParseResult Parsed = PerfectWorld::ParseJson(TCHAR_TO_UTF8(*Source));
-	if (!TestTrue(TEXT("the bundle parses"), Parsed.Value.has_value()))
-	{
-		return false;
-	}
-	const PerfectWorld::JsonValue* Strings = Parsed.Value->Find("strings");
-	if (!TestTrue(TEXT("the bundle has strings"), Strings != nullptr && Strings->IsObject()))
-	{
-		return false;
-	}
+	// The one code table holds exactly the keys of both bundles, and no key is in both bundles.
 	TSet<FString> JsonKeys;
-	for (const auto& Member : Strings->Object)
+	for (const TCHAR* File : {TEXT("Data/Text/en/phase2_a2.json"), TEXT("Data/Text/en/phase2_a3.json")})
 	{
-		const FString Key = FString(UTF8_TO_TCHAR(Member.first.c_str()));
-		JsonKeys.Add(Key);
-		FText Found;
-		if (TestTrue(*(Key + TEXT(": the code table has it")), PWClassLesson::FindText(Key, Found)))
+		const FString Path = FPaths::Combine(FPaths::ProjectDir(), File);
+		FString Source;
+		if (!TestTrue(TEXT("the bundle file is readable"), FFileHelper::LoadFileToString(Source, *Path)))
 		{
-			TestEqual(*(Key + TEXT(": same words")), Found.ToString(), FString(UTF8_TO_TCHAR(Member.second.String.c_str())));
+			return false;
+		}
+		const PerfectWorld::JsonParseResult Parsed = PerfectWorld::ParseJson(TCHAR_TO_UTF8(*Source));
+		if (!TestTrue(TEXT("the bundle parses"), Parsed.Value.has_value()))
+		{
+			return false;
+		}
+		const PerfectWorld::JsonValue* Strings = Parsed.Value->Find("strings");
+		if (!TestTrue(TEXT("the bundle has strings"), Strings != nullptr && Strings->IsObject()))
+		{
+			return false;
+		}
+		for (const auto& Member : Strings->Object)
+		{
+			const FString Key = FString(UTF8_TO_TCHAR(Member.first.c_str()));
+			TestFalse(*(Key + TEXT(": is in one bundle only")), JsonKeys.Contains(Key));
+			JsonKeys.Add(Key);
+			FText Found;
+			if (TestTrue(*(Key + TEXT(": the code table has it")), PWClassLesson::FindText(Key, Found)))
+			{
+				TestEqual(*(Key + TEXT(": same words")), Found.ToString(), FString(UTF8_TO_TCHAR(Member.second.String.c_str())));
+			}
 		}
 	}
 	for (const FString& Key : PWClassLesson::KnownTextKeys())
@@ -577,25 +583,24 @@ bool FA2TModelFlowTest::RunTest(const FString& Parameters)
 	const TSharedRef<SPWClassModel> Panel = SNew(SPWClassModel)
 		.Bridge(Bridge)
 		.Space(FVector2D(1920.0, 1080.0))
-		.OnClosed(FSimpleDelegate::CreateLambda([&Closed]() { ++Closed; }));
+		.OnClose(FSimpleDelegate::CreateLambda([&Closed]() { ++Closed; }));
 
 	// The period screen: three ways to take it, the foreground one open, the routine one refused with the core's own reason.
 	TArray<FString> Texts = A2TShownTexts(Panel);
 	TestTrue(TEXT("the lesson is named after its family when no title text exists"), A2THas(Texts, FString(UTF8_TO_TCHAR(F->Model.Families.front().Name.c_str()))));
-	TestEqual(TEXT("three ways to take the period"), A2TCountTag(Panel, PWClassLesson::ModeCardTag), 3);
-	const TSharedPtr<SButton> Foreground = A2TFindButton(Panel, A2TWord(TEXT("phase2.a2.common.open_foreground")));
-	const TSharedPtr<SButton> Routine = A2TFindButton(Panel, A2TWord(TEXT("phase2.a2.common.open_routine")));
-	if (!TestTrue(TEXT("both buttons exist"), Foreground.IsValid() && Routine.IsValid()))
+	TestEqual(TEXT("three ways to take the period and three goals"), A2TCountTag(Panel, PWClassLesson::RowTag), 6);
+	if (!TestTrue(TEXT("all three modes and Start are offered"), Panel->HasAction(TEXT("mode.foreground")) && Panel->HasAction(TEXT("mode.routine")) &&
+		Panel->HasAction(TEXT("mode.attend")) && Panel->HasAction(TEXT("open"))))
 	{
 		return false;
 	}
-	TestTrue(TEXT("foreground is open"), Foreground->IsEnabled());
-	TestFalse(TEXT("routine needs mastery"), Routine->IsEnabled());
+	TestTrue(TEXT("foreground is open"), Panel->IsActionEnabled(TEXT("mode.foreground")));
+	TestFalse(TEXT("routine needs mastery"), Panel->IsActionEnabled(TEXT("mode.routine")));
 	TestTrue(TEXT("the routine refusal is the core's reason in words"), A2THas(Texts, A2TWord(TEXT("school.session.not_secure"))));
 	TestTrue(TEXT("the goal is chosen first"), A2THas(Texts, A2TWord(TEXT("phase2.a2.model.goal.test_measurements"))));
 
-	Panel->SelectGoal(PerfectWorld::ModelGoal::TestMeasurements);
-	const PerfectWorld::SchoolSessionResult Opened = Panel->TriggerOpenLesson(PerfectWorld::SchoolLessonMode::Foreground);
+	TestTrue(TEXT("the goal is chosen first"), Panel->SetGoalIndex(1));
+	const PerfectWorld::SchoolSessionResult Opened = Panel->ExecuteOpen(PerfectWorld::SchoolLessonMode::Foreground);
 	if (!TestTrue(TEXT("the core opens the lesson"), Opened.Ok()) || !TestTrue(TEXT("a session exists"), Sessions.Active.has_value()))
 	{
 		return false;
@@ -606,8 +611,8 @@ bool FA2TModelFlowTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("the first step is named"), A2THas(Texts, A2TWord(TEXT("phase2.a2.model.beat.build_model"))));
 	TestFalse(TEXT("no result is shown before the lesson resolves"), A2THasSubstring(Texts, TEXT("Result:")));
 	TestFalse(TEXT("the hidden fault is never named"), A2THasSubstring(Texts, TEXT("hidden_flow")));
-	TestTrue(TEXT("units are shown"), A2THasSubstring(Texts, TEXT("Units remaining:")));
-	TestTrue(TEXT("every link is a choice"), A2TCountTag(Panel, PWClassLesson::ChoiceTag) >= 2);
+	TestTrue(TEXT("units are shown"), A2THasSubstring(Texts, TEXT("Time left:")));
+	TestTrue(TEXT("every link is a choice"), A2TCountTag(Panel, PWClassLesson::RowTag) >= 2);
 
 	int32 Charged = 0;
 	if (!TestTrue(TEXT("the lesson plays to its end"), A2TPlayModel(*this, Panel, Sessions, Cats, Charged)))
@@ -626,7 +631,7 @@ bool FA2TModelFlowTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("nothing is credited before the close"), A2TCompleted(Panel->GetLastResult().Events) ? 1 : 0, 0);
 	TestTrue(TEXT("a ready lesson offers the close"), A2TFindButton(Panel, A2TWord(TEXT("phase2.a2.common.complete_lesson"))).IsValid());
 	TestFalse(TEXT("a resolved foreground lesson cannot be cancelled for free mastery"),
-		A2TFindButton(Panel, A2TWord(TEXT("phase2.a2.common.cancel_lesson"))).IsValid());
+		A2TFindButton(Panel, A2TWord(TEXT("phase2.a3.common.leave"))).IsValid());
 
 	if (!TestTrue(TEXT("the close button is pressed"), A2TClick(Panel, A2TWord(TEXT("phase2.a2.common.complete_lesson")))))
 	{
@@ -635,7 +640,7 @@ bool FA2TModelFlowTest::RunTest(const FString& Parameters)
 	TestFalse(TEXT("the session is closed"), Sessions.Active.has_value());
 	TestTrue(TEXT("the period is recorded as completed"), !Sessions.Periods.empty() && Sessions.Periods.back().Completed && !Sessions.Periods.back().Cancelled);
 	TestTrue(TEXT("learning was emitted once, at the close"), A2TCompleted(Panel->GetLastResult().Events));
-	TestTrue(TEXT("the summary is shown"), Panel->IsSummaryShown() && A2TCountTag(Panel, PWClassLesson::SummaryTag) == 1);
+	TestTrue(TEXT("the summary is shown"), Panel->IsLessonClosed() && A2TCountTag(Panel, PWClassLesson::SummaryTag) == 1);
 
 	// A second close of the same session is the core's refusal, never a second credit.
 	const PerfectWorld::SchoolSessionsState Before = Sessions;
@@ -643,7 +648,7 @@ bool FA2TModelFlowTest::RunTest(const FString& Parameters)
 	TestFalse(TEXT("a second close is refused"), Again.Ok());
 	TestTrue(TEXT("and changes nothing"), Sessions == Before);
 
-	Panel->RequestLeavePanel();
+	Panel->RequestClose();
 	TestEqual(TEXT("leaving tells the host once"), Closed, 1);
 	return true;
 }
@@ -670,7 +675,7 @@ bool FA2TCancelTest::RunTest(const FString& Parameters)
 		const TSharedRef<PWClassLesson::FCoreBridge> Bridge =
 			MakeShared<PWClassLesson::FCoreBridge>(Sessions, Day, Cats, F->Binding(PerfectWorld::SchoolStructure::Model, 0, Cats), 100000, 7ULL);
 		const TSharedRef<SPWClassModel> Panel = SNew(SPWClassModel).Bridge(Bridge).Space(FVector2D(1280.0, 720.0));
-		if (!TestTrue(TEXT("opens"), Panel->TriggerOpenLesson(PerfectWorld::SchoolLessonMode::Foreground).Ok()))
+		if (!TestTrue(TEXT("opens"), Panel->ExecuteOpen(PerfectWorld::SchoolLessonMode::Foreground).Ok()))
 		{
 			return false;
 		}
@@ -682,7 +687,7 @@ bool FA2TCancelTest::RunTest(const FString& Parameters)
 		const PerfectWorld::ModelAction First = PerfectWorld::ModelStandardAction(*Def, Sessions.Model.Exposure);
 		if (First.Kind == PerfectWorld::ModelActionKind::WorkedExample)
 		{
-			TestTrue(TEXT("a first choice is made"), Panel->TriggerWorkedExample().Ok());
+			TestTrue(TEXT("a first choice is made"), Panel->ExecuteWorkedExample().Ok());
 		}
 		else
 		{
@@ -690,18 +695,18 @@ bool FA2TCancelTest::RunTest(const FString& Parameters)
 			{
 				Panel->ToggleLink(FString(UTF8_TO_TCHAR(Id.c_str())));
 			}
-			TestTrue(TEXT("a first choice is made"), Panel->TriggerCommitModel().Ok());
+			TestTrue(TEXT("a first choice is made"), Panel->ExecuteCommitModel().Ok());
 		}
-		TestTrue(TEXT("a foreground lesson can be cancelled"), A2TFindButton(Panel, A2TWord(TEXT("phase2.a2.common.cancel_lesson"))).IsValid());
-		TestTrue(TEXT("first press arms"), A2TClick(Panel, A2TWord(TEXT("phase2.a2.common.cancel_lesson"))));
-		TestTrue(TEXT("armed, and nothing is cancelled yet"), Panel->IsCancelArmed() && Sessions.Active.has_value());
+		TestTrue(TEXT("a foreground lesson can be cancelled"), A2TFindButton(Panel, A2TWord(TEXT("phase2.a3.common.leave"))).IsValid());
+		TestTrue(TEXT("first press arms"), A2TClick(Panel, A2TWord(TEXT("phase2.a3.common.leave"))));
+		TestTrue(TEXT("armed, and nothing is cancelled yet"), Panel->IsLeaveArmed() && Sessions.Active.has_value());
 		TestTrue(TEXT("the button now asks for confirmation"), A2TFindButton(Panel, A2TWord(TEXT("phase2.a2.common.confirm_cancel"))).IsValid());
 		TestTrue(TEXT("second press cancels"), A2TClick(Panel, A2TWord(TEXT("phase2.a2.common.confirm_cancel"))));
 		TestFalse(TEXT("the session is gone"), Sessions.Active.has_value());
 		TestTrue(TEXT("recorded as cancelled, not completed"), Sessions.Periods.back().Cancelled && !Sessions.Periods.back().Completed);
 		TestFalse(TEXT("cancellation emits no learning"), A2TCompleted(Panel->GetLastResult().Events));
 		TestTrue(TEXT("the summary says it was cancelled"),
-			A2THas(A2TShownTexts(Panel), A2TWord(TEXT("phase2.a2.common.summary.cancelled"))) && Panel->IsSummaryShown());
+			A2THas(A2TShownTexts(Panel), A2TWord(TEXT("phase2.a2.common.summary.cancelled"))) && Panel->IsLessonClosed());
 	}
 
 	// Period 1: a second foreground lesson is allowed; cancel it directly.
@@ -713,8 +718,8 @@ bool FA2TCancelTest::RunTest(const FString& Parameters)
 		const TSharedRef<PWClassLesson::FCoreBridge> Bridge =
 			MakeShared<PWClassLesson::FCoreBridge>(Sessions, Day, Cats, F->Binding(PerfectWorld::SchoolStructure::Model, 1, Cats), 100000, 8ULL);
 		const TSharedRef<SPWClassModel> Panel = SNew(SPWClassModel).Bridge(Bridge).Space(FVector2D(1280.0, 720.0));
-		TestTrue(TEXT("the second foreground lesson opens"), Panel->TriggerOpenLesson(PerfectWorld::SchoolLessonMode::Foreground).Ok());
-		TestTrue(TEXT("and cancels"), Panel->TriggerCancelLesson().Ok());
+		TestTrue(TEXT("the second foreground lesson opens"), Panel->ExecuteOpen(PerfectWorld::SchoolLessonMode::Foreground).Ok());
+		TestTrue(TEXT("and cancels"), Panel->ExecuteClose(true).Ok());
 	}
 
 	// Period 2: the third foreground lesson of the day is refused by the core, and the screen says so in words.
@@ -726,18 +731,16 @@ bool FA2TCancelTest::RunTest(const FString& Parameters)
 		const TSharedRef<PWClassLesson::FCoreBridge> Bridge =
 			MakeShared<PWClassLesson::FCoreBridge>(Sessions, Day, Cats, F->Binding(PerfectWorld::SchoolStructure::Model, 2, Cats), 100000, 9ULL);
 		const TSharedRef<SPWClassModel> Panel = SNew(SPWClassModel).Bridge(Bridge).Space(FVector2D(1280.0, 720.0));
-		const TSharedPtr<SButton> Foreground = A2TFindButton(Panel, A2TWord(TEXT("phase2.a2.common.open_foreground")));
-		TestTrue(TEXT("the button is there and closed"), Foreground.IsValid() && !Foreground->IsEnabled());
+		TestTrue(TEXT("the foreground choice is there and closed"), Panel->HasAction(TEXT("mode.foreground")) && !Panel->IsActionEnabled(TEXT("mode.foreground")));
 		TestTrue(TEXT("the limit is explained"), A2THas(A2TShownTexts(Panel), A2TWord(TEXT("school.session.foreground_limit"))));
 		const PerfectWorld::SchoolSessionsState Before = Sessions;
-		const PerfectWorld::SchoolSessionResult Refused = Panel->TriggerOpenLesson(PerfectWorld::SchoolLessonMode::Foreground);
+		const PerfectWorld::SchoolSessionResult Refused = Panel->ExecuteOpen(PerfectWorld::SchoolLessonMode::Foreground);
 		TestFalse(TEXT("the core refuses a third"), Refused.Ok());
 		TestEqual(TEXT("with its own code"), Panel->GetLastIssueCode(), FString(TEXT("school.session.foreground_limit")));
 		TestTrue(TEXT("nothing changed"), Sessions == Before);
-		TestEqual(TEXT("the status line is the sentence"), Panel->GetLastStatusText(), A2TWord(TEXT("school.session.foreground_limit")));
+		TestEqual(TEXT("the status line is the sentence"), Panel->GetBanner().ToString(), A2TWord(TEXT("school.session.foreground_limit")));
 		// Attend is still a legitimate choice and never costs a foreground slot.
-		TestTrue(TEXT("attend remains open"), A2TFindButton(Panel, A2TWord(TEXT("phase2.a2.common.open_attend"))).IsValid() &&
-			A2TFindButton(Panel, A2TWord(TEXT("phase2.a2.common.open_attend")))->IsEnabled());
+		TestTrue(TEXT("attend remains open"), Panel->IsActionEnabled(TEXT("mode.attend")));
 	}
 	return true;
 }
@@ -770,8 +773,8 @@ bool FA2TRoutineParityTest::RunTest(const FString& Parameters)
 		const TSharedRef<PWClassLesson::FCoreBridge> Bridge = MakeShared<PWClassLesson::FCoreBridge>(Sessions, Day, Cats, Binding, 100000, 17ULL);
 		const TSharedRef<SPWClassModel> Panel = SNew(SPWClassModel).Bridge(Bridge).Space(FVector2D(1280.0, 720.0));
 		int32 Charged = 0;
-		if (!TestTrue(TEXT("a practice lesson opens"), Panel->TriggerOpenLesson(PerfectWorld::SchoolLessonMode::Foreground).Ok()) ||
-			!A2TPlayModel(*this, Panel, Sessions, Cats, Charged) || !TestTrue(TEXT("and closes"), Panel->TriggerCloseLesson().Ok()))
+		if (!TestTrue(TEXT("a practice lesson opens"), Panel->ExecuteOpen(PerfectWorld::SchoolLessonMode::Foreground).Ok()) ||
+			!A2TPlayModel(*this, Panel, Sessions, Cats, Charged) || !TestTrue(TEXT("and closes"), Panel->ExecuteClose(false).Ok()))
 		{
 			return false;
 		}
@@ -796,16 +799,15 @@ bool FA2TRoutineParityTest::RunTest(const FString& Parameters)
 	{
 		const TSharedRef<PWClassLesson::FCoreBridge> Bridge = MakeShared<PWClassLesson::FCoreBridge>(Sessions, RoutineDay, Cats, Binding, 100000, 17ULL);
 		const TSharedRef<SPWClassModel> Panel = SNew(SPWClassModel).Bridge(Bridge).Space(FVector2D(1280.0, 720.0));
-		const TSharedPtr<SButton> Routine = A2TFindButton(Panel, A2TWord(TEXT("phase2.a2.common.open_routine")));
-		TestTrue(TEXT("routine is offered once the method is secure"), Routine.IsValid() && Routine->IsEnabled());
+		TestTrue(TEXT("routine is offered once the method is secure"), Panel->IsActionEnabled(TEXT("mode.routine")));
 		TestTrue(TEXT("mastery is stated"), A2THas(A2TShownTexts(Panel), A2TWord(TEXT("phase2.a2.common.mastery.secure"))));
-		if (!TestTrue(TEXT("the routine button is pressed"), A2TClick(Panel, A2TWord(TEXT("phase2.a2.common.open_routine")))) ||
+		if (!TestTrue(TEXT("the routine button is pressed"), Panel->PressAction(TEXT("mode.routine")) && Panel->PressAction(TEXT("open"))) ||
 			!TestTrue(TEXT("routine is ready at once"), Sessions.Active.has_value() && Sessions.Active->ReadyToClose))
 		{
 			return false;
 		}
 		TestTrue(TEXT("the routine screen says no manual play"), A2THas(A2TShownTexts(Panel), A2TWord(TEXT("phase2.a2.common.outcome.routine"))));
-		if (!TestTrue(TEXT("routine closes"), Panel->TriggerCloseLesson().Ok()))
+		if (!TestTrue(TEXT("routine closes"), Panel->ExecuteClose(false).Ok()))
 		{
 			return false;
 		}
@@ -817,8 +819,8 @@ bool FA2TRoutineParityTest::RunTest(const FString& Parameters)
 			MakeShared<PWClassLesson::FCoreBridge>(ManualSessions, ManualDay, Cats, Binding, 100000, 17ULL);
 		const TSharedRef<SPWClassModel> Panel = SNew(SPWClassModel).Bridge(Bridge).Space(FVector2D(1280.0, 720.0));
 		int32 Charged = 0;
-		if (!TestTrue(TEXT("the careful foreground lesson opens"), Panel->TriggerOpenLesson(PerfectWorld::SchoolLessonMode::Foreground).Ok()) ||
-			!A2TPlayModel(*this, Panel, ManualSessions, Cats, Charged) || !TestTrue(TEXT("and closes"), Panel->TriggerCloseLesson().Ok()))
+		if (!TestTrue(TEXT("the careful foreground lesson opens"), Panel->ExecuteOpen(PerfectWorld::SchoolLessonMode::Foreground).Ok()) ||
+			!A2TPlayModel(*this, Panel, ManualSessions, Cats, Charged) || !TestTrue(TEXT("and closes"), Panel->ExecuteClose(false).Ok()))
 		{
 			return false;
 		}
@@ -863,12 +865,12 @@ bool FA2TFakeBridgeTest::RunTest(const FString& Parameters)
 	Fake->OpenAnswer.Issue.Code = "school.session.not_at_bell";
 
 	const TSharedRef<SPWClassModel> Panel = SNew(SPWClassModel).Bridge(Fake).Space(FVector2D(1280.0, 720.0));
-	const PerfectWorld::SchoolSessionResult Refused = Panel->TriggerOpenLesson(PerfectWorld::SchoolLessonMode::Attend);
+	const PerfectWorld::SchoolSessionResult Refused = Panel->ExecuteOpen(PerfectWorld::SchoolLessonMode::Attend);
 	TestFalse(TEXT("the bridge's refusal is passed on"), Refused.Ok());
 	TestEqual(TEXT("one open command"), Fake->OpenCalls, 1);
 	TestEqual(TEXT("the mode is the one chosen"), static_cast<int32>(Fake->LastMode), static_cast<int32>(PerfectWorld::SchoolLessonMode::Attend));
 	TestEqual(TEXT("the code is kept"), Panel->GetLastIssueCode(), FString(TEXT("school.session.not_at_bell")));
-	TestEqual(TEXT("the sentence is shown"), Panel->GetLastStatusText(), A2TWord(TEXT("school.session.not_at_bell")));
+	TestEqual(TEXT("the sentence is shown"), Panel->GetBanner().ToString(), A2TWord(TEXT("school.session.not_at_bell")));
 	TestTrue(TEXT("on screen"), A2THas(A2TShownTexts(Panel), A2TWord(TEXT("school.session.not_at_bell"))));
 	TestFalse(TEXT("no session appears"), Panel->GetDisplayedSession() != 0);
 
@@ -882,36 +884,52 @@ bool FA2TFakeBridgeTest::RunTest(const FString& Parameters)
 	Fake->Lesson.Model.Exposure.CaseId = "case.fake";
 	Fake->Lesson.Model.Exposure.UnitsTotal = 9;
 	Fake->Lesson.Model.Exposure.UnitsLeft = 5;
-	Panel->RefreshFromSession();
+	Panel->RefreshModel();
 	TestEqual(TEXT("the screen shows session 7"), Panel->GetDisplayedSession(), static_cast<uint64>(7));
 	Fake->ChooseAnswer.Issue.Code = "school.session.stale_session";
-	const PerfectWorld::SchoolSessionResult Stale = Panel->TriggerWorkedExample();
+	const PerfectWorld::SchoolSessionResult Stale = Panel->ExecuteWorkedExample();
 	TestFalse(TEXT("a stale choice is refused by the world"), Stale.Ok());
 	TestEqual(TEXT("and carried the displayed session"), Fake->LastChooseSession, static_cast<uint64>(7));
-	TestEqual(TEXT("its sentence is shown"), Panel->GetLastStatusText(), A2TWord(TEXT("school.session.stale_session")));
+	TestEqual(TEXT("its sentence is shown"), Panel->GetBanner().ToString(), A2TWord(TEXT("school.session.stale_session")));
 
 	// Cancelling reports the working time spent so far: (9 - 5) units of five minutes.
-	const PerfectWorld::SchoolSessionResult Cancelled = Panel->TriggerCancelLesson();
+	const PerfectWorld::SchoolSessionResult Cancelled = Panel->ExecuteClose(true);
 	TestEqual(TEXT("one close command"), Fake->CloseCalls, 1);
 	TestTrue(TEXT("a cancel"), Fake->bLastCloseCancel);
 	TestEqual(TEXT("with session 7"), Fake->LastCloseSession, static_cast<uint64>(7));
 	TestEqual(TEXT("and the elapsed working time"), Fake->LastElapsed, 20);
 	TestTrue(TEXT("the fake accepts"), Cancelled.Ok());
-	// A normal close sends elapsed 0.
+	TestTrue(TEXT("after the core accepted it the screen is closed and sends nothing more"), Panel->IsLessonClosed() && !Panel->ExecuteClose(true).Ok() && Fake->CloseCalls == 1);
+
+	// A normal close sends elapsed 0, on a fresh screen over the finished lesson.
 	Fake->Lesson.Run->ReadyToClose = true;
-	Panel->RefreshFromSession();
-	Panel->TriggerCloseLesson();
-	TestTrue(TEXT("a normal close"), !Fake->bLastCloseCancel && Fake->LastElapsed == 0);
+	{
+		const TSharedRef<SPWClassModel> Finished = SNew(SPWClassModel).Bridge(Fake).Space(FVector2D(1280.0, 720.0));
+		TestTrue(TEXT("a lesson left open is resumed by a new screen"), Finished->GetDisplayedSession() == 7);
+		Finished->ExecuteClose(false);
+		TestTrue(TEXT("a normal close"), !Fake->bLastCloseCancel && Fake->LastElapsed == 0 && Fake->LastCloseSession == 7);
+	}
 
 	// A lesson open for another period is never driven by this screen.
 	Fake->Lesson.Run->Binding.Id = "school.lesson.other";
-	Panel->SetBridge(Fake);
-	TestTrue(TEXT("another lesson is open, and the screen says so"), A2THas(A2TShownTexts(Panel), A2TWord(TEXT("phase2.a2.common.other_session"))));
+	{
+		const TSharedRef<SPWClassModel> Other = SNew(SPWClassModel).Bridge(Fake).Space(FVector2D(1280.0, 720.0));
+		TestTrue(TEXT("another lesson is open, and the screen says so"), A2THas(A2TShownTexts(Other), A2TWord(TEXT("phase2.a3.common.other_lesson"))));
+		TestFalse(TEXT("and Leave early is not offered for it"), Other->CanLeaveEarly());
+		const int32 Calls = Fake->CloseCalls;
+		TestFalse(TEXT("nor can it be closed from here"), Other->ExecuteClose(false).Ok());
+		TestEqual(TEXT("no command was sent"), Fake->CloseCalls, Calls);
+	}
 
 	// A binding of another structure is not this screen's.
 	Fake->Binding.Structure = PerfectWorld::SchoolStructure::Explain;
-	Panel->SetBridge(Fake);
-	TestTrue(TEXT("the wrong kind of lesson is refused in words"), A2THas(A2TShownTexts(Panel), A2TWord(TEXT("phase2.a2.common.wrong_screen"))));
+	{
+		const TSharedRef<SPWClassModel> Wrong = SNew(SPWClassModel).Bridge(Fake).Space(FVector2D(1280.0, 720.0));
+		TestTrue(TEXT("the wrong kind of lesson is refused in words"), A2THas(A2TShownTexts(Wrong), A2TWord(TEXT("phase2.a2.common.wrong_screen"))));
+		const int32 Opens = Fake->OpenCalls;
+		TestFalse(TEXT("and never driven"), Wrong->ExecuteOpen(PerfectWorld::SchoolLessonMode::Foreground).Ok());
+		TestEqual(TEXT("no open was sent"), Fake->OpenCalls, Opens);
+	}
 	return true;
 }
 
@@ -937,8 +955,8 @@ bool FA2TKeysTest::RunTest(const FString& Parameters)
 	const TSharedRef<SPWClassModel> Panel = SNew(SPWClassModel)
 		.Bridge(Bridge)
 		.Space(FVector2D(853.0, 480.0))
-		.OnClosed(FSimpleDelegate::CreateLambda([&Closed]() { ++Closed; }));
-	if (!TestTrue(TEXT("opens"), Panel->TriggerOpenLesson(PerfectWorld::SchoolLessonMode::Foreground).Ok()))
+		.OnClose(FSimpleDelegate::CreateLambda([&Closed]() { ++Closed; }));
+	if (!TestTrue(TEXT("opens"), Panel->ExecuteOpen(PerfectWorld::SchoolLessonMode::Foreground).Ok()))
 	{
 		return false;
 	}
@@ -955,6 +973,9 @@ bool FA2TKeysTest::RunTest(const FString& Parameters)
 	const TSharedRef<SPWClassModel> Again = SNew(SPWClassModel).Bridge(Bridge).Space(FVector2D(853.0, 480.0));
 	TestEqual(TEXT("the same session is shown"), Again->GetDisplayedSession(), Session);
 	TestTrue(TEXT("with its first step"), A2THas(A2TShownTexts(Again), A2TWord(TEXT("phase2.a2.model.beat.build_model"))));
+	TestTrue(TEXT("and says it is a lesson resumed"), A2THas(A2TShownTexts(Again), A2TWord(TEXT("phase2.a2.common.resumed"))));
+	TestTrue(TEXT("Back and Leave early are both on screen at 853x480"),
+		A2TFindButton(Again, A2TWord(TEXT("phase2.a3.common.back"))).IsValid() && A2TFindButton(Again, A2TWord(TEXT("phase2.a3.common.leave"))).IsValid());
 	return true;
 }
 
@@ -989,9 +1010,9 @@ bool FA2TFitTest::RunTest(const FString& Parameters)
 		const FString Name = FString::Printf(TEXT("%dx%d"), static_cast<int32>(Size.X), static_cast<int32>(Size.Y));
 		TestTrue(*(Name + TEXT(": the period screen is not wider than the space")), Desired.X <= Size.X + 0.5);
 		TestTrue(*(Name + TEXT(": the period screen is not taller than the space")), Desired.Y <= Size.Y + 0.5);
-		TestEqual(*(Name + TEXT(": the pane arrangement follows the space")), Panel->IsTwoPane(), PWClassLesson::TwoPane(Size));
+		TestFalse(*(Name + TEXT(": the period screen is one pane")), Panel->IsSplit());
 	}
-	if (!TestTrue(TEXT("opens"), Panel->TriggerOpenLesson(PerfectWorld::SchoolLessonMode::Foreground).Ok()))
+	if (!TestTrue(TEXT("opens"), Panel->ExecuteOpen(PerfectWorld::SchoolLessonMode::Foreground).Ok()))
 	{
 		return false;
 	}
@@ -1004,11 +1025,12 @@ bool FA2TFitTest::RunTest(const FString& Parameters)
 		const FString Name = FString::Printf(TEXT("%dx%d"), static_cast<int32>(Size.X), static_cast<int32>(Size.Y));
 		TestTrue(*(Name + TEXT(": the running lesson is not wider than the space")), Desired.X <= Size.X + 0.5);
 		TestTrue(*(Name + TEXT(": the running lesson is not taller than the space")), Desired.Y <= Size.Y + 0.5);
-		TestEqual(*(Name + TEXT(": the pane arrangement follows the space")), Panel->IsTwoPane(), PWClassLesson::TwoPane(Size));
+		TestEqual(*(Name + TEXT(": the running lesson is split exactly when there is room")), Panel->IsSplit(), PWClassLesson::TwoPane(Size));
 		TestTrue(*(Name + TEXT(": the first step is on screen")), A2THas(A2TShownTexts(Panel), A2TWord(TEXT("phase2.a2.model.beat.build_model"))));
 		(void)bChanged;
 	}
-	TestTrue(TEXT("Leave is always on screen"), A2TFindButton(Panel, A2TWord(TEXT("phase2.a2.common.leave_panel"))).IsValid());
+	TestTrue(TEXT("Back is always on screen"), A2TFindButton(Panel, A2TWord(TEXT("phase2.a3.common.back"))).IsValid());
+	TestTrue(TEXT("and so is Leave early while a lesson runs"), A2TFindButton(Panel, A2TWord(TEXT("phase2.a3.common.leave"))).IsValid());
 	return true;
 }
 
@@ -1034,8 +1056,8 @@ bool FA2TExplainFlowTest::RunTest(const FString& Parameters)
 		MakeShared<PWClassLesson::FCoreBridge>(Sessions, Day, Cats, F->Binding(PerfectWorld::SchoolStructure::Explain, 0, Cats), 100000, 31ULL);
 	const TSharedRef<SPWClassExplain> Panel = SNew(SPWClassExplain).Bridge(Bridge).Space(FVector2D(1920.0, 1080.0));
 	TestTrue(TEXT("the explain goals are offered"), A2THas(A2TShownTexts(Panel), A2TWord(TEXT("phase2.a2.explain.goal.state_limits"))));
-	Panel->SelectGoal(PerfectWorld::ExplainGoal::StateLimits);
-	if (!TestTrue(TEXT("opens"), Panel->TriggerOpenLesson(PerfectWorld::SchoolLessonMode::Foreground).Ok()))
+	TestTrue(TEXT("the third goal is chosen"), Panel->SetGoalIndex(2));
+	if (!TestTrue(TEXT("opens"), Panel->ExecuteOpen(PerfectWorld::SchoolLessonMode::Foreground).Ok()))
 	{
 		return false;
 	}
@@ -1094,7 +1116,7 @@ bool FA2TExplainCancelTest::RunTest(const FString& Parameters)
 	const TSharedRef<PWClassLesson::FCoreBridge> Bridge =
 		MakeShared<PWClassLesson::FCoreBridge>(Sessions, Day, Cats, F->Binding(PerfectWorld::SchoolStructure::Explain, 0, Cats), 100000, 41ULL);
 	const TSharedRef<SPWClassExplain> Panel = SNew(SPWClassExplain).Bridge(Bridge).Space(FVector2D(1280.0, 720.0));
-	if (!TestTrue(TEXT("opens"), Panel->TriggerOpenLesson(PerfectWorld::SchoolLessonMode::Foreground).Ok()))
+	if (!TestTrue(TEXT("opens"), Panel->ExecuteOpen(PerfectWorld::SchoolLessonMode::Foreground).Ok()))
 	{
 		return false;
 	}
@@ -1105,13 +1127,13 @@ bool FA2TExplainCancelTest::RunTest(const FString& Parameters)
 		return true;
 	}
 	// Choosing nothing is refused by the screen without a command; a real claim is committed by the core.
-	TestFalse(TEXT("no claim, no command"), Panel->TriggerChooseClaim().Ok());
+	TestFalse(TEXT("no claim, no command"), Panel->ExecuteChooseClaim().Ok());
 	Panel->SelectClaim(FString(UTF8_TO_TCHAR(Def->Claims.front().Id.c_str())));
 	PerfectWorld::ExplainAction ClaimAction;
 	ClaimAction.Kind = PerfectWorld::ExplainActionKind::ChooseClaim;
 	ClaimAction.Claim = Def->Claims.front().Id;
 	const PerfectWorld::SchoolLessonQuote ClaimQuote = PerfectWorld::QuoteSchoolLessonAction(Sessions, Cats, Sessions.Active->Session, PerfectWorld::SchoolLessonAction(ClaimAction));
-	const PerfectWorld::SchoolSessionResult Chose = Panel->TriggerChooseClaim();
+	const PerfectWorld::SchoolSessionResult Chose = Panel->ExecuteChooseClaim();
 	if (!TestTrue(TEXT("a claim is committed"), Chose.Ok()))
 	{
 		return false;
@@ -1123,10 +1145,10 @@ bool FA2TExplainCancelTest::RunTest(const FString& Parameters)
 		Panel->ToggleEvidence(FString(UTF8_TO_TCHAR(Def->Evidence[static_cast<size_t>(Index)].Id.c_str())));
 	}
 	TestEqual(TEXT("two slots only"), Panel->GetSelectedEvidence().Num(), static_cast<int32>(PerfectWorld::ExplainEvidenceSlots));
-	TestEqual(TEXT("the screen says why"), Panel->GetLastStatusText(),
+	TestEqual(TEXT("the screen says why"), Panel->GetBanner().ToString(),
 		PWClassLesson::Text1(TEXT("phase2.a2.explain.status.slots_full"), PWClassLesson::Number(static_cast<int64>(PerfectWorld::ExplainEvidenceSlots))).ToString());
 	// Cancel with the working time spent so far; no learning, the period record says cancelled.
-	const PerfectWorld::SchoolSessionResult Cancelled = Panel->TriggerCancelLesson();
+	const PerfectWorld::SchoolSessionResult Cancelled = Panel->ExecuteClose(true);
 	TestTrue(TEXT("the core cancels"), Cancelled.Ok());
 	TestTrue(TEXT("cancelled, not completed"), !Sessions.Active.has_value() && Sessions.Periods.back().Cancelled && !Sessions.Periods.back().Completed);
 	TestFalse(TEXT("no learning"), A2TCompleted(Cancelled.Events));

@@ -1,6 +1,7 @@
-// Order A3: the Investigate and Coordinate lesson screens (SPWClassInvestigate, SPWClassCoordinate) over the frozen SchoolSessions contract.
+// Lessons (order A3 consolidated): the Investigate and Coordinate lesson screens (SPWClassInvestigate, SPWClassCoordinate) on the shared shell
+// (SPWClassLesson) over the frozen SchoolSessions contract. The model and explain screens and the shared words are in PerfectWorldPhase2A2Tests.cpp.
 // Run in the editor under "PerfectWorld.Phase2.A3". The widgets are the real ones, built without a window; the core is the real portable
-// SchoolSessions over the real Data/Content catalogues, reached through PWClassA3::FCoreLessonBridge. What needs a real window (focus
+// SchoolSessions over the real Data/Content catalogues, reached through PWClassLesson::FCoreBridge. What needs a real window (focus
 // travel, the pause menu hosting) is for the integrator's acceptance scenario, not here.
 
 #include "Misc/AutomationTest.h"
@@ -18,6 +19,8 @@
 #include "Widgets/Text/STextBlock.h"
 
 namespace
+{
+namespace ClT3
 {
 using namespace PerfectWorld;
 
@@ -184,7 +187,7 @@ FKeyEvent A3TstKey(const FKey Key, const bool bRepeat = false)
 }
 
 /** A bridge that refuses everything the core could, to prove a screen only reports. */
-class FA3TstRefusingBridge final : public PWClassA3::ILessonBridge
+class FA3TstRefusingBridge final : public PWClassLesson::IBridge
 {
 public:
     SchoolLessonBinding Binding;
@@ -215,42 +218,58 @@ public:
     virtual SchoolSessionResult ChooseAction(uint64, const SchoolLessonAction&) override { return {}; }
     virtual SchoolSessionResult CloseLesson(uint64, bool, int32) override { return {}; }
 };
+} // namespace ClT3
 } // namespace
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FA3TstWordsTest, "PerfectWorld.Phase2.A3.Words", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FA3TstWordsTest::RunTest(const FString& Parameters)
 {
-    TestTrue(TEXT("a phone-sized logical window is compact"), PWClassA3::Compact(569.0f, 320.0f));
-    TestTrue(TEXT("a 720p window at 150% text is compact"), PWClassA3::Compact(1280.0f, 720.0f));
-    TestFalse(TEXT("a 1080p window at 100% is not compact"), PWClassA3::Compact(1920.0f, 1080.0f));
+    using namespace ClT3;
+    using namespace PerfectWorld;
+    TestTrue(TEXT("a phone-sized logical window is compact"), PWClassLesson::Compact(FVector2D(569.0, 320.0)));
+    TestTrue(TEXT("a 720p window at 150% text is compact"), PWClassLesson::Compact(FVector2D(1280.0, 720.0)));
+    TestFalse(TEXT("a 1080p window at 100% is not compact"), PWClassLesson::Compact(FVector2D(1920.0, 1080.0)));
     for (const FVector2D Size : {FVector2D(569.0, 320.0), FVector2D(1280.0, 720.0), FVector2D(1920.0, 1080.0)})
     {
-        TestTrue(TEXT("the panel fits its window"), PWClassA3::PanelWidth(Size.X, Size.Y) <= Size.X);
-        TestTrue(TEXT("the panel keeps clear of the window height"), PWClassA3::PanelMaxHeight(Size.X, Size.Y) <= Size.Y);
+        TestTrue(TEXT("the panel fits its window"), PWClassLesson::PanelWidth(Size) <= Size.X);
+        TestTrue(TEXT("the panel keeps clear of the window height"), PWClassLesson::PanelMaxHeight(Size) <= Size.Y);
     }
     for (const char* Code : {"school.session.closed_day", "school.session.period_used", "school.session.not_at_bell", "school.session.foreground_limit",
                              "school.session.stale_session", "school.session.unfinished", "structure.units_short", "structure.already_done"})
     {
-        const FText Text = PWClassA3::IssueText({Code, {}});
+        const FText Text = PWClassLesson::IssueText(PerfectWorld::SchoolIssue{Code, {}});
         TestFalse(*FString::Printf(TEXT("%hs has words"), Code), Text.IsEmpty());
         TestFalse(*FString::Printf(TEXT("%hs is not shown as its code"), Code), Text.ToString().Contains(TEXT("school.")) || Text.ToString().Contains(TEXT("structure.")));
+        TestFalse(*FString::Printf(TEXT("%hs is not the neutral sentence"), Code), Text.EqualTo(PWClassLesson::Text(TEXT("phase2.a2.issue.unknown"))));
     }
-    TestFalse(TEXT("an unknown code reads as neutral text"), PWClassA3::IssueText({"dayloop.something_new", {}}).IsEmpty());
-    TestTrue(TEXT("an unknown key reads as empty, never as the key"), PWClassA3::Str(TEXT("phase2.a3.no.such.key")).IsEmpty());
-    TestEqual(TEXT("free"), PWClassA3::CostText(0).ToString(), PWClassA3::Str(TEXT("phase2.a3.common.cost.free")).ToString());
-    TestEqual(TEXT("clock"), PWClassA3::ClockText(575).ToString(), FString(TEXT("09:35")));
+    TestFalse(TEXT("an unknown code reads as neutral text"), PWClassLesson::IssueText(PerfectWorld::SchoolIssue{"dayloop.something_new", {}}).IsEmpty());
+    TestEqual(TEXT("an unknown key reads neutrally, never as the key"), PWClassLesson::Text(TEXT("phase2.a3.no.such.key")).ToString(), FString(TEXT("Text unavailable.")));
+    TestEqual(TEXT("free"), PWClassLesson::CostText(0).ToString(), PWClassLesson::Text(TEXT("phase2.a3.common.cost.free")).ToString());
+    TestEqual(TEXT("clock"), PWClassLesson::ClockText(575).ToString(), FString(TEXT("09:35")));
+    {
+        PerfectWorld::SchoolLessonQuote Short;
+        Short.Issue.Code = "structure.units_short";
+        Short.Units = 4;
+        TestEqual(TEXT("a short price says what it needs and what is left"), PWClassLesson::PriceText(Short, 2).ToString(),
+                  PWClassLesson::Text2(TEXT("phase2.a3.common.cost.short"), PWClassLesson::Number(4), PWClassLesson::Number(2)).ToString());
+        PerfectWorld::SchoolLessonQuote Other;
+        Other.Issue.Code = "structure.wrong_beat";
+        TestTrue(TEXT("any other refusal has no price"), PWClassLesson::PriceText(Other, 2).IsEmpty());
+    }
     return true;
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FA3TstInvestigateFlowTest, "PerfectWorld.Phase2.A3.InvestigateFlow", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FA3TstInvestigateFlowTest::RunTest(const FString& Parameters)
 {
+    using namespace ClT3;
+    using namespace PerfectWorld;
     FA3TstFixture Fixture;
     if (!Fixture.Init(*this)) return false;
     SchoolSessionsState Sessions;
     DayLoopState Day = Fixture.DayAtBell();
     const SchoolLessonBinding Binding = Fixture.Binding(SchoolStructure::Investigate);
-    const TSharedRef<PWClassA3::FCoreLessonBridge> Bridge = MakeShared<PWClassA3::FCoreLessonBridge>(Sessions, Day, Fixture.Cats, Binding, 100000, 17ULL);
+    const TSharedRef<PWClassLesson::FCoreBridge> Bridge = MakeShared<PWClassLesson::FCoreBridge>(Sessions, Day, Fixture.Cats, Binding, 100000, 17ULL);
     int32 Closed = 0;
     bool bClosedCancelled = true;
     int32 Backs = 0;
@@ -334,13 +353,15 @@ bool FA3TstInvestigateFlowTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FA3TstInvestigateLeaveTest, "PerfectWorld.Phase2.A3.InvestigateLeave", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FA3TstInvestigateLeaveTest::RunTest(const FString& Parameters)
 {
+    using namespace ClT3;
+    using namespace PerfectWorld;
     FA3TstFixture Fixture;
     if (!Fixture.Init(*this)) return false;
     SchoolSessionsState Sessions;
     DayLoopState Day = Fixture.DayAtBell();
     const GameInstant Start = Day.Now;
-    const TSharedRef<PWClassA3::FCoreLessonBridge> Bridge =
-        MakeShared<PWClassA3::FCoreLessonBridge>(Sessions, Day, Fixture.Cats, Fixture.Binding(SchoolStructure::Investigate), 0, 3ULL);
+    const TSharedRef<PWClassLesson::FCoreBridge> Bridge =
+        MakeShared<PWClassLesson::FCoreBridge>(Sessions, Day, Fixture.Cats, Fixture.Binding(SchoolStructure::Investigate), 0, 3ULL);
     const TSharedRef<SPWClassInvestigate> Panel = SNew(SPWClassInvestigate).Bridge(Bridge).Space(FVector2D(569.0, 320.0));
     TestTrue(TEXT("open"), Panel->ExecuteOpen().Ok());
     const PWClassInvestigate::FTestRow* First = Panel->GetModel().Tests.FindByPredicate([](const PWClassInvestigate::FTestRow& Row) { return Row.Issue.Ok(); });
@@ -363,12 +384,14 @@ bool FA3TstInvestigateLeaveTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FA3TstCoordinateFlowTest, "PerfectWorld.Phase2.A3.CoordinateFlow", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FA3TstCoordinateFlowTest::RunTest(const FString& Parameters)
 {
+    using namespace ClT3;
+    using namespace PerfectWorld;
     FA3TstFixture Fixture;
     if (!Fixture.Init(*this)) return false;
     SchoolSessionsState Sessions;
     DayLoopState Day = Fixture.DayAtBell();
-    const TSharedRef<PWClassA3::FCoreLessonBridge> Bridge =
-        MakeShared<PWClassA3::FCoreLessonBridge>(Sessions, Day, Fixture.Cats, Fixture.Binding(SchoolStructure::Coordinate), 100000, 29ULL);
+    const TSharedRef<PWClassLesson::FCoreBridge> Bridge =
+        MakeShared<PWClassLesson::FCoreBridge>(Sessions, Day, Fixture.Cats, Fixture.Binding(SchoolStructure::Coordinate), 100000, 29ULL);
     int32 Closed = 0;
     const TSharedRef<SPWClassCoordinate> Panel = SNew(SPWClassCoordinate)
         .Bridge(Bridge)
@@ -426,17 +449,20 @@ bool FA3TstCoordinateFlowTest::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FA3TstScreenTest, "PerfectWorld.Phase2.A3.Screen", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 bool FA3TstScreenTest::RunTest(const FString& Parameters)
 {
+    using namespace ClT3;
+    using namespace PerfectWorld;
     // A refusing bridge: the screen reports the core's words and stays usable.
     {
         const TSharedRef<FA3TstRefusingBridge> Bridge = MakeShared<FA3TstRefusingBridge>();
+        Bridge->Binding.Structure = SchoolStructure::Investigate;
         const TSharedRef<SPWClassInvestigate> Panel = SNew(SPWClassInvestigate).Bridge(Bridge).Space(FVector2D(853.0, 480.0));
         TestTrue(TEXT("open is offered"), Panel->HasAction(TEXT("open")));
         const SchoolSessionResult Result = Panel->ExecuteOpen();
         TestFalse(TEXT("the refusal is the bridge's"), Result.Ok());
         TestEqual(TEXT("one open reached the bridge"), Bridge->Opens, 1);
-        TestTrue(TEXT("the banner is the issue's words"), Panel->IsBannerError() && Panel->GetBanner().EqualTo(PWClassA3::IssueText(Result.Issue)));
+        TestTrue(TEXT("the banner is the issue's words"), Panel->IsBannerError() && Panel->GetBanner().EqualTo(PWClassLesson::IssueText(Result.Issue)));
         TestTrue(TEXT("still idle and usable"), Panel->HasAction(TEXT("open")) && !Panel->GetFrame().bHasRun);
-        TestTrue(TEXT("one panel is on screen"), A3TstCountTag(Panel, PWClassA3::PanelTag) == 1);
+        TestTrue(TEXT("one panel is on screen"), A3TstCountTag(Panel, PWClassLesson::PanelTag) == 1);
     }
     // The real lesson at each window size: one panel, the Back button reachable, the density follows the window.
     FA3TstFixture Fixture;
@@ -445,18 +471,63 @@ bool FA3TstScreenTest::RunTest(const FString& Parameters)
     {
         SchoolSessionsState Sessions;
         DayLoopState Day = Fixture.DayAtBell();
-        const TSharedRef<PWClassA3::FCoreLessonBridge> Bridge =
-            MakeShared<PWClassA3::FCoreLessonBridge>(Sessions, Day, Fixture.Cats, Fixture.Binding(SchoolStructure::Investigate), 100000, 5ULL);
+        const TSharedRef<PWClassLesson::FCoreBridge> Bridge =
+            MakeShared<PWClassLesson::FCoreBridge>(Sessions, Day, Fixture.Cats, Fixture.Binding(SchoolStructure::Investigate), 100000, 5ULL);
         const TSharedRef<SPWClassInvestigate> Panel = SNew(SPWClassInvestigate).Bridge(Bridge).Space(Size);
         TestTrue(TEXT("opened"), Panel->ExecuteOpen().Ok());
         TArray<FString> Texts = A3TstShownTexts(Panel);
-        TestEqual(TEXT("one panel"), A3TstCountTag(Panel, PWClassA3::PanelTag), 1);
-        TestTrue(TEXT("Back is on screen"), A3TstShows(Texts, PWClassA3::Str(TEXT("phase2.a3.common.back")).ToString()));
+        TestEqual(TEXT("one panel"), A3TstCountTag(Panel, PWClassLesson::PanelTag), 1);
+        TestTrue(TEXT("Back is on screen"), A3TstShows(Texts, PWClassLesson::Text(TEXT("phase2.a3.common.back")).ToString()));
+        TestTrue(TEXT("Leave early is on screen while the exercise runs"), A3TstShows(Texts, PWClassLesson::Text(TEXT("phase2.a3.common.leave")).ToString()));
         TestTrue(TEXT("the case is named"), A3TstShows(Texts, Panel->GetModel().CaseName.ToString()));
-        TestTrue(TEXT("the units are shown"), A3TstShows(Texts, PWClassA3::UnitsText(Panel->GetModel().UnitsLeft, Panel->GetModel().UnitsTotal).ToString()));
+        TestTrue(TEXT("the units are shown"), A3TstShows(Texts, PWClassLesson::UnitsText(Panel->GetModel().UnitsLeft, Panel->GetModel().UnitsTotal).ToString()));
         TestTrue(TEXT("every test is listed"), Panel->GetModel().Tests.Num() == 0 || A3TstShows(Texts, Panel->GetModel().Tests[0].Name.ToString()));
         TestTrue(TEXT("the keys a lesson uses are bound: G and M do nothing mid-lesson"), Panel->OnKeyDown(FGeometry(), A3TstKey(EKeys::G)).IsEventHandled() == false);
     }
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FA3TstResumeTest, "PerfectWorld.Phase2.A3.BackLeavesTheLessonOpenAndANewScreenResumesIt",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FA3TstResumeTest::RunTest(const FString& Parameters)
+{
+    using namespace ClT3;
+    using namespace PerfectWorld;
+    FA3TstFixture Fixture;
+    if (!Fixture.Init(*this)) return false;
+    SchoolSessionsState Sessions;
+    DayLoopState Day = Fixture.DayAtBell();
+    const TSharedRef<PWClassLesson::FCoreBridge> Bridge =
+        MakeShared<PWClassLesson::FCoreBridge>(Sessions, Day, Fixture.Cats, Fixture.Binding(SchoolStructure::Investigate), 100000, 11ULL);
+    int32 Backs = 0;
+    uint64 Session = 0;
+    {
+        const TSharedRef<SPWClassInvestigate> First = SNew(SPWClassInvestigate)
+            .Bridge(Bridge)
+            .Space(FVector2D(853.0, 480.0))
+            .OnClose(FSimpleDelegate::CreateLambda([&Backs]() { ++Backs; }));
+        if (!TestTrue(TEXT("opens"), First->ExecuteOpen().Ok())) return false;
+        Session = Sessions.Active->Session;
+        TestTrue(TEXT("Back is handled"), First->OnKeyDown(FGeometry(), A3TstKey(EKeys::Escape)).IsEventHandled());
+        TestEqual(TEXT("and reaches the host once"), Backs, 1);
+        TestTrue(TEXT("a held Back does not leave twice"), First->OnKeyDown(FGeometry(), A3TstKey(EKeys::Escape, true)).IsEventHandled() && Backs == 1);
+        TestTrue(TEXT("Back did not close or cancel the lesson"), Sessions.Active.has_value() && Sessions.Active->Session == Session && !First->IsLessonClosed());
+    }
+    // One behaviour: a new screen over the same world resumes the same session at its current step.
+    const TSharedRef<SPWClassInvestigate> Second = SNew(SPWClassInvestigate).Bridge(Bridge).Space(FVector2D(853.0, 480.0));
+    TestEqual(TEXT("the same session is shown"), Second->GetDisplayedSession(), Session);
+    TestTrue(TEXT("with the exercise on screen"), Second->GetModel().bActive && Second->GetModel().Tests.Num() >= 3);
+    TestTrue(TEXT("and it says the lesson is resumed"), A3TstShows(A3TstShownTexts(Second), PWClassLesson::Text(TEXT("phase2.a2.common.resumed")).ToString()));
+    // A screen of another kind never drives it.
+    const TSharedRef<SPWClassCoordinate> Wrong = SNew(SPWClassCoordinate).Bridge(Bridge).Space(FVector2D(853.0, 480.0));
+    TestFalse(TEXT("a coordinate screen on an investigate binding offers nothing"), Wrong->HasAction(TEXT("open")) || Wrong->CanLeaveEarly());
+
+    // Leave early asks twice; only the second press ends the period.
+    TestTrue(TEXT("Leave early is offered"), Second->CanLeaveEarly());
+    TestFalse(TEXT("the first press only arms it"), Second->PressLeaveEarly());
+    TestTrue(TEXT("armed, and the lesson is still open"), Second->IsLeaveArmed() && Sessions.Active.has_value());
+    TestTrue(TEXT("the second press leaves"), Second->PressLeaveEarly());
+    TestTrue(TEXT("the period is cancelled and the screen is closed"), Sessions.Periods.back().Cancelled && Second->IsLessonClosed() && !Sessions.Active.has_value());
     return true;
 }
 
