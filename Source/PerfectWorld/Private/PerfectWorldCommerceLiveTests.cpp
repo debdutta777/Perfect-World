@@ -5,6 +5,8 @@
 #if WITH_DEV_AUTOMATION_TESTS && !UE_BUILD_SHIPPING
 
 #include "PerfectWorldKeyBindings.h"
+#include "PerfectWorldCommerceCounter.h"
+#include "PerfectWorldInteractionComponent.h"
 #include "WorldHash.h"
 
 namespace
@@ -180,6 +182,23 @@ bool FR88LiveReloadTest::RunTest(const FString& Parameters)
         F.Bridge->BeginService(F.Shop()).Error == PerfectWorld::CommerceError::InvalidState);
     TestFalse(TEXT("no confirmation after owner teardown"),
         F.Bridge->Quote(F.Shop(), F.Food(), 1).CanBuy());
+    return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FR89CounterReachTest, "PerfectWorld.CommerceLive.CounterReachRetention",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FR89CounterReachTest::RunTest(const FString& Parameters)
+{
+    // A 165 cm character with a 34 cm radius has a 48.5 cm half-axis.
+    const FVector R89Bottom(0, 0, 34);
+    const FVector R89Top(0, 0, 131);
+    const double R89Reach = PWInteraction::ReachCm + PWInteraction::ReachHysteresisCm;
+    TestTrue(TEXT("strict acquisition boundary"), PWCommerce::R89WithinCounterReach(R89Bottom, R89Top, FVector(200, 0, 110)));
+    TestTrue(TEXT("visible retained Buy beyond strict reach"), PWCommerce::R89WithinCounterReach(R89Bottom, R89Top, FVector(215, 0, 110)));
+    TestTrue(TEXT("inclusive retained boundary"), PWCommerce::R89WithinCounterReach(R89Bottom, R89Top, FVector(R89Reach, 0, 110)));
+    TestFalse(TEXT("outside retained reach"), PWCommerce::R89WithinCounterReach(R89Bottom, R89Top, FVector(R89Reach + 0.1, 0, 110)));
+    TestTrue(TEXT("vertical reach starts at nearest axis endpoint"), PWCommerce::R89WithinCounterReach(R89Bottom, R89Top, R89Top + FVector(0, 0, R89Reach)));
+    TestFalse(TEXT("diagonal outside spherical reach"), PWCommerce::R89WithinCounterReach(R89Bottom, R89Top, R89Top + FVector(200, 0, 200)));
+    TestTrue(TEXT("non-character point axis fallback"), PWCommerce::R89WithinCounterReach(FVector::ZeroVector, FVector::ZeroVector, FVector(R89Reach, 0, 0)));
     return true;
 }
 #endif

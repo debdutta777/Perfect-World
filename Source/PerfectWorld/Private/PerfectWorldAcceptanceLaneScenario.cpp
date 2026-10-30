@@ -311,7 +311,7 @@ namespace
 /**
  * The way from the living doorway to the table chair's stand point, in building-local U, V. A straight line is blocked: the household
  * adult stands at HomeAdultSpot (U 520, V 290) facing the doorway, 125 cm in. So the route goes through the doorway's centre, keeps
- * V 370+ past the adult (the kitchen door's swing zone, U 445-547 V 345+, is closed by default), then turns down the room at
+ * V 370+ past the adult (R89: the kitchen door starts open into the kitchen, beyond V 437), then turns down the room at
  * U 405, 120 cm west of the adult, to the stand point (U 393, V 215). Every point is checked against the adult's spot at run time.
  */
 bool AwChairRoute(TArray<FVector>& OutRoute, FString& Why)
