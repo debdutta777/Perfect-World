@@ -10,9 +10,14 @@
 
 class USceneComponent;
 class UWorld;
+class APawn;
 
 namespace PWCommerce
 {
+/** R89: the same capsule-axis reach, including retention hysteresis, used by TryInteract. */
+bool R89WithinCounterReach(const FVector& AxisBottom, const FVector& AxisTop, const FVector& Point);
+bool R89WithinCounterReach(const APawn& Pawn, const FVector& Point);
+
 /** Where one staffed shop's customer counter is, and which shop it sells for. All values come from the shop's content binding and the building's frame. */
 struct FCmCounterSpec
 {

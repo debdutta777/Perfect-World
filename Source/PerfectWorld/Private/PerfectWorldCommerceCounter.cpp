@@ -1,7 +1,9 @@
 #include "PerfectWorldCommerceCounter.h"
 
 #include "Components/SceneComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Engine/World.h"
+#include "GameFramework/Character.h"
 #include "GameFramework/Pawn.h" // R88
 #include "PerfectWorldBuyPresenter.h"
 #include "PerfectWorldCommerceText.h"
@@ -12,6 +14,29 @@
 
 namespace PWCommerce
 {
+bool R89WithinCounterReach(const FVector& AxisBottom, const FVector& AxisTop, const FVector& Point)
+{
+    return FVector::Dist(FMath::ClosestPointOnSegment(Point, AxisBottom, AxisTop), Point) <=
+        PWInteraction::ReachCm + PWInteraction::ReachHysteresisCm;
+}
+
+bool R89WithinCounterReach(const APawn& Pawn, const FVector& Point)
+{
+    FVector Bottom = Pawn.GetActorLocation();
+    FVector Top = Bottom;
+    if (const ACharacter* Character = Cast<ACharacter>(&Pawn))
+    {
+        if (const UCapsuleComponent* Capsule = Character->GetCapsuleComponent())
+        {
+            const double Half = FMath::Max(0.0, static_cast<double>(
+                Capsule->GetScaledCapsuleHalfHeight() - Capsule->GetScaledCapsuleRadius()));
+            Bottom = Capsule->GetComponentLocation() - FVector(0.0, 0.0, Half);
+            Top = Capsule->GetComponentLocation() + FVector(0.0, 0.0, Half);
+        }
+    }
+    return R89WithinCounterReach(Bottom, Top, Point);
+}
+
 int32 SpawnCommerceCounters(UWorld& World, const TArray<FCmCounterSpec>& Specs)
 {
     FActorSpawnParameters Params;
@@ -127,7 +152,7 @@ void APWCounterBuyActor::Tick(const float DeltaSeconds)
     APawn* By = R88Customer.Get();
     if (!bR88Pending) return;
     if (By == nullptr || UPWInteractionComponent::IsWorldInputBlocked(By) ||
-        FVector::Dist2D(By->GetActorLocation(), GetInteractionPoint()) > PWInteraction::ReachCm)
+        !PWCommerce::R89WithinCounterReach(*By, GetInteractionPoint()))
     {
         if (const auto Bridge = PWCommerce::CmBridge::Resolve(GetWorld())) Bridge->EndService(ShopId);
         bR88Pending = false;

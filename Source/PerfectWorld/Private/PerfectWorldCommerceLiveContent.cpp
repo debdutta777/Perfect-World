@@ -166,8 +166,7 @@ std::string R88CounterApproach(UWorld& World, const FName ShopId)
     {
         if (It->GetShopId() != ShopId) continue;
         const FVector Point = It->GetInteractionPoint();
-        if (FVector::Dist2D(Pawn->GetActorLocation(), Point) > PWInteraction::ReachCm ||
-            FMath::Abs(Pawn->GetActorLocation().Z - Point.Z) > PWInteraction::ReachCm) return {};
+        if (!R89WithinCounterReach(*Pawn, Point)) return {};
         FVector Eye; FRotator Facing;
         Pawn->GetActorEyesViewPoint(Eye, Facing);
         FCollisionQueryParams Params(SCENE_QUERY_STAT(R88CounterSight), false, Pawn);
