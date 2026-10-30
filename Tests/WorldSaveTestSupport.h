@@ -46,6 +46,27 @@ CharacterCreationSave MakeCreation(const char* household, const char* givenName 
     return creator.CaptureSave();
 }
 
+/** The restored creator of a record: a world for that life begins with its household's commerce (R8-04). */
+CharacterCreator CreatorOf(const CharacterCreationSave& creation)
+{
+    CharacterCreator creator;
+    Check(creator.RestoreSave(creation).Succeeded(), "the creation record restores");
+    return creator;
+}
+
+/** Seed-and-creation replay: the same starting snapshot as WorldSim(seed, CreatorOf(creation)), household funding included. */
+ReplayResult ReplayLife(std::uint64_t seed, const CharacterCreationSave& creation, const std::vector<Command>& log)
+{
+    return ReplayCommandLogFromSnapshot(MakeWorldState(seed, CreatorOf(creation)), log);
+}
+
+/** What a pre-v10 save of `data` loads as: everything kept, commerce initialised once at the saved instant (R8-04). */
+WorldSaveData MigratedCommerce(WorldSaveData data)
+{
+    data.World.Commerce = InitialiseCommerce(CreatorOf(data.Creation).GetTraitRank(HouseholdResourcesTraitId), data.World.Clock.Now()).State;
+    return data;
+}
+
 Command SystemCommand(CommandPayload payload) { return {CommandSource::System, std::move(payload)}; }
 
 Command RandomCommand(std::mt19937_64& random, const WorldSim& sim)
@@ -113,14 +134,15 @@ void BusyDay(WorldState& world)
 WorldSaveData RichSave(std::uint64_t seed, int steps)
 {
     std::mt19937_64 random(seed);
-    WorldSim sim(seed);
+    const CharacterCreationSave creation = MakeCreation("grandparent_household");
+    WorldSim sim(seed, CreatorOf(creation));
     for (int i = 0; i < steps; ++i)
         (void)sim.Submit(RandomCommand(random, sim));
     // Make sure the interesting parts are present whatever the dice said.
     (void)sim.Submit(SystemCommand(ScheduleWorldEvent{sim.State().Clock.Now() + 700, "sys/kind/pinned"}));
     (void)sim.Submit({CommandSource::Player, SetWorldFlag{"pinned.flag", true}});
     (void)sim.Submit(SystemCommand(GateRegister{"gate.pinned", GateRank::C, GateStatus::Contained}));
-    WorldSaveData data = SaveOf(sim, MakeCreation("grandparent_household"));
+    WorldSaveData data = SaveOf(sim, creation);
     DrawFromStreams(data.World, random);
     BusyDay(data.World);
     data.Player.Camera = CameraMode::ThirdPerson;
@@ -143,6 +165,7 @@ WorldSaveData EdgeSave()
     clock.Pending = {{Max64 - 1, Max64, std::string("nul\0inside/\xff\x80/key", 17)}, {1, DayLoopMaxInstant, ""}};
     Check(w.Clock.RestoreSave(clock), "the edge clock is consistent");
     w.DayLoop = NewDayLoopState(DayLoopMaxInstant);
+    w.Commerce = InitialiseCommerce(CreatorOf(data.Creation).GetTraitRank(HouseholdResourcesTraitId), DayLoopMaxInstant).State;
     BusyDay(w);
     w.Flags = {{"", false}, {std::string("a\0b", 3), true}, {"\xc3\xa9.unicode", true}, {"quote\"back\\slash", false}};
     w.Gates["gate.edge"] = GateSiteState{GateRank::S, GateStatus::Sealed, Min64, std::numeric_limits<std::int32_t>::max()};
@@ -199,6 +222,7 @@ void CheckSame(const WorldSaveData& a, const WorldSaveData& b, const char* what)
     Check(SameGates(a.World, b.World), what);
     Check(a.World.Rng == b.World.Rng, what);
     Check(a.World.Conversations == b.World.Conversations && a.World.Doors == b.World.Doors, what);
+    Check(a.World.Commerce == b.World.Commerce && a.World.Journal.Encounters == b.World.Journal.Encounters, what);
     Check(a.World.DayLoop == b.World.DayLoop && SerialiseDayLoop(a.World.DayLoop) == SerialiseDayLoop(b.World.DayLoop), what);
     Check(IsWorldDayInStep(a.World) == IsWorldDayInStep(b.World) && a.World.DayLoop.Now == a.World.Clock.Now(), what);
     Check(a.Player == b.Player, what);

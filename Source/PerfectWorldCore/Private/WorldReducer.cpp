@@ -66,12 +66,8 @@ WorldSim::WorldSim(std::uint64_t worldSeed, const CharacterCreator& creation, st
 WorldSim::WorldSim(WorldState state, std::size_t eventCap, DayLoopCatalogues school, WorldCommerceCatalogues commerce)
     : State_(std::move(state)), EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap), School_(school), Commerce_(commerce)
 {
-    // Temporary pre-R8-04 compatibility: v9 readers leave the exact default slice.
-    // Such a snapshot starts a new allowance period now, with no historical backpay.
-    // R8-04 must initialise legacy funding from creation BEFORE this constructor;
-    // its authenticated v10 reader must reject missing/misaligned commerce instead.
-    if (State_.Clock.Now() > 0 && State_.Commerce == CommerceState{})
-        State_.Commerce = InitialiseCommerce(0, State_.Clock.Now()).State;
+    // R8-04: the save reader supplies authenticated commerce (v10) or the one-time household initialisation (v6 to v9), so
+    // the snapshot is taken exactly as given; a slice out of step with the clock refuses time commands rather than being repaired.
 }
 
 std::optional<Rejection> WorldSim::ValidateTimeCharge(std::int64_t minutes) const

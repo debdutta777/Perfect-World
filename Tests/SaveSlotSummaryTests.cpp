@@ -132,6 +132,8 @@ void R62Projection()
     const GameInstant savedAt = GameClock::FromCalendar(2043, 6, 3, 14, 30);
     R62Expect(!data.World.Clock.AdvanceTo(savedAt).Rejected, "projection fixture advances clock");
     data.World.DayLoop = NewDayLoopState(savedAt);
+    // R8-04: the allowance settles with the clock, as the reducer settles it on every time path.
+    data.World.Commerce = SettleAllowance(data.World.Commerce, data.World.Commerce.AllowanceSettledThrough, savedAt).State;
     const WorldSlotSummary summary = MakeWorldSlotSummary(data);
     R62Expect(summary.Name == "Anika Sen" && summary.HomeCity == "Kolkata", "saved name and home city projected");
     R62Expect(summary.CurrentAge == 18 && data.Creation.Age == 16, "current age is derived from birth and clock");

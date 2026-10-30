@@ -26,7 +26,9 @@ CharacterCreationSave WorldDayCreation()
 /** The world a life begins in, with the rested morning player the day-loop tests use. */
 WorldState MorningWorld()
 {
-    WorldState world = MakeWorldState(77);
+    CharacterCreator creator; // R8-04: the world's household commerce belongs to the life it is saved with
+    Check(creator.RestoreSave(WorldDayCreation()).Succeeded(), "the creation record restores");
+    WorldState world = MakeWorldState(77, creator);
     world.DayLoop = MorningState();
     Check(IsWorldDayInStep(world), "the morning world's day is in step with its clock");
     return world;
@@ -42,6 +44,10 @@ void ApplyInWorld(WorldState& world, const DayCommand& command)
     (void)result;
     if (world.DayLoop.Now > world.Clock.Now())
         Check(!world.Clock.AdvanceTo(world.DayLoop.Now).Rejected, "the world clock follows the day");
+    // As the reducer does on every time path (R8-03), the allowance settles over exactly the interval the clock moved.
+    const CommerceStateResult settled = SettleAllowance(world.Commerce, world.Commerce.AllowanceSettledThrough, world.Clock.Now());
+    Check(settled.Ok(), "the allowance settles with the clock");
+    world.Commerce = settled.State;
     Check(IsWorldDayInStep(world), "the day and the world clock agree after every command");
 }
 

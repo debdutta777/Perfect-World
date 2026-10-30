@@ -395,7 +395,9 @@ void BuildOpeningHome(FLaneScene& S, const FLaneBuilding& B)
     // Open, the leaf lies against the back partition; the living room never has a leaf in it.
     AddDoorSpec(S, F, TEXT("door.nabapara.home_living"), HomeLivingPartitionU, HomeLivingDoorV + HomeDoorHalfClear, 0.0, -1.0, 1.0, 0.0, false);
     AddDoorSpec(S, F, TEXT("door.nabapara.home_bedroom"), 155.0, 437.0, 1.0, 0.0, 0.0, 1.0, true);
-    AddDoorSpec(S, F, TEXT("door.nabapara.home_kitchen"), 455.0, 437.0, 1.0, 0.0, 0.0, 1.0, true);
+    // R89: core open side +1 must point into the kitchen. With the west hinge it restored into the living-room route.
+    // Reverse the hinge/closed direction, preserving the same 455-545 opening and the two-way interaction.
+    AddDoorSpec(S, F, TEXT("door.nabapara.home_kitchen"), 545.0, 437.0, -1.0, 0.0, 0.0, 1.0, true);
     AddDoorSpec(S, F, TEXT("door.nabapara.home_washroom"), 905.0, 437.0, -1.0, 0.0, 0.0, 1.0, true);
     S.bOpeningHomeBuilt = true;
 }

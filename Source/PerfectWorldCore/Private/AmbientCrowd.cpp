@@ -77,13 +77,8 @@ CrowdOutfit R75Outfit(CrowdCohort cohort, std::uint64_t seed)
     default: return CrowdOutfit::EverydayWear;
     }
 }
-std::string R75Text(const CrowdRouteSlot& slot, std::uint64_t seed)
-{
-    if (slot.Cohort == CrowdCohort::Student)
-        return slot.Arrival ? "ambient.exchange.heading_to_school" : "ambient.exchange.greeting";
-    return seed % 3 == 0 ? "ambient.exchange.directions_school" :
-        seed % 3 == 1 ? "ambient.exchange.directions_bus_stop" : "ambient.exchange.greeting";
-}
+constexpr const char* R75CohortNames[] = {"student", "office_commuter", "vendor", "child", "elder", "passer_by"};
+constexpr const char* R75BandNames[] = {"night", "early_morning", "school_arrival", "school_departure", "daytime", "evening"};
 int R75TravelMinutes(std::int64_t distance, int speed)
 {
     return static_cast<int>((distance + speed - 1) / speed);
@@ -167,6 +162,28 @@ void R75Evaluate(CrowdPerson& person, const CrowdRouteSlot& slot, std::uint64_t 
     R75Place(person, slot, distance, direction);
 }
 } // namespace
+
+std::string CrowdExchangeTextKey(CrowdCohort cohort, CrowdTimeBand band, std::uint64_t seed)
+{
+    const auto mixed = R75Mix(seed ^ 0x766f69636573ULL);
+    // About one in five passers-by or elders in daylight points the way instead of making small talk.
+    const bool helper = cohort == CrowdCohort::PasserBy || cohort == CrowdCohort::Elder;
+    const bool light = band != CrowdTimeBand::Night;
+    if (helper && light && mixed % 5 == 0)
+        return (mixed / 5) % 2 == 0 ? "ambient.exchange.directions_school" : "ambient.exchange.directions_bus_stop";
+    return std::string("ambient.exchange.") + R75CohortNames[static_cast<std::size_t>(cohort)] + "." +
+        R75BandNames[static_cast<std::size_t>(band)] + "." + std::to_string(1 + (mixed / 10) % 3);
+}
+
+std::vector<std::string> CrowdExchangeTextKeys()
+{
+    std::vector<std::string> keys{"ambient.exchange.directions_school", "ambient.exchange.directions_bus_stop"};
+    for (const char* cohort : R75CohortNames)
+        for (const char* band : R75BandNames)
+            for (int n = 1; n <= 3; ++n)
+                keys.push_back(std::string("ambient.exchange.") + cohort + "." + band + "." + std::to_string(n));
+    return keys;
+}
 
 CrowdSchoolTiming CrowdSchoolTimingFromBell(const BellSchedule& schedule)
 {
@@ -293,7 +310,7 @@ CrowdSnapshot AmbientCrowd::CrowdAt(GameInstant now, NeighbourhoodPoint centre, 
         person.Id = PersonId(day, slot.Slot); person.Slot = slot.Slot; person.Cohort = slot.Cohort;
         person.AppearanceSeed = DailySeed(day, slot.Slot);
         person.Outfit = R75Outfit(slot.Cohort, person.AppearanceSeed);
-        person.ShortExchangeTextKey = R75Text(slot, person.AppearanceSeed);
+        person.ShortExchangeTextKey = CrowdExchangeTextKey(slot.Cohort, result.Target.Band, person.AppearanceSeed);
         R75Evaluate(person, slot, person.AppearanceSeed, (minute-slot.BeginMinute)*1000+minuteFractionMilli);
         if (R75DistanceSquared(centre, person.Position) <= radiusSquared) result.People.push_back(std::move(person));
     }
