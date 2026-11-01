@@ -89,6 +89,8 @@ FText QwAgreementWhat(const FString& Key)
     if (QwIs(Suffix, TEXT("mahua_saha.sort_promised"))) return LOCTEXT("AgrMahuaSort", "Help sort loose screws one quiet afternoon.");
     if (QwIs(Suffix, TEXT("prabir_chatterjee.lane_stories_agreed"))) return LOCTEXT("AgrPrabirStories", "An hour of lane stories, as you agreed.");
     if (QwIs(Suffix, TEXT("ishita_banerjee.quiet_evening_agreed"))) return LOCTEXT("AgrIshitaEvening", "A quiet evening, as you agreed.");
+    if (QwIs(Suffix, TEXT("madhabi_das.ward_records_agreed"))) return LOCTEXT("AgrMadhabiRecords", "An evening of old ward records, as you agreed.");
+    if (QwIs(Suffix, TEXT("arup_basu.parcel_round_agreed"))) return LOCTEXT("AgrArupRound", "An evening hearing about the parcel round, as you agreed.");
     return LOCTEXT("AgrFallback", "An arrangement you made.");
 }
 

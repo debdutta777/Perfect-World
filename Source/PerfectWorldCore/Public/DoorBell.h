@@ -27,7 +27,7 @@ inline constexpr std::array<std::string_view, 10> DoorBellEntranceIds{{
     "door.nabapara.home_front", "door.nabapara.care_front", "door.nabapara.caretaker_flat_front",
     "door.nabapara.tall_flats_unit_a", "door.nabapara.tall_flats_unit_b", "door.nabapara.tea_row_house_front",
     "door.nabapara.old_house_front", "door.nabapara.tall_flats_upper_a",
-    // R6-01: the two residences opened last (no residents yet, so a ring is never answered).
+    // R6-01: the two residences opened last. R6-04: Madhabi Das and Arup Basu now answer 16:00-19:30.
     "door.nabapara.alley_house_front", "door.nabapara.stair_flats_front"}};
 
 inline constexpr std::array<std::string_view, 2> DoorPrivateRoomIds{{"door.nabapara.home_bedroom", "door.nabapara.care_dormitory"}};
