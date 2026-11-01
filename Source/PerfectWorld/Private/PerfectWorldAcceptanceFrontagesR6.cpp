@@ -6,6 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "LaneFrontageCatalogue.h"
 #include "Misc/FileHelper.h"
+#include "PerfectWorldAcceptanceDoorBell.h"
 #include "PerfectWorldAcceptanceStationery.h"
 #include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "PerfectWorldDoorActor.h"
@@ -49,6 +50,13 @@ APWDoorActor* R61Door(UPWAcceptanceSubsystem& Sub, const FString& Name)
     for (TActorIterator<APWDoorActor> It(Sub.GetPlayWorld()); It; ++It)
         if (It->GetDoorId() == Id) return *It;
     return nullptr;
+}
+
+APWDoorBellActor* R61Bell(UPWAcceptanceSubsystem& Sub, const FString& Name)
+{
+    const auto* Row = R61Row(Name);
+    if (!Row || !Sub.GetPlayWorld()) return nullptr;
+    return PWAcceptance::DoorBell::FindBell(Sub.GetPlayWorld(), FName(UTF8_TO_TCHAR(std::string(Row->EntranceDoorId).c_str())));
 }
 
 bool R61ReadSlot(UPWAcceptanceSubsystem& Sub, PerfectWorld::WorldSaveData& Out)
@@ -186,7 +194,7 @@ FStepDef R61PrivateDoor(const FString& Name, const FString& Camera)
 {
     const auto R61Before = MakeShared<PerfectWorld::DoorState>();
     auto R61Step = PWAcceptance::MakeInteractStep(Name + Camera + TEXT("_private_knock"),
-        [Name](UPWAcceptanceSubsystem& Sub) -> AActor* { return R61Door(Sub, Name); },
+        [Name](UPWAcceptanceSubsystem& Sub) -> AActor* { return R61Bell(Sub, Name); }, // F5: the ring is E on the calling bell, not on the leaf
         [Name, R61Before](UPWAcceptanceSubsystem& Sub, FString& Detail)
         {
             const auto* Door = R61Door(Sub, Name);
@@ -207,11 +215,11 @@ FStepDef R61PrivateDoor(const FString& Name, const FString& Camera)
             auto* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
             auto* Interaction = Sub.GetInteraction();
             if (!Def || !Door || !Life || !Interaction || Def->Access != PerfectWorld::DoorAccess::Private ||
-                !Def->VisitingWindows.empty() || Life->IsHostHomeForAcceptance(*Def) || Door->IsOpen() || Door->IsMoving() ||
+                Def->VisitingWindows.size() != 1 || Life->IsHostHomeForAcceptance(*Def) || Door->IsOpen() || Door->IsMoving() ||
                 Life->IsDoorOpen(Door->GetDoorId(), true) ||
                 PerfectWorld::EvaluateDoorPassage(*Def, Life->GetMinuteOfDay(), {}) != PerfectWorld::DoorResult::Private ||
                 PerfectWorld::EvaluateDoorKnock(*Def, Life->GetMinuteOfDay(), {}).Answer != PerfectWorld::DoorKnockAnswer::NoAnswer)
-                return FStepOutcome::Fail(TEXT("home is not unoccupied, closed and private with no visiting windows"));
+                return FStepOutcome::Fail(TEXT("home is not closed, private and unanswered (R64: its resident is at work at 10:30) with its single evening visiting window"));
             *R61Before = Life->GetWorldState().Doors;
             Interaction->ShowNotice(FText::GetEmpty()); // do not accept a stale notice from the previous home/camera
         }

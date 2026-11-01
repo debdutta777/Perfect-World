@@ -26,12 +26,14 @@
 #include "PerfectWorldAmbientBindings.h"
 #include "PerfectWorldProprietorBindings.h"
 #include "PerfectWorldResidentsR5Bindings.h"
+#include "PerfectWorldResidentsR6Bindings.h"
 #include "PerfectWorldTailorBindings.h"
 #include "PerfectWorldNeighbourhoodStreets.h"
 #include "PerfectWorldSchoolCampus.h"
 #include "PerfectWorldTrafficPresenter.h"
 #include "PerfectWorldCrowdPresenter.h"
 #include "PerfectWorldSubrataBindings.h"
+#include "PerfectWorldCommerceLive.h" // R88
 
 namespace PWLane
 {
@@ -319,12 +321,17 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     {
         UE_LOG(LogTemp, Error, TEXT("R52 resident bindings/registration failed; homes_round5 cannot pass."));
     }
+    if (!SpawnResidentsR6(World, Scene))
+    {
+        UE_LOG(LogTemp, Error, TEXT("R64 resident bindings/registration failed; homes_round6 cannot pass."));
+    }
     SpawnAmbientLife(World);
     SpawnDebashis(World, Scene);
     SpawnMahua(World, Scene);
     R66SpawnTailor(World, Scene);
     SpawnKitShopDisplays(World, Scene); // R4-01: the browse actors and posted hours of market_stalls_a, market_stalls_b and end_shop
     SpawnLaneEndSigns(World);           // R6-05: the posted hours over the community hall and market hall archways
+    PWCommerce::R88SpawnLiveCounters(World); // R88: content catalogues + registered spatial anchors
     if (Scene.bOpeningHomeBuilt)
     {
         SpawnHouseholdAdult(World);

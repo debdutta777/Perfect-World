@@ -86,7 +86,8 @@ void R67Refused(WorldSim& sim, CommandPayload payload, std::string_view code)
 WorldSaveData R67Save(const WorldState& state)
 {
     CharacterCreator creator;
-    R67Expect(creator.ApplyPreset("balanced_scholar").Succeeded(), "creation preset applies");
+    // R8-04: a Household Resources rank-0 life, matching the seed-only sims whose worlds it saves.
+    R67Expect(creator.ApplyPreset("independent_generalist").Succeeded(), "creation preset applies");
     R67Expect(creator.StartLife().Succeeded(), "the life starts");
     WorldSaveData data;
     R67Expect(BeginWorldFromCreation(creator.CaptureSave(), state.WorldSeed, data).Succeeded(), "world save begins");

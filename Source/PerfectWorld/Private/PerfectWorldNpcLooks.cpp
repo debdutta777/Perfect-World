@@ -29,6 +29,8 @@ const FCastRow NlCast[] = {
     {TEXT("person.prabir_chatterjee"), 169.0, ELook::Prabir}, // R52: narrow, silver thinning hair, slate short kurta, glasses
     {TEXT("person.ishita_banerjee"), 165.0, ELook::Ishita},    // R52: short curls, teal kurta, canvas shoulder bag
     {TEXT("person.satyajit_dutta"), 167.0, ELook::Satyajit},  // R66: burgundy waistcoat, tape and chalk, short dark hair
+    {TEXT("person.madhabi_das"), 156.0, ELook::Madhabi},      // R64: dusty-blue saree, grey knot, manila file folder
+    {TEXT("person.arup_basu"), 179.0, ELook::Arup},           // R64: orange dispatch vest, buzz cut, handheld scanner
 };
 
 void NlLegacyHouseholdAdult(const double H, TArray<FPWNpcBlock>& Out)
@@ -113,6 +115,8 @@ FSilhouette NlSilhouetteOfLook(const ELook Look, const EPWNpcOutfit Outfit)
     case ELook::Prabir: return {EHair::Thinning, EGarment::Kurta, EAccessory::Glasses, EBuild::Slight};
     case ELook::Ishita: return {EHair::ShortCurls, EGarment::Kurta, EAccessory::ClothBag, EBuild::Medium};
     case ELook::Satyajit: return {EHair::ShortWavy, EGarment::Waistcoat, EAccessory::TapeAndChalk, EBuild::Slight};
+    case ELook::Madhabi: return {EHair::GreyKnot, EGarment::Saree, EAccessory::DocumentFolder, EBuild::Slight};
+    case ELook::Arup: return {EHair::BuzzCut, EGarment::DispatchVest, EAccessory::HandScanner, EBuild::Medium};
     default: break;
     }
     switch (Outfit)

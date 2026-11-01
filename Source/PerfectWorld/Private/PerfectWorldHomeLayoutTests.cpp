@@ -1,3 +1,5 @@
+#include "PerfectWorldHomeLayoutTestSupport.h"
+
 // Layout rules of the opening home (PerfectWorld.Home.*): door clear widths, routes, swing zones, the household adult's
 // spot, the seat and readable anchors, the reserved stair, ceiling fans and room lights. The home is built exactly as the
 // lane builds it (BuildOpeningHome plus the furniture footprints), so these tests read the real collision boxes.
@@ -7,7 +9,8 @@
 
 #if WITH_DEV_AUTOMATION_TESTS && !UE_BUILD_SHIPPING
 
-#include "PerfectWorldHomeLayoutTestSupport.h"
+#include "Doors.h"
+#include "PerfectWorldDoorActor.h"
 
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPWHomeDoorWidthsTest, "PerfectWorld.Home.DoorClearWidths",
@@ -393,6 +396,48 @@ bool FPWHomeLightingTest::RunTest(const FString& Parameters)
             if (DistToRect(Fan.U, Fan.V, RectOf(Solid)) < Fan.RadiusCm && Solid.H1 > Fan.UndersideCm - 55.0)
             {
                 AddError(FString::Printf(TEXT("%s: furniture up to %.0f cm high is under the blades"), *Where, Solid.H1));
+            }
+        }
+    }
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FR89HomeKitchenRouteTest, "PerfectWorld.Home.RestoredKitchenLeafClearsChairRoute",
+                                 EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FR89HomeKitchenRouteTest::RunTest(const FString& Parameters)
+{
+    using namespace PWHomeLayoutTest;
+    FHome R89Home;
+    BuildHome(R89Home);
+    const FLaneDoorSpec* R89Door = FindDoor(R89Home, TEXT("door.nabapara.home_kitchen"));
+    const auto* R89Def = PerfectWorld::FindDoor("door.nabapara.home_kitchen");
+    if (!TestTrue(TEXT("authored kitchen door and core definition exist"), R89Door != nullptr && R89Def != nullptr)) return false;
+    TestTrue(TEXT("core starts the kitchen door open"), R89Def->bInitiallyOpen);
+    // RegisterDoor/StartLife restore the core side, which may differ from the layout preference.
+    const double R89Yaw = FMath::DegreesToRadians(R89Door->ClosedYaw + R89Def->PreferredSwingSide * PWDoor::OpenAngleDegrees);
+    const FVector R89Tip = R89Door->Hinge + FVector(FMath::Cos(R89Yaw), FMath::Sin(R89Yaw), 0) * PWDoor::LeafWidth;
+    double R89HingeU = 0, R89HingeV = 0, R89TipU = 0, R89TipV = 0;
+    ToLocal(R89Home.Building.Frame, R89Door->Hinge, R89HingeU, R89HingeV);
+    ToLocal(R89Home.Building.Frame, R89Tip, R89TipU, R89TipV);
+    TestTrue(TEXT("restored leaf opens into kitchen"), R89TipV > R89HingeV);
+    const FRect R89Leaf{FMath::Min(R89HingeU, R89TipU) - 2, FMath::Max(R89HingeU, R89TipU) + 2,
+        FMath::Min(R89HingeV, R89TipV) - 2, FMath::Max(R89HingeV, R89TipV) + 2};
+    TestTrue(TEXT("reported stuck position is clear of restored leaf"), DistToRect(485, 366, R89Leaf) > HomePersonRadiusCm);
+    // Exercise the unchanged chair route against the real shell/furniture and the core-restored leaf, without a map.
+    const FVector2D R89Points[] = {{630, 365}, {560, 375}, {440, 370}, {405, 265}, {393, 215}};
+    const auto R89Adult = HomeAdultSpot();
+    for (int32 R89Segment = 1; R89Segment < UE_ARRAY_COUNT(R89Points); ++R89Segment)
+    {
+        for (int32 R89Sample = 0; R89Sample <= 100; ++R89Sample)
+        {
+            const FVector2D R89At = R89Points[R89Segment - 1] +
+                (R89Points[R89Segment] - R89Points[R89Segment - 1]) * (R89Sample / 100.0);
+            if (MinDistToBodyBlocks(R89Home, R89At.X, R89At.Y) <= HomePersonRadiusCm ||
+                DistToRect(R89At.X, R89At.Y, R89Leaf) <= HomePersonRadiusCm ||
+                FVector2D::Distance(R89At, FVector2D(R89Adult.U, R89Adult.V)) <= 2 * HomePersonRadiusCm)
+            {
+                AddError(FString::Printf(TEXT("chair route blocked at U %.1f V %.1f"), R89At.X, R89At.Y));
+                return false;
             }
         }
     }

@@ -21,6 +21,7 @@ class IPWConversationSession;
 class SPWClockReadout;
 class SWeakWidget;
 namespace PWLane { struct FLaneBuilding; }
+namespace PWCommerce { class FCmLiveContent; }
 
 DECLARE_LOG_CATEGORY_EXTERN(LogPWLaneLife, Log, All);
 
@@ -57,6 +58,7 @@ enum class EPWClockHold : uint8
     Menu,
     Conversation,
     Reading,
+    Commerce, // R88: buy panel is a zero-minute reading overlay
     /** The window is in the background. */
     Unfocused
 };
@@ -190,6 +192,11 @@ public:
     /** Shows a short notice through the local player's interaction component. */
     void ShowPlayerNotice(const FText& Message, const APawn* By = nullptr) const;
 
+    // R88: commerce uses this owner's current sim, never a detached purchase copy.
+    const PerfectWorld::WorldSim* R88CommerceSim();
+    PerfectWorld::CommandResult R88CommerceSubmit(const PerfectWorld::Command& Command);
+    void R88InstallCommerce();
+
 private:
     // ---- Clock (PerfectWorldLaneLifeClock.cpp) ----
     void BuildWorld();
@@ -234,6 +241,7 @@ private:
     void HandleReadRequested(FName ReadableId, FName ContentId, FText Title);
 
     TUniquePtr<PerfectWorld::WorldSim> Sim;
+    TSharedPtr<PWCommerce::FCmLiveContent> R88CommerceContent;
     uint64 RestorePresentationCount = 0;
     PerfectWorld::TimeModeState ClockMode;
     EPWClockHold ClockHold = EPWClockHold::Menu;

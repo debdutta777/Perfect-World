@@ -1,6 +1,11 @@
 #include "PerfectWorldCrowdFigures.h"
 
 #include "Components/CapsuleComponent.h"
+// ContentRegistry.h includes the core Json.h from its own directory first (as PerfectWorldAcceptanceTests.cpp does).
+#include "ContentRegistry.h"
+#include "Json.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
@@ -67,14 +72,29 @@ FLook MakeLook(const PerfectWorld::CrowdPerson& Person)
     return Result;
 }
 
+// DefaultGame.ini stages ../Data/Text beside Data/Content, so the authored lines load in PIE and the packaged game.
+const TMap<FString, FText>& CvExchangeLines()
+{
+    static const TMap<FString, FText> Lines = []
+    {
+        TMap<FString, FText> Result;
+        FString Text;
+        const FString Path = FPaths::Combine(FPaths::ProjectDir(), TEXT("Data/Text/en/ambient.crowd.json"));
+        if (!FFileHelper::LoadFileToString(Text, *Path)) return Result;
+        const PerfectWorld::JsonParseResult Parsed = PerfectWorld::ParseJson(TCHAR_TO_UTF8(*Text));
+        if (!Parsed.Value || !Parsed.Value->IsObject()) return Result;
+        for (const auto& [Key, Value] : Parsed.Value->Object)
+            if (Value.IsString())
+                Result.Add(UTF8_TO_TCHAR(Key.c_str()), FText::FromString(UTF8_TO_TCHAR(Value.String.c_str())));
+        return Result;
+    }();
+    return Lines;
+}
+
 FText ExchangeLine(const std::string& Key)
 {
-    if (Key == "ambient.exchange.heading_to_school")
-        return NSLOCTEXT("PerfectWorldCrowd", "ambient.exchange.heading_to_school", "I'm heading to school.");
-    if (Key == "ambient.exchange.directions_school")
-        return NSLOCTEXT("PerfectWorldCrowd", "ambient.exchange.directions_school", "The school entrance is along the para road.");
-    if (Key == "ambient.exchange.directions_bus_stop")
-        return NSLOCTEXT("PerfectWorldCrowd", "ambient.exchange.directions_bus_stop", "The bus stop is on the main road.");
+    if (const FText* Line = CvExchangeLines().Find(UTF8_TO_TCHAR(Key.c_str())))
+        return *Line;
     return NSLOCTEXT("PerfectWorldCrowd", "ambient.exchange.greeting", "Hello.");
 }
 
