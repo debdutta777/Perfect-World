@@ -808,6 +808,14 @@ add_executable(PerfectWorldNeighbourhoodTrafficTests Tests/NeighbourhoodTrafficT
 target_link_libraries(PerfectWorldNeighbourhoodTrafficTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldNeighbourhoodTrafficTests COMMAND PerfectWorldNeighbourhoodTrafficTests)
 
+# R65: the two lane-end masses opened as public halls (community hall west, market hall east); doorless archways, no roster or save change.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/LaneEndLayouts.cpp
+    Source/PerfectWorldCore/Private/LaneEndHallCommunity.cpp
+    Source/PerfectWorldCore/Private/LaneEndHallMarket.cpp)
+add_executable(PerfectWorldLaneEndLayoutsTests Tests/LaneEndLayoutsTests.cpp)
+target_link_libraries(PerfectWorldLaneEndLayoutsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneEndLayoutsTests COMMAND PerfectWorldLaneEndLayoutsTests)
 # R6-04: the two remaining private homes get a resident each (Madhabi Das, alley house; Arup Basu, stair flats).
 target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationResidentsR6.cpp)
 add_executable(PerfectWorldResidentsR6Tests Tests/ResidentsR6Tests.cpp)
