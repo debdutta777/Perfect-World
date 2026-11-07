@@ -1,7 +1,7 @@
 {
   "schema": "pw.content_manifest/1",
-  "fileCount": 211,
-  "recordCount": 270,
+  "fileCount": 223,
+  "recordCount": 282,
   "files": [
     {
       "path": "/ability_recipe/ability_recipe.agni_assay_flame.json",
@@ -1018,9 +1018,39 @@
       ]
     },
     {
+      "path": "/school_scene/p2.broken_beaker.json",
+      "records": [
+        { "id": "p2.broken_beaker", "kind": "school_scene" }
+      ]
+    },
+    {
+      "path": "/school_scene/p2.canteen_petition.json",
+      "records": [
+        { "id": "p2.canteen_petition", "kind": "school_scene" }
+      ]
+    },
+    {
       "path": "/school_scene/p2.changing_friendship.json",
       "records": [
         { "id": "p2.changing_friendship", "kind": "school_scene" }
+      ]
+    },
+    {
+      "path": "/school_scene/p2.copied_homework.json",
+      "records": [
+        { "id": "p2.copied_homework", "kind": "school_scene" }
+      ]
+    },
+    {
+      "path": "/school_scene/p2.football_or_coaching.json",
+      "records": [
+        { "id": "p2.football_or_coaching", "kind": "school_scene" }
+      ]
+    },
+    {
+      "path": "/school_scene/p2.friend_moving_away.json",
+      "records": [
+        { "id": "p2.friend_moving_away", "kind": "school_scene" }
       ]
     },
     {
@@ -1033,6 +1063,48 @@
       "path": "/school_scene/p2.household_responsibility.json",
       "records": [
         { "id": "p2.household_responsibility", "kind": "school_scene" }
+      ]
+    },
+    {
+      "path": "/school_scene/p2.load_shedding_night.json",
+      "records": [
+        { "id": "p2.load_shedding_night", "kind": "school_scene" }
+      ]
+    },
+    {
+      "path": "/school_scene/p2.lost_library_book.json",
+      "records": [
+        { "id": "p2.lost_library_book", "kind": "school_scene" }
+      ]
+    },
+    {
+      "path": "/school_scene/p2.new_student.json",
+      "records": [
+        { "id": "p2.new_student", "kind": "school_scene" }
+      ]
+    },
+    {
+      "path": "/school_scene/p2.sibling_walk_home.json",
+      "records": [
+        { "id": "p2.sibling_walk_home", "kind": "school_scene" }
+      ]
+    },
+    {
+      "path": "/school_scene/p2.stream_change_doubt.json",
+      "records": [
+        { "id": "p2.stream_change_doubt", "kind": "school_scene" }
+      ]
+    },
+    {
+      "path": "/school_scene/p2.unfair_mark.json",
+      "records": [
+        { "id": "p2.unfair_mark", "kind": "school_scene" }
+      ]
+    },
+    {
+      "path": "/school_scene/p2.wall_magazine_deadline.json",
+      "records": [
+        { "id": "p2.wall_magazine_deadline", "kind": "school_scene" }
       ]
     },
     {
