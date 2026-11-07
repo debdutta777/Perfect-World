@@ -18,6 +18,7 @@
 #include "PerfectWorldKeyBindingsContext.h"
 #include "PerfectWorldMapSubsystem.h"
 #include "PerfectWorldReadingPresenter.h"
+#include "PerfectWorldFrontEndHUD.h" // R88
 #include "UI/PWQuestText.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPWPlayerInput, Log, All);
@@ -85,6 +86,7 @@ void APerfectWorldPlayerCharacter::BuildInputAssets()
     CycleTargetAction = MakeAction(TEXT("IA_CycleTarget"), EInputActionValueType::Boolean);
     QuestsAction = MakeAction(TEXT("IA_Quests"), EInputActionValueType::Boolean);
     MapAction = MakeAction(TEXT("IA_ToggleMap"), EInputActionValueType::Boolean);
+    InventoryAction = MakeAction(TEXT("IA_Inventory"), EInputActionValueType::Boolean); // R88
 
     WalkingContext = NewObject<UInputMappingContext>(this, TEXT("IMC_Walking"));
 
@@ -106,6 +108,7 @@ void APerfectWorldPlayerCharacter::BuildInputAssets()
         Actions.CycleTarget = CycleTargetAction.Get();
         Actions.Quests = QuestsAction.Get();
         Actions.Map = MapAction.Get();
+        Actions.Inventory = InventoryAction.Get(); // R88
         return Actions;
     };
     KbPopulateWalkingContext(*WalkingContext, MakeKbActions(), *this, FKbBindingStore::Get().Current());
@@ -148,6 +151,17 @@ void APerfectWorldPlayerCharacter::BindEnhancedInput(UEnhancedInputComponent& In
     Input.BindActionInstanceLambda(QuestsAction.Get(), ETriggerEvent::Started,
         [Pawn = TWeakObjectPtr<const APawn>(this)](const FInputActionInstance&) { QwRequestQuests(Pawn); });
     Input.BindAction(MapAction, ETriggerEvent::Started, this, &APerfectWorldPlayerCharacter::OnToggleMapStarted);
+    Input.BindAction(InventoryAction, ETriggerEvent::Started, this, &APerfectWorldPlayerCharacter::OnInventoryStarted); // R88
+}
+
+void APerfectWorldPlayerCharacter::OnInventoryStarted()
+{
+    // R88: the input store owns both devices' keys, including remapped keys.
+    const auto* Reading = UPWReadingPresenter::Get(this); // R88: match the existing Quests guard
+    if (IsInputBlocked() || (Reading != nullptr && Reading->IsOpen())) return;
+    const auto* Player = Cast<APlayerController>(GetController());
+    auto* Hud = Player != nullptr ? Cast<APerfectWorldFrontEndHUD>(Player->GetHUD()) : nullptr;
+    if (Hud != nullptr) Hud->OpenInventoryWindow();
 }
 
 void APerfectWorldPlayerCharacter::OnToggleMapStarted()
@@ -404,6 +418,8 @@ void APerfectWorldPlayerCharacter::BindLegacyInput(UInputComponent& Input)
     {
         Input.BindKey(Key, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnToggleMapStarted);
     }
+    for (const FKey& Key : KeysOf(EKbAction::Inventory)) // R88
+        Input.BindKey(Key, IE_Pressed, this, &APerfectWorldPlayerCharacter::OnInventoryStarted);
     for (const FKey& Key : KeysOf(EKbAction::Quests))
     {
         FInputKeyBinding Binding(FInputChord(Key), IE_Pressed);
