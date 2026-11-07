@@ -1,5 +1,6 @@
 #include "PerfectWorldInteractionComponent.h"
-#include "PerfectWorldBuyPresenter.h" // R88: buy overlay owns movement, targeting and world input
+#include "PerfectWorldBuyPresenter.h"
+#include "PerfectWorldSchoolPresenter.h" // S03 // R88: buy overlay owns movement, targeting and world input
 
 #include "CollisionQueryParams.h"
 #include "Components/CapsuleComponent.h"
@@ -125,6 +126,7 @@ UPWInteractionComponent::UPWInteractionComponent()
 bool UPWInteractionComponent::IsWorldInputBlocked(const APawn* Pawn)
 {
     if (UPWBuyPresenter::IsOpenIn(Pawn)) return true; // R88
+    if (UPWSchoolPresenter::IsOpenIn(Pawn)) return true; // S03: a school panel owns the input
     if (Pawn == nullptr)
     {
         return true;

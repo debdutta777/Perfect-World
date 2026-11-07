@@ -30,6 +30,7 @@
 #include "PerfectWorldTailorBindings.h"
 #include "PerfectWorldNeighbourhoodStreets.h"
 #include "PerfectWorldSchoolCampus.h"
+#include "PerfectWorldSchoolActors.h" // S03
 #include "PerfectWorldTrafficPresenter.h"
 #include "PerfectWorldCrowdPresenter.h"
 #include "PerfectWorldSubrataBindings.h"
@@ -220,6 +221,12 @@ void SpawnHomeFurniture(UWorld& World)
     if (APWReadableActor* Paper = World.SpawnActor<APWReadableActor>(FVector::ZeroVector, FRotator::ZeroRotator, Params))
     {
         Paper->ConfigureFromSpec(HomeReadableSpec(), HomeFrame, NSLOCTEXT("PerfectWorldLane", "HomeNewspaper", "Today's newspaper"));
+    }
+    // S03: the study desk under the sleeping room's back window (desk U 230-370, V 817-873, top 76 cm); the chair stands at V 760-802, so the
+    // player reads it from the open floor south of the chair, about 1.2 m away.
+    if (APWStudyDeskActor* StudyDesk = World.SpawnActor<APWStudyDeskActor>(FVector::ZeroVector, FRotator::ZeroRotator, Params))
+    {
+        StudyDesk->Configure(HomeWorldPoint(HomeFrame, 300.0, 815.0, 85.0));
     }
 }
 void FaSpawnFarida(UWorld& World, const FLaneScene& Scene)

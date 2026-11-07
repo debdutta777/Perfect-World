@@ -8,7 +8,7 @@
 // R88: Inventory shares the existing pause menu's focus, layout, time and input policy.
 void SPWPauseMenu::OpenInventory(const bool bFromWorld)
 {
-    if (R88InventoryPanel.IsValid() || bQuestsOpen || bTodayOpen || bSettingsOpen || PendingExit != EPendingExit::None) return;
+    if (R88InventoryPanel.IsValid() || bS03PlannerOpen || bQuestsOpen || bTodayOpen || bSettingsOpen || PendingExit != EPendingExit::None) return;
     PWUI::CancelPendingFocus(AsShared());
     bR88InventoryFromWorld = bFromWorld;
     const TWeakPtr<SWidget> Self = AsShared();
