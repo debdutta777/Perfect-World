@@ -87,7 +87,8 @@ namespace PerfectWorld
  * CHOSEN (the documents leave them open), marked "Design choice (M4-03)" in the code: the tables'
  * numbers; the six preparation dimensions; the three-outcome shape; the odds bands; that
  * obligations stand by default; that a negotiation is attempted once; that the countdown opens
- * only at exactly 18:00; the day-loop credit mapping; and the comparability measure.
+ * at 18:00 (WorldCountdown.h connects the scheduled boundary and late make-up entry);
+ * the day-loop credit mapping; and the comparability measure.
  */
 
 constexpr std::uint32_t CountdownFormatVersion = 1;
