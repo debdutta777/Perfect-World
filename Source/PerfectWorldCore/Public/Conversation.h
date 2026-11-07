@@ -167,6 +167,9 @@ struct ConversationCatalogue
 /** Prabir Chatterjee's and Ishita Banerjee's catalogues (R5-01, ConversationResidentsR5.cpp). */
 [[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue PrabirConversationCatalogue() noexcept;
 [[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue IshitaConversationCatalogue() noexcept;
+/** Madhabi Das's and Arup Basu's catalogues (R6-04, ConversationResidentsR6.cpp). */
+[[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue MadhabiConversationCatalogue() noexcept;
+[[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue ArupConversationCatalogue() noexcept;
 /** Satyajit Dutta, tailor (R6-06, ConversationTailor.cpp). */
 [[nodiscard]] PERFECTWORLDCORE_API ConversationCatalogue TailorConversationCatalogue() noexcept;
 /** The default catalogue's nodes. */

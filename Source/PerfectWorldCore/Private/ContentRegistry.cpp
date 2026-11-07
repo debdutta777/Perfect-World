@@ -210,6 +210,13 @@ public:
 
     void LoadFile(const ContentFile& file)
     {
+        std::string normalizedPath = file.Path;
+        std::replace(normalizedPath.begin(), normalizedPath.end(), '\\', '/');
+        if (normalizedPath == "manifest.json" ||
+            (normalizedPath.size() >= 14 && normalizedPath.compare(normalizedPath.size() - 14, 14, "/manifest.json") == 0))
+        {
+            return; // Data/Content/manifest.json is the inventory manifest, not a content record file
+        }
         std::string_view text = file.Text;
         if (text.substr(0, 3) == "\xEF\xBB\xBF")
         {

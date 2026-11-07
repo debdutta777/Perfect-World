@@ -95,6 +95,10 @@ WorldSaveResult WorldSaveReadEnvelope(std::string_view text, const JsonValue& do
         return world;
     if (WorldSaveResult player = WorldSaveReadPlayer(*doc.Find("player"), data.Player); !player)
         return player;
+    if (WorldSaveResult commerce = WorldSaveReadCommerce(*doc.Find("world"), data.World, static_cast<std::int32_t>(version),
+                                                         creator.GetTraitRank(HouseholdResourcesTraitId));
+        !commerce)
+        return commerce;
 
     std::int64_t hashVersion = 0;
     std::uint64_t storedHash = 0;
@@ -102,22 +106,23 @@ WorldSaveResult WorldSaveReadEnvelope(std::string_view text, const JsonValue& do
         return WorldSaveMalformed("the world hash is missing or malformed.");
     WorldSaveResult result;
     result.SourceVersion = static_cast<std::int32_t>(version);
-    const bool R4JHistoricalHash = version == 8 && hashVersion == 5;
-    if (R4JHistoricalHash || (version == WorldSaveSchemaVersion && hashVersion == static_cast<std::int64_t>(WorldHashVersion)))
+    // Historical encodings this build still authenticates: v8 with hash 5 (no journal or commerce), v9 with hash 6 (no commerce).
+    const bool historicalHash = (version == 8 && hashVersion == 5) || (version == 9 && hashVersion == 6);
+    if (historicalHash || (version == WorldSaveSchemaVersion && hashVersion == static_cast<std::int64_t>(WorldHashVersion)))
     {
-        // Historical door rosters (ten, eleven, sixteen or twenty doors) and the v8 empty-journal migration change the loaded world.
-        // hashes as it was saved. Its checksum is authenticated over the door text exactly as stored, so the appended
-        // defaults never count towards it; a tampered roster fails here. The changed world loads unverified, and its
-        // first save is certified again. Unknown rosters were already refused by the world reader.
+        // Historical door rosters and the empty-journal and household-commerce migrations change the loaded world from the
+        // one that was hashed. The checksum is authenticated in the encoding it was written with, over the door text exactly
+        // as stored, so appended doors, the migrated journal and the initialised commerce never count towards it; a tampered
+        // save fails here. A migrated world loads unverified; its first save is certified again. Unknown rosters were refused.
         const JsonValue* storedDoors = doc.Find("world")->Find("doors");
         const bool doorsMigrated = storedDoors != nullptr && storedDoors->IsString() &&
                                    DeserialiseDoorState(storedDoors->String).bMigrated;
-        const std::uint64_t expected = R4JHistoricalHash
-            ? HashWorldStateWithDoorsText(data.World, storedDoors->String, 5)
-            : doorsMigrated ? HashWorldStateWithDoorsText(data.World, storedDoors->String) : HashWorldState(data.World);
+        const std::uint64_t expected = historicalHash || doorsMigrated
+            ? HashWorldStateWithDoorsText(data.World, storedDoors->String, static_cast<std::uint32_t>(hashVersion))
+            : HashWorldState(data.World);
         if (expected != storedHash)
             return WorldSaveFail(WorldSaveError::HashMismatch, "This save file is damaged: its world does not match its checksum.");
-        result.HashVerified = !doorsMigrated && !R4JHistoricalHash;
+        result.HashVerified = !doorsMigrated && !historicalHash;
     }
     out = std::move(data);
     return result;
@@ -187,7 +192,7 @@ WorldSaveResult BeginWorldFromCreation(const CharacterCreationSave& creation, st
         return WorldSaveFromCreationError(restored);
     WorldSaveData data;
     data.Creation = creator.CaptureSave();
-    data.World = MakeWorldState(worldSeed);
+    data.World = MakeWorldState(worldSeed, creator);
     data.Player.ZoneId = OriginHomeZoneId(creator.ResolveOpeningHome().HomeKitId);
     out = std::move(data);
     WorldSaveResult result;
@@ -199,7 +204,8 @@ std::string SerializeWorldSave(const WorldSaveData& data)
 {
     const WorldState& world = data.World;
     const std::string lane = WorldSaveWriteLane(world);
-    if (lane.empty())
+    const std::string commerce = WorldSaveWriteCommerce(world, data.Creation);
+    if (lane.empty() || commerce.empty())
         return {};
     std::string creation = SerializeCreationSave(data.Creation);
     while (!creation.empty() && std::isspace(static_cast<unsigned char>(creation.back())) != 0)
@@ -255,7 +261,7 @@ std::string SerializeWorldSave(const WorldSaveData& data)
         out += "], \"draws\": " + WorldSaveHexQuoted(stream.Draws) + " }";
     }
     // The player's day is its own envelope text, hash line included, carried as one string.
-    out += "\n    ],\n    \"dayloop\": " + WorldSaveQuoted(SerialiseDayLoop(world.DayLoop)) + lane + "\n  }";
+    out += "\n    ],\n    \"dayloop\": " + WorldSaveQuoted(SerialiseDayLoop(world.DayLoop)) + lane + commerce + "\n  }";
 
     const PlayerPlacement& player = data.Player;
     out += ",\n  \"player\": { \"zone\": " + WorldSaveQuoted(player.ZoneId) + ", \"posCm\": [" + std::to_string(player.PositionCm[0]) + ", " +

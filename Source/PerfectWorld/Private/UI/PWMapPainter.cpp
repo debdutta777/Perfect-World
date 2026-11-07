@@ -186,7 +186,9 @@ void PaintQuadOutline(const FPlanQuad& Quad, const FLinearColor& Colour, float T
     {
         Outline.Add(Quad.Centre + MpRotate(Corner, Quad.AngleRadians));
     }
-    Outline.Add(Outline[0]);
+    // Copy first: adding an element of the array to itself can reallocate under the reference (UE asserts on it).
+    const auto First = Outline[0];
+    Outline.Add(First);
     MpLine(Elements, Layer, Geometry, MoveTemp(Outline), Colour, Thickness);
 }
 

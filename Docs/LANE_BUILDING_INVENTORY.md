@@ -121,3 +121,13 @@ Until then an open doorway means anyone can walk in and out; `NpcSchedule`/prese
 - **Shops need furniture sets.** `ShopWithStockroom` currently has only the stationery set. The shop rows (-Y0, -Y3, -Y6, -Y9, +Y5, +Y8, and the stall rows) wait for a workshop set and a general goods set in the core (a core change, not a table row). A shop built with `FurnitureSet::None` would be an unfurnished shell, so it should not count as "furnished".
 - Complete ground floors in batches of at most three, and record **constructed, furnished, access, occupied and walked** separately here for each.
 - Measure room-light cost once more than a handful of interiors exist (the plan's performance risk); each interior adds one shadowed light per room.
+
+
+## R6-05 (2026-10-23): the two end masses are open halls
+
+| Mass | Building id | Hall | Storeys | Entrance (doorless archway on the lane axis) | Posted hours | Layout |
+|---|---|---|---|---|---|---|
+| West, X -3300 to -2400 | `building.nabapara.west_end_block` | Community hall | 4 | 300 x 240 cm at (-2400, 0) | 08:00-21:00 | `LaneEndLayouts.h`, GenerateEndLayout(CommunityHall) |
+| East, X 6400 to 7300 | `building.nabapara.east_end_block` | Market hall | 5 | 400 x 250 cm at (6400, 0) | 06:00-13:00 and 16:00-21:00 | GenerateEndLayout(MarketHall) |
+
+No lane building is sealed any more. The archways hang no leaf and add no door id (roster stays at 29); the hours are posted and reported by `IsOpenAt` but not enforced. A real door leaf would be a later roster edition.

@@ -77,6 +77,11 @@ void R91Creation(const ContentDb& content, const AbilityRecipeSet& recipes)
         varied.TraitRanks[static_cast<std::size_t>(found - traits.begin())] = 4;
         const auto state = R91Seed(content, varied);
         const auto result = ResolveAwakening(BuildAwakeningInput(state), recipes);
+        R91Expect(state.Stats != baseline.Stats, "every documented skill-seeding trait changes the seeded stats");
+        // academic_foundation seeds study skills that the existing resolver's latent signal inputs (AwLatentInputs) do not
+        // read, so it changes stats but not the awakening; the three aptitudes must move the whole result.
+        if (id == "academic_foundation")
+            continue;
         R91Expect(state.Stats != baseline.Stats && result.Signals != baseResult.Signals &&
                       result.TattvaMilli != baseResult.TattvaMilli && result.Rating != baseResult.Rating,
                   "documented skill-seeding traits change stats, signals, affinity and capability");

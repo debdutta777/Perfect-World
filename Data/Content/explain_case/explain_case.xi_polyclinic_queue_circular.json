@@ -1,0 +1,31 @@
+{
+  "type": "explain_case",
+  "id": "explain_case.xi_polyclinic_queue_circular",
+  "family": "explain_family.xi_claim_evidence_limit",
+  "name": "The new token hours at the community clinic",
+  "subject": "interpretation",
+  "question": "judgement",
+  "role": "critic",
+  "scarce": "time",
+  "method": "method.close_reading",
+  "brief": "Dr Ananya Chatterjee has pinned a notice outside the community clinic: 'From 1 November, tokens for routine blood-pressure checks and dressings will be issued between 2:00 and 3:30 p.m. only. The morning window is kept for acute fevers and maternity care.' With a few minutes left in civics, you are the critic judging whether the rule is fair to the people who use the clinic.",
+  "claims": [
+    { "id": "c_serves_urgent", "name": "Moving routine tokens out of the morning protects the fever and maternity patients who most need quick care", "defensible": true },
+    { "id": "c_burdens_workers", "name": "Fixing routine tokens in mid-afternoon makes the clinic harder to reach for daily-wage workers who cannot leave a shift", "defensible": true },
+    { "id": "c_closes_dressings", "name": "The notice closes the dressing room for good from 1 November", "defensible": false }
+  ],
+  "evidence": [
+    { "id": "e_morning_waits", "name": "October's waiting-bench log shows fever patients waited seventy minutes when dressings shared the morning queue", "supports": ["c_serves_urgent"], "against": [] },
+    { "id": "e_clinic_standard", "name": "The clinic's own written standard is to see an acutely feverish child within thirty minutes of arrival", "supports": ["c_serves_urgent"], "against": [] },
+    { "id": "e_shift_hours", "name": "Market porters and workshop hands in the lane work continuous shifts from 10:00 a.m. to 5:30 p.m.", "supports": ["c_burdens_workers"], "against": [] },
+    { "id": "e_no_evening_window", "name": "The notice offers no evening or Sunday window for working adults who need repeat blood-pressure checks", "supports": ["c_burdens_workers"], "against": [] },
+    { "id": "e_nurse_rota", "name": "The notice assigns the senior dressing nurse and two sterile trays to Room 4 every afternoon from 2:00 p.m.", "supports": [], "against": ["c_closes_dressings"] },
+    { "id": "e_notice_paper", "name": "The notice is typed on pale blue paper with the ward health office stamp", "supports": [], "against": [] }
+  ],
+  "limitations": [
+    { "id": "l_no_new_data", "name": "The rule starts on 1 November, so there are no attendance figures yet for the new hours", "bounds": ["c_serves_urgent", "c_burdens_workers"] },
+    { "id": "l_side_door", "name": "Dr Chatterjee is known to see an early dressing patient at the side door before eight, which may ease the burden", "bounds": ["c_burdens_workers"] },
+    { "id": "l_fever_season", "name": "October is the post-monsoon fever peak, so January's morning rush may be lighter even without the change", "bounds": ["c_serves_urgent"] }
+  ],
+  "note": "The community clinic (loc_clinic) and Dr Ananya Chatterjee (npc_dr_chatterjee) are from INDIA_WORLD_BIBLE.md; the notice and figures are invented. The fairness question has two sides, both defensible: urgent care first, and access for people who cannot leave work. The closure claim misreads the notice, which moves the dressing nurse to the afternoon. The paper colour is beside the point."
+}

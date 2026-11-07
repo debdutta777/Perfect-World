@@ -32,7 +32,8 @@ std::string LaneQuoted(std::string_view text)
 
 void LaneRoundTripAndReplay()
 {
-    WorldSim live(81);
+    const CharacterCreationSave creation = MakeCreation("parent_household");
+    WorldSim live(81, CreatorOf(creation));
     const std::string person(HouseholdAdultId);
     Check(live.Submit({CommandSource::Player, AdvanceTime{720}}).Accepted, "advance to the evening conversation window");
     Check(live.Submit({CommandSource::Player, ConversationOpen{person, PersonAvailability::Awake}}).Accepted,
@@ -45,10 +46,10 @@ void LaneRoundTripAndReplay()
     Check(live.Submit({CommandSource::System, DoorSettle{door, true, -1}}).Accepted, "settle an open negative-side door");
     const std::string secondDoor(AuthoredDoors()[2].Id);
     Check(live.Submit({CommandSource::System, DoorSettle{secondDoor, true, 1}}).Accepted, "settle a positive-side door");
-    WorldSaveData data = SaveOf(live, MakeCreation("parent_household"));
+    WorldSaveData data = SaveOf(live, creation);
     WorldSaveData loaded;
     const auto result = DeserializeWorldSave(SerializeWorldSave(data), loaded);
-    Check(result.Succeeded() && result.SourceVersion == 9 && result.HashVerified, "v9 mid-session round trip is certified");
+    Check(result.Succeeded() && result.SourceVersion == WorldSaveSchemaVersion && result.HashVerified, "current-schema mid-session round trip is certified");
     CheckSame(data, loaded, "all persisted fields survive the lane round trip");
     WorldSim resumed(loaded.World);
     for (WorldSim* sim : {&live, &resumed})
@@ -60,7 +61,7 @@ void LaneRoundTripAndReplay()
         Check(sim->Submit({CommandSource::Player, AdvanceTime{17}}).Accepted, "advance continued world");
     }
     Check(HashWorldState(live.State()) == HashWorldState(resumed.State()), "reload continuation equals uninterrupted run");
-    const auto replay = ReplayCommandLog(81, live.Log());
+    const auto replay = ReplayLife(81, creation, live.Log());
     Check(replay.Complete && replay.Hash == HashWorldState(live.State()), "lane command replay is equivalent");
 }
 
@@ -70,8 +71,8 @@ void LaneMigration()
     std::string old = SerializeWorldSave(data);
     const auto begin = old.find(",\n    \"conversations\":");
     old.erase(begin, old.find("\n  }", begin) - begin);
-    old = ReplaceOnce(old, "\"schemaVersion\": 9", "\"schemaVersion\": 7");
-    old = ReplaceOnce(old, "\"hashVersion\": 6", "\"hashVersion\": 4");
+    old = ReplaceOnce(old, "\"schemaVersion\": " + std::to_string(WorldSaveSchemaVersion), "\"schemaVersion\": 7");
+    old = ReplaceOnce(old, "\"hashVersion\": " + std::to_string(WorldHashVersion), "\"hashVersion\": 4");
     // Historical v4 cannot be certified by v5. Use the independently pinned v4 reference value as a stale hash.
     const auto hash = old.find("\"stateHash\": ") + 13;
     old.replace(hash, 20, "\"0x6172068cb2eb0ae3\"");
@@ -79,10 +80,10 @@ void LaneMigration()
     const auto result = DeserializeWorldSave(old, loaded);
     Check(result.Succeeded() && result.SourceVersion == 7 && !result.HashVerified && !result.Migrated,
           "historical world loads unverified; Migrated remains the creation-only marker");
-    CheckSame(data, loaded, "v7 retains old authority and receives empty conversations and authored doors");
+    CheckSame(MigratedCommerce(data), loaded, "v7 retains old authority and receives empty conversations, authored doors and household commerce");
     Check(loaded.World.Conversations.empty() && loaded.World.Doors == MakeInitialDoorState(), "honest lane defaults");
     // Even a relabelled historical record carrying today's hash must not be certified as a v8 snapshot.
-    std::string relabelled = ReplaceOnce(old, "\"hashVersion\": 4", "\"hashVersion\": 6");
+    std::string relabelled = ReplaceOnce(old, "\"hashVersion\": 4", "\"hashVersion\": " + std::to_string(WorldHashVersion));
     const std::string current = SerializeWorldSave(data);
     const auto currentHash = current.find("\"stateHash\": ") + 13;
     relabelled.replace(relabelled.find("\"stateHash\": ") + 13, 20, current.substr(currentHash, 20));
@@ -196,7 +197,7 @@ void LaneRefusals()
 
 void LaneStationeryEgress()
 {
-    WorldSim live(85);
+    const auto creation = MakeCreation("parent_household"); WorldSim live(85, CreatorOf(creation));
     const std::string door = "door.nabapara.stationery_front";
     Check(live.Submit({CommandSource::Player, AdvanceTime{810}}).Accepted, "reach stationery closing time at 19:30");
     const auto before = HashWorldState(live.State());
@@ -205,7 +206,7 @@ void LaneStationeryEgress()
           "closed-hours entry is refused atomically through the reducer");
     Check(live.Submit({CommandSource::Player, DoorSet{door, true, {DoorDirection::Exit}}}).Accepted,
           "a person inside opens the stationery door after closing");
-    const auto data = SaveOf(live, MakeCreation("parent_household"));
+    const auto data = SaveOf(live, creation);
     WorldSaveData loaded;
     Check(DeserializeWorldSave(SerializeWorldSave(data), loaded).HashVerified, "stationery open state survives certified v8 save");
     CheckSame(data, loaded, "stationery state and remaining world survive save and load");
@@ -215,12 +216,12 @@ void LaneStationeryEgress()
           "an open leaf after reload does not grant entry after closing");
     Check(resumed.Submit({CommandSource::Player, DoorSet{door, false, {DoorDirection::Exit}}}).Accepted,
           "a person leaving may close the door after reload");
-    Check(ReplayCommandLog(85, live.Log()).Hash == HashWorldState(live.State()), "exit command replays deterministically");
+    Check(ReplayLife(85, creation, live.Log()).Hash == HashWorldState(live.State()), "exit command replays deterministically");
 }
 
 void R1FrontageDoorRestart()
 {
-    WorldSim live(401);
+    const auto creation = MakeCreation("parent_household"); WorldSim live(401, CreatorOf(creation));
     Check(live.Submit({CommandSource::Player, AdvanceTime{270}}).Accepted, "reach 10:30 browsing hours");
     const std::string ids[]{"door.nabapara.market_stalls_a_front", "door.nabapara.market_stalls_b_front", "door.nabapara.end_shop_front",
         "door.nabapara.cloth_merchant_front", "door.nabapara.narrow_shop_front", "door.nabapara.tailor_shop_front", "door.nabapara.corner_stalls_front"};
@@ -228,7 +229,7 @@ void R1FrontageDoorRestart()
         Check(live.Submit({CommandSource::Player, DoorSet{id, true, {DoorDirection::Entry}}}).Accepted, "each browsing door opens");
     Check(live.Submit({CommandSource::Player, DoorSet{ids[1], false, {DoorDirection::Exit}}}).Accepted, "mixed open and closed leaves");
     Check(live.Submit({CommandSource::Player, DoorSet{ids[4], false, {DoorDirection::Exit}}}).Accepted, "R53 mixed leaves");
-    const auto data = SaveOf(live, MakeCreation("parent_household"));
+    const auto data = SaveOf(live, creation);
     WorldSaveData loaded;
     Check(DeserializeWorldSave(SerializeWorldSave(data), loaded).HashVerified, "current 29-door save authenticates");
     CheckSame(data, loaded, "restart retains all world and door facts");
@@ -259,7 +260,7 @@ void R1FrontageDoorRestart()
         }
     }
     Check(HashWorldState(live.State()) == HashWorldState(resumed.State()), "continued door commands equal uninterrupted play");
-    Check(ReplayCommandLog(401, live.Log()).Hash == HashWorldState(live.State()), "round4 door commands replay deterministically");
+    Check(ReplayLife(401, creation, live.Log()).Hash == HashWorldState(live.State()), "round4 door commands replay deterministically");
 }
 
 // Historical v5 byte layout, independent of the door writer's current authored table.
@@ -282,7 +283,7 @@ std::uint64_t LaneHistoricalHash(const WorldState& world, std::string_view doors
     };
     std::string bytes = "u" + number(5);
     for (const auto& section : HashWorldSections(world))
-        if (section.Name != "journal")
+        if (section.Name != "journal" && section.Name != "commerce")
             bytes += text(section.Name) + "u" + number(section.Name == "doors" ? fnv(text(doors)) : section.Hash);
     return fnv(bytes);
 }
@@ -307,8 +308,8 @@ void LaneTenDoorV8Migration()
     std::string old = ReplaceOnce(SerializeWorldSave(data), LaneQuoted(SerialiseDoorState(data.World.Doors)), LaneQuoted(oldDoors));
     const auto R4JStart = old.find(",\n    \"journal\":");
     old.erase(R4JStart, old.find("\n  }", R4JStart) - R4JStart);
-    old = ReplaceOnce(old, "\"schemaVersion\": 9", "\"schemaVersion\": 8");
-    old = ReplaceOnce(old, "\"hashVersion\": 6", "\"hashVersion\": 5");
+    old = ReplaceOnce(old, "\"schemaVersion\": " + std::to_string(WorldSaveSchemaVersion), "\"schemaVersion\": 8");
+    old = ReplaceOnce(old, "\"hashVersion\": " + std::to_string(WorldHashVersion), "\"hashVersion\": 5");
     const auto hashAt = old.find("\"stateHash\": ") + 13;
     const auto hex = [](std::uint64_t hash) {
         std::string value = "\"0x0000000000000000\"";
@@ -321,7 +322,7 @@ void LaneTenDoorV8Migration()
     const auto result = DeserializeWorldSave(old, loaded);
     Check(result.Succeeded() && result.SourceVersion == 8 && !result.HashVerified,
           "historical ten-door v8 authenticates its original hash and reports changed state honestly");
-    CheckSame(data, loaded, "historical door facts survive and stationery receives its closed authored default");
+    CheckSame(MigratedCommerce(data), loaded, "historical door facts survive and stationery receives its closed authored default");
     Check(QueryDoorOpen(loaded.World.Doors, "door.nabapara.stationery_front") == false, "new business starts closed");
     WorldSaveData again;
     Check(DeserializeWorldSave(SerializeWorldSave(loaded), again).HashVerified, "migrated world resaves as certified current v8");

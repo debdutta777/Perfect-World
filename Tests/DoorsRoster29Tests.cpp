@@ -54,9 +54,11 @@ void R61DefinitionsAndAccess()
         const auto& door = doors[i];
         const bool shop = i == 28;
         R61Expect(door.LocationId == locations[i - 26] && !door.bInitiallyOpen && !door.bTwoWay &&
-            door.PreferredSwingSide == (shop ? 1 : -1) && door.VisitingWindows.empty() &&
+            door.PreferredSwingSide == (shop ? 1 : -1) &&
+            (shop ? door.VisitingWindows.empty() : door.VisitingWindows.size() == 1 && door.VisitingWindows[0].OpenMinute == 960 &&
+                door.VisitingWindows[0].CloseMinute == 1170) &&
             door.OpenMinute == 0 && door.CloseMinute == 0 &&
-            door.Access == (shop ? DoorAccess::BusinessHours : DoorAccess::Private), "R61 identity, access and inward leaf policy");
+            door.Access == (shop ? DoorAccess::BusinessHours : DoorAccess::Private), "R61 identity, access and inward leaf policy; R64 evening visiting window on both homes");
         R61Expect(shop ? door.OpeningWindows.size() == 2 && door.OpeningWindows[0].OpenMinute == 540 &&
             door.OpeningWindows[0].CloseMinute == 780 && door.OpeningWindows[1].OpenMinute == 900 &&
             door.OpeningWindows[1].CloseMinute == 1170 : door.OpeningWindows.empty(), "browsing windows only on the corner shop");
@@ -75,8 +77,11 @@ void R61DefinitionsAndAccess()
                     EvaluateDoorKnock(door, minute, {}).Answer == DoorKnockAnswer::NoAnswer, "unoccupied home offers an unanswered knock");
                 R61Expect(EvaluateDoorPassage(door, minute, {DoorDirection::Entry, false, false, false, true}) == DoorResult::Private,
                     "an unanswered knock grants nothing");
-                R61Expect(EvaluateDoorKnock(door, minute, {DoorDirection::Entry, false, false, true}).Answer == DoorKnockAnswer::NotReceiving &&
-                    DoorMinutesUntilVisiting(door, minute) == -1, "no visiting window is invented even if a future host is home");
+                const bool visiting = minute >= 960 && minute < 1170;
+                const auto atHome = EvaluateDoorKnock(door, minute, {DoorDirection::Entry, false, false, true});
+                R61Expect(atHome.Answer == (visiting ? DoorKnockAnswer::Admitted : DoorKnockAnswer::NotReceiving) &&
+                    (DoorMinutesUntilVisiting(door, minute) == 0) == visiting,
+                    "R64: a home host answers only inside 16:00-19:30; outside it the knock is not received");
             }
         }
         auto state = MakeInitialDoorState();

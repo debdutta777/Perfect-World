@@ -2289,3 +2289,63 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 - R8-05 Buy panel, wallet and inventory UI (Claude Sonnet).
 - R8-04, the save migration to schema 10 and hash 7, follows R8-03 (Claude deep-work).
 - The staffed shops (R7-04) still wait on the owner's decision about the counter patch.
+
+## Checkpoint — first runtime evidence; v0.6.1-alpha hotfix published, 2026-10-25
+
+**The first boot smoke test ever run on a package** (`boot_walk_interact`, offscreen, while the owner's apps were closed) found that **v0.4.0–v0.6.0 crash a few frames after entering the world**.
+- The cause is `Array.Add(Array[0])` in the minimap painter (`PWMapPainter.cpp`) and the trait radar (`SPWAttributeRadarPaint.cpp`); Unreal asserts on it.
+- Fixed at `1b49712`.
+- The rerun on the fixed package boots, enters the world, walks and renders: a screenshot with the minimap and clock.
+- It then **fails one step**: `walk_to_table_chair` is blocked 45 cm short of the chair. Still to investigate.
+
+**Released `v0.6.1-alpha`:**
+- https://github.com/debdutta777/Perfect-World/releases/tag/v0.6.1-alpha
+- sha256 `8845cc6b41b177b4dbaaed7f3e00cc9859a90b1b02d5edab659fb135a348a541`.
+- v0.4.0–v0.6.0 now carry a known-crash note.
+
+**New tooling:**
+- The Antigravity CLI (`agy.exe`) runs **Gemini 4 Argon Medium** as an edit-only subagent through `D:\PWWork\run_agy.ps1`.
+- The Gemini CLI's Google sign-in is refused for personal accounts.
+
+**Gemini's first two orders, done on their branches:**
+- R9-07: the Awakening result and countdown panels.
+- S01: a content manifest. Its build and tests are running.
+
+**Phase 2** (`Docs/PHASE2_PLAN_2026-10-25.md`, gpt-6-astra) is under way:
+- the school contracts (gpt-6.1-sol);
+- A4 school-life content and A7 tower scenarios (Gemini 4 Argon Medium).
+
+
+## Checkpoint — v0.7.0-alpha published, 2026-10-30
+
+**Published:** `v0.7.0-alpha` prerelease at `33a55ea`: shop counters, wallet, Inventory, 108 crowd lines. sha256 `3e9cdf5224e4eff2c534c9437f07d08113f83bd4ccd1b5e2f1df331dd3d6d7f5`. The packaged exe is the one both scenarios ran (`2d582358...`).
+
+**Verification, by rung:**
+- Rung 1: 209/209 at `b3b1cda` (the last core change).
+- Rung 2: editor target compiled at `8b1bea9`.
+- Rung 4: package at `33a55ea`.
+- Packaged `boot_walk_interact`: boots, enters, walks, renders, no crash; fails `walk_to_table_chair`, 45 cm short at (185, -766), as v0.6.1 did.
+- Packaged `commerce_shanti_round8`: **FAIL**. Reaches the counter on foot, then `commerce_real_buy_interaction` times out after 30 s with no reason. Payment, debit, Inventory and eating were not reached. **Commerce is not verified in the game.** `b620702` makes the step name the core's refusal or the held target.
+- Not run: engine automation tests, fresh-process Continue on this build.
+
+**Review:** gpt-6-astra (`D:\PWWork\logs\REVIEW_astra_v070.md`) recommended publishing with the failure stated. It found no 09:00 blocker in the Shanti Chai or Farida data. It ranks target or visibility rejection first, then keeper binding or approach rejection, then presenter refusal; these are hypotheses, not a diagnosis. It found a real reach mismatch: loose target retention against strict commerce approach. The next run of the diagnostic scenario decides.
+
+**Merged since v0.6.1:** R8-04 (save schema 10, hash 7), R8-05 + R8-08 (commerce in the game), crowd voices (Gemini 3.8 Flash lines; Data/Text is now staged).
+
+**Done on branches, not merged:**
+- A1, A2, A3, A5, A6: panels written, Unreal not compiled.
+- `core/p2-school-contracts`: Phase 2 contracts + A4 + A7 + A8; Rung 1 pending after the file renames.
+- R9-05: adapters; Rung 1 pending; reducer wiring not done.
+- R6-04, R6-05: Rung 1 pending.
+- R9-06, R9-07: not compiled.
+
+**Blocked design questions before school integration (astra):**
+- Map academic foundation into authoritative Awakening evidence.
+- Resolve A7's three `model.xi.*` ids, which have no catalogue entries.
+- Distinguish attendance days from ordinary lesson days (sports day, assessment weeks).
+- Constrain lesson selection to subject-appropriate cases.
+
+**Environment lessons:**
+- A power-off can leave the D: clone at the right HEAD with an old tree, and packaging then "succeeds" on stale content. Seen on 2026-10-29; check `git status` and the packaged `Data` folder before publishing.
+- The owner's apps can exhaust commit memory, which stalls `cl.exe`.
+- `D:\PWWork\job_package_staged.ps1` resumes per stage. A plain BuildCookRun no longer fits between power-offs.

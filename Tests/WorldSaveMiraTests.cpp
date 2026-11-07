@@ -41,7 +41,7 @@ constexpr std::string_view MrSaveFact = "fact.mira_sen.notes_returned";
 
 void MrSaveMidSession()
 {
-    WorldSim live(93);
+    const auto creation = MakeCreation("parent_household"); WorldSim live(93, CreatorOf(creation));
     const std::string person(MrSavePerson);
     // Monday 06:00 plus 640 minutes is 16:40; Mira stands at the packing desk on a Tuesday or Thursday, and the core serves the
     // desk line from 16:30 whatever the day.
@@ -65,7 +65,7 @@ void MrSaveMidSession()
     Check(!live.Submit({CommandSource::Player, ConversationChoose{person, std::string(MrSaveCompare), 2}}).Accepted, "a duplicate charge is refused");
     Check(live.State().Clock.Now() == clockAfter, "a refused duplicate costs nothing");
 
-    WorldSaveData data = SaveOf(live, MakeCreation("parent_household"));
+    WorldSaveData data = SaveOf(live, creation);
     WorldSaveData loaded;
     const auto result = DeserializeWorldSave(SerializeWorldSave(data), loaded);
     Check(result.Succeeded() && result.SourceVersion == WorldSaveSchemaVersion && result.HashVerified, "current-schema mid-session round trip with Mira is certified");
@@ -87,7 +87,7 @@ void MrSaveMidSession()
         Check(sim->Submit({CommandSource::Player, ConversationLeave{person}}).Accepted, "leave again");
     }
     Check(HashWorldState(live.State()) == HashWorldState(resumed.State()), "reload continuation equals the uninterrupted run");
-    const auto replay = ReplayCommandLog(93, live.Log());
+    const auto replay = ReplayLife(93, creation, live.Log());
     Check(replay.Complete && replay.Hash == HashWorldState(live.State()), "command replay is equivalent");
 }
 

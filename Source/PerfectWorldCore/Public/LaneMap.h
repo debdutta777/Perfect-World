@@ -31,7 +31,8 @@ namespace PerfectWorld::LaneMap
  * an axis-aligned rectangle, and presenters may rely on IsRectangle.
  *
  * Coverage is the lane the player can walk: the road, the two side alleys, the footpaths in front of the near buildings, the nineteen
- * near frontages and the two masses that close the lane. The second row, the third row and the skyline are backdrop and are not mapped.
+ * near frontages and the two masses that close the lane (R6-05: the community hall and the market hall, entered through doorless archways;
+ * LaneEndLayouts.h). The second row, the third row and the skyline are backdrop and are not mapped.
  * Only exterior front doors have an authored position; interior doors (home_living, care_dormitory ...) are not on the map.
  *
  * Integer-valued geometry in doubles; no exceptions.
@@ -67,10 +68,11 @@ struct Surface
 /**
  * What a building is, for colouring and the legend. Home covers every dwelling and the children's home; Workshop is a shop with the
  * workshop furniture set (repair, tailoring); Shop is every other trading or browsing room; School is reserved for the school
- * the lane will gain (no building uses it today, but ExtraBuilding can add one); Sealed is a ground floor nobody can enter yet.
+ * the lane will gain (no building uses it today, but ExtraBuilding can add one); Sealed is a ground floor nobody can enter yet (none remain
+ * since R6-05); Civic is a public hall that is not a shop (the community hall at the west end of the lane).
  */
-enum class BuildingKind : std::uint8_t { Home, Shop, School, Workshop, Sealed };
-inline constexpr std::size_t BuildingKindCount = 5;
+enum class BuildingKind : std::uint8_t { Home, Shop, School, Workshop, Sealed, Civic };
+inline constexpr std::size_t BuildingKindCount = 6;
 
 struct Building
 {
@@ -87,7 +89,7 @@ struct Building
     /** Where the front door is; meaningful only when bHasEntrance. */
     Point Entrance;
     bool bHasEntrance = false;
-    /** -1 or +1: the side of the lane; 0 for the two masses that close its ends. */
+    /** -1 or +1: the side of the lane; 0 for the two masses that close its ends (their entrance is on the lane-facing X edge, R6-05). */
     int Side = 0;
     int Storeys = 0;
     /** True when the ground floor can be entered (it has a front door or doorway). */
@@ -106,7 +108,7 @@ struct MapDoor
     bool bInitiallyOpen = false;
 };
 
-enum class PoiKind : std::uint8_t { Home, Shop, Workshop, School, Alley, LaneEnd };
+enum class PoiKind : std::uint8_t { Home, Shop, Workshop, School, Alley, LaneEnd, Civic };
 
 struct PointOfInterest
 {

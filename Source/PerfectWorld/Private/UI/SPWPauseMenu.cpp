@@ -5,6 +5,7 @@
 #include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "PerfectWorldFrontEndHUD.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
+#include "PerfectWorldCommerceText.h" // R88
 #include "UI/PWStyle.h"
 #include "UI/PWWidgets.h"
 #include "UI/SPWAwakeningSigil.h"
@@ -177,6 +178,7 @@ void SPWPauseMenu::Construct(const FArguments& InArgs)
     {
         OpenQuests(true);
     }
+    if (Hud.IsValid() && Hud->R88TakeInventoryRequest()) OpenInventory(true); // R88
 }
 
 FVector2D SPWPauseMenu::PauseSpaceOf(const TWeakPtr<SWidget>& Self)
@@ -230,6 +232,10 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
             OpenQuests(false);
             return FReply::Handled();
         }));
+
+    R88InventoryButton = CpPauseButton(LOCTEXT("Inventory", "Inventory"), PWUI::EButtonKind::Secondary,
+        FOnClicked::CreateSPLambda(this, [this]() { OpenInventory(); return FReply::Handled(); })); // R88
+    R88InventoryButton->SetTag(TEXT("R88PauseInventory"));
 
     SettingsButton = CpPauseButton(
         LOCTEXT("Settings", "Settings"), PWUI::EButtonKind::Secondary,
@@ -312,6 +318,9 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
             [
                 ContextRow(LOCTEXT("TimeLabel", "TIME"), TimeText)
             ]
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 2.0f, 0.0f, 0.0f) // R88
+            [ContextRow(LOCTEXT("WalletLabel", "WALLET"), TAttribute<FText>::CreateLambda([WeakHud]()
+                { return PWCommerce::CmPauseWalletValue(WeakHud.IsValid() ? WeakHud->GetWorld() : nullptr); }))]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 6.0f, 0.0f, 0.0f)
             [
                 SNew(SBox).Visibility_Lambda([CompactVisibility]() { return CompactVisibility(false); })
@@ -379,6 +388,7 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[ResumeButton]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[TodayButton.ToSharedRef()]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[QuestsButton.ToSharedRef()]
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[R88InventoryButton.ToSharedRef()] // R88
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[SettingsButton.ToSharedRef()]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[SaveButton]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[SaveFeedback]

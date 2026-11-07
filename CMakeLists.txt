@@ -808,6 +808,22 @@ add_executable(PerfectWorldNeighbourhoodTrafficTests Tests/NeighbourhoodTrafficT
 target_link_libraries(PerfectWorldNeighbourhoodTrafficTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldNeighbourhoodTrafficTests COMMAND PerfectWorldNeighbourhoodTrafficTests)
 
+# R65: the two lane-end masses opened as public halls (community hall west, market hall east); doorless archways, no roster or save change.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/LaneEndLayouts.cpp
+    Source/PerfectWorldCore/Private/LaneEndHallCommunity.cpp
+    Source/PerfectWorldCore/Private/LaneEndHallMarket.cpp)
+add_executable(PerfectWorldLaneEndLayoutsTests Tests/LaneEndLayoutsTests.cpp)
+target_link_libraries(PerfectWorldLaneEndLayoutsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneEndLayoutsTests COMMAND PerfectWorldLaneEndLayoutsTests)
+# R6-04: the two remaining private homes get a resident each (Madhabi Das, alley house; Arup Basu, stair flats).
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationResidentsR6.cpp)
+add_executable(PerfectWorldResidentsR6Tests Tests/ResidentsR6Tests.cpp)
+target_include_directories(PerfectWorldResidentsR6Tests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldResidentsR6Tests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldResidentsR6Tests COMMAND PerfectWorldResidentsR6Tests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.madhabi_das.json
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.arup_basu.json)
 # R83: reducer commerce/service inputs, every time path and atomic refusals; save/hash remain R8-04's.
 target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldCommerce.cpp)
 add_executable(PerfectWorldWorldCommerceTests Tests/WorldCommerceTests.cpp)
@@ -820,8 +836,93 @@ add_executable(PerfectWorldCommerceContentTests Tests/CommerceContentTests.cpp)
 target_link_libraries(PerfectWorldCommerceContentTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldCommerceContentTests COMMAND PerfectWorldCommerceContentTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
+# P2C: frozen Phase 2 school/tower contracts. This is the single appended block.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/SchoolSessions.cpp
+    Source/PerfectWorldCore/Private/SchoolWork.cpp
+    Source/PerfectWorldCore/Private/SchoolLife.cpp
+    Source/PerfectWorldCore/Private/SchoolWeek.cpp
+    Source/PerfectWorldCore/Private/TowerSession.cpp)
+foreach(P2C_SYSTEM SchoolSessions SchoolWork SchoolLife SchoolWeek TowerSession)
+    add_executable(PerfectWorld${P2C_SYSTEM}Tests Tests/${P2C_SYSTEM}Tests.cpp)
+    target_link_libraries(PerfectWorld${P2C_SYSTEM}Tests PRIVATE PerfectWorldCore)
+    add_test(NAME PerfectWorld${P2C_SYSTEM}Tests COMMAND PerfectWorld${P2C_SYSTEM}Tests ${CMAKE_SOURCE_DIR}/Data/Content)
+endforeach()
+
+# P2 A1: the timetable and lesson catalogue (school_lesson content kind, today's school-day projection).
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/SchoolLessonContent.cpp
+    Source/PerfectWorldCore/Private/SchoolLessonDayView.cpp)
+add_executable(PerfectWorldSchoolLessonContentTests Tests/SchoolLessonContentTests.cpp)
+target_link_libraries(PerfectWorldSchoolLessonContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSchoolLessonContentTests COMMAND PerfectWorldSchoolLessonContentTests ${CMAKE_SOURCE_DIR}/Data/Content ${CMAKE_SOURCE_DIR}/Data/Text/en/phase2_a1.json)
+# R84: commerce persistence (pw.commerce/1, schema 10, hash 7), legacy authentication and household migration.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldSaveCommerce.cpp)
+add_executable(PerfectWorldWorldSaveCommerceTests Tests/WorldSaveCommerceTests.cpp Tests/WorldSaveCommerceFixtureTests.cpp)
+target_link_libraries(PerfectWorldWorldSaveCommerceTests PRIVATE PerfectWorldCore)
+target_compile_definitions(PerfectWorldWorldSaveCommerceTests PRIVATE PW_COMMERCE_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
+add_test(NAME PerfectWorldWorldSaveCommerceTests COMMAND PerfectWorldWorldSaveCommerceTests)
+add_executable(PerfectWorldWorldHashCommerceTests Tests/WorldHashCommerceTests.cpp)
+target_link_libraries(PerfectWorldWorldHashCommerceTests PRIVATE PerfectWorldCore)
+target_compile_definitions(PerfectWorldWorldHashCommerceTests PRIVATE PW_COMMERCE_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
+add_test(NAME PerfectWorldWorldHashCommerceTests COMMAND PerfectWorldWorldHashCommerceTests)
+
+# S01: deterministic content manifest, diffing and pwcontent check-manifest gate.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ContentManifest.cpp)
+add_executable(PerfectWorldContentManifestTests Tests/ContentManifestTests.cpp)
+target_link_libraries(PerfectWorldContentManifestTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldContentManifestTests COMMAND PerfectWorldContentManifestTests ${CMAKE_SOURCE_DIR}/Data/Content)
+add_test(NAME PerfectWorldContentManifestData COMMAND pwcontent check-manifest ${CMAKE_SOURCE_DIR}/Data/Content)
+
+
 # R91: frozen Awakening inputs/state contract and exactly-once genuine activity credits.
 target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/AwakeningInputs.cpp)
 add_executable(PerfectWorldAwakeningInputsTests Tests/AwakeningInputsTests.cpp)
 target_link_libraries(PerfectWorldAwakeningInputsTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldAwakeningInputsTests COMMAND PerfectWorldAwakeningInputsTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# R95: scheduled countdown boundary, fixed-deadline make-up handoff and optional practice.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldCountdown.cpp)
+add_executable(PerfectWorldWorldCountdownTests Tests/WorldCountdownTests.cpp)
+target_link_libraries(PerfectWorldWorldCountdownTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldCountdownTests COMMAND PerfectWorldWorldCountdownTests ${CMAKE_SOURCE_DIR}/Data/Content)
+# R92: supervised tutorial situations, recovery, safe withdrawal, make-up and atomic grant.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/TutorialDungeon.cpp)
+add_executable(PerfectWorldTutorialDungeonTests Tests/TutorialDungeonTests.cpp)
+target_link_libraries(PerfectWorldTutorialDungeonTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldTutorialDungeonTests COMMAND PerfectWorldTutorialDungeonTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# R93: authored tutorial content, registry schema and complete text-reference validation.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/ContentTutorialSchemas.cpp
+    Source/PerfectWorldCore/Private/TutorialContent.cpp)
+add_executable(PerfectWorldTutorialContentTests Tests/TutorialContentTests.cpp)
+target_link_libraries(PerfectWorldTutorialContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldTutorialContentTests COMMAND PerfectWorldTutorialContentTests
+    ${CMAKE_SOURCE_DIR}/Data/Content ${CMAKE_SOURCE_DIR}/Data/Text/en/tutorial.awakening.json)
+
+# Phase 2 A4 (Gemini Argon): teachers, classmates and home obligations - school_scene content.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/SchoolLifeContent.cpp)
+add_executable(PerfectWorldSchoolLifeContentTests Tests/SchoolLifeContentTests.cpp)
+target_link_libraries(PerfectWorldSchoolLifeContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSchoolLifeContentTests COMMAND PerfectWorldSchoolLifeContentTests
+    ${CMAKE_SOURCE_DIR}/Data/Content ${CMAKE_SOURCE_DIR}/Data/Text/en/phase2_a4.json)
+
+# Phase 2 A7 (Gemini Argon): tower scenario content - tower_scenario.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/TowerScenarioContent.cpp
+    Source/PerfectWorldCore/Private/TowerScenarioSchema.cpp)
+add_executable(PerfectWorldTowerScenarioContentTests Tests/TowerScenarioContentTests.cpp)
+target_link_libraries(PerfectWorldTowerScenarioContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldTowerScenarioContentTests COMMAND PerfectWorldTowerScenarioContentTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/tower_scenario ${CMAKE_SOURCE_DIR}/Data/Text/en/phase2_a7.json)
+
+# A8: playable follow-ups after every tower outcome (school_followup content).
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/SchoolFollowupContent.cpp)
+add_executable(PerfectWorldSchoolFollowupContentTests Tests/SchoolFollowupContentTests.cpp)
+target_link_libraries(PerfectWorldSchoolFollowupContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSchoolFollowupContentTests
+    COMMAND PerfectWorldSchoolFollowupContentTests ${CMAKE_SOURCE_DIR}/Data/Content)
+# Crowd voices: every anonymous exchange key is authored in Data/Text/en/ambient.crowd.json.
+add_executable(PerfectWorldCrowdVoicesTests Tests/CrowdVoicesTests.cpp)
+target_link_libraries(PerfectWorldCrowdVoicesTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldCrowdVoicesTests COMMAND PerfectWorldCrowdVoicesTests ${CMAKE_SOURCE_DIR}/Data/Text/en/ambient.crowd.json)

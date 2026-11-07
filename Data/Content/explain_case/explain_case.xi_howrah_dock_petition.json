@@ -1,0 +1,31 @@
+{
+  "type": "explain_case",
+  "id": "explain_case.xi_howrah_dock_petition",
+  "family": "explain_family.xi_claim_evidence_limit",
+  "name": "The boatmen's petition against the foreshore fee",
+  "subject": "history",
+  "question": "judgement",
+  "role": "researcher",
+  "scarce": "sources",
+  "method": "method.source_criticism",
+  "brief": "In a teaching set for Class XI history, the port authority of the 1920s replaces a small fee for each landing on the Howrah foreshore with a monthly licence for every boat. A group of boatmen petitions against it, and an engineer's report and an audit table are included. Was the new fee fair? You are the researcher, so the digging is yours, but the set has three documents and the library will not lend more.",
+  "claims": [
+    { "id": "c_unfair_to_dinghies", "name": "The flat monthly licence fell unfairly on small dinghies that landed perishable goods only twice a week", "defensible": true },
+    { "id": "c_steps_justified", "name": "The new fee had a real purpose, because the rotting timber landing stages were costing cargo and had to be replaced", "defensible": true },
+    { "id": "c_small_boats_exempt", "name": "The new rules freed every boat under twenty tons from foreshore charges", "defensible": false }
+  ],
+  "evidence": [
+    { "id": "e_flat_licence", "name": "Clause 4 replaces the anna charge per landing with a compulsory licence of 4 rupees a month, whatever the boat's size or the number of landings", "supports": ["c_unfair_to_dinghies"], "against": ["c_small_boats_exempt"] },
+    { "id": "e_vegetable_ledger", "name": "A sampled vegetable dinghy earned about 18 rupees a month from two market days a week, so the licence was over a fifth of its takings", "supports": ["c_unfair_to_dinghies"], "against": [] },
+    { "id": "e_barge_same_fee", "name": "A sixty-ton jute lighter that used the landing daily paid the same 4 rupees as a two-oar country boat", "supports": ["c_unfair_to_dinghies"], "against": [] },
+    { "id": "e_rotten_stages", "name": "The port engineer's survey records three broken timber stages and twenty-four sacks of pulse lost into the tide", "supports": ["c_steps_justified"], "against": [] },
+    { "id": "e_stone_steps_spend", "name": "Audit table B shows that 82 per cent of the first quarter's receipts went on dressed-stone steps and iron mooring rings", "supports": ["c_steps_justified"], "against": [] },
+    { "id": "e_steamer_timetable", "name": "The back page prints the winter timetable of the passenger steamer", "supports": [], "against": [] }
+  ],
+  "limitations": [
+    { "id": "l_petitioners_agree", "name": "The boatmen themselves say the new stone steps stopped baskets slipping into the mud", "bounds": ["c_unfair_to_dinghies"] },
+    { "id": "l_fee_not_needed_flat", "name": "Paying for the steps did not require charging a twice-weekly dinghy the same as a daily barge", "bounds": ["c_steps_justified"] },
+    { "id": "l_one_ward", "name": "The papers cover the north Howrah foreshore for the first six months only", "bounds": ["c_unfair_to_dinghies", "c_steps_justified"] }
+  ],
+  "note": "The port authority is the Port Commissioners of Calcutta in the 1920s; the petition, report and audit table are an invented teaching set. 'Fair' is a contestable judgement, so two claims are defensible and they do not exclude each other. The exemption claim is contradicted by clause 4, which applies to every boat. The steamer timetable is beside the point."
+}

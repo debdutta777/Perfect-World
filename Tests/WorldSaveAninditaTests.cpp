@@ -39,7 +39,7 @@ constexpr std::string_view AnSaveFact = "fact.anindita_sen.labels_helped";
 
 void AnSaveMidSession()
 {
-    WorldSim live(91);
+    const auto creation = MakeCreation("parent_household"); WorldSim live(91, CreatorOf(creation));
     const std::string person(AnSavePerson);
     Check(live.Submit({CommandSource::Player, AdvanceTime{180}}).Accepted, "advance to the counter hours (09:00)");
     Check(live.Submit({CommandSource::Player, ConversationOpen{person, PersonAvailability::Awake}}).Accepted, "open Anindita's session through the reducer");
@@ -54,7 +54,7 @@ void AnSaveMidSession()
     Check(!live.Submit({CommandSource::Player, ConversationChoose{person, std::string(AnSaveHelp), 1}}).Accepted, "a duplicate charge is refused");
     Check(live.State().Clock.Now() == clockAfter, "a refused duplicate costs nothing");
 
-    WorldSaveData data = SaveOf(live, MakeCreation("parent_household"));
+    WorldSaveData data = SaveOf(live, creation);
     WorldSaveData loaded;
     const auto result = DeserializeWorldSave(SerializeWorldSave(data), loaded);
     Check(result.Succeeded() && result.SourceVersion == WorldSaveSchemaVersion && result.HashVerified, "current-schema mid-session round trip with Anindita is certified");
@@ -75,7 +75,7 @@ void AnSaveMidSession()
         Check(sim->Submit({CommandSource::Player, ConversationLeave{person}}).Accepted, "leave again");
     }
     Check(HashWorldState(live.State()) == HashWorldState(resumed.State()), "reload continuation equals the uninterrupted run");
-    const auto replay = ReplayCommandLog(91, live.Log());
+    const auto replay = ReplayLife(91, creation, live.Log());
     Check(replay.Complete && replay.Hash == HashWorldState(live.State()), "command replay is equivalent");
 }
 
