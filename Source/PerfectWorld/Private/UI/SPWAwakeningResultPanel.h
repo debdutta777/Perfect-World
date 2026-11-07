@@ -63,6 +63,7 @@ public:
 private:
 	TSharedPtr<PWAwakening::IApAwakeningWorld> ResolveBridge() const;
 	void RebuildBody();
+	TSharedRef<SWidget> AddFocusRow(const TSharedRef<SWidget>& Content, FName RowTag);
 	FReply HandleContinueClicked();
 
 	TWeakObjectPtr<UWorld> WorldPtr;
@@ -75,6 +76,6 @@ private:
 
 	TSharedPtr<SScrollBox> DetailScrollBox;
 	TSharedPtr<SVerticalBox> BodyContainer;
-	TArray<TSharedPtr<SButton>> FocusableRowButtons;
-	TSharedPtr<SButton> ContinueButton;
+	TArray<TSharedPtr<SWidget>> FocusableRowButtons;
+	TSharedPtr<SWidget> ContinueButton;
 };

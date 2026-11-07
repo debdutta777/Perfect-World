@@ -9,7 +9,9 @@
 #include "Layout/ArrangedChildren.h"
 #include "Layout/Geometry.h"
 #include "Misc/AutomationTest.h"
+#include "PerfectWorldPresentationSettings.h"
 #include "UI/PWStyle.h"
+#include "UI/PWWidgets.h"
 #include "Widgets/SWidget.h"
 #include "Widgets/Text/STextBlock.h"
 
@@ -17,7 +19,7 @@
 
 namespace
 {
-	void ApCollectVisibleTexts(const TSharedRef<SWidget>& Widget, TArray<FString>& OutTexts)
+	void R97CollectVisibleTexts(const TSharedRef<SWidget>& Widget, TArray<FString>& OutTexts)
 	{
 		if (!Widget->GetVisibility().IsVisible())
 		{
@@ -39,11 +41,11 @@ namespace
 		}
 		for (int32 i = 0; i < Children->Num(); ++i)
 		{
-			ApCollectVisibleTexts(Children->GetChildAt(i), OutTexts);
+			R97CollectVisibleTexts(Children->GetChildAt(i), OutTexts);
 		}
 	}
 
-	void ApCollectTaggedTexts(const TSharedRef<SWidget>& Widget, const FName& Tag, TArray<FString>& OutTexts)
+	void R97CollectTaggedTexts(const TSharedRef<SWidget>& Widget, const FName& Tag, TArray<FString>& OutTexts)
 	{
 		if (!Widget->GetVisibility().IsVisible())
 		{
@@ -61,11 +63,11 @@ namespace
 		}
 		for (int32 i = 0; i < Children->Num(); ++i)
 		{
-			ApCollectTaggedTexts(Children->GetChildAt(i), Tag, OutTexts);
+			R97CollectTaggedTexts(Children->GetChildAt(i), Tag, OutTexts);
 		}
 	}
 
-	int32 ApCountTaggedWidgets(const TSharedRef<SWidget>& Widget, const FName& Tag)
+	int32 R97CountTaggedWidgets(const TSharedRef<SWidget>& Widget, const FName& Tag)
 	{
 		if (!Widget->GetVisibility().IsVisible())
 		{
@@ -79,20 +81,43 @@ namespace
 		}
 		for (int32 i = 0; i < Children->Num(); ++i)
 		{
-			Count += ApCountTaggedWidgets(Children->GetChildAt(i), Tag);
+			Count += R97CountTaggedWidgets(Children->GetChildAt(i), Tag);
 		}
 		return Count;
 	}
 
-	void ApCollectFocusableTags(const TSharedRef<SWidget>& Widget, TArray<FName>& OutTags)
+	bool R97HasFocusableDescendant(const TSharedRef<SWidget>& Widget)
+	{
+		FChildren* Children = Widget->GetChildren();
+		if (!Children)
+		{
+			return false;
+		}
+		for (int32 i = 0; i < Children->Num(); ++i)
+		{
+			const TSharedRef<SWidget> Child = Children->GetChildAt(i);
+			if (Child->SupportsKeyboardFocus() || R97HasFocusableDescendant(Child))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	void R97CollectFocusableTags(const TSharedRef<SWidget>& Widget, TArray<FName>& OutTags)
 	{
 		if (!Widget->GetVisibility().IsVisible())
 		{
 			return;
 		}
-		if (Widget->SupportsKeyboardFocus() && !Widget->GetTag().IsNone())
+		// A row is tagged on the box that wraps its focusable button, so a tagged widget counts when it is, or
+		// directly wraps, something focusable. The whole-panel tag is not a row.
+		const bool bIsPanel = Widget->GetTag() == PWApResult::PanelTag || Widget->GetTag() == PWApCountdown::PanelTag;
+		if (!bIsPanel && !Widget->GetTag().IsNone()
+			&& (Widget->SupportsKeyboardFocus() || R97HasFocusableDescendant(Widget)))
 		{
 			OutTags.Add(Widget->GetTag());
+			return;
 		}
 		FChildren* Children = Widget->GetChildren();
 		if (!Children)
@@ -101,16 +126,16 @@ namespace
 		}
 		for (int32 i = 0; i < Children->Num(); ++i)
 		{
-			ApCollectFocusableTags(Children->GetChildAt(i), OutTags);
+			R97CollectFocusableTags(Children->GetChildAt(i), OutTags);
 		}
 	}
 
-	FString ApJoinTexts(const TArray<FString>& Texts)
+	FString R97JoinTexts(const TArray<FString>& Texts)
 	{
 		return FString::Join(Texts, TEXT("\n"));
 	}
 
-	bool ApHasRawIdLeak(const FString& AllText, FString& OutOffender)
+	bool R97HasRawIdLeak(const FString& AllText, FString& OutOffender)
 	{
 		static const TCHAR* kForbiddenSubstrings[] = {
 			TEXT("attribute."), TEXT("skill."), TEXT("facet."), TEXT("conduct."),
@@ -129,7 +154,7 @@ namespace
 		return false;
 	}
 
-	FKeyEvent ApMakeKeyDown(const FKey& Key, bool bRepeat = false)
+	FKeyEvent R97MakeKeyDown(const FKey& Key, bool bRepeat = false)
 	{
 		return FKeyEvent(Key, FModifierKeysState(), 0, bRepeat, 0, 0);
 	}
@@ -169,21 +194,21 @@ bool FPWApVerbatimEvidenceAndNoRawIdsTest::RunTest(const FString& Parameters)
 		.ViewportSize(FVector2D(1920.0f, 1080.0f));
 	Panel->SlatePrepass(1.0f);
 
-	TestEqual(TEXT("Stage card count"), ApCountTaggedWidgets(Panel, PWApResult::StageCardTag), 1);
-	TestEqual(TEXT("Five Tattva rows rendered"), ApCountTaggedWidgets(Panel, PWApResult::TattvaRowTag), 5);
-	TestEqual(TEXT("Six capability rows rendered"), ApCountTaggedWidgets(Panel, PWApResult::CapabilityRowTag), 6);
-	TestEqual(TEXT("One derived ability card rendered"), ApCountTaggedWidgets(Panel, PWApResult::AbilityCardTag), 1);
+	TestEqual(TEXT("Stage card count"), R97CountTaggedWidgets(Panel, PWApResult::StageCardTag), 1);
+	TestEqual(TEXT("Five Tattva rows rendered"), R97CountTaggedWidgets(Panel, PWApResult::TattvaRowTag), 5);
+	TestEqual(TEXT("Six capability rows rendered"), R97CountTaggedWidgets(Panel, PWApResult::CapabilityRowTag), 6);
+	TestEqual(TEXT("One derived ability card rendered"), R97CountTaggedWidgets(Panel, PWApResult::AbilityCardTag), 1);
 
 	TArray<FString> EvidenceTexts;
-	ApCollectTaggedTexts(Panel, PWApResult::EvidenceLineTag, EvidenceTexts);
+	R97CollectTaggedTexts(Panel, PWApResult::EvidenceLineTag, EvidenceTexts);
 	TestTrue(TEXT("Verbatim crossing evidence line is shown exactly"),
 		EvidenceTexts.Contains(VerbatimCrossing));
 	TestTrue(TEXT("Verbatim pillar evidence line is shown exactly"),
 		EvidenceTexts.Contains(VerbatimPillar));
 
 	TArray<FString> VisibleTexts;
-	ApCollectVisibleTexts(Panel, VisibleTexts);
-	const FString Joined = ApJoinTexts(VisibleTexts);
+	R97CollectVisibleTexts(Panel, VisibleTexts);
+	const FString Joined = R97JoinTexts(VisibleTexts);
 
 	TestTrue(TEXT("Shows Grade F stage"), Joined.Contains(TEXT("Grade F")));
 	TestTrue(TEXT("Shows Prithvi"), Joined.Contains(TEXT("Prithvi")));
@@ -196,7 +221,7 @@ bool FPWApVerbatimEvidenceAndNoRawIdsTest::RunTest(const FString& Parameters)
 	FString Offender;
 	TestFalse(
 		FString::Printf(TEXT("No raw IDs leaked into Awakening Result UI (found: %s)"), *Offender),
-		ApHasRawIdLeak(Joined, Offender));
+		R97HasRawIdLeak(Joined, Offender));
 
 	return true;
 }
@@ -220,23 +245,23 @@ bool FPWApCountdownDisplacedAndOrdinaryDayTest::RunTest(const FString& Parameter
 	TestEqual(TEXT("Days remaining from 24 Jan 08:00 to 2 Feb 06:00 is 8"), InitialModel.DaysRemaining, 8);
 	TestEqual(TEXT("Hours remaining from 24 Jan 08:00 to 2 Feb 06:00 is 22"), InitialModel.HoursRemaining, 22);
 	TestEqual(TEXT("Two optional practice offers rendered"),
-		ApCountTaggedWidgets(Panel, PWApCountdown::OfferRowTag), 2);
+		R97CountTaggedWidgets(Panel, PWApCountdown::OfferRowTag), 2);
 	TestEqual(TEXT("One standing obligation rendered"),
-		ApCountTaggedWidgets(Panel, PWApCountdown::ObligationRowTag), 1);
+		R97CountTaggedWidgets(Panel, PWApCountdown::ObligationRowTag), 1);
 	TestEqual(TEXT("Before-confirming displaced card rendered"),
-		ApCountTaggedWidgets(Panel, PWApCountdown::DisplacedCardTag), 1);
+		R97CountTaggedWidgets(Panel, PWApCountdown::DisplacedCardTag), 1);
 
 	TArray<FString> DisplacedLines;
-	ApCollectTaggedTexts(Panel, PWApCountdown::DisplacedLineTag, DisplacedLines);
-	const FString DisplacedJoined = ApJoinTexts(DisplacedLines);
+	R97CollectTaggedTexts(Panel, PWApCountdown::DisplacedLineTag, DisplacedLines);
+	const FString DisplacedJoined = R97JoinTexts(DisplacedLines);
 	TestTrue(TEXT("Shows displaced standing commitment before confirming"),
 		DisplacedJoined.Contains(TEXT("Evening tea and market list at home")));
 	TestTrue(TEXT("Shows closed same-day option before confirming"),
-		DisplacedJoined.Contains(TEXT("Reading Room Cadence Study")));
+		DisplacedJoined.Contains(TEXT("Reading room cadence study")));
 
 	TArray<FString> VisibleTexts;
-	ApCollectVisibleTexts(Panel, VisibleTexts);
-	const FString Joined = ApJoinTexts(VisibleTexts);
+	R97CollectVisibleTexts(Panel, VisibleTexts);
+	const FString Joined = R97JoinTexts(VisibleTexts);
 	TestTrue(TEXT("Shows examination date 2 February 2043 · 06:00"),
 		Joined.Contains(TEXT("2 February 2043 · 06:00")));
 	TestTrue(TEXT("Shows 'Keep an ordinary day' option"),
@@ -245,7 +270,7 @@ bool FPWApCountdownDisplacedAndOrdinaryDayTest::RunTest(const FString& Parameter
 	FString Offender;
 	TestFalse(
 		FString::Printf(TEXT("No raw IDs leaked into Countdown UI (found: %s)"), *Offender),
-		ApHasRawIdLeak(Joined, Offender));
+		R97HasRawIdLeak(Joined, Offender));
 
 	// Verify 'Keep an ordinary day'
 	TestTrue(TEXT("TriggerKeepOrdinaryDay succeeds"), Panel->TriggerKeepOrdinaryDay());
@@ -259,7 +284,7 @@ bool FPWApCountdownDisplacedAndOrdinaryDayTest::RunTest(const FString& Parameter
 	TestTrue(TEXT("TriggerConfirmSelectedOffer succeeds"), Panel->TriggerConfirmSelectedOffer());
 	TestEqual(TEXT("ConfirmOfferCount incremented"), Fake->GetConfirmOfferCount(), 1);
 	TestEqual(TEXT("Confirmed offer ID recorded on bridge"),
-		Fake->GetLastConfirmedOfferId(), FString(TEXT("opp_courtyard_footing")));
+		Fake->GetLastConfirmedOfferId(), FString(TEXT("sample.offer_footing")));
 
 	return true;
 }
@@ -283,9 +308,9 @@ bool FPWApEmptyAndUnavailableStatesTest::RunTest(const FString& Parameters)
 		.BridgeOverride(Fake);
 	ResultPanel->SlatePrepass(1.0f);
 	TestEqual(TEXT("Unavailable tag shown when result model unavailable"),
-		ApCountTaggedWidgets(ResultPanel, PWApResult::UnavailableTag), 1);
+		R97CountTaggedWidgets(ResultPanel, PWApResult::UnavailableTag), 1);
 	TestEqual(TEXT("Zero Tattva rows when unavailable"),
-		ApCountTaggedWidgets(ResultPanel, PWApResult::TattvaRowTag), 0);
+		R97CountTaggedWidgets(ResultPanel, PWApResult::TattvaRowTag), 0);
 
 	// 2. Available but ungranted Awakening Result
 	PWAwakening::FPWAwakeningResultModel UngrantedResult;
@@ -295,7 +320,7 @@ bool FPWApEmptyAndUnavailableStatesTest::RunTest(const FString& Parameters)
 	ResultPanel->RefreshFromBridge();
 	ResultPanel->SlatePrepass(1.0f);
 	TestEqual(TEXT("EmptyState tag shown when tutorial not yet granted"),
-		ApCountTaggedWidgets(ResultPanel, PWApResult::EmptyStateTag), 1);
+		R97CountTaggedWidgets(ResultPanel, PWApResult::EmptyStateTag), 1);
 
 	// 3. Unavailable Countdown
 	PWAwakening::FPWCountdownModel UnavailCountdown;
@@ -306,7 +331,7 @@ bool FPWApEmptyAndUnavailableStatesTest::RunTest(const FString& Parameters)
 		.BridgeOverride(Fake);
 	CountdownPanel->SlatePrepass(1.0f);
 	TestEqual(TEXT("Unavailable tag shown when countdown model unavailable"),
-		ApCountTaggedWidgets(CountdownPanel, PWApCountdown::UnavailableTag), 1);
+		R97CountTaggedWidgets(CountdownPanel, PWApCountdown::UnavailableTag), 1);
 
 	// 4. Empty offers Countdown
 	PWAwakening::FPWCountdownModel EmptyOffersCountdown;
@@ -318,9 +343,9 @@ bool FPWApEmptyAndUnavailableStatesTest::RunTest(const FString& Parameters)
 	CountdownPanel->RefreshFromBridge();
 	CountdownPanel->SlatePrepass(1.0f);
 	TestEqual(TEXT("EmptyOffers tag shown when no offers remain today"),
-		ApCountTaggedWidgets(CountdownPanel, PWApCountdown::EmptyOffersTag), 1);
+		R97CountTaggedWidgets(CountdownPanel, PWApCountdown::EmptyOffersTag), 1);
 	TestEqual(TEXT("OrdinaryDayButton remains present when offers are empty"),
-		ApCountTaggedWidgets(CountdownPanel, PWApCountdown::OrdinaryDayButtonTag), 1);
+		R97CountTaggedWidgets(CountdownPanel, PWApCountdown::OrdinaryDayButtonTag), 1);
 
 	return true;
 }
@@ -333,8 +358,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 bool FPWApFocusOrderAndNavigationTest::RunTest(const FString& Parameters)
 {
 	(void)Parameters;
-	const bool bPrevReducedMotion = PWUI::IsReducedMotion();
-	PWUI::SetReducedMotion(true);
+	const bool bPrevReducedMotion = UPerfectWorldPresentationSettings::Get().IsReducedMotion();
+	UPerfectWorldPresentationSettings::Get().SetReducedMotion(true);
 
 	TSharedRef<PWAwakening::FApFakeAwakeningWorld> Fake = PWAwakening::MakeFakeAwakeningWorld();
 	bool bResultClosed = false;
@@ -349,23 +374,23 @@ bool FPWApFocusOrderAndNavigationTest::RunTest(const FString& Parameters)
 		ResultPanel->GetFocusSlotCount(), 13);
 
 	TArray<FName> FocusOrder;
-	ApCollectFocusableTags(ResultPanel, FocusOrder);
+	R97CollectFocusableTags(ResultPanel, FocusOrder);
 	TestTrue(TEXT("Focusable order starts with StageCard and ends with ContinueButton"),
 		FocusOrder.Num() >= 14
 		&& FocusOrder[0] == PWApResult::StageCardTag
 		&& FocusOrder.Last() == PWApResult::ContinueButtonTag);
 
 	const FGeometry DummyGeo;
-	ResultPanel->OnKeyDown(DummyGeo, ApMakeKeyDown(EKeys::Down));
+	ResultPanel->OnKeyDown(DummyGeo, R97MakeKeyDown(EKeys::Down));
 	TestEqual(TEXT("Down key advances focus slot to 1"), ResultPanel->GetSelectedFocusSlot(), 1);
-	ResultPanel->OnKeyDown(DummyGeo, ApMakeKeyDown(EKeys::Gamepad_DPad_Down));
+	ResultPanel->OnKeyDown(DummyGeo, R97MakeKeyDown(EKeys::Gamepad_DPad_Down));
 	TestEqual(TEXT("Gamepad DPad Down advances focus slot to 2"), ResultPanel->GetSelectedFocusSlot(), 2);
-	ResultPanel->OnKeyDown(DummyGeo, ApMakeKeyDown(EKeys::Gamepad_DPad_Up));
+	ResultPanel->OnKeyDown(DummyGeo, R97MakeKeyDown(EKeys::Gamepad_DPad_Up));
 	TestEqual(TEXT("Gamepad DPad Up moves focus slot back to 1"), ResultPanel->GetSelectedFocusSlot(), 1);
 
-	ResultPanel->OnKeyDown(DummyGeo, ApMakeKeyDown(EKeys::Gamepad_FaceButton_Right, true));
+	ResultPanel->OnKeyDown(DummyGeo, R97MakeKeyDown(EKeys::Gamepad_FaceButton_Right, true));
 	TestFalse(TEXT("Repeat B button does not close result panel"), bResultClosed);
-	ResultPanel->OnKeyDown(DummyGeo, ApMakeKeyDown(EKeys::Gamepad_FaceButton_Right, false));
+	ResultPanel->OnKeyDown(DummyGeo, R97MakeKeyDown(EKeys::Gamepad_FaceButton_Right, false));
 	TestTrue(TEXT("Non-repeat B button closes result panel and acknowledges result"),
 		bResultClosed && Fake->GetAcknowledgeCount() == 1 && !Fake->HasUnseenResult());
 
@@ -379,12 +404,12 @@ bool FPWApFocusOrderAndNavigationTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("Countdown panel initial focus target is valid"),
 		CountdownPanel->GetInitialFocusTarget().IsValid());
 	TestEqual(TEXT("Countdown starts at offer index 0"), CountdownPanel->GetSelectedOfferIndex(), 0);
-	CountdownPanel->OnKeyDown(DummyGeo, ApMakeKeyDown(EKeys::Gamepad_DPad_Down));
+	CountdownPanel->OnKeyDown(DummyGeo, R97MakeKeyDown(EKeys::Gamepad_DPad_Down));
 	TestEqual(TEXT("Gamepad DPad Down selects offer index 1"), CountdownPanel->GetSelectedOfferIndex(), 1);
-	CountdownPanel->OnKeyDown(DummyGeo, ApMakeKeyDown(EKeys::Escape, false));
+	CountdownPanel->OnKeyDown(DummyGeo, R97MakeKeyDown(EKeys::Escape, false));
 	TestTrue(TEXT("Escape closes countdown panel"), bCountdownClosed);
 
-	PWUI::SetReducedMotion(bPrevReducedMotion);
+	UPerfectWorldPresentationSettings::Get().SetReducedMotion(bPrevReducedMotion);
 	return true;
 }
 

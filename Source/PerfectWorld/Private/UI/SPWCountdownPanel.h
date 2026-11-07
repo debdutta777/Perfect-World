@@ -85,8 +85,8 @@ private:
 
 	TSharedPtr<SScrollBox> DetailScrollBox;
 	TSharedPtr<SVerticalBox> BodyContainer;
-	TArray<TSharedPtr<SButton>> OfferRowButtons;
-	TSharedPtr<SButton> ConfirmButton;
-	TSharedPtr<SButton> OrdinaryDayButton;
-	TSharedPtr<SButton> CloseButton;
+	TArray<TSharedPtr<SWidget>> OfferRowButtons;
+	TSharedPtr<SWidget> ConfirmButton;
+	TSharedPtr<SWidget> OrdinaryDayButton;
+	TSharedPtr<SWidget> CloseButton;
 };

@@ -10,19 +10,19 @@ namespace PWAwakening
 {
 	namespace
 	{
-		TMap<TWeakObjectPtr<UWorld>, TSharedPtr<IApAwakeningWorld>>& ApBridgeRegistry()
+		TMap<TWeakObjectPtr<UWorld>, TSharedPtr<IApAwakeningWorld>>& R97BridgeRegistry()
 		{
 			static TMap<TWeakObjectPtr<UWorld>, TSharedPtr<IApAwakeningWorld>> Registry;
 			return Registry;
 		}
 
-		struct FApKeyPhrase
+		struct R97FKeyPhrase
 		{
 			const TCHAR* Key;
 			const TCHAR* Evidence;
 		};
 
-		const FApKeyPhrase kApKnownSourceEvidence[] = {
+		const R97FKeyPhrase R97kKnownSourceEvidence[] = {
 			{TEXT("attribute.body"), TEXT("Sixteen years of physical conditioning and steady breath.")},
 			{TEXT("attribute.agility"), TEXT("Footwork and balance practiced across narrow Kolkata lanes.")},
 			{TEXT("attribute.intelligence"), TEXT("Class XI analytical study and structured problem-solving.")},
@@ -60,9 +60,9 @@ namespace PWAwakening
 			{TEXT("conduct.attentiveness"), TEXT("You traced the seam along the tutorial pillar before stepping.")},
 		};
 
-		FString ApLookupKnownEvidence(const FString& Key)
+		FString R97LookupKnownEvidence(const FString& Key)
 		{
-			for (const FApKeyPhrase& Entry : kApKnownSourceEvidence)
+			for (const R97FKeyPhrase& Entry : R97kKnownSourceEvidence)
 			{
 				if (Key.Equals(Entry.Key, ESearchCase::IgnoreCase))
 				{
@@ -72,7 +72,26 @@ namespace PWAwakening
 			return FString();
 		}
 
-		FText ApFormatClockInstant(PerfectWorld::GameInstant Instant)
+		FString R97Utf8(std::string_view Text)
+		{
+			const std::string Owned(Text);
+			return FString(UTF8_TO_TCHAR(Owned.c_str()));
+		}
+
+		PerfectWorld::Tattva R97DominantTattva(const PerfectWorld::AwakeningResult& Result)
+		{
+			int32 Best = 0;
+			for (int32 i = 1; i < PerfectWorld::TattvaCount; ++i)
+			{
+				if (Result.TattvaMilli[i] > Result.TattvaMilli[Best])
+				{
+					Best = i;
+				}
+			}
+			return static_cast<PerfectWorld::Tattva>(Best);
+		}
+
+		FText R97FormatClockInstant(PerfectWorld::GameInstant Instant)
 		{
 			const PerfectWorld::CalendarTime Cal = PerfectWorld::GameClock::ToCalendar(Instant);
 			static const TCHAR* kMonths[] = {
@@ -85,7 +104,7 @@ namespace PWAwakening
 				Cal.Day, kMonths[MonthIdx], Cal.Year, Cal.Hour, Cal.Minute));
 		}
 
-		FText ApFallbackAbilityName(PerfectWorld::Tattva Affinity)
+		FText R97FallbackAbilityName(PerfectWorld::Tattva Affinity)
 		{
 			switch (Affinity)
 			{
@@ -98,7 +117,7 @@ namespace PWAwakening
 			return FText::FromString(TEXT("Settled Footing"));
 		}
 
-		FText ApFallbackAbilityEffect(PerfectWorld::Tattva Affinity)
+		FText R97FallbackAbilityEffect(PerfectWorld::Tattva Affinity)
 		{
 			switch (Affinity)
 			{
@@ -116,10 +135,10 @@ namespace PWAwakening
 			return FText::FromString(TEXT("Steadies stance and anchors weight across uneven ground for a short interval."));
 		}
 
-		class FApLaneLifeAwakeningWorld final : public IApAwakeningWorld
+		class R97FLaneLifeAwakeningWorld final : public IApAwakeningWorld
 		{
 		public:
-			explicit FApLaneLifeAwakeningWorld(UWorld& InWorld)
+			explicit R97FLaneLifeAwakeningWorld(UWorld& InWorld)
 				: WorldPtr(&InWorld)
 			{
 			}
@@ -158,33 +177,26 @@ namespace PWAwakening
 				{
 					return FPWCountdownModel{};
 				}
-				const PerfectWorld::WorldState& CoreWorld = Life->CoreWorld();
-				PerfectWorld::CountdownState State{};
-				PerfectWorld::CountdownContext Ctx{};
+				// The running world holds no CountdownState yet (WorldState does not carry one), so
+				// the clock and deadline are shown and no practice offers are invented.
+				const PerfectWorld::CountdownContext Ctx{};
 				return BuildCountdownModelFromCore(
-					Life->GetNow(), CoreWorld, State, Ctx, bOrdinaryDayKept, CommittedOfferId, LastStatusBanner);
+					Life->GetNow(), Life->GetWorldState(), nullptr, Ctx, bOrdinaryDayKept, FString(), LastStatusBanner);
 			}
 
 			virtual bool ConfirmPracticeOffer(const FString& OfferId, FText& OutNotice) override
 			{
-				if (OfferId.IsEmpty())
-				{
-					OutNotice = FText::FromString(TEXT("Select an optional practice offer first."));
-					return false;
-				}
-				CommittedOfferId = OfferId;
-				bOrdinaryDayKept = false;
-				LastStatusBanner = FText::FromString(TEXT("Optional practice recorded for today."));
-				OutNotice = LastStatusBanner;
-				return true;
+				OutNotice = OfferId.IsEmpty()
+					? FText::FromString(TEXT("Select an optional practice offer first."))
+					: FText::FromString(TEXT("Practice sessions are not connected to the running world yet, so nothing was committed."));
+				return false;
 			}
 
 			virtual bool KeepOrdinaryDay(FText& OutNotice) override
 			{
 				bOrdinaryDayKept = true;
-				CommittedOfferId.Reset();
 				LastStatusBanner = FText::FromString(
-					TEXT("You kept an ordinary day. Your classes, household routines, and friendships remain untouched."));
+					TEXT("You kept an ordinary day. Declining practice costs no time; your classes, household routines, and friendships remain untouched."));
 				OutNotice = LastStatusBanner;
 				return true;
 			}
@@ -192,7 +204,6 @@ namespace PWAwakening
 		private:
 			TWeakObjectPtr<UWorld> WorldPtr;
 			bool bOrdinaryDayKept = false;
-			FString CommittedOfferId;
 			FText LastStatusBanner;
 		};
 	}
@@ -201,7 +212,7 @@ namespace PWAwakening
 	{
 		if (World)
 		{
-			ApBridgeRegistry().Add(World, MoveTemp(Bridge));
+			R97BridgeRegistry().Add(World, MoveTemp(Bridge));
 		}
 	}
 
@@ -209,7 +220,7 @@ namespace PWAwakening
 	{
 		if (World)
 		{
-			ApBridgeRegistry().Remove(World);
+			R97BridgeRegistry().Remove(World);
 		}
 	}
 
@@ -219,7 +230,7 @@ namespace PWAwakening
 		{
 			return nullptr;
 		}
-		if (const TSharedPtr<IApAwakeningWorld>* Found = ApBridgeRegistry().Find(World))
+		if (const TSharedPtr<IApAwakeningWorld>* Found = R97BridgeRegistry().Find(World))
 		{
 			if (Found->IsValid())
 			{
@@ -231,7 +242,7 @@ namespace PWAwakening
 
 	TSharedPtr<IApAwakeningWorld> MakeLaneLifeAwakeningBridge(UWorld& World)
 	{
-		return MakeShared<FApLaneLifeAwakeningWorld>(World);
+		return MakeShared<R97FLaneLifeAwakeningWorld>(World);
 	}
 
 	FText TattvaDisplayName(PerfectWorld::Tattva Tattva)
@@ -347,7 +358,7 @@ namespace PWAwakening
 		{
 			return FallbackText;
 		}
-		const FString Mapped = ApLookupKnownEvidence(Trimmed);
+		const FString Mapped = R97LookupKnownEvidence(Trimmed);
 		if (!Mapped.IsEmpty())
 		{
 			return FText::FromString(Mapped);
@@ -364,7 +375,7 @@ namespace PWAwakening
 		const FString ChoiceStr = UTF8_TO_TCHAR(Cause.ChoiceId.c_str());
 		if (!ChoiceStr.IsEmpty())
 		{
-			const FString MappedChoice = ApLookupKnownEvidence(ChoiceStr);
+			const FString MappedChoice = R97LookupKnownEvidence(ChoiceStr);
 			if (!MappedChoice.IsEmpty())
 			{
 				return FText::FromString(MappedChoice);
@@ -378,7 +389,7 @@ namespace PWAwakening
 		const FString SourceStr = UTF8_TO_TCHAR(Cause.Source.c_str());
 		if (!SourceStr.IsEmpty())
 		{
-			const FString MappedSource = ApLookupKnownEvidence(SourceStr);
+			const FString MappedSource = R97LookupKnownEvidence(SourceStr);
 			if (!MappedSource.IsEmpty())
 			{
 				return FText::FromString(MappedSource);
@@ -394,69 +405,31 @@ namespace PWAwakening
 
 	const PerfectWorld::AbilityRecipeSet& DefaultAbilityRecipeCatalogue()
 	{
+		// Display-only stand-in for tests and the fake world: one fallback recipe per Tattva, built
+		// from the real AbilityRecipe fields. The running game uses the content registry's recipes.
 		static const PerfectWorld::AbilityRecipeSet Catalogue = []()
 		{
 			PerfectWorld::AbilityRecipeSet Set;
-			PerfectWorld::AbilityRecipe R0;
-			R0.Id = "settled_stance";
-			R0.Name = "Settled Stance";
-			R0.Affinity = PerfectWorld::Tattva::Prithvi;
-			R0.PrimaryDimension = PerfectWorld::PowerDimension::Duration;
-			R0.SecondaryDimension = PerfectWorld::PowerDimension::Output;
-			R0.PrimarySignal = PerfectWorld::AwakeningSignal::Steadfastness;
-			R0.SecondarySignal = PerfectWorld::AwakeningSignal::Bodywork;
-			R0.OriginTag = "foundation";
-			R0.Effect = "Steadies footing and distributes weight across uneven ground for a short interval.";
-			Set.Recipes.push_back(R0);
-
-			PerfectWorld::AbilityRecipe R1;
-			R1.Id = "measured_current";
-			R1.Name = "Measured Current";
-			R1.Affinity = PerfectWorld::Tattva::Jala;
-			R1.PrimaryDimension = PerfectWorld::PowerDimension::Coordination;
-			R1.SecondaryDimension = PerfectWorld::PowerDimension::Duration;
-			R1.PrimarySignal = PerfectWorld::AwakeningSignal::Care;
-			R1.SecondarySignal = PerfectWorld::AwakeningSignal::People;
-			R1.OriginTag = "continuity";
-			R1.Effect = "Smooths movement transitions and keeps breath even while assisting someone nearby.";
-			Set.Recipes.push_back(R1);
-
-			PerfectWorld::AbilityRecipe R2;
-			R2.Id = "kindled_point";
-			R2.Name = "Kindled Point";
-			R2.Affinity = PerfectWorld::Tattva::Agni;
-			R2.PrimaryDimension = PerfectWorld::PowerDimension::Precision;
-			R2.SecondaryDimension = PerfectWorld::PowerDimension::Output;
-			R2.PrimarySignal = PerfectWorld::AwakeningSignal::Study;
-			R2.SecondarySignal = PerfectWorld::AwakeningSignal::Resolve;
-			R2.OriginTag = "focus";
-			R2.Effect = "Gathers attention and heat into a single clean point of release.";
-			Set.Recipes.push_back(R2);
-
-			PerfectWorld::AbilityRecipe R3;
-			R3.Id = "paced_crossing";
-			R3.Name = "Paced Crossing";
-			R3.Affinity = PerfectWorld::Tattva::Vayu;
-			R3.PrimaryDimension = PerfectWorld::PowerDimension::Range;
-			R3.SecondaryDimension = PerfectWorld::PowerDimension::Coordination;
-			R3.PrimarySignal = PerfectWorld::AwakeningSignal::Bodywork;
-			R3.SecondarySignal = PerfectWorld::AwakeningSignal::Resourcefulness;
-			R3.OriginTag = "step";
-			R3.Effect = "Lightens step transitions across narrow spans and sudden changes of level.";
-			Set.Recipes.push_back(R3);
-
-			PerfectWorld::AbilityRecipe R4;
-			R4.Id = "clear_interval";
-			R4.Name = "Clear Interval";
-			R4.Affinity = PerfectWorld::Tattva::Akasha;
-			R4.PrimaryDimension = PerfectWorld::PowerDimension::Perception;
-			R4.SecondaryDimension = PerfectWorld::PowerDimension::Range;
-			R4.PrimarySignal = PerfectWorld::AwakeningSignal::Attentiveness;
-			R4.SecondarySignal = PerfectWorld::AwakeningSignal::Senses;
-			R4.OriginTag = "bearing";
-			R4.Effect = "Marks clear spatial intervals and faint seams in the surrounding room.";
-			Set.Recipes.push_back(R4);
-
+			auto AddFallback = [&Set](const char* Id, const char* Name, PerfectWorld::Tattva Affinity, const char* Effect)
+			{
+				PerfectWorld::AbilityRecipe Recipe;
+				Recipe.Id = Id;
+				Recipe.Name = Name;
+				Recipe.Affinity = Affinity;
+				Recipe.Fallback = true;
+				Recipe.Effect = Effect;
+				Set.Recipes.push_back(Recipe);
+			};
+			AddFallback("settled_stance", "Settled Stance", PerfectWorld::Tattva::Prithvi,
+				"Steadies footing and distributes weight across uneven ground for a short interval.");
+			AddFallback("measured_current", "Measured Current", PerfectWorld::Tattva::Jala,
+				"Smooths movement transitions and keeps breath even while assisting someone nearby.");
+			AddFallback("kindled_point", "Kindled Point", PerfectWorld::Tattva::Agni,
+				"Gathers attention and heat into a single clean point of release.");
+			AddFallback("paced_crossing", "Paced Crossing", PerfectWorld::Tattva::Vayu,
+				"Lightens step transitions across narrow spans and sudden changes of level.");
+			AddFallback("clear_interval", "Clear Interval", PerfectWorld::Tattva::Akasha,
+				"Marks clear spatial intervals and faint seams in the surrounding room.");
 			return Set;
 		}();
 		return Catalogue;
@@ -469,12 +442,12 @@ namespace PWAwakening
 	{
 		FPWAwakeningResultModel Model;
 		Model.bAvailable = true;
-		Model.bGranted = Grant.Result.Granted;
-		Model.bUnseen = bUnseen && Grant.Result.Granted;
+		Model.bGranted = Grant.Result.Ok();
+		Model.bUnseen = bUnseen && Grant.Result.Ok();
 		Model.bConductObserved = Grant.Result.ConductObserved;
-		Model.GrantedAtText = ApFormatClockInstant(Grant.At);
+		Model.GrantedAtText = R97FormatClockInstant(Grant.At);
 
-		if (!Grant.Result.Granted)
+		if (!Grant.Result.Ok())
 		{
 			Model.SubtitleText = FText::FromString(
 				TEXT("The school tutorial dungeon has not yet concluded with an Awakening record."));
@@ -486,15 +459,16 @@ namespace PWAwakening
 
 		const int32 StageNum = FMath::Clamp(
 			static_cast<int32>(PerfectWorld::StageWithinGrade(Grant.StartingProfile)), 1, 10);
-		Model.Stage.GradeText = FText::FromString(TEXT("Grade F"));
+		const FString GradeName = R97Utf8(PerfectWorld::AwakenedGradeName(Grant.StartingProfile.Grade));
+		Model.Stage.GradeText = FText::FromString(FString::Printf(TEXT("Grade %s"), *GradeName));
 		Model.Stage.StageWithinGrade = StageNum;
-		Model.Stage.StageCodeText = FText::FromString(FString::Printf(TEXT("F-%d"), StageNum));
+		Model.Stage.StageCodeText = FText::FromString(FString::Printf(TEXT("%s-%d"), *GradeName, StageNum));
 		Model.Stage.StageTitleText = FText::FromString(
-			FString::Printf(TEXT("Grade F · Stage %d of 10"), StageNum));
+			FString::Printf(TEXT("Grade %s · Stage %d of 10"), *GradeName, StageNum));
 		Model.Stage.RuleNoticeText = FText::FromString(
 			TEXT("Every Awakening begins within Grade F (Stages 1 to 10). Advancing beyond Grade F requires formal assessment; everything after the tutorial is optional."));
 
-		for (std::size_t i = 0; i < PerfectWorld::TattvaCount; ++i)
+		for (int32 i = 0; i < PerfectWorld::TattvaCount; ++i)
 		{
 			const PerfectWorld::Tattva Tv = static_cast<PerfectWorld::Tattva>(i);
 			FPWAwakeningTattvaRow Row;
@@ -525,7 +499,7 @@ namespace PWAwakening
 			Model.Tattvas.Add(MoveTemp(Row));
 		}
 
-		for (std::size_t d = 0; d < PerfectWorld::PowerDimensionCount; ++d)
+		for (int32 d = 0; d < PerfectWorld::PowerDimensionCount; ++d)
 		{
 			const PerfectWorld::PowerDimension Dim = static_cast<PerfectWorld::PowerDimension>(d);
 			FPWAwakeningCapabilityRow Row;
@@ -536,11 +510,10 @@ namespace PWAwakening
 			Row.LatentPoints = Grant.Result.LatentRating[d];
 			Row.ConductPoints = Grant.Result.ConductRating[d];
 			Row.ScoreText = FText::FromString(FString::Printf(
-				TEXT("%d.%02d pts"), Row.RatingPoints / 100, Row.RatingPoints % 100));
+				TEXT("%d points"), Row.RatingPoints));
 			Row.BreakdownText = FText::FromString(FString::Printf(
-				TEXT("%d.%02d sixteen-year formation · %d.%02d tutorial conduct"),
-				Row.LatentPoints / 100, Row.LatentPoints % 100,
-				Row.ConductPoints / 100, Row.ConductPoints % 100));
+				TEXT("%d from sixteen years of formation · %d from tutorial conduct"),
+				Row.LatentPoints, Row.ConductPoints));
 
 			for (const PerfectWorld::AwakeningCause& Cause : Grant.Result.RatingCauses[d])
 			{
@@ -564,37 +537,44 @@ namespace PWAwakening
 		}
 		if (Model.Tattvas.Num() > 0 && Model.Tattvas[0].EvidenceLines.Num() > 0)
 		{
-			Model.Stage.EvidenceLines.AddUnique(Model.Tattvas[0].EvidenceLines[0]);
+			const FText& TattvaLine = Model.Tattvas[0].EvidenceLines[0];
+			bool bSeen = false;
+			for (const FText& Existing : Model.Stage.EvidenceLines)
+			{
+				bSeen = bSeen || Existing.EqualTo(TattvaLine);
+			}
+			if (!bSeen)
+			{
+				Model.Stage.EvidenceLines.Add(TattvaLine);
+			}
 		}
 
 		const PerfectWorld::AbilityRecipeSet& Cat = Recipes ? *Recipes : DefaultAbilityRecipeCatalogue();
-		if (!Grant.Result.Abilities.empty())
+		if (!Grant.Result.Ability.RecipeId.empty())
 		{
-			const PerfectWorld::AwakenedAbilityGrant& Ab = Grant.Result.Abilities[0];
-			Model.Ability.RecipeId = UTF8_TO_TCHAR(Ab.RecipeId.c_str());
+			const PerfectWorld::AwakenedAbilityGrant& Ab = Grant.Result.Ability;
+			Model.Ability.RecipeId = R97Utf8(Ab.RecipeId);
 			Model.Ability.bFallback = Ab.Fallback;
 			const PerfectWorld::AbilityRecipe* Found = Cat.Find(Ab.RecipeId);
-			const PerfectWorld::Tattva Dominant = Grant.StartingProfile.DominantAffinity;
+			const PerfectWorld::Tattva Dominant = R97DominantTattva(Grant.Result);
 			Model.Ability.AffinityText = TattvaDisplayName(Found ? Found->Affinity : Dominant);
 
 			if (Found && !Found->Name.empty())
 			{
-				Model.Ability.Name = SanitizeDisplayEvidence(
-					UTF8_TO_TCHAR(Found->Name.c_str()), ApFallbackAbilityName(Dominant));
+				Model.Ability.Name = SanitizeDisplayEvidence(R97Utf8(Found->Name), R97FallbackAbilityName(Dominant));
 			}
 			else
 			{
-				Model.Ability.Name = ApFallbackAbilityName(Dominant);
+				Model.Ability.Name = R97FallbackAbilityName(Dominant);
 			}
 
 			if (Found && !Found->Effect.empty())
 			{
-				Model.Ability.EffectText = SanitizeDisplayEvidence(
-					UTF8_TO_TCHAR(Found->Effect.c_str()), ApFallbackAbilityEffect(Dominant));
+				Model.Ability.EffectText = SanitizeDisplayEvidence(R97Utf8(Found->Effect), R97FallbackAbilityEffect(Dominant));
 			}
 			else
 			{
-				Model.Ability.EffectText = ApFallbackAbilityEffect(Dominant);
+				Model.Ability.EffectText = R97FallbackAbilityEffect(Dominant);
 			}
 
 			Model.Ability.OriginBadgeText = Ab.Fallback
@@ -612,10 +592,10 @@ namespace PWAwakening
 		}
 		if (Model.Ability.Name.IsEmpty())
 		{
-			const PerfectWorld::Tattva Dominant = Grant.StartingProfile.DominantAffinity;
-			Model.Ability.Name = ApFallbackAbilityName(Dominant);
+			const PerfectWorld::Tattva Dominant = R97DominantTattva(Grant.Result);
+			Model.Ability.Name = R97FallbackAbilityName(Dominant);
 			Model.Ability.AffinityText = TattvaDisplayName(Dominant);
-			Model.Ability.EffectText = ApFallbackAbilityEffect(Dominant);
+			Model.Ability.EffectText = R97FallbackAbilityEffect(Dominant);
 			Model.Ability.bFallback = true;
 			Model.Ability.OriginBadgeText = FText::FromString(TEXT("Foundational form aligned to dominant affinity"));
 		}

@@ -12,14 +12,15 @@
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
+#include "Widgets/SOverlay.h"
 #include "Widgets/Text/STextBlock.h"
 
 namespace
 {
-	constexpr float kApCountdownScrollStep = 120.0f;
-	constexpr float kApCountdownStickDeadZone = 0.35f;
+	constexpr float kR97CountdownScrollStep = 120.0f;
+	constexpr float kR97CountdownStickDeadZone = 0.35f;
 
-	TSharedRef<SWidget> ApMakeDisplacedListWidget(
+	TSharedRef<SWidget> R97MakeDisplacedListWidget(
 		const TArray<FText>& DisplacedCommitments,
 		float WrapWidth)
 	{
@@ -32,8 +33,8 @@ namespace
 		[
 			PWUI::MakeText(
 				FText::FromString(TEXT("COMMITMENTS THIS WOULD DISPLACE BEFORE CONFIRMING")),
-				Style.FontMonoSmall,
-				Style.AmberWarn)
+				PWUI::ETextRole::Meta,
+				Style.Warn)
 		];
 
 		if (DisplacedCommitments.Num() == 0)
@@ -44,8 +45,8 @@ namespace
 			[
 				SNew(STextBlock)
 				.Tag(PWApCountdown::DisplacedLineTag)
-				.Font(Style.FontBodySmall)
-				.ColorAndOpacity(Style.PaperMuted)
+				.Font(PWUI::Font(15))
+				.ColorAndOpacity(Style.TextSecondary)
 				.WrapTextAt(WrapWidth)
 				.Text(FText::FromString(TEXT("No standing household or school obligation overlaps this window.")))
 			];
@@ -60,8 +61,8 @@ namespace
 			[
 				SNew(STextBlock)
 				.Tag(PWApCountdown::DisplacedLineTag)
-				.Font(Style.FontBodySmall)
-				.ColorAndOpacity(Style.PaperWarm)
+				.Font(PWUI::Font(15))
+				.ColorAndOpacity(Style.TextPrimary)
 				.WrapTextAt(WrapWidth)
 				.Text(Line)
 			];
@@ -89,7 +90,6 @@ void SPWCountdownPanel::Construct(const FArguments& InArgs)
 	BridgeOverride = InArgs._BridgeOverride;
 	ViewportSize = InArgs._ViewportSize;
 	OnClose = InArgs._OnClose;
-	SetTag(PWApCountdown::PanelTag);
 
 	const PWUI::FStyle& Style = PWUI::FStyle::Get();
 	const float Width = PanelWidth(ViewportSize.X, ViewportSize.Y);
@@ -99,21 +99,21 @@ void SPWCountdownPanel::Construct(const FArguments& InArgs)
 
 	OrdinaryDayButton = PWUI::MakeButton(
 		FText::FromString(TEXT("Keep an ordinary day")),
+		PWUI::EButtonKind::Primary,
 		FOnClicked::CreateSP(this, &SPWCountdownPanel::HandleKeepOrdinaryDayClicked),
-		PWUI::EButtonKind::Primary);
-	OrdinaryDayButton->SetTag(PWApCountdown::OrdinaryDayButtonTag);
+		true, 20, 0.0f);
 
 	ConfirmButton = PWUI::MakeButton(
 		FText::FromString(TEXT("Confirm selected practice")),
+		PWUI::EButtonKind::Secondary,
 		FOnClicked::CreateSP(this, &SPWCountdownPanel::HandleConfirmClicked),
-		PWUI::EButtonKind::Secondary);
-	ConfirmButton->SetTag(PWApCountdown::ConfirmButtonTag);
+		true, 20, 0.0f);
 
 	CloseButton = PWUI::MakeButton(
 		FText::FromString(TEXT("Back")),
+		PWUI::EButtonKind::Secondary,
 		FOnClicked::CreateSP(this, &SPWCountdownPanel::HandleCloseClicked),
-		PWUI::EButtonKind::Ghost);
-	CloseButton->SetTag(PWApCountdown::CloseButtonTag);
+		true, 20, 0.0f);
 
 	ChildSlot
 	[
@@ -122,12 +122,16 @@ void SPWCountdownPanel::Construct(const FArguments& InArgs)
 		.MaxDesiredHeight(MaxHeight)
 		[
 			SNew(SBorder)
+			.Tag(PWApCountdown::PanelTag)
 			.BorderImage(&Style.BrushPanel)
 			.Padding(FMargin(bCompact ? 14.0f : 20.0f))
 			[
-				SNew(PWUI::SPWCornerBrackets)
-				.Arm(14.0f)
-				.Thickness(1.5f)
+				SNew(SOverlay)
+				+ SOverlay::Slot()
+				[
+					SNew(SPWCornerBrackets)
+				]
+				+ SOverlay::Slot()
 				[
 					SNew(SVerticalBox)
 					+ SVerticalBox::Slot()
@@ -140,9 +144,9 @@ void SPWCountdownPanel::Construct(const FArguments& InArgs)
 						.VAlign(VAlign_Center)
 						.Padding(0.0f, 0.0f, 12.0f, 0.0f)
 						[
-							SNew(PWUI::SPWAwakeningSigil)
-							.Size(bCompact ? 24.0f : 30.0f)
-							.Phase(0.75f)
+							SNew(SPWAwakeningSigil)
+							.SizeClass(EPWSigilSizeClass::Seal)
+							.Diameter(bCompact ? 24.0f : 30.0f)
 							.Reveal(!PWUI::IsReducedMotion())
 						]
 						+ SHorizontalBox::Slot()
@@ -155,8 +159,8 @@ void SPWCountdownPanel::Construct(const FArguments& InArgs)
 							[
 								PWUI::MakeText(
 									FText::FromString(TEXT("EXAMINATION COUNTDOWN · OPTIONAL PRACTICE")),
-									Style.FontTitleSmall,
-									Style.GoldBright)
+									22,
+									Style.Accent, true)
 							]
 							+ SVerticalBox::Slot()
 							.AutoHeight()
@@ -164,8 +168,8 @@ void SPWCountdownPanel::Construct(const FArguments& InArgs)
 							[
 								SNew(STextBlock)
 								.Tag(PWApCountdown::HeadlineTag)
-								.Font(Style.FontBodyBold)
-								.ColorAndOpacity(Style.CyanSignal)
+								.Font(PWUI::Font(17, true))
+								.ColorAndOpacity(Style.Good)
 								.WrapTextAt(Width - 110.0f)
 								.Text_Lambda([this]() { return Model.CountdownHeadlineText; })
 							]
@@ -176,8 +180,8 @@ void SPWCountdownPanel::Construct(const FArguments& InArgs)
 						[
 							PWUI::MakeText(
 								TAttribute<FText>::CreateLambda([this]() { return Model.CurrentClockText; }),
-								Style.FontMonoSmall,
-								Style.PaperMuted)
+								PWUI::ETextRole::Meta,
+								Style.TextSecondary)
 						]
 					]
 					+ SVerticalBox::Slot()
@@ -214,21 +218,21 @@ void SPWCountdownPanel::Construct(const FArguments& InArgs)
 						.FillWidth(1.0f)
 						.VAlign(VAlign_Center)
 						[
-							OrdinaryDayButton.ToSharedRef()
+							SNew(SBox).Tag(PWApCountdown::OrdinaryDayButtonTag)[OrdinaryDayButton.ToSharedRef()]
 						]
 						+ SHorizontalBox::Slot()
 						.AutoWidth()
 						.VAlign(VAlign_Center)
 						.Padding(8.0f, 0.0f, 0.0f, 0.0f)
 						[
-							ConfirmButton.ToSharedRef()
+							SNew(SBox).Tag(PWApCountdown::ConfirmButtonTag)[ConfirmButton.ToSharedRef()]
 						]
 						+ SHorizontalBox::Slot()
 						.AutoWidth()
 						.VAlign(VAlign_Center)
 						.Padding(8.0f, 0.0f, 0.0f, 0.0f)
 						[
-							CloseButton.ToSharedRef()
+							SNew(SBox).Tag(PWApCountdown::CloseButtonTag)[CloseButton.ToSharedRef()]
 						]
 					]
 				]
@@ -296,8 +300,8 @@ void SPWCountdownPanel::RebuildBody()
 			.Padding(FMargin(14.0f))
 			[
 				SNew(STextBlock)
-				.Font(Style.FontBody)
-				.ColorAndOpacity(Style.PaperMuted)
+				.Font(PWUI::Font(17))
+				.ColorAndOpacity(Style.TextSecondary)
 				.WrapTextAt(InnerWrap)
 				.Text(FText::FromString(TEXT("No active world session is available to read the examination countdown.")))
 			]
@@ -324,13 +328,13 @@ void SPWCountdownPanel::RebuildBody()
 				[
 					PWUI::MakeText(
 						FText::FromString(TEXT("NATIONAL VIRTUAL-TOWER EXAMINATION DEADLINE")),
-						Style.FontMonoSmall,
-						Style.GoldBrass)
+						PWUI::ETextRole::Meta,
+						Style.Accent)
 				]
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				[
-					PWUI::MakeText(Model.ExamDeadlineText, Style.FontMono, Style.GoldBright)
+					PWUI::MakeText(Model.ExamDeadlineText, PWUI::ETextRole::Meta, Style.Accent)
 				]
 			]
 			+ SVerticalBox::Slot()
@@ -338,8 +342,8 @@ void SPWCountdownPanel::RebuildBody()
 			.Padding(0.0f, 4.0f, 0.0f, 0.0f)
 			[
 				SNew(STextBlock)
-				.Font(Style.FontBodySmall)
-				.ColorAndOpacity(Style.PaperWarm)
+				.Font(PWUI::Font(15))
+				.ColorAndOpacity(Style.TextPrimary)
 				.WrapTextAt(InnerWrap)
 				.Text(Model.FreedomNoticeText)
 			]
@@ -358,8 +362,8 @@ void SPWCountdownPanel::RebuildBody()
 			.Padding(FMargin(12.0f, 8.0f))
 			[
 				SNew(STextBlock)
-				.Font(Style.FontBodyBold)
-				.ColorAndOpacity(Style.JadeGood)
+				.Font(PWUI::Font(17, true))
+				.ColorAndOpacity(Style.Good)
 				.WrapTextAt(InnerWrap)
 				.Text(Model.StatusBannerText)
 			]
@@ -373,8 +377,8 @@ void SPWCountdownPanel::RebuildBody()
 	[
 		PWUI::MakeText(
 			FText::FromString(TEXT("TODAY'S OPTIONAL PRACTICE OFFERS")),
-			Style.FontMono,
-			Style.GoldBright)
+			PWUI::ETextRole::Meta,
+			Style.Accent)
 	];
 
 	if (Model.Offers.Num() == 0)
@@ -389,8 +393,8 @@ void SPWCountdownPanel::RebuildBody()
 			.Padding(FMargin(12.0f, 10.0f))
 			[
 				SNew(STextBlock)
-				.Font(Style.FontBody)
-				.ColorAndOpacity(Style.PaperMuted)
+				.Font(PWUI::Font(17))
+				.ColorAndOpacity(Style.TextSecondary)
 				.WrapTextAt(InnerWrap)
 				.Text(FText::FromString(
 					TEXT("No optional practice windows are open for the remainder of today. Your ordinary day continues uninterrupted.")))
@@ -404,7 +408,7 @@ void SPWCountdownPanel::RebuildBody()
 			const PWAwakening::FPWCountdownOfferRow& Offer = Model.Offers[i];
 			const bool bSelected = (i == SelectedOfferIndex);
 
-			TSharedRef<SVerticalBox> OfferContent = SNew(SVerticalBox)
+			const TSharedRef<SWidget> OfferContent = SNew(SVerticalBox)
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
@@ -414,13 +418,14 @@ void SPWCountdownPanel::RebuildBody()
 					[
 						PWUI::MakeText(
 							Offer.Title,
-							Style.FontBodyBold,
-							bSelected ? Style.GoldBright : Style.PaperWarm)
+							17,
+							bSelected ? Style.Accent : Style.TextPrimary,
+							true)
 					]
 					+ SHorizontalBox::Slot()
 					.AutoWidth()
 					[
-						PWUI::MakeText(Offer.WindowText, Style.FontMono, Style.CyanSignal)
+						PWUI::MakeText(Offer.WindowText, PWUI::ETextRole::Meta, Style.Good)
 					]
 				]
 				+ SVerticalBox::Slot()
@@ -431,38 +436,39 @@ void SPWCountdownPanel::RebuildBody()
 					+ SHorizontalBox::Slot()
 					.FillWidth(1.0f)
 					[
-						PWUI::MakeText(Offer.ContactText, Style.FontBodySmall, Style.PaperMuted)
+						PWUI::MakeText(Offer.ContactText, 15, Style.TextSecondary)
 					]
 					+ SHorizontalBox::Slot()
 					.AutoWidth()
 					[
-						PWUI::MakeText(Offer.AvailabilityText, Style.FontMonoSmall, Style.GoldBrass)
+						PWUI::MakeText(Offer.AvailabilityText, PWUI::ETextRole::Meta, Style.Accent)
 					]
 				]
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				.Padding(0.0f, 2.0f)
 				[
-					PWUI::MakeText(Offer.SummaryText, Style.FontBodySmall, Style.PaperWarm)
+					PWUI::MakeText(Offer.SummaryText, 15, Style.TextPrimary)
 				]
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
-					ApMakeDisplacedListWidget(Offer.DisplacedCommitments, InnerWrap)
+					R97MakeDisplacedListWidget(Offer.DisplacedCommitments, InnerWrap)
 				];
 
-			TSharedRef<SButton> Btn = PWUI::MakeContentButton(
+			const TSharedRef<SWidget> OfferButton = PWUI::MakeContentButton(
 				OfferContent,
-				FOnClicked::CreateLambda([this, i]()
+				PWUI::EButtonKind::TextRow,
+				FOnClicked::CreateSPLambda(this, [this, i]()
 				{
 					SelectOfferIndex(i);
 					return FReply::Handled();
 				}),
-				PWUI::EButtonKind::Ghost,
-				FMargin(12.0f, 8.0f),
-				Offer.Title);
-			Btn->SetTag(PWApCountdown::OfferRowTag);
-			OfferRowButtons.Add(Btn);
+				bSelected,
+				true,
+				FMargin(12.0f, 8.0f));
+			OfferRowButtons.Add(OfferButton);
+			const TSharedRef<SWidget> Btn = SNew(SBox).Tag(PWApCountdown::OfferRowTag)[OfferButton];
 
 			BodyContainer->AddSlot()
 			.AutoHeight()
@@ -493,13 +499,13 @@ void SPWCountdownPanel::RebuildBody()
 								TEXT("BEFORE CONFIRMING: %s (%s)"),
 								*Sel.Title.ToString(),
 								*Sel.WindowText.ToString())),
-							Style.FontBodyBold,
-							Style.GoldBright)
+							17,
+							Style.Accent, true)
 					]
 					+ SVerticalBox::Slot()
 					.AutoHeight()
 					[
-						ApMakeDisplacedListWidget(Sel.DisplacedCommitments, InnerWrap)
+						R97MakeDisplacedListWidget(Sel.DisplacedCommitments, InnerWrap)
 					]
 				]
 			];
@@ -515,8 +521,8 @@ void SPWCountdownPanel::RebuildBody()
 		[
 			PWUI::MakeText(
 				FText::FromString(TEXT("STANDING HOUSEHOLD & SCHOOL COMMITMENTS")),
-				Style.FontMono,
-				Style.GoldBright)
+				PWUI::ETextRole::Meta,
+				Style.Accent)
 		];
 
 		for (const PWAwakening::FPWCountdownObligationRow& Obl : Model.Obligations)
@@ -538,12 +544,12 @@ void SPWCountdownPanel::RebuildBody()
 						+ SVerticalBox::Slot()
 						.AutoHeight()
 						[
-							PWUI::MakeText(Obl.Title, Style.FontBodyBold, Style.PaperWarm)
+							PWUI::MakeText(Obl.Title, 17, Style.TextPrimary, true)
 						]
 						+ SVerticalBox::Slot()
 						.AutoHeight()
 						[
-							PWUI::MakeText(Obl.PersonText, Style.FontBodySmall, Style.PaperMuted)
+							PWUI::MakeText(Obl.PersonText, 15, Style.TextSecondary)
 						]
 					]
 					+ SHorizontalBox::Slot()
@@ -555,13 +561,13 @@ void SPWCountdownPanel::RebuildBody()
 						.AutoHeight()
 						.HAlign(HAlign_Right)
 						[
-							PWUI::MakeText(Obl.WindowText, Style.FontMonoSmall, Style.CyanSignal)
+							PWUI::MakeText(Obl.WindowText, PWUI::ETextRole::Meta, Style.Good)
 						]
 						+ SVerticalBox::Slot()
 						.AutoHeight()
 						.HAlign(HAlign_Right)
 						[
-							PWUI::MakeText(Obl.StatusText, Style.FontMonoSmall, Style.PaperMuted)
+							PWUI::MakeText(Obl.StatusText, PWUI::ETextRole::Meta, Style.TextSecondary)
 						]
 					]
 				]
@@ -594,14 +600,15 @@ void SPWCountdownPanel::SelectOfferIndex(int32 Index)
 	RebuildBody();
 	if (OfferRowButtons.IsValidIndex(SelectedOfferIndex) && OfferRowButtons[SelectedOfferIndex].IsValid())
 	{
-		const TSharedPtr<SButton>& Target = OfferRowButtons[SelectedOfferIndex];
+		const TSharedPtr<SWidget>& Target = OfferRowButtons[SelectedOfferIndex];
 		if (DetailScrollBox.IsValid())
 		{
 			DetailScrollBox->ScrollDescendantIntoView(Target, true);
 		}
 		if (FSlateApplication::IsInitialized())
 		{
-			FSlateApplication::Get().SetKeyboardFocus(Target, EFocusCause::Navigation);
+			const TSharedPtr<SWidget> Focusable = PWUI::FindFirstFocusable(Target.ToSharedRef());
+			FSlateApplication::Get().SetKeyboardFocus(Focusable.IsValid() ? Focusable : Target, EFocusCause::Navigation);
 		}
 	}
 }
@@ -689,7 +696,7 @@ FReply SPWCountdownPanel::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent
 		}
 		else
 		{
-			ScrollDetailBy(kApCountdownScrollStep);
+			ScrollDetailBy(kR97CountdownScrollStep);
 		}
 		return FReply::Handled();
 	}
@@ -701,18 +708,18 @@ FReply SPWCountdownPanel::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent
 		}
 		else
 		{
-			ScrollDetailBy(-kApCountdownScrollStep);
+			ScrollDetailBy(-kR97CountdownScrollStep);
 		}
 		return FReply::Handled();
 	}
 	if (Key == EKeys::PageDown || Key == EKeys::Gamepad_RightStick_Down)
 	{
-		ScrollDetailBy(kApCountdownScrollStep);
+		ScrollDetailBy(kR97CountdownScrollStep);
 		return FReply::Handled();
 	}
 	if (Key == EKeys::PageUp || Key == EKeys::Gamepad_RightStick_Up)
 	{
-		ScrollDetailBy(-kApCountdownScrollStep);
+		ScrollDetailBy(-kR97CountdownScrollStep);
 		return FReply::Handled();
 	}
 	return SCompoundWidget::OnKeyDown(MyGeometry, InKeyEvent);
@@ -724,7 +731,7 @@ FReply SPWCountdownPanel::OnAnalogValueChanged(
 {
 	const FKey Key = InAnalogEvent.GetKey();
 	const float Val = InAnalogEvent.GetAnalogValue();
-	if (Key == EKeys::Gamepad_RightY && FMath::Abs(Val) > kApCountdownStickDeadZone)
+	if (Key == EKeys::Gamepad_RightY && FMath::Abs(Val) > kR97CountdownStickDeadZone)
 	{
 		ScrollDetailBy(-Val * 28.0f);
 		return FReply::Handled();

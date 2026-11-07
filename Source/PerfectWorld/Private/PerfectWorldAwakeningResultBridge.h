@@ -154,7 +154,7 @@ namespace PWAwakening
 	FPWCountdownModel BuildCountdownModelFromCore(
 		PerfectWorld::GameInstant Now,
 		const PerfectWorld::WorldState& World,
-		const PerfectWorld::CountdownState& State,
+		const PerfectWorld::CountdownState* State,
 		const PerfectWorld::CountdownContext& Ctx,
 		bool bOrdinaryDayKept = false,
 		const FString& CommittedOfferId = FString(),

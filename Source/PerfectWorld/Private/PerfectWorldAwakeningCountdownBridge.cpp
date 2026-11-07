@@ -6,88 +6,134 @@ namespace PWAwakening
 {
 	namespace
 	{
-		FString ApFormatHourMinute(PerfectWorld::GameInstant Instant)
+		FString R97Utf8(std::string_view Text)
+		{
+			const std::string Owned(Text);
+			return FString(UTF8_TO_TCHAR(Owned.c_str()));
+		}
+
+		FString R97HourMinute(PerfectWorld::GameInstant Instant)
 		{
 			const PerfectWorld::CalendarTime Cal = PerfectWorld::GameClock::ToCalendar(Instant);
 			return FString::Printf(TEXT("%02d:%02d"), Cal.Hour, Cal.Minute);
 		}
 
-		FText ApFormatFullClock(PerfectWorld::GameInstant Instant)
+		FText R97FullClock(PerfectWorld::GameInstant Instant)
 		{
 			const PerfectWorld::CalendarTime Cal = PerfectWorld::GameClock::ToCalendar(Instant);
-			static const TCHAR* kMonths[] = {
+			static const TCHAR* const Months[] = {
 				TEXT(""), TEXT("January"), TEXT("February"), TEXT("March"), TEXT("April"),
 				TEXT("May"), TEXT("June"), TEXT("July"), TEXT("August"),
 				TEXT("September"), TEXT("October"), TEXT("November"), TEXT("December")
 			};
-			const int32 MonthIdx = FMath::Clamp(Cal.Month, 1, 12);
+			const int32 MonthIdx = FMath::Clamp(static_cast<int32>(Cal.Month), 1, 12);
 			return FText::FromString(FString::Printf(
 				TEXT("%d %s %04d · %02d:%02d"),
-				Cal.Day, kMonths[MonthIdx], Cal.Year, Cal.Hour, Cal.Minute));
+				Cal.Day, Months[MonthIdx], Cal.Year, Cal.Hour, Cal.Minute));
 		}
 
-		FText ApAvailabilityLabel(PerfectWorld::OpportunityAvailability Avail, bool bCommitted)
+		FText R97AvailabilityLabel(PerfectWorld::CountdownAvailability Avail, bool bCommitted)
 		{
-			if (bCommitted || Avail == PerfectWorld::OpportunityAvailability::Taken)
+			if (bCommitted)
 			{
-				return FText::FromString(TEXT("Committed for today"));
+				return FText::FromString(TEXT("Committed"));
 			}
 			switch (Avail)
 			{
-			case PerfectWorld::OpportunityAvailability::Open:
-				return FText::FromString(TEXT("Open today (optional)"));
-			case PerfectWorld::OpportunityAvailability::ClosedByGroup:
+			case PerfectWorld::CountdownAvailability::Open:
+				return FText::FromString(TEXT("Open (optional)"));
+			case PerfectWorld::CountdownAvailability::Taken:
+				return FText::FromString(TEXT("Already committed"));
+			case PerfectWorld::CountdownAvailability::WindowClosed:
+				return FText::FromString(TEXT("This window has already passed"));
+			case PerfectWorld::CountdownAvailability::NeedsNews:
+				return FText::FromString(TEXT("Opens once the news has arrived"));
+			case PerfectWorld::CountdownAvailability::NoContact:
+				return FText::FromString(TEXT("Needs someone you know for this session"));
+			case PerfectWorld::CountdownAvailability::RelationTooLow:
+				return FText::FromString(TEXT("Needs a closer relationship with the person involved"));
+			case PerfectWorld::CountdownAvailability::GroupTaken:
 				return FText::FromString(TEXT("Closed because another option in this window was chosen"));
-			case PerfectWorld::OpportunityAvailability::PrerequisitesUnmet:
-				return FText::FromString(TEXT("Requires prior arrangement before opening"));
-			case PerfectWorld::OpportunityAvailability::OutsideWindow:
-				return FText::FromString(TEXT("Outside today's active hour window"));
-			case PerfectWorld::OpportunityAvailability::Completed:
-				return FText::FromString(TEXT("Completed earlier in the countdown"));
-			case PerfectWorld::OpportunityAvailability::Expired:
-				return FText::FromString(TEXT("Window has already passed"));
-			case PerfectWorld::OpportunityAvailability::Taken:
-				return FText::FromString(TEXT("Committed for today"));
+			case PerfectWorld::CountdownAvailability::TimeConflict:
+				return FText::FromString(TEXT("Overlaps something you have already committed to"));
 			}
 			return FText::FromString(TEXT("Optional practice window"));
 		}
 
-		FText ApObligationStatusLabel(PerfectWorld::ObligationDisposition Disp)
+		FText R97BandLabel(PerfectWorld::CountdownBand Band)
 		{
-			switch (Disp)
+			switch (Band)
 			{
-			case PerfectWorld::ObligationDisposition::Pending:
-				return FText::FromString(TEXT("Scheduled on your ordinary day"));
-			case PerfectWorld::ObligationDisposition::Honored:
-				return FText::FromString(TEXT("Kept as promised"));
-			case PerfectWorld::ObligationDisposition::Rescheduled:
-				return FText::FromString(TEXT("Moved to another hour"));
-			case PerfectWorld::ObligationDisposition::Missed:
-				return FText::FromString(TEXT("Missed during another commitment"));
+			case PerfectWorld::CountdownBand::Unlikely: return FText::FromString(TEXT("unlikely"));
+			case PerfectWorld::CountdownBand::Possible: return FText::FromString(TEXT("possible"));
+			case PerfectWorld::CountdownBand::Likely: return FText::FromString(TEXT("likely"));
+			case PerfectWorld::CountdownBand::VeryLikely: return FText::FromString(TEXT("very likely"));
 			}
-			return FText::FromString(TEXT("Scheduled on your ordinary day"));
+			return FText::FromString(TEXT("possible"));
 		}
 
-		FString ApLookupOpportunityDisplayName(
-			const PerfectWorld::CountdownCatalogue& Catalog,
-			const std::string& Id)
+		FText R97ObligationStatus(const PerfectWorld::CountdownObligationRecord& Record)
 		{
-			if (const PerfectWorld::CountdownOpportunityDef* Def = Catalog.FindOpportunity(Id))
+			if (Record.Done)
 			{
-				const FString Candidate = UTF8_TO_TCHAR(Def->Name.c_str());
-				if (!LooksLikeRawIdentifier(Candidate))
-				{
-					return Candidate;
-				}
+				return FText::FromString(TEXT("Done"));
 			}
-			return TEXT("Another optional session in the same hour window");
+			switch (Record.Disposition)
+			{
+			case PerfectWorld::CountdownDisposition::Standing:
+				return FText::FromString(TEXT("Standing: kept on your ordinary day"));
+			case PerfectWorld::CountdownDisposition::Shared:
+				return FText::FromString(TEXT("Shared with a helper"));
+			case PerfectWorld::CountdownDisposition::Deferred:
+				return FText::FromString(TEXT("Moved to another hour"));
+			case PerfectWorld::CountdownDisposition::Declined:
+				return FText::FromString(TEXT("Declined"));
+			}
+			return FText::FromString(TEXT("Standing: kept on your ordinary day"));
+		}
+
+		FText R97ObligationTitle(const PerfectWorld::CountdownObligationRecord& Record)
+		{
+			const PerfectWorld::CountdownObligationDef* Def = PerfectWorld::CountdownFindObligation(Record.Id);
+			return SanitizeDisplayEvidence(
+				Def ? R97Utf8(Def->Name) : FString(),
+				FText::FromString(TEXT("Household or school commitment")));
+		}
+
+		FText R97RoleText(const PerfectWorld::CountdownObligationDef* Def)
+		{
+			const FString Role = Def ? R97Utf8(Def->Role) : FString();
+			if (Role.IsEmpty() || LooksLikeRawIdentifier(Role))
+			{
+				return FText::FromString(TEXT("Someone you know"));
+			}
+			return FText::FromString(FString::Printf(TEXT("Your %s"), *Role));
+		}
+
+		FString R97OfferName(const PerfectWorld::CountdownOpportunityDef* Def)
+		{
+			const FString Candidate = Def ? R97Utf8(Def->Name) : FString();
+			if (!Candidate.IsEmpty() && !LooksLikeRawIdentifier(Candidate))
+			{
+				return Candidate;
+			}
+			return TEXT("Another optional session in the same window");
+		}
+
+		FText R97OddsSummary(const PerfectWorld::CountdownOffer& Offer)
+		{
+			return FText::FromString(FString::Printf(
+				TEXT("Outcomes if taken: good %d%% (%s) · fair %d%% (%s) · poor %d%% (%s)"),
+				Offer.Odds[0] / 10, *R97BandLabel(Offer.Bands[0]).ToString(),
+				Offer.Odds[1] / 10, *R97BandLabel(Offer.Bands[1]).ToString(),
+				Offer.Odds[2] / 10, *R97BandLabel(Offer.Bands[2]).ToString()));
 		}
 	}
 
 	FPWCountdownModel BuildCountdownModelFromCore(
 		PerfectWorld::GameInstant Now,
 		const PerfectWorld::WorldState& World,
-		const PerfectWorld::CountdownState& State,
+		const PerfectWorld::CountdownState* State,
 		const PerfectWorld::CountdownContext& Ctx,
 		bool bOrdinaryDayKept,
 		const FString& CommittedOfferId,
@@ -95,28 +141,29 @@ namespace PWAwakening
 	{
 		FPWCountdownModel Model;
 		Model.bAvailable = true;
-		Model.CurrentClockText = ApFormatFullClock(Now);
-		Model.ExamDeadlineText = FText::FromString(TEXT("2 February 2043 · 06:00"));
+		Model.CurrentClockText = R97FullClock(Now);
 
 		const PerfectWorld::GameInstant ExamAt = PerfectWorld::CountdownEndInstant();
-		const int64_t RemainingMinutes = FMath::Max<int64_t>(0, ExamAt - Now);
+		const FText ExamClock = R97FullClock(ExamAt);
+		Model.ExamDeadlineText = ExamClock;
+
+		const int64 RemainingMinutes = FMath::Max<int64>(0, ExamAt - Now);
 		Model.DaysRemaining = static_cast<int32>(RemainingMinutes / PerfectWorld::MinutesPerDay);
 		Model.HoursRemaining = static_cast<int32>(
 			(RemainingMinutes % PerfectWorld::MinutesPerDay) / PerfectWorld::MinutesPerHour);
 
 		if (RemainingMinutes > 0)
 		{
+			const TCHAR* DayWord = (Model.DaysRemaining == 1) ? TEXT("day") : TEXT("days");
+			const TCHAR* HourWord = (Model.HoursRemaining == 1) ? TEXT("hour") : TEXT("hours");
 			Model.CountdownHeadlineText = FText::FromString(FString::Printf(
-				TEXT("%d %s, %d %s until the examination (2 February 2043 · 06:00)"),
-				Model.DaysRemaining,
-				Model.DaysRemaining == 1 ? TEXT("day") : TEXT("days"),
-				Model.HoursRemaining,
-				Model.HoursRemaining == 1 ? TEXT("hour") : TEXT("hours")));
+				TEXT("%d %s, %d %s until the examination (%s)"),
+				Model.DaysRemaining, DayWord, Model.HoursRemaining, HourWord, *ExamClock.ToString()));
 		}
 		else
 		{
-			Model.CountdownHeadlineText = FText::FromString(
-				TEXT("0 days, 0 hours — examination morning (2 February 2043 · 06:00)"));
+			Model.CountdownHeadlineText = FText::FromString(FString::Printf(
+				TEXT("0 days, 0 hours: examination morning (%s)"), *ExamClock.ToString()));
 		}
 
 		Model.FreedomNoticeText = FText::FromString(
@@ -125,99 +172,97 @@ namespace PWAwakening
 		Model.CommittedOfferId = CommittedOfferId;
 		Model.StatusBannerText = StatusBanner;
 
-		for (const PerfectWorld::StandingObligation& Obl : State.Obligations)
+		if (!State)
 		{
+			return Model;
+		}
+
+		for (const PerfectWorld::CountdownObligationRecord& Record : State->Obligations)
+		{
+			const PerfectWorld::CountdownObligationDef* Def = PerfectWorld::CountdownFindObligation(Record.Id);
 			FPWCountdownObligationRow Row;
-			Row.Id = UTF8_TO_TCHAR(Obl.Def.Id.c_str());
-			Row.Title = SanitizeDisplayEvidence(
-				UTF8_TO_TCHAR(Obl.Def.Title.c_str()),
-				FText::FromString(TEXT("Household or school commitment")));
-			Row.PersonText = SanitizeDisplayEvidence(
-				UTF8_TO_TCHAR(Obl.Def.PersonName.c_str()),
-				FText::FromString(TEXT("Household & neighbours")));
+			Row.Id = R97Utf8(Record.Id);
+			Row.Title = R97ObligationTitle(Record);
+			Row.PersonText = R97RoleText(Def);
 			Row.WindowText = FText::FromString(FString::Printf(
 				TEXT("%s–%s"),
-				*ApFormatHourMinute(Obl.Start),
-				*ApFormatHourMinute(Obl.End)));
-			Row.StatusText = ApObligationStatusLabel(Obl.Disposition);
+				*R97HourMinute(Record.Start),
+				*R97HourMinute(Record.Start + Record.Minutes)));
+			Row.StatusText = R97ObligationStatus(Record);
 			Model.Obligations.Add(MoveTemp(Row));
 		}
 
 		const std::vector<PerfectWorld::CountdownOffer> CoreOffers =
-			PerfectWorld::CountdownOffers(State, World, Ctx, Now);
-		for (std::size_t i = 0; i < CoreOffers.size(); ++i)
+			PerfectWorld::CountdownOffers(World, *State, Ctx);
+		for (const PerfectWorld::CountdownOffer& Offer : CoreOffers)
 		{
-			const PerfectWorld::CountdownOffer& Offer = CoreOffers[i];
+			if (!Offer.Def)
+			{
+				continue;
+			}
 			FPWCountdownOfferRow Row;
-			Row.Id = UTF8_TO_TCHAR(Offer.Def.Id.c_str());
+			Row.Id = R97Utf8(Offer.Def->Id);
 			Row.Title = SanitizeDisplayEvidence(
-				UTF8_TO_TCHAR(Offer.Def.Name.c_str()),
-				FText::FromString(TEXT("Optional Practice Window")));
+				R97Utf8(Offer.Def->Name),
+				FText::FromString(TEXT("Optional practice window")));
 
-			const int32 Hours = FMath::Max(1, Offer.Minutes / 60);
+			const int32 Hours = FMath::Max(1, static_cast<int32>(Offer.Minutes / 60));
 			Row.WindowText = FText::FromString(FString::Printf(
 				TEXT("%s–%s (%dh)"),
-				*ApFormatHourMinute(Offer.Start),
-				*ApFormatHourMinute(Offer.End),
+				*R97HourMinute(Offer.Start),
+				*R97HourMinute(Offer.End),
 				Hours));
 
-			const FString ContactName = UTF8_TO_TCHAR(Offer.Contact.Name.c_str());
-			if (!ContactName.IsEmpty() && !LooksLikeRawIdentifier(ContactName))
-			{
-				Row.ContactText = FText::FromString(FString::Printf(TEXT("With %s"), *ContactName));
-			}
-			else
+			const FString Role = R97Utf8(Offer.Def->Role);
+			if (Offer.Contact.empty() || Role.IsEmpty() || LooksLikeRawIdentifier(Role))
 			{
 				Row.ContactText = FText::FromString(TEXT("Self-directed practice window"));
 			}
+			else
+			{
+				Row.ContactText = FText::FromString(FString::Printf(TEXT("With your %s"), *Role));
+			}
 
-			Row.SummaryText = FText::FromString(FString::Printf(
-				TEXT("Estimated readiness +%d to +%d · strain +%d to +%d"),
-				Offer.Bands.ScoreMin,
-				Offer.Bands.ScoreMax,
-				Offer.Bands.StrainMin,
-				Offer.Bands.StrainMax));
+			Row.SummaryText = R97OddsSummary(Offer);
 
-			Row.bCommitted = (!CommittedOfferId.IsEmpty() && Row.Id == CommittedOfferId)
-				|| (Offer.Availability == PerfectWorld::OpportunityAvailability::Taken);
-			Row.bOpen = (Offer.Availability == PerfectWorld::OpportunityAvailability::Open)
+			const bool bTaken = (PerfectWorld::CountdownFindCommitment(*State, Offer.Def->Id) != nullptr)
+				|| (Offer.Availability == PerfectWorld::CountdownAvailability::Taken);
+			Row.bCommitted = bTaken || (!CommittedOfferId.IsEmpty() && Row.Id == CommittedOfferId);
+			Row.bOpen = (Offer.Availability == PerfectWorld::CountdownAvailability::Open)
 				&& !bOrdinaryDayKept
 				&& (CommittedOfferId.IsEmpty() || Row.Id == CommittedOfferId);
-			Row.AvailabilityText = ApAvailabilityLabel(Offer.Availability, Row.bCommitted);
+			Row.AvailabilityText = R97AvailabilityLabel(Offer.Availability, Row.bCommitted);
 
-			for (const PerfectWorld::StandingObligation& Obl : State.Obligations)
+			for (const PerfectWorld::CountdownObligationRecord& Record : State->Obligations)
 			{
-				if (Obl.Start < Offer.End && Offer.Start < Obl.End)
+				if (Record.Done || Record.Minutes <= 0)
 				{
-					const FText OblTitle = SanitizeDisplayEvidence(
-						UTF8_TO_TCHAR(Obl.Def.Title.c_str()),
-						FText::FromString(TEXT("Scheduled commitment")));
-					const FText PersonName = SanitizeDisplayEvidence(
-						UTF8_TO_TCHAR(Obl.Def.PersonName.c_str()),
-						FText::FromString(TEXT("household")));
+					continue;
+				}
+				const PerfectWorld::GameInstant OblEnd = Record.Start + Record.Minutes;
+				if (Record.Start < Offer.End && Offer.Start < OblEnd)
+				{
 					Row.DisplacedCommitments.Add(FText::FromString(FString::Printf(
-						TEXT("Displaces standing commitment: %s with %s (%s–%s)"),
-						*OblTitle.ToString(),
-						*PersonName.ToString(),
-						*ApFormatHourMinute(Obl.Start),
-						*ApFormatHourMinute(Obl.End))));
+						TEXT("Overlaps a standing commitment: %s (%s–%s)"),
+						*R97ObligationTitle(Record).ToString(),
+						*R97HourMinute(Record.Start),
+						*R97HourMinute(OblEnd))));
 				}
 			}
 
-			for (std::size_t c = 0; c < Offer.Closes.size(); ++c)
+			for (const std::string& ClosedId : Offer.Closes)
 			{
-				const FString ClosedTitle = ApLookupOpportunityDisplayName(State.Catalog, Offer.Closes[c]);
 				Row.DisplacedCommitments.Add(FText::FromString(FString::Printf(
-					TEXT("Closes same-day option: %s"),
-					*ClosedTitle)));
+					TEXT("Closes another option in this window: %s"),
+					*R97OfferName(PerfectWorld::CountdownFindOpportunity(ClosedId)))));
 			}
 
 			if (Row.DisplacedCommitments.Num() == 0)
 			{
 				Row.DisplacedCommitments.Add(FText::FromString(FString::Printf(
-					TEXT("Sets aside %s–%s from your unhurried afternoon and evening hours"),
-					*ApFormatHourMinute(Offer.Start),
-					*ApFormatHourMinute(Offer.End))));
+					TEXT("Sets aside %s–%s of your own time; nothing else you have committed to falls in it"),
+					*R97HourMinute(Offer.Start),
+					*R97HourMinute(Offer.End))));
 			}
 
 			Model.Offers.Add(MoveTemp(Row));
@@ -256,103 +301,102 @@ namespace PWAwakening
 		const PerfectWorld::CountdownState& State,
 		const PerfectWorld::CountdownContext& Ctx)
 	{
-		CountdownModel = BuildCountdownModelFromCore(Now, World, State, Ctx);
+		CountdownModel = BuildCountdownModelFromCore(Now, World, &State, Ctx);
 	}
 
 	void FApFakeAwakeningWorld::SeedSampleGrantedAwakening()
 	{
-		PerfectWorld::AwakeningInput Input{};
-		for (int32 i = 0; i < 6; ++i)
-		{
-			Input.Attributes[i] = 52 + i * 4;
-		}
-		for (int32 i = 0; i < 10; ++i)
-		{
-			Input.Skills[i] = 44 + (i % 5) * 8;
-		}
-		for (int32 i = 0; i < 12; ++i)
-		{
-			Input.Facets[i] = 48 + (i % 4) * 7;
-		}
-		Input.Conduct.Observed = true;
-		Input.Conduct.Resolve = 680;
-		Input.Conduct.Care = 790;
-		Input.Conduct.Steadfastness = 840;
-		Input.Conduct.Restraint = 640;
-		Input.Conduct.Resourcefulness = 710;
-		Input.Conduct.Attentiveness = 760;
-
-		PerfectWorld::DungeonChoiceRecord Choice0;
-		Choice0.TestId = "crossing_span";
-		Choice0.ChoiceId = "You steadied the crossing so the student beside you could pass.";
-		Choice0.CareDelta = 290;
-		Choice0.SteadfastnessDelta = 340;
-		Input.Conduct.Choices.push_back(Choice0);
-
-		PerfectWorld::DungeonChoiceRecord Choice1;
-		Choice1.TestId = "lintel_seam";
-		Choice1.ChoiceId = "You traced the seam along the tutorial pillar before stepping.";
-		Choice1.AttentivenessDelta = 260;
-		Choice1.ResourcefulnessDelta = 210;
-		Input.Conduct.Choices.push_back(Choice1);
-
-		const PerfectWorld::AbilityRecipeSet& Cat = DefaultAbilityRecipeCatalogue();
+		// A hand-built grant using the real result types; no resolver is run, so the sample is
+		// independent of the content registry.
 		PerfectWorld::AwakeningGrant Grant;
 		Grant.At = PerfectWorld::GameClock::FromCalendar(2043, 1, 23, 15, 0);
-		Grant.Input = Input;
-		Grant.Result = PerfectWorld::ResolveAwakening(Input, Cat);
-		Grant.StartingProfile = PerfectWorld::BuildStartingAwakenedProfile(Grant.Result, Grant.At);
 
-		ResultModel = BuildResultModelFromGrant(Grant, &Cat, true);
+		PerfectWorld::AwakeningResult& Result = Grant.Result;
+		Result.ConductObserved = true;
+		const int32 Percent[PerfectWorld::TattvaCount] = {30, 20, 20, 15, 15};
+		for (int32 i = 0; i < PerfectWorld::TattvaCount; ++i)
+		{
+			Result.TattvaPercent[i] = Percent[i];
+			Result.TattvaMilli[i] = Percent[i] * 1000;
+
+			PerfectWorld::AwakeningCause Cause;
+			Cause.Signal = PerfectWorld::AwakeningSignal::Care;
+			Cause.Reading = 700;
+			Cause.Contribution = 100 + i;
+			Cause.Source = "conduct.care";
+			Cause.TestId = "crossing_span";
+			Cause.ChoiceId = "You steadied the crossing so the student beside you could pass.";
+			Result.TattvaCauses[i].push_back(Cause);
+		}
+		const int32 Latent[PerfectWorld::PowerDimensionCount] = {14, 18, 9, 22, 20, 16};
+		for (int32 d = 0; d < PerfectWorld::PowerDimensionCount; ++d)
+		{
+			Result.LatentRating[d] = Latent[d];
+			Result.ConductRating[d] = 10;
+			Result.Rating[d] = Latent[d] + 10;
+
+			PerfectWorld::AwakeningCause Cause;
+			Cause.Signal = PerfectWorld::AwakeningSignal::Attentiveness;
+			Cause.Reading = 640;
+			Cause.Contribution = 90 + d;
+			Cause.Source = "conduct.attentiveness";
+			Cause.TestId = "lintel_seam";
+			Cause.ChoiceId = "You traced the seam along the tutorial pillar before stepping.";
+			Result.RatingCauses[d].push_back(Cause);
+		}
+		Result.Ability.RecipeId = "settled_stance";
+		Result.Ability.Fallback = true;
+		Result.Ability.Rank = PerfectWorld::AwakeningAbilityRank;
+		Result.Ability.Causes = Result.TattvaCauses[0];
+
+		Grant.StartingProfile = PerfectWorld::Awaken(
+			Result.TattvaPercent, Result.Rating, PerfectWorld::GameClock::DayNumber(Grant.At))
+			.value_or(PerfectWorld::AwakenedProfile{});
+
+		ResultModel = BuildResultModelFromGrant(Grant, &DefaultAbilityRecipeCatalogue(), true);
 	}
 
 	void FApFakeAwakeningWorld::SeedSampleCountdownDay()
 	{
-		const PerfectWorld::GameInstant Now =
-			PerfectWorld::GameClock::FromCalendar(2043, 1, 24, 8, 0);
-		const PerfectWorld::WorldState World{};
+		// Hand-authored sample rows (the fake never invents core data; the live builder above is
+		// the only path from CountdownState).
+		const PerfectWorld::GameInstant Now = PerfectWorld::GameClock::FromCalendar(2043, 1, 24, 8, 0);
+		CountdownModel = BuildCountdownModelFromCore(
+			Now, PerfectWorld::WorldState{}, nullptr, PerfectWorld::CountdownContext{});
 
-		PerfectWorld::CountdownState State{};
-		PerfectWorld::StandingObligation Obl0;
-		Obl0.Def.Id = "oblig_evening_tea";
-		Obl0.Def.Title = "Evening tea and market list at home";
-		Obl0.Def.PersonId = "npc_household_aunt";
-		Obl0.Def.PersonName = "Meera Roy";
-		Obl0.Def.Day = 2;
-		Obl0.Def.StartMinute = 17 * 60;
-		Obl0.Def.DurationMinutes = 90;
-		Obl0.Start = PerfectWorld::GameClock::FromCalendar(2043, 1, 24, 17, 0);
-		Obl0.End = Obl0.Start + 90;
-		State.Obligations.push_back(Obl0);
+		FPWCountdownObligationRow Obl;
+		Obl.Id = TEXT("sample.obligation");
+		Obl.Title = FText::FromString(TEXT("Evening tea and market list at home"));
+		Obl.PersonText = FText::FromString(TEXT("Your aunt"));
+		Obl.WindowText = FText::FromString(TEXT("17:00–18:30"));
+		Obl.StatusText = FText::FromString(TEXT("Standing: kept on your ordinary day"));
+		CountdownModel.Obligations.Add(Obl);
 
-		PerfectWorld::CountdownOpportunityDef Opp0;
-		Opp0.Id = "opp_courtyard_footing";
-		Opp0.Name = "Courtyard Footing Drill";
-		Opp0.Group = "day2_late_afternoon";
-		Opp0.Day = 2;
-		Opp0.StartMinute = 16 * 60 + 30;
-		Opp0.DurationMinutes = 120;
-		Opp0.ContactId = "npc_mentor_sen";
-		Opp0.ContactName = "Subir Sen";
-		Opp0.ScoreGain = 115;
-		Opp0.StrainDelta = 9;
-		State.Catalog.Opportunities.push_back(Opp0);
+		FPWCountdownOfferRow Offer0;
+		Offer0.Id = TEXT("sample.offer_footing");
+		Offer0.Title = FText::FromString(TEXT("Courtyard footing drill"));
+		Offer0.WindowText = FText::FromString(TEXT("16:30–18:30 (2h)"));
+		Offer0.ContactText = FText::FromString(TEXT("With your teacher"));
+		Offer0.SummaryText = FText::FromString(
+			TEXT("Outcomes if taken: good 40% (possible) · fair 40% (possible) · poor 20% (unlikely)"));
+		Offer0.AvailabilityText = FText::FromString(TEXT("Open (optional)"));
+		Offer0.DisplacedCommitments.Add(FText::FromString(
+			TEXT("Overlaps a standing commitment: Evening tea and market list at home (17:00–18:30)")));
+		Offer0.DisplacedCommitments.Add(FText::FromString(
+			TEXT("Closes another option in this window: Reading room cadence study")));
+		CountdownModel.Offers.Add(Offer0);
 
-		PerfectWorld::CountdownOpportunityDef Opp1;
-		Opp1.Id = "opp_archive_cadence";
-		Opp1.Name = "Reading Room Cadence Study";
-		Opp1.Group = "day2_late_afternoon";
-		Opp1.Day = 2;
-		Opp1.StartMinute = 16 * 60 + 30;
-		Opp1.DurationMinutes = 120;
-		Opp1.ContactId = "npc_classmate_das";
-		Opp1.ContactName = "Ananya Das";
-		Opp1.ScoreGain = 95;
-		Opp1.StrainDelta = 5;
-		State.Catalog.Opportunities.push_back(Opp1);
-
-		const PerfectWorld::CountdownContext Ctx{};
-		CountdownModel = BuildCountdownModelFromCore(Now, World, State, Ctx);
+		FPWCountdownOfferRow Offer1;
+		Offer1.Id = TEXT("sample.offer_cadence");
+		Offer1.Title = FText::FromString(TEXT("Reading room cadence study"));
+		Offer1.WindowText = FText::FromString(TEXT("16:30–18:30 (2h)"));
+		Offer1.ContactText = FText::FromString(TEXT("With your friend"));
+		Offer1.SummaryText = FText::FromString(
+			TEXT("Outcomes if taken: good 30% (possible) · fair 50% (possible) · poor 20% (unlikely)"));
+		Offer1.AvailabilityText = FText::FromString(TEXT("Open (optional)"));
+		Offer1.DisplacedCommitments.Add(FText::FromString(
+			TEXT("Closes another option in this window: Courtyard footing drill")));
+		CountdownModel.Offers.Add(Offer1);
 	}
 
 	FPWAwakeningResultModel FApFakeAwakeningWorld::ReadResultModel()
@@ -397,11 +441,11 @@ namespace PWAwakening
 					CountdownModel.Offers[j].bCommitted = (j == i);
 					CountdownModel.Offers[j].bOpen = (j == i);
 					CountdownModel.Offers[j].AvailabilityText = (j == i)
-						? FText::FromString(TEXT("Committed for today"))
+						? FText::FromString(TEXT("Committed"))
 						: FText::FromString(TEXT("Closed because another option in this window was chosen"));
 				}
 				CountdownModel.StatusBannerText = FText::FromString(FString::Printf(
-					TEXT("Committed to %s. You can still return to an ordinary day tomorrow."),
+					TEXT("Committed to %s. You can still keep an ordinary day tomorrow."),
 					*Row.Title.ToString()));
 				OutNotice = CountdownModel.StatusBannerText;
 				return true;

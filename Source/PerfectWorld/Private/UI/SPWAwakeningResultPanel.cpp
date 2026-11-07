@@ -13,14 +13,15 @@
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SSeparator.h"
 #include "Widgets/SBoxPanel.h"
+#include "Widgets/SOverlay.h"
 #include "Widgets/Text/STextBlock.h"
 
 namespace
 {
-	constexpr float kApResultScrollStep = 120.0f;
-	constexpr float kApResultStickDeadZone = 0.35f;
+	constexpr float kR97ResultScrollStep = 120.0f;
+	constexpr float kR97ResultStickDeadZone = 0.35f;
 
-	TSharedRef<SWidget> ApMakeEvidenceListWidget(
+	TSharedRef<SWidget> R97MakeEvidenceListWidget(
 		const TArray<FText>& EvidenceLines,
 		float WrapWidth)
 	{
@@ -33,8 +34,8 @@ namespace
 		[
 			PWUI::MakeText(
 				FText::FromString(TEXT("NAMED EVIDENCE")),
-				Style.FontMonoSmall,
-				Style.GoldBrass)
+				PWUI::ETextRole::Meta,
+				Style.Accent)
 		];
 
 		if (EvidenceLines.Num() == 0)
@@ -44,9 +45,9 @@ namespace
 			.Padding(0.0f, 2.0f)
 			[
 				SNew(STextBlock)
-				.Tag(PWApResult::EvidenceLineTag)
-				.Font(Style.FontBodySmall)
-				.ColorAndOpacity(Style.PaperMuted)
+				.Tag(FName(PWApResult::EvidenceLineTag))
+				.Font(PWUI::Font(15))
+				.ColorAndOpacity(Style.TextSecondary)
 				.WrapTextAt(WrapWidth)
 				.Text(FText::FromString(TEXT("Recorded from baseline sixteen-year formation and school tutorial conduct.")))
 			];
@@ -60,9 +61,9 @@ namespace
 			.Padding(0.0f, 2.0f)
 			[
 				SNew(STextBlock)
-				.Tag(PWApResult::EvidenceLineTag)
-				.Font(Style.FontBodySmall)
-				.ColorAndOpacity(Style.PaperWarm)
+				.Tag(FName(PWApResult::EvidenceLineTag))
+				.Font(PWUI::Font(15))
+				.ColorAndOpacity(Style.TextPrimary)
 				.WrapTextAt(WrapWidth)
 				.Text(Line)
 			];
@@ -90,7 +91,6 @@ void SPWAwakeningResultPanel::Construct(const FArguments& InArgs)
 	BridgeOverride = InArgs._BridgeOverride;
 	ViewportSize = InArgs._ViewportSize;
 	OnClose = InArgs._OnClose;
-	SetTag(PWApResult::PanelTag);
 
 	const PWUI::FStyle& Style = PWUI::FStyle::Get();
 	const float Width = PanelWidth(ViewportSize.X, ViewportSize.Y);
@@ -100,9 +100,9 @@ void SPWAwakeningResultPanel::Construct(const FArguments& InArgs)
 
 	ContinueButton = PWUI::MakeButton(
 		FText::FromString(TEXT("Continue into the day")),
+		PWUI::EButtonKind::Primary,
 		FOnClicked::CreateSP(this, &SPWAwakeningResultPanel::HandleContinueClicked),
-		PWUI::EButtonKind::Primary);
-	ContinueButton->SetTag(PWApResult::ContinueButtonTag);
+		true, 20, 0.0f);
 
 	ChildSlot
 	[
@@ -111,12 +111,16 @@ void SPWAwakeningResultPanel::Construct(const FArguments& InArgs)
 		.MaxDesiredHeight(MaxHeight)
 		[
 			SNew(SBorder)
+			.Tag(FName(PWApResult::PanelTag))
 			.BorderImage(&Style.BrushPanel)
 			.Padding(FMargin(bCompact ? 14.0f : 20.0f))
 			[
-				SNew(PWUI::SPWCornerBrackets)
-				.Arm(14.0f)
-				.Thickness(1.5f)
+				SNew(SOverlay)
+				+ SOverlay::Slot()
+				[
+					SNew(SPWCornerBrackets)
+				]
+				+ SOverlay::Slot()
 				[
 					SNew(SVerticalBox)
 					+ SVerticalBox::Slot()
@@ -129,9 +133,9 @@ void SPWAwakeningResultPanel::Construct(const FArguments& InArgs)
 						.VAlign(VAlign_Center)
 						.Padding(0.0f, 0.0f, 12.0f, 0.0f)
 						[
-							SNew(PWUI::SPWAwakeningSigil)
-							.Size(bCompact ? 24.0f : 32.0f)
-							.Phase(1.0f)
+							SNew(SPWAwakeningSigil)
+							.SizeClass(EPWSigilSizeClass::Seal)
+							.Diameter(bCompact ? 24.0f : 32.0f)
 							.Reveal(!PWUI::IsReducedMotion())
 						]
 						+ SHorizontalBox::Slot()
@@ -144,16 +148,16 @@ void SPWAwakeningResultPanel::Construct(const FArguments& InArgs)
 							[
 								PWUI::MakeText(
 									FText::FromString(TEXT("AWAKENING RECORD · SCHOOL TUTORIAL")),
-									Style.FontTitleSmall,
-									Style.GoldBright)
+									22,
+									Style.Accent, true)
 							]
 							+ SVerticalBox::Slot()
 							.AutoHeight()
 							.Padding(0.0f, 2.0f, 0.0f, 0.0f)
 							[
 								SNew(STextBlock)
-								.Font(Style.FontBodySmall)
-								.ColorAndOpacity(Style.PaperMuted)
+								.Font(PWUI::Font(15))
+								.ColorAndOpacity(Style.TextSecondary)
 								.WrapTextAt(Width - 110.0f)
 								.Text_Lambda([this]() { return Model.SubtitleText; })
 							]
@@ -164,8 +168,8 @@ void SPWAwakeningResultPanel::Construct(const FArguments& InArgs)
 						[
 							PWUI::MakeText(
 								TAttribute<FText>::CreateLambda([this]() { return Model.GrantedAtText; }),
-								Style.FontMonoSmall,
-								Style.PaperMuted)
+								PWUI::ETextRole::Meta,
+								Style.TextSecondary)
 						]
 					]
 					+ SVerticalBox::Slot()
@@ -204,14 +208,14 @@ void SPWAwakeningResultPanel::Construct(const FArguments& InArgs)
 						[
 							PWUI::MakeText(
 								FText::FromString(TEXT("Up/Down: inspect sections · PgUp/PgDn: scroll · Enter/Esc: continue")),
-								Style.FontMonoSmall,
-								Style.PaperMuted)
+								PWUI::ETextRole::Meta,
+								Style.TextSecondary)
 						]
 						+ SHorizontalBox::Slot()
 						.AutoWidth()
 						.VAlign(VAlign_Center)
 						[
-							ContinueButton.ToSharedRef()
+							SNew(SBox).Tag(FName(PWApResult::ContinueButtonTag))[ContinueButton.ToSharedRef()]
 						]
 					]
 				]
@@ -253,6 +257,24 @@ void SPWAwakeningResultPanel::SetModel(const PWAwakening::FPWAwakeningResultMode
 	RebuildBody();
 }
 
+TSharedRef<SWidget> SPWAwakeningResultPanel::AddFocusRow(const TSharedRef<SWidget>& Content, const FName RowTag)
+{
+	const int32 SlotIdx = FocusableRowButtons.Num();
+	const TSharedRef<SWidget> Button = PWUI::MakeContentButton(
+		Content,
+		PWUI::EButtonKind::TextRow,
+		FOnClicked::CreateSPLambda(this, [this, SlotIdx]()
+		{
+			SelectFocusSlot(SlotIdx);
+			return FReply::Handled();
+		}),
+		false,
+		true,
+		FMargin(12.0f, 8.0f));
+	FocusableRowButtons.Add(Button);
+	return SNew(SBox).Tag(RowTag)[Button];
+}
+
 void SPWAwakeningResultPanel::RebuildBody()
 {
 	if (!BodyContainer.IsValid())
@@ -273,13 +295,13 @@ void SPWAwakeningResultPanel::RebuildBody()
 		.Padding(0.0f, 6.0f)
 		[
 			SNew(SBorder)
-			.Tag(PWApResult::UnavailableTag)
+			.Tag(FName(PWApResult::UnavailableTag))
 			.BorderImage(&Style.BrushInset)
 			.Padding(FMargin(14.0f))
 			[
 				SNew(STextBlock)
-				.Font(Style.FontBody)
-				.ColorAndOpacity(Style.PaperMuted)
+				.Font(PWUI::Font(17))
+				.ColorAndOpacity(Style.TextSecondary)
 				.WrapTextAt(InnerWrap)
 				.Text(FText::FromString(TEXT("No active world session is available to read the Awakening record.")))
 			]
@@ -294,13 +316,13 @@ void SPWAwakeningResultPanel::RebuildBody()
 		.Padding(0.0f, 6.0f)
 		[
 			SNew(SBorder)
-			.Tag(PWApResult::EmptyStateTag)
+			.Tag(FName(PWApResult::EmptyStateTag))
 			.BorderImage(&Style.BrushInset)
 			.Padding(FMargin(14.0f))
 			[
 				SNew(STextBlock)
-				.Font(Style.FontBody)
-				.ColorAndOpacity(Style.PaperWarm)
+				.Font(PWUI::Font(17))
+				.ColorAndOpacity(Style.TextPrimary)
 				.WrapTextAt(InnerWrap)
 				.Text(Model.SubtitleText.IsEmpty()
 					? FText::FromString(TEXT("The school tutorial dungeon has not yet granted an Awakening record."))
@@ -312,8 +334,7 @@ void SPWAwakeningResultPanel::RebuildBody()
 
 	// 1. Starting F-grade stage card
 	{
-		const int32 SlotIdx = FocusableRowButtons.Num();
-		TSharedRef<SVerticalBox> StageContent = SNew(SVerticalBox)
+		const TSharedRef<SWidget> StageContent = SNew(SVerticalBox)
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
@@ -323,49 +344,38 @@ void SPWAwakeningResultPanel::RebuildBody()
 				[
 					PWUI::MakeText(
 						FText::FromString(TEXT("STARTING STAGE WITHIN GRADE F")),
-						Style.FontMonoSmall,
-						Style.GoldBrass)
+						PWUI::ETextRole::Meta,
+						Style.Accent)
 				]
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				[
-					PWUI::MakeText(Model.Stage.StageCodeText, Style.FontTitleSmall, Style.GoldBright)
+					PWUI::MakeText(Model.Stage.StageCodeText, 22, Style.Accent, true)
 				]
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0.0f, 2.0f)
 			[
-				PWUI::MakeText(Model.Stage.StageTitleText, Style.FontBodyBold, Style.PaperWarm)
+				PWUI::MakeText(Model.Stage.StageTitleText, 17, Style.TextPrimary, true)
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0.0f, 2.0f)
 			[
 				SNew(STextBlock)
-				.Font(Style.FontBodySmall)
-				.ColorAndOpacity(Style.PaperMuted)
+				.Font(PWUI::Font(15))
+				.ColorAndOpacity(Style.TextSecondary)
 				.WrapTextAt(InnerWrap)
 				.Text(Model.Stage.RuleNoticeText)
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
-				ApMakeEvidenceListWidget(Model.Stage.EvidenceLines, InnerWrap)
+				R97MakeEvidenceListWidget(Model.Stage.EvidenceLines, InnerWrap)
 			];
 
-		TSharedRef<SButton> Btn = PWUI::MakeContentButton(
-			StageContent,
-			FOnClicked::CreateLambda([this, SlotIdx]()
-			{
-				SelectFocusSlot(SlotIdx);
-				return FReply::Handled();
-			}),
-			PWUI::EButtonKind::Ghost,
-			FMargin(12.0f, 8.0f),
-			Model.Stage.StageTitleText);
-		Btn->SetTag(PWApResult::StageCardTag);
-		FocusableRowButtons.Add(Btn);
+		const TSharedRef<SWidget> Btn = AddFocusRow(StageContent, PWApResult::StageCardTag);
 
 		BodyContainer->AddSlot()
 		.AutoHeight()
@@ -382,16 +392,15 @@ void SPWAwakeningResultPanel::RebuildBody()
 	[
 		PWUI::MakeText(
 			FText::FromString(TEXT("FIVE-TATTVA AFFINITY DISTRIBUTION")),
-			Style.FontMono,
-			Style.GoldBright)
+			PWUI::ETextRole::Meta,
+			Style.Accent)
 	];
 
 	for (int32 i = 0; i < Model.Tattvas.Num(); ++i)
 	{
 		const PWAwakening::FPWAwakeningTattvaRow& Row = Model.Tattvas[i];
-		const int32 SlotIdx = FocusableRowButtons.Num();
 
-		TSharedRef<SVerticalBox> RowContent = SNew(SVerticalBox)
+		const TSharedRef<SWidget> RowContent = SNew(SVerticalBox)
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
@@ -399,38 +408,27 @@ void SPWAwakeningResultPanel::RebuildBody()
 				+ SHorizontalBox::Slot()
 				.FillWidth(1.0f)
 				[
-					PWUI::MakeText(Row.Name, Style.FontBodyBold, Style.PaperWarm)
+					PWUI::MakeText(Row.Name, 17, Style.TextPrimary, true)
 				]
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				[
-					PWUI::MakeText(Row.ShareText, Style.FontMono, Style.CyanSignal)
+					PWUI::MakeText(Row.ShareText, PWUI::ETextRole::Meta, Style.Good)
 				]
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0.0f, 2.0f)
 			[
-				PWUI::MakeText(Row.Domain, Style.FontBodySmall, Style.PaperMuted)
+				PWUI::MakeText(Row.Domain, 15, Style.TextSecondary)
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
-				ApMakeEvidenceListWidget(Row.EvidenceLines, InnerWrap)
+				R97MakeEvidenceListWidget(Row.EvidenceLines, InnerWrap)
 			];
 
-		TSharedRef<SButton> Btn = PWUI::MakeContentButton(
-			RowContent,
-			FOnClicked::CreateLambda([this, SlotIdx]()
-			{
-				SelectFocusSlot(SlotIdx);
-				return FReply::Handled();
-			}),
-			PWUI::EButtonKind::Ghost,
-			FMargin(12.0f, 8.0f),
-			Row.Name);
-		Btn->SetTag(PWApResult::TattvaRowTag);
-		FocusableRowButtons.Add(Btn);
+		const TSharedRef<SWidget> Btn = AddFocusRow(RowContent, PWApResult::TattvaRowTag);
 
 		BodyContainer->AddSlot()
 		.AutoHeight()
@@ -447,16 +445,15 @@ void SPWAwakeningResultPanel::RebuildBody()
 	[
 		PWUI::MakeText(
 			FText::FromString(TEXT("SIX CAPABILITY DIMENSIONS")),
-			Style.FontMono,
-			Style.GoldBright)
+			PWUI::ETextRole::Meta,
+			Style.Accent)
 	];
 
 	for (int32 i = 0; i < Model.Capabilities.Num(); ++i)
 	{
 		const PWAwakening::FPWAwakeningCapabilityRow& Row = Model.Capabilities[i];
-		const int32 SlotIdx = FocusableRowButtons.Num();
 
-		TSharedRef<SVerticalBox> RowContent = SNew(SVerticalBox)
+		const TSharedRef<SWidget> RowContent = SNew(SVerticalBox)
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
@@ -464,44 +461,33 @@ void SPWAwakeningResultPanel::RebuildBody()
 				+ SHorizontalBox::Slot()
 				.FillWidth(1.0f)
 				[
-					PWUI::MakeText(Row.Name, Style.FontBodyBold, Style.PaperWarm)
+					PWUI::MakeText(Row.Name, 17, Style.TextPrimary, true)
 				]
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				[
-					PWUI::MakeText(Row.ScoreText, Style.FontMono, Style.GoldBright)
+					PWUI::MakeText(Row.ScoreText, PWUI::ETextRole::Meta, Style.Accent)
 				]
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0.0f, 2.0f)
 			[
-				PWUI::MakeText(Row.Domain, Style.FontBodySmall, Style.PaperMuted)
+				PWUI::MakeText(Row.Domain, 15, Style.TextSecondary)
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0.0f, 2.0f)
 			[
-				PWUI::MakeText(Row.BreakdownText, Style.FontMonoSmall, Style.PaperMuted)
+				PWUI::MakeText(Row.BreakdownText, PWUI::ETextRole::Meta, Style.TextSecondary)
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
-				ApMakeEvidenceListWidget(Row.EvidenceLines, InnerWrap)
+				R97MakeEvidenceListWidget(Row.EvidenceLines, InnerWrap)
 			];
 
-		TSharedRef<SButton> Btn = PWUI::MakeContentButton(
-			RowContent,
-			FOnClicked::CreateLambda([this, SlotIdx]()
-			{
-				SelectFocusSlot(SlotIdx);
-				return FReply::Handled();
-			}),
-			PWUI::EButtonKind::Ghost,
-			FMargin(12.0f, 8.0f),
-			Row.Name);
-		Btn->SetTag(PWApResult::CapabilityRowTag);
-		FocusableRowButtons.Add(Btn);
+		const TSharedRef<SWidget> Btn = AddFocusRow(RowContent, PWApResult::CapabilityRowTag);
 
 		BodyContainer->AddSlot()
 		.AutoHeight()
@@ -518,13 +504,12 @@ void SPWAwakeningResultPanel::RebuildBody()
 	[
 		PWUI::MakeText(
 			FText::FromString(TEXT("DERIVED AWAKENED ABILITY")),
-			Style.FontMono,
-			Style.GoldBright)
+			PWUI::ETextRole::Meta,
+			Style.Accent)
 	];
 
 	{
-		const int32 SlotIdx = FocusableRowButtons.Num();
-		TSharedRef<SVerticalBox> AbilityContent = SNew(SVerticalBox)
+		const TSharedRef<SWidget> AbilityContent = SNew(SVerticalBox)
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
@@ -532,48 +517,37 @@ void SPWAwakeningResultPanel::RebuildBody()
 				+ SHorizontalBox::Slot()
 				.FillWidth(1.0f)
 				[
-					PWUI::MakeText(Model.Ability.Name, Style.FontTitleSmall, Style.GoldBright)
+					PWUI::MakeText(Model.Ability.Name, 22, Style.Accent, true)
 				]
 				+ SHorizontalBox::Slot()
 				.AutoWidth()
 				[
-					PWUI::MakeText(Model.Ability.AffinityText, Style.FontMono, Style.CyanSignal)
+					PWUI::MakeText(Model.Ability.AffinityText, PWUI::ETextRole::Meta, Style.Good)
 				]
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0.0f, 2.0f)
 			[
-				PWUI::MakeText(Model.Ability.OriginBadgeText, Style.FontMonoSmall, Style.GoldBrass)
+				PWUI::MakeText(Model.Ability.OriginBadgeText, PWUI::ETextRole::Meta, Style.Accent)
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			.Padding(0.0f, 4.0f)
 			[
 				SNew(STextBlock)
-				.Font(Style.FontBody)
-				.ColorAndOpacity(Style.PaperWarm)
+				.Font(PWUI::Font(17))
+				.ColorAndOpacity(Style.TextPrimary)
 				.WrapTextAt(InnerWrap)
 				.Text(Model.Ability.EffectText)
 			]
 			+ SVerticalBox::Slot()
 			.AutoHeight()
 			[
-				ApMakeEvidenceListWidget(Model.Ability.EvidenceLines, InnerWrap)
+				R97MakeEvidenceListWidget(Model.Ability.EvidenceLines, InnerWrap)
 			];
 
-		TSharedRef<SButton> Btn = PWUI::MakeContentButton(
-			AbilityContent,
-			FOnClicked::CreateLambda([this, SlotIdx]()
-			{
-				SelectFocusSlot(SlotIdx);
-				return FReply::Handled();
-			}),
-			PWUI::EButtonKind::Ghost,
-			FMargin(12.0f, 8.0f),
-			Model.Ability.Name);
-		Btn->SetTag(PWApResult::AbilityCardTag);
-		FocusableRowButtons.Add(Btn);
+		const TSharedRef<SWidget> Btn = AddFocusRow(AbilityContent, PWApResult::AbilityCardTag);
 
 		BodyContainer->AddSlot()
 		.AutoHeight()
@@ -605,7 +579,7 @@ void SPWAwakeningResultPanel::SelectFocusSlot(int32 Index)
 		return;
 	}
 	SelectedSlotIndex = FMath::Clamp(Index, 0, FocusableRowButtons.Num() - 1);
-	const TSharedPtr<SButton>& Target = FocusableRowButtons[SelectedSlotIndex];
+	const TSharedPtr<SWidget>& Target = FocusableRowButtons[SelectedSlotIndex];
 	if (Target.IsValid())
 	{
 		if (DetailScrollBox.IsValid())
@@ -614,7 +588,8 @@ void SPWAwakeningResultPanel::SelectFocusSlot(int32 Index)
 		}
 		if (FSlateApplication::IsInitialized())
 		{
-			FSlateApplication::Get().SetKeyboardFocus(Target, EFocusCause::Navigation);
+			const TSharedPtr<SWidget> Focusable = PWUI::FindFirstFocusable(Target.ToSharedRef());
+			FSlateApplication::Get().SetKeyboardFocus(Focusable.IsValid() ? Focusable : Target, EFocusCause::Navigation);
 		}
 	}
 }
@@ -663,7 +638,7 @@ FReply SPWAwakeningResultPanel::OnKeyDown(const FGeometry& MyGeometry, const FKe
 		}
 		else
 		{
-			ScrollDetailBy(kApResultScrollStep);
+			ScrollDetailBy(kR97ResultScrollStep);
 		}
 		return FReply::Handled();
 	}
@@ -675,18 +650,18 @@ FReply SPWAwakeningResultPanel::OnKeyDown(const FGeometry& MyGeometry, const FKe
 		}
 		else
 		{
-			ScrollDetailBy(-kApResultScrollStep);
+			ScrollDetailBy(-kR97ResultScrollStep);
 		}
 		return FReply::Handled();
 	}
 	if (Key == EKeys::PageDown || Key == EKeys::Gamepad_RightStick_Down)
 	{
-		ScrollDetailBy(kApResultScrollStep);
+		ScrollDetailBy(kR97ResultScrollStep);
 		return FReply::Handled();
 	}
 	if (Key == EKeys::PageUp || Key == EKeys::Gamepad_RightStick_Up)
 	{
-		ScrollDetailBy(-kApResultScrollStep);
+		ScrollDetailBy(-kR97ResultScrollStep);
 		return FReply::Handled();
 	}
 	return SCompoundWidget::OnKeyDown(MyGeometry, InKeyEvent);
@@ -698,7 +673,7 @@ FReply SPWAwakeningResultPanel::OnAnalogValueChanged(
 {
 	const FKey Key = InAnalogEvent.GetKey();
 	const float Val = InAnalogEvent.GetAnalogValue();
-	if (Key == EKeys::Gamepad_RightY && FMath::Abs(Val) > kApResultStickDeadZone)
+	if (Key == EKeys::Gamepad_RightY && FMath::Abs(Val) > kR97ResultStickDeadZone)
 	{
 		ScrollDetailBy(-Val * 28.0f);
 		return FReply::Handled();
