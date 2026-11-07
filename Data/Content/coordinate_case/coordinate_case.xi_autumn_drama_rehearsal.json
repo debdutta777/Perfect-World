@@ -1,0 +1,28 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.xi_autumn_drama_rehearsal",
+  "family": "coordinate_family.xi_group_work",
+  "name": "Stage cues for the autumn cultural afternoon",
+  "subject": "events",
+  "constraint": "clash",
+  "role": "chair",
+  "scarce": "time",
+  "method": "method.run_a_check_in",
+  "seam": true,
+  "brief": "Your stage crew of three is putting on the Class XI one-act play at the autumn cultural afternoon: bracing the painted courtyard flats, ringing the offstage bell and playing the harmonium chord, and holding the prompt book. You are in the chair and the dress-rehearsal bell rings in minutes. Nobody has said when the stage is actually yours, or who else may be using it.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 2, "self": true },
+    { "id": "m_tara", "name": "Tara Das", "capacity": 2, "self": false },
+    { "id": "m_arup", "name": "Arup Ghosh", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_flats", "name": "Shift and brace the painted courtyard flats", "load": 2, "fits": ["m_tara", "m_you"] },
+    { "id": "t_sound_cues", "name": "Ring the offstage cycle bell and harmonium chord", "load": 1, "fits": ["m_arup", "m_you"] },
+    { "id": "t_prompt_book", "name": "Follow the script in the wings as prompter", "load": 1, "fits": ["m_you", "m_tara"] }
+  ],
+  "facts": [
+    { "id": "f_choir_slot", "holder": "m_tara", "text": "The music teacher has booked the stage for the Class XII chorus from 3:00 to 3:30 p.m., right across your rehearsal slot", "critical": true },
+    { "id": "f_arup_bell", "holder": "m_arup", "text": "Arup brought an old brass rickshaw bell for the street-scene cue", "critical": false }
+  ],
+  "note": "Uses Tara Das (npc_tara_das) at Nabapara Vidyalaya (loc_nhss). The constraint is the 3:00 p.m. stage booking clash with the Class XII chorus known to Tara; the seam is that the prompt copy and the sound-cue slip number the curtain cues differently."
+}

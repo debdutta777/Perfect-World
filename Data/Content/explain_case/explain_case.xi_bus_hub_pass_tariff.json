@@ -1,0 +1,31 @@
+{
+  "type": "explain_case",
+  "id": "explain_case.xi_bus_hub_pass_tariff",
+  "family": "explain_family.xi_claim_evidence_limit",
+  "name": "The new student fares at the bus stand",
+  "subject": "economics",
+  "question": "judgement",
+  "role": "author",
+  "scarce": "counterpoint",
+  "method": "method.reading_figures",
+  "brief": "At Nabapara Bus Stand the transport syndicate replaced four short fare stages with two wide zones and a new monthly pass for students. Everyone in your study group lives within two stops of the school and calls the change unfair. You are the author of the group's judgement, so you must use the stand's October ticket return, September's to compare, and no one in the group is willing to speak for the other side.",
+  "claims": [
+    { "id": "c_outer_gain", "name": "The new pass lowered monthly travel costs for students who ride in from the canal side and the outer lanes", "defensible": true },
+    { "id": "c_short_hop_loss", "name": "Merging the first two stages raised the fare for short-hop riders who do not buy a pass", "defensible": true },
+    { "id": "c_ridership_collapse", "name": "The change halved the number of students travelling by bus in October", "defensible": false }
+  ],
+  "evidence": [
+    { "id": "e_pass_renewals", "name": "Monthly student pass renewals from the canal-side lanes rose from 190 in September to 275 in October", "supports": ["c_outer_gain"], "against": [] },
+    { "id": "e_five_km", "name": "A student travelling five kilometres now pays 110 rupees a month, against 145 rupees under the old stage table", "supports": ["c_outer_gain"], "against": [] },
+    { "id": "e_min_ticket", "name": "The cheapest cash ticket, for one kilometre, rose from 5 rupees to the new Zone A rate of 8 rupees", "supports": ["c_short_hop_loss"], "against": [] },
+    { "id": "e_walking_counts", "name": "Kerbside counts show some short afternoon trips moving to shared autos or to walking on dry days", "supports": ["c_short_hop_loss"], "against": [] },
+    { "id": "e_boardings", "name": "Total morning student boardings at the stand rose from 1,120 a day to 1,165 a day", "supports": [], "against": ["c_ridership_collapse"] },
+    { "id": "e_shelter_paint", "name": "The tin shelter at Bay 2 was repainted yellow before the Puja fortnight", "supports": [], "against": [] }
+  ],
+  "limitations": [
+    { "id": "l_festival_days", "name": "October had nine festival holidays, which shifts the point where a pass beats cash tickets", "bounds": ["c_outer_gain", "c_short_hop_loss"] },
+    { "id": "l_feeder_autos", "name": "The return does not follow students who still pay a separate auto fare to reach the stand", "bounds": ["c_outer_gain"] },
+    { "id": "l_wet_september", "name": "September had eleven wet mornings and October was dry, so the walking comparison is unreliable", "bounds": ["c_short_hop_loss"] }
+  ],
+  "note": "The Nabapara Bus Stand (loc_bus_hub) is from INDIA_WORLD_BIBLE.md; the fares and counts are invented. Both effects are real and neither cancels the other, so the honest judgement is mixed. The collapse claim is contradicted by the boarding counts. The shelter paint is beside the point."
+}

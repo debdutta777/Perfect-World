@@ -1,0 +1,30 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.xi_canal_chart_survey",
+  "family": "coordinate_family.xi_group_work",
+  "name": "The drainage chart for the Canal Pump and Works",
+  "subject": "projects",
+  "constraint": "budget",
+  "role": "chair",
+  "scarce": "space",
+  "method": "method.settle_by_ledger",
+  "seam": false,
+  "brief": "Four of you are preparing a geography-and-civics display chart on the Canal Pump and Works: tracing the ward contour map, tabulating the pump-house log, and mounting the photograph strip. You are in the chair, and every flat table in the geography room is crowded with other groups' drawing boards.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 2, "self": true },
+    { "id": "m_ishan", "name": "Ishan Sheikh", "capacity": 2, "self": false },
+    { "id": "m_mira", "name": "Mira Sen", "capacity": 1, "self": false },
+    { "id": "m_arup", "name": "Arup Ghosh", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_contours", "name": "Ink the ward contour and sluice map on tracing cloth", "load": 2, "fits": ["m_ishan", "m_you"] },
+    { "id": "t_pumplog", "name": "Tabulate the monsoon pump-house discharge figures", "load": 1, "fits": ["m_mira", "m_you"] },
+    { "id": "t_photos", "name": "Mount and caption the four sluice photographs", "load": 1, "fits": ["m_arup", "m_ishan"] }
+  ],
+  "facts": [
+    { "id": "f_cloth_cost", "holder": "m_mira", "text": "The project allowance holds 120 rupees, and linen tracing cloth plus darkroom prints would cost 165 rupees", "critical": true },
+    { "id": "f_print_receipt", "holder": "m_ishan", "text": "The stationer can substitute heavy butter-paper for 40 rupees if ordered before noon", "critical": true },
+    { "id": "f_arup_pen", "holder": "m_arup", "text": "Arup has a 0.4-millimetre mapping nib in his geometry tin", "critical": false }
+  ],
+  "note": "Uses the Canal Pump and Works (loc_canal_works), Ishan Sheikh (npc_ishan_sheikh), and Mira Sen (npc_mira_sen) from INDIA_WORLD_BIBLE.md. Exercises 2 critical-fact holders (Mira and Ishan) while Arup holds only a non-critical fact."
+}

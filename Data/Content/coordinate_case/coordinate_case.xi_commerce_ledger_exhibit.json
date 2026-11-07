@@ -1,0 +1,28 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.xi_commerce_ledger_exhibit",
+  "family": "coordinate_family.xi_group_work",
+  "name": "The Old Market wholesale-and-retail ledger exhibit",
+  "subject": "projects",
+  "constraint": "clash",
+  "role": "treasurer",
+  "scarce": "attention",
+  "method": "method.settle_by_ledger",
+  "seam": true,
+  "brief": "Your commerce group of three is assembling an exhibition board comparing wholesale vegetable invoices and retail stall tallies from Nabapara Old Market. You are the treasurer balancing the exhibit's accounts, and the commerce room is loud with three other groups rehearsing their talks across the aisle.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 2, "self": true },
+    { "id": "m_mira", "name": "Mira Sen", "capacity": 2, "self": false },
+    { "id": "m_nasrin", "name": "Nasrin Khatun", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_wholesale_sheet", "name": "Copy and foot the dawn auction invoice column", "load": 2, "fits": ["m_mira", "m_you"] },
+    { "id": "t_retail_sheet", "name": "Draw the evening retail basket-price bar chart", "load": 1, "fits": ["m_you", "m_nasrin"] },
+    { "id": "t_summary_card", "name": "Write the transport-and-wastage bridging note", "load": 1, "fits": ["m_nasrin", "m_mira"] }
+  ],
+  "facts": [
+    { "id": "f_easel_clash", "holder": "m_nasrin", "text": "Section A has booked the same display easel and table in the hall for the third period", "critical": true },
+    { "id": "f_mira_ruler", "holder": "m_mira", "text": "Mira has a brass-edged accounting ruler for red double-underlines", "critical": false }
+  ],
+  "note": "Uses Nabapara Old Market (loc_old_market) and Mira Sen (npc_mira_sen) from INDIA_WORLD_BIBLE.md. The constraint is an easel and table booking clash known to Nasrin; the seam is that the wholesale column uses maunds and forty-kilogram sacks while the retail chart uses kilograms."
+}

@@ -1,0 +1,31 @@
+{
+  "type": "explain_case",
+  "id": "explain_case.xi_chitpur_jatra_scene",
+  "family": "explain_family.xi_claim_evidence_limit",
+  "name": "Why the watchman does not ring the bell",
+  "subject": "literature",
+  "question": "cause",
+  "role": "critic",
+  "scarce": "help",
+  "method": "method.close_reading",
+  "brief": "Your class reads a scene from an invented nineteenth-century jatra, the Bengali folk theatre for which the Chitpur Road area is famous. A night-watchman on a zamindar's estate sees a boat of grain-rowers slip past in the dark and does not ring the alarm bell at once. Why does he hold back? You are the critic, so you test the group's reasons, and the teacher is busy at another desk and cannot be asked about the dialect.",
+  "claims": [
+    { "id": "c_nephew", "name": "He holds back because he recognises his sister's son among the rowers", "defensible": true },
+    { "id": "c_grievance", "name": "He holds back because the estate bailiff has cheated the watchmen and he will not do the bailiff's work for him", "defensible": true },
+    { "id": "c_asleep", "name": "He fails to ring because he has fallen asleep beside his lantern", "defensible": false }
+  ],
+  "evidence": [
+    { "id": "e_gamchha", "name": "Raising his lamp, he names the red-bordered gamchha tied to the lead oar", "supports": ["c_nephew"], "against": ["c_asleep"] },
+    { "id": "e_flood_aside", "name": "In an aside he says his sister's house by the Damodar embankment was washed away two harvests ago and her boys took to the boats", "supports": ["c_nephew"], "against": [] },
+    { "id": "e_dry_cruse", "name": "He shakes the empty oil-cruse towards the bailiff's window and asks who sold the watch-house oil in the bazaar", "supports": ["c_grievance"], "against": [] },
+    { "id": "e_fined_watchmen", "name": "He recalls that the watchmen were fined for 'breaking the peace' after he caught a salt-smuggler last Phalgun", "supports": ["c_grievance"], "against": [] },
+    { "id": "e_counting_strokes", "name": "A stage direction has him standing wide awake, his hand on the clapper, counting twenty oar-strokes downstream", "supports": [], "against": ["c_asleep"] },
+    { "id": "e_cornet_margin", "name": "A margin note marks a four-bar cornet and drum interlude before the next scene", "supports": [], "against": [] }
+  ],
+  "limitations": [
+    { "id": "l_before_the_gamchha", "name": "He has already unhooked the clapper while cursing the bailiff's ledger, before he names the scarf", "bounds": ["c_nephew"] },
+    { "id": "l_rings_at_the_bend", "name": "He rings the bell once the boat has cleared the bend, which fits shielding the crew as well as it fits a grudge", "bounds": ["c_grievance"] },
+    { "id": "l_one_scene", "name": "The school reader prints only this scene and leaves out the reckoning in the last act", "bounds": ["c_nephew", "c_grievance"] }
+  ],
+  "note": "The jatra is an invented teaching text; Chitpur is a real part of north Kolkata and the traditional home of the form. Two motives are defensible and the text allows both at once. The sleeping reading is contradicted by the lamp and the counting. The cornet interlude is beside the point."
+}

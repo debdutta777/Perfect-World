@@ -1,0 +1,28 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.xi_teachers_day_programme",
+  "family": "coordinate_family.xi_group_work",
+  "name": "The Teachers' Day programme in the corridor",
+  "subject": "events",
+  "constraint": "deadline",
+  "role": "chair",
+  "scarce": "space",
+  "method": "method.run_a_check_in",
+  "seam": false,
+  "brief": "Class XI is arranging a short Teachers' Day programme: decorating the notice board and hall entrance, writing the programme card and announcing the items. Three of you share the work and you are the chair. The hall is being used for tests, so you are working in the narrow corridor outside it. Nobody has said by when the printed card has to be handed in.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 2, "self": true },
+    { "id": "m_mira", "name": "Mira Sen", "capacity": 2, "self": false },
+    { "id": "m_nasrin", "name": "Nasrin Khatun", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_decorate", "name": "Decorate the notice board and the hall entrance", "load": 2, "fits": ["m_mira", "m_you"] },
+    { "id": "t_card", "name": "Write the programme card", "load": 1, "fits": ["m_you", "m_nasrin"] },
+    { "id": "t_announce", "name": "Prepare the announcements", "load": 1, "fits": ["m_nasrin", "m_mira"] }
+  ],
+  "facts": [
+    { "id": "f_card_due", "holder": "m_mira", "text": "Ms Basu needs the card for the printer by noon on Thursday, a day earlier than the group assumed", "critical": true },
+    { "id": "f_nasrin_garlands", "holder": "m_nasrin", "text": "Nasrin has brought marigold garlands from home", "critical": false }
+  ],
+  "note": "Set at Nabapara Vidyalaya (loc_nhss); Ms Basu (npc_ms_basu) is the class teacher and Mira Sen is npc_mira_sen. The constraint is the deadline: the card is due earlier than the group assumed, which only Mira knows, so the group has to ask for more time. Space is scarce, so settling it costs more. No seam."
+}
