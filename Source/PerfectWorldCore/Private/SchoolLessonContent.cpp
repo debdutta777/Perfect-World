@@ -232,6 +232,8 @@ SchoolLessonContentResult DecodeSchoolLessonContent(const ContentDb& db)
                 b.RoleTextKey = A1Text(value, "roleKey");
                 entry.FamilySubject = A1Text(value, "familySubject");
                 entry.Role = A1Text(value, "role");
+                b.FamilySubject = entry.FamilySubject;
+                b.Role = entry.Role;
                 if (!A1Token(b.Id, "school.lesson.") || !ids.insert(b.Id).second) issue("lesson id is malformed or duplicated: " + b.Id);
                 if (!periods.insert(b.Period).second) issue("two lessons bind period " + std::to_string(b.Period));
                 key(b.TitleTextKey); key(b.BriefTextKey); key(b.RoleTextKey);

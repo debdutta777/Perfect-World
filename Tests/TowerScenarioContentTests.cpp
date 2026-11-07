@@ -36,6 +36,21 @@ std::string ReadFileText(const std::filesystem::path& path)
     return std::string{std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
 }
 
+std::vector<ContentFile> S02ReadContentFiles(const std::filesystem::path& root)
+{
+    std::vector<ContentFile> files;
+    std::error_code error;
+    std::filesystem::recursive_directory_iterator it(root, error), end;
+    while (!error && it != end)
+    {
+        if (it->is_regular_file(error) && it->path().extension() == ".json")
+            files.push_back({it->path().generic_string(), ReadFileText(it->path())});
+        it.increment(error);
+    }
+    Require(!error, "content tree is readable");
+    return files;
+}
+
 JsonValue& Field(JsonValue& object, std::string_view name)
 {
     for (auto& [key, value] : object.Object)
@@ -137,8 +152,8 @@ void TestCatalogueCoverageAndMetrics(const TowerScenarioCatalogue& catalogue)
         methodSeen[static_cast<std::size_t>(scenario->PrimaryMethod)] = true;
         if (scenario->Floor == 2)
         {
-            Require(scenario->ClassroomModelId.rfind("model.xi.", 0) == 0,
-                    "Floor 2 scenario binds a Class XI classroom model id");
+            Require(scenario->ClassroomModelId.rfind("problem_case.", 0) == 0,
+                    "Floor 2 scenario binds a real problem_case id");
             Require(!scenario->ChangedRuleKey.empty(),
                     "Floor 2 scenario defines a changedRuleKey for its single changed rule");
             classroomModels.insert(scenario->ClassroomModelId);
@@ -313,7 +328,7 @@ void RefuseRecord(const JsonValue& badRoot, const char* reason)
     Require(!issues.empty(), "ValidateTowerScenarioSemantics reports rejected record");
 }
 
-void TestMalformedRefusals(const std::vector<ContentFile>& files)
+void TestMalformedRefusals(const std::vector<ContentFile>& files, const ContentDb& cases)
 {
     const JsonParseResult parsed = ParseJson(files[3].Text); // p2.changed_rule.json
     Require(parsed.Value.has_value(), "reference scenario JSON parses");
@@ -336,6 +351,10 @@ void TestMalformedRefusals(const std::vector<ContentFile>& files)
     RefuseRecord(bad, "missing classroomModel on Floor 2 refused");
 
     bad = good;
+    Field(bad, "classroomModel").String = "model.xi.stock_and_flow_tank";
+    RefuseRecord(bad, "legacy uncatalogued classroom model refused");
+
+    bad = good;
     Field(bad, "changedRuleKey").String = "";
     RefuseRecord(bad, "empty changedRuleKey on Floor 2 refused");
 
@@ -355,8 +374,56 @@ void TestMalformedRefusals(const std::vector<ContentFile>& files)
     RefuseRecord(bad, "unreachable beats refused");
 
     std::vector<ContentFile> incompleteFiles(files.begin(), files.end() - 1);
-    Require(!LoadTowerScenarioFiles(incompleteFiles, true).Ok(),
+    Require(!LoadTowerScenarioFiles(incompleteFiles, true, cases).Ok(),
             "catalogue missing one of the nine routes is refused when full coverage is required");
+}
+
+void S02CaseReferences(const std::vector<ContentFile>& files, const std::vector<ContentFile>& allFiles,
+    const ContentDb& db)
+{
+    const auto loaded = LoadTowerScenarioCatalogue(db, true);
+    Require(loaded.Ok(), "registry catalogue resolves all classroom cases");
+    const std::array<std::pair<std::string_view, std::string_view>, 3> expected = {{
+        {"p2.changed_rule", "problem_case.xi_overhead_tank_draw"},
+        {"p2.stabilise", "problem_case.xi_dc_series_parallel"},
+        {"p2.design", "problem_case.xi_spring_mass_shm"}}};
+    for (const auto& [id, targetId] : expected)
+    {
+        const auto* scenario = loaded.Catalogue.FindById(id);
+        const auto* target = db.Find(targetId);
+        Require(scenario && scenario->ClassroomModelId == targetId && target && target->Type == "problem_case",
+            "authored mapping names the intended existing Model case");
+    }
+    Require(!LoadTowerScenarioFiles(files, true).Ok(), "standalone loader refuses unresolved classroom references");
+    const auto refused = [](const ContentDb& broken) {
+        std::vector<ContentIssue> issues;
+        ContentSchema::ValidateTowerScenarioSemantics(broken, issues);
+        Require(std::any_of(issues.begin(), issues.end(), [](const auto& issue) {
+            return issue.Message.find("existing problem_case") != std::string::npos;
+        }), "semantic validator refuses missing or wrongly typed classroom target");
+    };
+    auto broken = db;
+    broken.Records.erase("problem_case.xi_overhead_tank_draw");
+    refused(broken);
+    broken = db;
+    broken.Records.at("problem_case.xi_overhead_tank_draw").Type = "explain_case";
+    refused(broken);
+    broken = db;
+    Field(broken.Records.at("p2.pace").Data, "classroomModel").String = "problem_case.s02_missing";
+    refused(broken); // Optional references on other floors must resolve too.
+    auto mutated = allFiles;
+    for (auto& file : mutated)
+        if (file.Path.ends_with("/tower_scenario/p2.changed_rule.json"))
+        {
+            const std::string from = "problem_case.xi_overhead_tank_draw";
+            const auto at = file.Text.find(from);
+            Require(at != std::string::npos, "registry reference mutation exists");
+            file.Text.replace(at, from.size(), "problem_case.s02_missing");
+        }
+    const auto registry = LoadContent(mutated);
+    Require(!registry.Ok() && std::any_of(registry.Issues.begin(), registry.Issues.end(), [](const auto& issue) {
+        return issue.Id == "p2.changed_rule" && issue.Message.find("existing problem_case") != std::string::npos;
+    }), "registry runs semantic reference validation instead of stopping at a hard Ref");
 }
 } // namespace
 
@@ -367,7 +434,10 @@ int main(int argc, char** argv)
     ResolveDataPaths(argc, argv, scenarioDir, textFile);
 
     const std::vector<ContentFile> files = LoadAuthoredScenarioFiles(scenarioDir);
-    const TowerScenarioCatalogueResult loaded = LoadTowerScenarioFiles(files, true);
+    const auto allFiles = S02ReadContentFiles(scenarioDir.parent_path());
+    const auto content = LoadContent(allFiles);
+    Require(content.Ok(), "real content registry loads");
+    const TowerScenarioCatalogueResult loaded = LoadTowerScenarioFiles(files, true, content.Db);
     for (const auto& issue : loaded.Issues)
     {
         std::cerr << issue.File << " [" << issue.Id << "]: " << issue.Message << '\n';
@@ -380,7 +450,8 @@ int main(int argc, char** argv)
     TestCatalogueCoverageAndMetrics(loaded.Catalogue);
     TestFullNonCombatExaminationAndParity(loaded.Catalogue);
     TestLocalizationTextKeys(loaded.Catalogue, textFile);
-    TestMalformedRefusals(files);
+    TestMalformedRefusals(files, content.Db);
+    S02CaseReferences(files, allFiles, content.Db);
 
     std::cout << "PASS: " << Assertions << " assertions\n";
     return 0;

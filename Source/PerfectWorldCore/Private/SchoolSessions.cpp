@@ -1,6 +1,7 @@
 #include "SchoolSessions.h"
 
 #include <algorithm>
+#include <array>
 #include <limits>
 #include <utility>
 
@@ -31,6 +32,34 @@ bool P2CSecure(const SchoolSessionsState& state, const SchoolLessonBinding& b)
     }
     return false;
 }
+template <typename Catalogue, typename State, std::size_t N>
+StructureSelection S02SelectLessonCase(const Catalogue& catalogue, const State& state,
+    const SchoolLessonBinding& binding, const std::array<std::string_view, N>& roleNames,
+    std::uint64_t seed, GameInstant at)
+{
+    const auto* family = catalogue.FindFamily(binding.FamilyId);
+    if (family == nullptr) return {StructureError::UnknownFamily, {}, 0, false};
+    std::vector<std::string> ids;
+    for (const auto& def : family->Cases)
+        if ((binding.FamilySubject.empty() || def.Subject == binding.FamilySubject) &&
+            (binding.Role.empty() || ModelNameOf(roleNames, def.Role) == binding.Role))
+            ids.push_back(def.Id);
+    // The catalogue keeps cases sorted; filtering preserves the shared selector's ID order.
+    // Model and the other structures keep the same history fields in distinct record types.
+    StructureFamilyRecord history;
+    const auto* record = state.FindFamily(binding.FamilyId);
+    if (record != nullptr)
+        history = {record->FamilyId, record->Seen, record->Recent, record->Exposures,
+            record->SoundExposures, record->Secure};
+    return StructureSelectCase(ids, record != nullptr ? &history : nullptr, binding.FamilyId, seed, at);
+}
+SchoolIssue S02SelectionIssue(const StructureSelection& selection, const SchoolLessonBinding& binding)
+{
+    if (selection.Error == StructureError::UnknownCase)
+        return P2CSessionIssue("no_matching_case", "No case in " + binding.FamilyId +
+            " matches familySubject '" + binding.FamilySubject + "' and role '" + binding.Role + "'.");
+    return P2CRunnerIssue(selection.Error);
+}
 SchoolIssue P2CBeginLesson(SchoolSessionsState& s, const SchoolSessionCatalogues& c,
     const SchoolLessonBinding& b, const SchoolLessonGoal& goal, std::int32_t skill, std::uint64_t seed, GameInstant at)
 {
@@ -39,32 +68,32 @@ SchoolIssue P2CBeginLesson(SchoolSessionsState& s, const SchoolSessionCatalogues
     case SchoolStructure::Model:
         if (const auto* g = std::get_if<ModelGoal>(&goal))
         {
-            const auto pick = SelectModelCase(*c.Structures.Model, s.Model, b.FamilyId, seed, at);
-            if (!pick.Ok()) return P2CRunnerIssue(pick.Error);
+            const auto pick = S02SelectLessonCase(*c.Structures.Model, s.Model, b, ModelRoleNames, seed, at);
+            if (!pick.Ok()) return S02SelectionIssue(pick, b);
             return P2CRunnerIssue(BeginModelExposure(s.Model, *c.Structures.Model, pick.CaseId, *g, skill).Error);
         }
         break;
     case SchoolStructure::Explain:
         if (const auto* g = std::get_if<ExplainGoal>(&goal))
         {
-            const auto pick = SelectExplainCase(*c.Structures.Explain, s.Explain, b.FamilyId, seed, at);
-            if (!pick.Ok()) return P2CRunnerIssue(pick.Error);
+            const auto pick = S02SelectLessonCase(*c.Structures.Explain, s.Explain, b, ExplainRoleNames, seed, at);
+            if (!pick.Ok()) return S02SelectionIssue(pick, b);
             return P2CRunnerIssue(BeginExplainExposure(s.Explain, *c.Structures.Explain, pick.CaseId, *g, skill).Error);
         }
         break;
     case SchoolStructure::Investigate:
         if (const auto* g = std::get_if<InvestigateGoal>(&goal))
         {
-            const auto pick = SelectInvestigateCase(*c.Structures.Investigate, s.Investigate, b.FamilyId, seed, at);
-            if (!pick.Ok()) return P2CRunnerIssue(pick.Error);
+            const auto pick = S02SelectLessonCase(*c.Structures.Investigate, s.Investigate, b, InvestigateRoleNames, seed, at);
+            if (!pick.Ok()) return S02SelectionIssue(pick, b);
             return P2CRunnerIssue(BeginInvestigateExposure(s.Investigate, *c.Structures.Investigate, pick.CaseId, *g, skill).Error);
         }
         break;
     case SchoolStructure::Coordinate:
         if (const auto* g = std::get_if<CoordinateGoal>(&goal))
         {
-            const auto pick = SelectCoordinateCase(*c.Structures.Coordinate, s.Coordinate, b.FamilyId, seed, at);
-            if (!pick.Ok()) return P2CRunnerIssue(pick.Error);
+            const auto pick = S02SelectLessonCase(*c.Structures.Coordinate, s.Coordinate, b, CoordinateRoleNames, seed, at);
+            if (!pick.Ok()) return S02SelectionIssue(pick, b);
             return P2CRunnerIssue(BeginCoordinateExposure(s.Coordinate, *c.Structures.Coordinate, pick.CaseId, *g, skill).Error);
         }
         break;

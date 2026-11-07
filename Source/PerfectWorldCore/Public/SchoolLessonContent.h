@@ -33,8 +33,8 @@ namespace PerfectWorld
  * The bell schedules stay the only time authority. A binding names the period by index and repeats the
  * schedule's subject so a re-ordered timetable is refused, not silently re-bound. Each lesson also names
  * the (subject, role) the family teaches it through; the pair must be reached by at least one authored case of
- * that family, so no lesson claims a case that does not exist. (Case selection stays the runner's: a lesson
- * binds a family, not a case.)
+ * that family, so no lesson claims a case that does not exist. The binding carries both constraints into
+ * SchoolSessions, which draws only matching cases through the deterministic structure selector.
  *
  * Presentation is text keys only ("phase2.a1.*"). The keys resolve in Data/Text/en/phase2_a1.json, a flat
  * object of key -> nonempty string. LoadSchoolLessonContent refuses a missing key and an unreferenced one.
