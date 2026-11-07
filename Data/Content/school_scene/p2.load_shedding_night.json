@@ -1,0 +1,314 @@
+{
+  "type": "school_scene",
+  "id": "p2.load_shedding_night",
+  "note": "Order C2 scene 6: a humid monsoon feeder cut hits Nabapara on the evening before a unit test, and the player rearranges water-bucket, lantern and study turns with Amrita Basu, Ishan Sheikh, Mira Sen, household adult and care worker (INDIA_WORLD_BIBLE.md named cast: Amrita Basu, Ishan Sheikh, Mira Sen).",
+  "arcKind": "household_responsibility",
+  "titleKey": "school_scene.p2.load_shedding_night.title",
+  "summaryKey": "school_scene.p2.load_shedding_night.summary",
+  "institution": "institution.nabapara_vidyalaya",
+  "calendar": "calendar.nabapara_2042_43",
+  "term": "term_1",
+  "calendarSpan": "unit_test_1",
+  "threadTemplate": "thread.evening_rota",
+  "entryScene": "scene_feeder_cut_warning",
+  "cast": [
+    {
+      "person": "person.amrita_basu",
+      "role": "teacher",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.ishan_sheikh",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.mira_sen",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.household_adult",
+      "role": "family_adult",
+      "originVariant": "family",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.care_worker",
+      "role": "care_adult",
+      "originVariant": "care_home",
+      "proposedNewCast": false
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_feeder_cut_warning",
+      "titleKey": "school_scene.p2.load_shedding_night.warning.title",
+      "promptKey": "school_scene.p2.load_shedding_night.warning.prompt",
+      "speaker": "person.ishan_sheikh",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "timetable_period",
+        "bellSchedule": "bell_schedule.nabapara_xi_science",
+        "periodIndex": 5,
+        "subject": "bengali",
+        "zone": "nhss.room_xi_science",
+        "startMinute": 905,
+        "endMinute": 950
+      },
+      "conversationTopic": "topic.ishan_sheikh.evening_feeder_outage",
+      "choices": [
+        {
+          "id": "plan_family_inverter_and_water_shift",
+          "labelKey": "school_scene.p2.load_shedding_night.warning.family.label",
+          "outcomeKey": "school_scene.p2.load_shedding_night.warning.family.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_family_lantern_evening",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.loadshed.family_outage_plan_started",
+            "factSet": "school.loadshed.planning_family_cut"
+          }
+        },
+        {
+          "id": "plan_care_emergency_lamp_shift",
+          "labelKey": "school_scene.p2.load_shedding_night.warning.care.label",
+          "outcomeKey": "school_scene.p2.load_shedding_night.warning.care.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_care_lantern_handover",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.loadshed.care_outage_plan_started",
+            "factSet": "school.loadshed.planning_care_cut"
+          }
+        },
+        {
+          "id": "leave_evening_routine_unchanged_refusal",
+          "labelKey": "school_scene.p2.load_shedding_night.warning.refuse.label",
+          "outcomeKey": "school_scene.p2.load_shedding_night.warning.refuse.outcome",
+          "costMinutes": 0,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.mira_sen",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.loadshed.took_chance_on_power",
+            "factSet": "school.loadshed.unplanned_outage_evening"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_family_lantern_evening",
+      "titleKey": "school_scene.p2.load_shedding_night.family.title",
+      "promptKey": "school_scene.p2.load_shedding_night.family.prompt",
+      "speaker": "person.household_adult",
+      "originVariant": "family",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.player_home",
+        "startMinute": 1095,
+        "endMinute": 1155
+      },
+      "conversationTopic": "topic.household_adult.load_shedding_test_eve",
+      "choices": [
+        {
+          "id": "fill_buckets_before_feeder_trip",
+          "labelKey": "school_scene.p2.load_shedding_night.family.redesign.label",
+          "outcomeKey": "school_scene.p2.load_shedding_night.family.redesign.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_veranda_lamp_revision",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.loadshed.family_chores_done_before_cut",
+            "threadEvent": "obligation_covered",
+            "factSet": "school.loadshed.family_chores_frontloaded",
+            "journalAgreementFact": "c2_loadshed_family_redesigned"
+          }
+        },
+        {
+          "id": "share_charging_and_kitchen_turns",
+          "labelKey": "school_scene.p2.load_shedding_night.family.share.label",
+          "outcomeKey": "school_scene.p2.load_shedding_night.family.share.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_veranda_lamp_revision",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.loadshed.family_lamp_hours_shared",
+            "threadEvent": "jobs_shared",
+            "factSet": "school.loadshed.family_lamp_shared",
+            "journalAgreementFact": "c2_loadshed_family_shared"
+          }
+        },
+        {
+          "id": "wait_out_cut_without_replanning_refusal",
+          "labelKey": "school_scene.p2.load_shedding_night.family.refuse.label",
+          "outcomeKey": "school_scene.p2.load_shedding_night.family.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.loadshed.family_waited_in_dark",
+            "factSet": "school.loadshed.family_waited_for_supply"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_care_lantern_handover",
+      "titleKey": "school_scene.p2.load_shedding_night.care.title",
+      "promptKey": "school_scene.p2.load_shedding_night.care.prompt",
+      "speaker": "person.care_worker",
+      "originVariant": "care_home",
+      "schedule": {
+        "slotKind": "care_handover",
+        "periodIndex": -1,
+        "zone": "location.nabapara.care_home",
+        "startMinute": 850,
+        "endMinute": 895
+      },
+      "conversationTopic": "topic.care_worker.load_shedding_lamp_rota",
+      "choices": [
+        {
+          "id": "move_water_pump_duty_before_dusk",
+          "labelKey": "school_scene.p2.load_shedding_night.care.redesign.label",
+          "outcomeKey": "school_scene.p2.load_shedding_night.care.redesign.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_veranda_lamp_revision",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.loadshed.care_pump_turn_moved_early",
+            "threadEvent": "obligation_covered",
+            "factSet": "school.loadshed.care_chores_frontloaded",
+            "journalAgreementFact": "c2_loadshed_care_redesigned"
+          }
+        },
+        {
+          "id": "share_emergency_lantern_table_rota",
+          "labelKey": "school_scene.p2.load_shedding_night.care.share.label",
+          "outcomeKey": "school_scene.p2.load_shedding_night.care.share.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_veranda_lamp_revision",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.loadshed.care_lantern_table_shared",
+            "threadEvent": "jobs_shared",
+            "factSet": "school.loadshed.care_lamp_shared",
+            "journalAgreementFact": "c2_loadshed_care_shared"
+          }
+        },
+        {
+          "id": "keep_standard_hall_rota_refusal",
+          "labelKey": "school_scene.p2.load_shedding_night.care.refuse.label",
+          "outcomeKey": "school_scene.p2.load_shedding_night.care.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.loadshed.care_rota_kept_unchanged",
+            "factSet": "school.loadshed.care_waited_for_supply"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_veranda_lamp_revision",
+      "titleKey": "school_scene.p2.load_shedding_night.revision.title",
+      "promptKey": "school_scene.p2.load_shedding_night.revision.prompt",
+      "speaker": "person.ishan_sheikh",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.evening_study",
+        "startMinute": 1170,
+        "endMinute": 1230
+      },
+      "conversationTopic": "topic.ishan_sheikh.emergency_lamp_revision",
+      "choices": [
+        {
+          "id": "lock_in_early_dusk_prep_plan",
+          "labelKey": "school_scene.p2.load_shedding_night.revision.redesigned.label",
+          "outcomeKey": "school_scene.p2.load_shedding_night.revision.redesigned.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "redesigned",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.loadshed.early_prep_routine_settled",
+            "threadEvent": "rota_renegotiated",
+            "factSet": "school.loadshed.settled_redesigned"
+          }
+        },
+        {
+          "id": "lock_in_shared_lantern_revision",
+          "labelKey": "school_scene.p2.load_shedding_night.revision.shared.label",
+          "outcomeKey": "school_scene.p2.load_shedding_night.revision.shared.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "shared_out",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.loadshed.lantern_study_shared",
+            "threadEvent": "jobs_shared",
+            "factSet": "school.loadshed.settled_shared_out"
+          }
+        },
+        {
+          "id": "close_books_when_lamp_dims_refusal",
+          "labelKey": "school_scene.p2.load_shedding_night.revision.refuse.label",
+          "outcomeKey": "school_scene.p2.load_shedding_night.revision.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.loadshed.rested_early_for_test",
+            "factSet": "school.loadshed.slept_early_before_test",
+            "factCleared": "school.loadshed.planning_family_cut"
+          }
+        }
+      ]
+    }
+  ],
+  "resolutions": [
+    "redesigned",
+    "shared_out",
+    "stayed_as_was"
+  ]
+}

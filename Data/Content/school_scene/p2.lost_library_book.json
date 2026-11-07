@@ -1,0 +1,362 @@
+{
+  "type": "school_scene",
+  "id": "p2.lost_library_book",
+  "note": "Order C2 scene 11: a borrowed school library reference volume is left behind on the crowded morning bus to Nabapara Bus Stand, and the player retraces the route or arranges a replacement with Ishan Sheikh, Mira Sen and Amrita Basu (INDIA_WORLD_BIBLE.md named cast: Ishan Sheikh, Mira Sen, Amrita Basu, plus household adult and care worker).",
+  "arcKind": "changing_friendship",
+  "titleKey": "school_scene.p2.lost_library_book.title",
+  "summaryKey": "school_scene.p2.lost_library_book.summary",
+  "institution": "institution.nabapara_vidyalaya",
+  "calendar": "calendar.nabapara_2042_43",
+  "term": "term_1",
+  "calendarSpan": "half_yearly",
+  "threadTemplate": "thread.hidden_pickup",
+  "entryScene": "scene_missing_reference_volume",
+  "cast": [
+    {
+      "person": "person.ishan_sheikh",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.mira_sen",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.amrita_basu",
+      "role": "teacher",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.household_adult",
+      "role": "family_adult",
+      "originVariant": "family",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.care_worker",
+      "role": "care_adult",
+      "originVariant": "care_home",
+      "proposedNewCast": false
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_missing_reference_volume",
+      "titleKey": "school_scene.p2.lost_library_book.tiffin.title",
+      "promptKey": "school_scene.p2.lost_library_book.tiffin.prompt",
+      "speaker": "person.ishan_sheikh",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "school_break",
+        "bellSchedule": "bell_schedule.nabapara_xi_science",
+        "periodIndex": -1,
+        "zone": "nhss.court",
+        "startMinute": 770,
+        "endMinute": 800
+      },
+      "conversationTopic": "topic.ishan_sheikh.missing_library_book_bus",
+      "choices": [
+        {
+          "id": "ask_ishan_about_bus_depot_route",
+          "labelKey": "school_scene.p2.lost_library_book.tiffin.ask.label",
+          "outcomeKey": "school_scene.p2.lost_library_book.tiffin.ask.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_accountancy_library_ledger",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.libbook.bus_loss_confided",
+            "threadEvent": "confidence_shared",
+            "factSet": "school.libbook.confided_in_ishan"
+          }
+        },
+        {
+          "id": "speak_at_home_about_replacement_copy",
+          "labelKey": "school_scene.p2.lost_library_book.tiffin.family.label",
+          "outcomeKey": "school_scene.p2.lost_library_book.tiffin.family.outcome",
+          "costMinutes": 5,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_family_book_replacement",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.libbook.family_talk_planned",
+            "factSet": "school.libbook.telling_family_tonight"
+          }
+        },
+        {
+          "id": "speak_at_care_home_about_library_slip",
+          "labelKey": "school_scene.p2.lost_library_book.tiffin.care.label",
+          "outcomeKey": "school_scene.p2.lost_library_book.tiffin.care.outcome",
+          "costMinutes": 5,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_care_book_handover",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.libbook.care_talk_planned",
+            "factSet": "school.libbook.telling_care_worker"
+          }
+        },
+        {
+          "id": "search_satchel_alone_refusal",
+          "labelKey": "school_scene.p2.lost_library_book.tiffin.refuse.label",
+          "outcomeKey": "school_scene.p2.lost_library_book.tiffin.refuse.outcome",
+          "costMinutes": 0,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.libbook.kept_loss_to_self",
+            "factSet": "school.libbook.searched_alone"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_family_book_replacement",
+      "titleKey": "school_scene.p2.lost_library_book.family.title",
+      "promptKey": "school_scene.p2.lost_library_book.family.prompt",
+      "speaker": "person.household_adult",
+      "originVariant": "family",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.player_home",
+        "startMinute": 1110,
+        "endMinute": 1170
+      },
+      "conversationTopic": "topic.household_adult.lost_library_volume",
+      "choices": [
+        {
+          "id": "arrange_old_market_secondhand_search",
+          "labelKey": "school_scene.p2.lost_library_book.family.agree.label",
+          "outcomeKey": "school_scene.p2.lost_library_book.family.agree.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_accountancy_library_ledger",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.libbook.family_replacement_planned",
+            "factSet": "school.libbook.family_replacement_backed",
+            "journalAgreementFact": "c2_libbook_family_replacement"
+          }
+        },
+        {
+          "id": "wait_before_telling_household_refusal",
+          "labelKey": "school_scene.p2.lost_library_book.family.refuse.label",
+          "outcomeKey": "school_scene.p2.lost_library_book.family.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.libbook.family_evening_unworried",
+            "factSet": "school.libbook.postponed_family_mention"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_care_book_handover",
+      "titleKey": "school_scene.p2.lost_library_book.care.title",
+      "promptKey": "school_scene.p2.lost_library_book.care.prompt",
+      "speaker": "person.care_worker",
+      "originVariant": "care_home",
+      "schedule": {
+        "slotKind": "care_handover",
+        "periodIndex": -1,
+        "zone": "location.nabapara.care_home",
+        "startMinute": 840,
+        "endMinute": 885
+      },
+      "conversationTopic": "topic.care_worker.lost_library_volume",
+      "choices": [
+        {
+          "id": "log_bus_terminus_enquiry_pass",
+          "labelKey": "school_scene.p2.lost_library_book.care.agree.label",
+          "outcomeKey": "school_scene.p2.lost_library_book.care.agree.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_accountancy_library_ledger",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.libbook.care_terminus_pass_logged",
+            "factSet": "school.libbook.care_pass_arranged",
+            "journalAgreementFact": "c2_libbook_care_terminus_pass"
+          }
+        },
+        {
+          "id": "keep_library_worry_private_refusal",
+          "labelKey": "school_scene.p2.lost_library_book.care.refuse.label",
+          "outcomeKey": "school_scene.p2.lost_library_book.care.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.libbook.care_handover_unworried",
+            "factSet": "school.libbook.postponed_care_mention"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_accountancy_library_ledger",
+      "titleKey": "school_scene.p2.lost_library_book.ledger.title",
+      "promptKey": "school_scene.p2.lost_library_book.ledger.prompt",
+      "speaker": "person.mira_sen",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "timetable_period",
+        "bellSchedule": "bell_schedule.nabapara_xi_commerce",
+        "periodIndex": 0,
+        "subject": "accountancy",
+        "zone": "nhss.room_xi_commerce",
+        "startMinute": 620,
+        "endMinute": 665
+      },
+      "conversationTopic": "topic.mira_sen.edition_number_and_bus_timing",
+      "choices": [
+        {
+          "id": "plan_bus_stand_search_with_ishan",
+          "labelKey": "school_scene.p2.lost_library_book.ledger.search.label",
+          "outcomeKey": "school_scene.p2.lost_library_book.ledger.search.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_after_school_bus_enquiry",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.libbook.bus_stand_search_planned",
+            "threadEvent": "pickup_covered",
+            "factSet": "school.libbook.searching_bus_stand",
+            "journalAgreementFact": "c2_libbook_bus_stand_walk"
+          }
+        },
+        {
+          "id": "report_missing_volume_to_amrita",
+          "labelKey": "school_scene.p2.lost_library_book.ledger.adviser.label",
+          "outcomeKey": "school_scene.p2.lost_library_book.ledger.adviser.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "support_found",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "apologise",
+            "relationshipEvent": "school.libbook.grace_week_granted",
+            "threadEvent": "adviser_consulted",
+            "factSet": "school.libbook.amrita_granted_extension",
+            "journalAgreementFact": "c2_libbook_amrita_renewal"
+          }
+        },
+        {
+          "id": "handle_library_fine_alone_refusal",
+          "labelKey": "school_scene.p2.lost_library_book.ledger.refuse.label",
+          "outcomeKey": "school_scene.p2.lost_library_book.ledger.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.mira_sen",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.libbook.kept_search_private",
+            "factSet": "school.libbook.handling_fine_alone"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_after_school_bus_enquiry",
+      "titleKey": "school_scene.p2.lost_library_book.enquiry.title",
+      "promptKey": "school_scene.p2.lost_library_book.enquiry.prompt",
+      "speaker": "person.ishan_sheikh",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "after_school",
+        "bellSchedule": "bell_schedule.nabapara_xi_commerce",
+        "periodIndex": -1,
+        "zone": "nhss.court",
+        "startMinute": 955,
+        "endMinute": 1005
+      },
+      "conversationTopic": "topic.ishan_sheikh.starter_kiosk_lost_property",
+      "choices": [
+        {
+          "id": "walk_to_bus_stand_starter_desk_with_ishan",
+          "labelKey": "school_scene.p2.lost_library_book.enquiry.walk.label",
+          "outcomeKey": "school_scene.p2.lost_library_book.enquiry.walk.outcome",
+          "costMinutes": 25,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "lightened",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.libbook.volume_recovered_at_stand",
+            "threadEvent": "pickup_covered",
+            "factSet": "school.libbook.recovered_from_conductor"
+          }
+        },
+        {
+          "id": "submit_secondhand_replacement_with_amrita",
+          "labelKey": "school_scene.p2.lost_library_book.enquiry.adviser.label",
+          "outcomeKey": "school_scene.p2.lost_library_book.enquiry.adviser.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "support_found",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.libbook.replacement_copy_logged",
+            "threadEvent": "adviser_consulted",
+            "factSet": "school.libbook.replacement_accepted"
+          }
+        },
+        {
+          "id": "call_off_bus_stand_search_refusal",
+          "labelKey": "school_scene.p2.lost_library_book.enquiry.refuse.label",
+          "outcomeKey": "school_scene.p2.lost_library_book.enquiry.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.libbook.parted_at_gate_after_bell",
+            "factSet": "school.libbook.stopped_bus_search",
+            "factCleared": "school.libbook.searching_bus_stand"
+          }
+        }
+      ]
+    }
+  ],
+  "resolutions": [
+    "lightened",
+    "support_found",
+    "carried_alone"
+  ]
+}
