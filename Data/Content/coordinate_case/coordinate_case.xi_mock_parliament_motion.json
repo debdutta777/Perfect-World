@@ -1,0 +1,28 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.xi_mock_parliament_motion",
+  "family": "coordinate_family.xi_group_work",
+  "name": "Drafting the ward drainage motion for mock parliament",
+  "subject": "debate",
+  "constraint": "deadline",
+  "role": "scribe",
+  "scarce": "time",
+  "method": "method.split_the_list",
+  "seam": true,
+  "brief": "In the Class XI humanities mock parliament, your bench of three is tabling a private member's motion on monsoon lane drainage: the main motion text, the financial memorandum, and the oral opening question. You are the scribe writing out the clean copy, and the recess bell rings in a few minutes.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 2, "self": true },
+    { "id": "m_arup", "name": "Arup Ghosh", "capacity": 2, "self": false },
+    { "id": "m_nasrin", "name": "Nasrin Khatun", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_motion_clauses", "name": "Draft the three operative clauses of the motion", "load": 2, "fits": ["m_you", "m_arup"] },
+    { "id": "t_cost_memo", "name": "Prepare the one-paragraph municipal outlay note", "load": 1, "fits": ["m_arup", "m_nasrin"] },
+    { "id": "t_star_question", "name": "Frame the two-minute oral opening question", "load": 1, "fits": ["m_nasrin", "m_you"] }
+  ],
+  "facts": [
+    { "id": "f_speaker_box", "holder": "m_arup", "text": "The student Speaker closes the notice box at 1:15 p.m. sharp before lunch, not at the start of fifth period", "critical": true },
+    { "id": "f_nasrin_orders", "holder": "m_nasrin", "text": "Nasrin has a bookmarked copy of the mock parliament standing orders", "critical": false }
+  ],
+  "note": "Set in the humanities stream at Nabapara Vidyalaya (loc_nhss). The deadline constraint is the 1:15 p.m. notice-box closure known to Arup; the seam is that the motion clauses cite Ward 14 while the financial note cites Ward 11."
+}

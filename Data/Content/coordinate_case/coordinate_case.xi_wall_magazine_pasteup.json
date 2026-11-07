@@ -1,0 +1,28 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.xi_wall_magazine_pasteup",
+  "family": "coordinate_family.xi_group_work",
+  "name": "Pasting up the autumn wall magazine on the corridor board",
+  "subject": "projects",
+  "constraint": "deadline",
+  "role": "mediator",
+  "scarce": "materials",
+  "method": "method.split_the_list",
+  "seam": true,
+  "brief": "Your group of three is putting up the Class XI bilingual wall magazine outside Ms Basu's room: lettering the masthead, pasting the essays and poems, and bordering the columns. You are the mediator keeping everyone heard, and there is only one jar of gum-arabic paste and one pair of long scissors between you. Nobody has said when Ms Basu locks the glass frame.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 2, "self": true },
+    { "id": "m_mira", "name": "Mira Sen", "capacity": 2, "self": false },
+    { "id": "m_tara", "name": "Tara Das", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_masthead", "name": "Letter the Bengali and English masthead strip", "load": 1, "fits": ["m_you", "m_tara"] },
+    { "id": "t_columns", "name": "Rule and paste the four essay and poem columns", "load": 2, "fits": ["m_mira", "m_you"] },
+    { "id": "t_border", "name": "Cut and pin the coloured paper border", "load": 1, "fits": ["m_tara", "m_mira"] }
+  ],
+  "facts": [
+    { "id": "f_frame_lock", "holder": "m_mira", "text": "Ms Basu locks the corridor display frame at two o'clock before the staff meeting, not at four", "critical": true },
+    { "id": "f_tara_brush", "holder": "m_tara", "text": "Tara brought her own flat squirrel-hair brush from home", "critical": false }
+  ],
+  "note": "Uses Ms Basu (npc_ms_basu), Mira Sen (npc_mira_sen), and Tara Das (npc_tara_das) at Nabapara Vidyalaya (loc_nhss). The deadline constraint is that the display frame is locked at 2:00 p.m., which only Mira knows. The seam: the masthead width and the four essay columns use different margin widths unless the hand-over is inspected."
+}

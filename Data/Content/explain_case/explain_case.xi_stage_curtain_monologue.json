@@ -1,0 +1,31 @@
+{
+  "type": "explain_case",
+  "id": "explain_case.xi_stage_curtain_monologue",
+  "family": "explain_family.xi_claim_evidence_limit",
+  "name": "The elder brother's silence at the gate",
+  "subject": "literature",
+  "question": "judgement",
+  "role": "recorder",
+  "scarce": "counterpoint",
+  "method": "method.close_reading",
+  "brief": "In a one-act play read by Class XI, the elder brother stands by the iron gate of a north Kolkata courtyard house and says nothing while his younger brother leaves with the deed that divides the family house. How is his silence best judged? You are the recorder, writing up the group's judgement, and everyone at your bench agrees too quickly with the first reading offered. No one is willing to argue the opposite.",
+  "claims": [
+    { "id": "c_forbearance", "name": "His silence is forbearance, meant to leave the family door open for his brother's return", "defensible": true },
+    { "id": "c_wounded_pride", "name": "His silence is wounded pride, which will not beg once the paper is signed", "defensible": true },
+    { "id": "c_misses_the_point", "name": "He is silent because he has not understood what the clerk's paper is", "defensible": false }
+  ],
+  "evidence": [
+    { "id": "e_latch_lifted", "name": "The stage direction has him lift the heavy iron bar off its staple instead of bolting the gate behind his brother", "supports": ["c_forbearance"], "against": [] },
+    { "id": "e_lamp_left", "name": "He tells the servant to leave the lamp burning in the niche by the threshold, as on any ordinary evening", "supports": ["c_forbearance"], "against": [] },
+    { "id": "e_turned_shoulder", "name": "When the younger brother pauses on the step, he turns his shoulder to the pillar and gathers his shawl", "supports": ["c_wounded_pride"], "against": [] },
+    { "id": "e_bitter_line", "name": "Earlier he says, 'A man who brings a stamp-seller into his father's house has heard my answer already'", "supports": ["c_wounded_pride"], "against": ["c_misses_the_point"] },
+    { "id": "e_corrects_clerk", "name": "In Scene 2 he corrects the clerk's measurement of the east verandah from memory before he refuses to sign", "supports": [], "against": ["c_misses_the_point"] },
+    { "id": "e_first_staging", "name": "The programme says the play was first staged at an amateur hall in 1961", "supports": [], "against": [] }
+  ],
+  "limitations": [
+    { "id": "l_no_speech", "name": "The playwright gives him no closing speech, so his motive rests on stage directions and earlier lines", "bounds": ["c_forbearance", "c_wounded_pride"] },
+    { "id": "l_actor_pause", "name": "Whether the lifted bar reads as welcome or as weariness depends on how long the actor holds the pause", "bounds": ["c_forbearance"] },
+    { "id": "l_scene_one_missing", "name": "The class sheet prints only the last scene and leaves out the quarrel over the shop in Scene 1", "bounds": ["c_wounded_pride"] }
+  ],
+  "note": "The play is an invented teaching text, read in the literature period at Nabapara Vidyalaya (loc_nhss). A judgement of a character's motive is contestable, so two readings are defensible and the text gives evidence for each. The misunderstanding reading is contradicted by Scene 2. The first-staging date is beside the point."
+}

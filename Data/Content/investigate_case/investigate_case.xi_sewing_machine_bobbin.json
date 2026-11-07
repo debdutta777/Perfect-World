@@ -1,0 +1,26 @@
+{
+  "type": "investigate_case",
+  "id": "investigate_case.xi_sewing_machine_bobbin",
+  "family": "investigate_family.xi_fault_finding",
+  "name": "The lower thread that loops and snaps",
+  "subject": "repair",
+  "symptom": "intermittent",
+  "role": "repairer",
+  "scarce": "time",
+  "method": "method.swap_known_good",
+  "brief": "In the craft room before sports day, you are hemming cotton house-team armbands on the cast-iron treadle sewing machine. It stitches a clean six-inch run, then suddenly bunches loops underneath and snaps the lower thread. The house captains are waiting outside the door for the armbands.",
+  "causes": [
+    { "id": "c_upper_tension_disc", "name": "Lint wedged between the upper tension discs lets the needle thread slacken", "fault": false },
+    { "id": "c_burred_bobbin_case", "name": "A tiny needle-strike burr on the lip of the steel bobbin case catches the shuttle thread every few turns", "fault": true },
+    { "id": "c_blunt_needle_eye", "name": "The needle eye is rough and frays the cotton on the downstroke", "fault": false },
+    { "id": "c_uneven_spool_wind", "name": "The wooden top spool is cross-wound and jerks on its upright pin", "fault": false }
+  ],
+  "tests": [
+    { "id": "t_inspect_thread_path", "name": "Open the slide plate and inspect the upper discs and bobbin-case lip under the bench lamp", "kind": "observe", "units": 1, "implicates": ["c_upper_tension_disc", "c_burred_bobbin_case"] },
+    { "id": "t_feel_needle_and_case", "name": "Run a thumbnail along the bobbin-case slot and down the needle point", "kind": "observe", "units": 2, "implicates": ["c_burred_bobbin_case", "c_blunt_needle_eye"] },
+    { "id": "t_pull_scale_drag", "name": "Pull both threads through a small spring gauge to compare upper and needle-eye drag", "kind": "measure", "units": 2, "implicates": ["c_upper_tension_disc", "c_blunt_needle_eye"] },
+    { "id": "t_drop_test_bobbin_case", "name": "Hold the bobbin case by its thread tail and gauge whether it jerks and catches as it unwinds", "kind": "measure", "units": 3, "implicates": ["c_burred_bobbin_case"] },
+    { "id": "t_swap_top_spool", "name": "Fit a fresh mercerised cotton reel from the workbox onto the top spool pin", "kind": "swap", "units": 3, "implicates": ["c_uneven_spool_wind"] }
+  ],
+  "note": "Set in the craft room at Nabapara Vidyalaya (loc_nhss). A needle-strike burr on the lip of the bobbin case catches the lower thread every few turns, so the fault comes and goes. Opening the slide plate and running a thumbnail along the case lip isolates it."
+}

@@ -1,0 +1,26 @@
+{
+  "type": "investigate_case",
+  "id": "investigate_case.xi_sonometer_tuning_fork",
+  "family": "investigate_family.xi_fault_finding",
+  "name": "The paper rider that would not settle",
+  "subject": "practical_science",
+  "symptom": "intermittent",
+  "role": "experimenter",
+  "scarce": "equipment",
+  "method": "method.read_the_meter",
+  "brief": "During the acoustics practical in the physics room, you strike a 256-hertz tuning fork and press its stem to the wooden soundbox of a sonometer. At a bridge span of 32 centimetres the V-shaped paper rider jumps off on one trial, then sits motionless on the next two trials at the same 32-centimetre mark. The digital stroboscope is shared across all six benches.",
+  "causes": [
+    { "id": "c_kinked_steel_wire", "name": "A rust kink on the steel wire near the 32-centimetre mark damps the antinode", "fault": false },
+    { "id": "c_sticking_pulley_axle", "name": "The brass end-pulley sticks on its un-oiled pin, so the slotted hanger weight does not tension the wire evenly", "fault": true },
+    { "id": "c_split_wooden_bridge", "name": "The movable knife-edge wooden bridge rocks in a split groove", "fault": false },
+    { "id": "c_cracked_fork_prong", "name": "The tuning fork has a hairline fatigue crack at the base of one prong", "fault": false }
+  ],
+  "tests": [
+    { "id": "t_sight_wire_and_pulley", "name": "Sight along the steel wire and watch whether the brass pulley turns when the hanger is nudged", "kind": "observe", "units": 1, "implicates": ["c_kinked_steel_wire", "c_sticking_pulley_axle"] },
+    { "id": "t_feel_bridge_and_hanger", "name": "Press the movable wooden bridge and gently lift and release the slotted weight hanger", "kind": "observe", "units": 2, "implicates": ["c_sticking_pulley_axle", "c_split_wooden_bridge"] },
+    { "id": "t_micrometer_wire_span", "name": "Gauge wire diameter with a screw gauge and measure bridge squareness with a set-square", "kind": "measure", "units": 2, "implicates": ["c_kinked_steel_wire", "c_split_wooden_bridge"] },
+    { "id": "t_spring_balance_tension", "name": "Measure wire tension horizontal to the bridge before and after tapping the brass pulley", "kind": "measure", "units": 3, "implicates": ["c_sticking_pulley_axle"] },
+    { "id": "t_swap_tuning_fork", "name": "Repeat the trial with the matched 256-hertz fork from the front cupboard", "kind": "swap", "units": 3, "implicates": ["c_cracked_fork_prong"] }
+  ],
+  "note": "Set in the physics laboratory at Nabapara Vidyalaya (loc_nhss). Resonance should return at the same length every time at constant tension. A brass end pulley that binds on its un-oiled pin leaves a different tension after each adjustment, so the resonant length wanders. A spring balance on the wire, read before and after tapping the pulley, shows the tension jump."
+}

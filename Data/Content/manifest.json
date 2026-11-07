@@ -1,7 +1,7 @@
 {
   "schema": "pw.content_manifest/1",
-  "fileCount": 211,
-  "recordCount": 270,
+  "fileCount": 259,
+  "recordCount": 318,
   "files": [
     {
       "path": "/ability_recipe/ability_recipe.agni_assay_flame.json",
@@ -394,9 +394,63 @@
       ]
     },
     {
+      "path": "/coordinate_case/coordinate_case.xi_autumn_drama_rehearsal.json",
+      "records": [
+        { "id": "coordinate_case.xi_autumn_drama_rehearsal", "kind": "coordinate_case" }
+      ]
+    },
+    {
+      "path": "/coordinate_case/coordinate_case.xi_canal_chart_survey.json",
+      "records": [
+        { "id": "coordinate_case.xi_canal_chart_survey", "kind": "coordinate_case" }
+      ]
+    },
+    {
+      "path": "/coordinate_case/coordinate_case.xi_commerce_ledger_exhibit.json",
+      "records": [
+        { "id": "coordinate_case.xi_commerce_ledger_exhibit", "kind": "coordinate_case" }
+      ]
+    },
+    {
       "path": "/coordinate_case/coordinate_case.xi_debate_hall.json",
       "records": [
         { "id": "coordinate_case.xi_debate_hall", "kind": "coordinate_case" }
+      ]
+    },
+    {
+      "path": "/coordinate_case/coordinate_case.xi_economics_panel_round.json",
+      "records": [
+        { "id": "coordinate_case.xi_economics_panel_round", "kind": "coordinate_case" }
+      ]
+    },
+    {
+      "path": "/coordinate_case/coordinate_case.xi_history_moot_bench.json",
+      "records": [
+        { "id": "coordinate_case.xi_history_moot_bench", "kind": "coordinate_case" }
+      ]
+    },
+    {
+      "path": "/coordinate_case/coordinate_case.xi_maidan_athletics_lanes.json",
+      "records": [
+        { "id": "coordinate_case.xi_maidan_athletics_lanes", "kind": "coordinate_case" }
+      ]
+    },
+    {
+      "path": "/coordinate_case/coordinate_case.xi_metre_bridge_graph.json",
+      "records": [
+        { "id": "coordinate_case.xi_metre_bridge_graph", "kind": "coordinate_case" }
+      ]
+    },
+    {
+      "path": "/coordinate_case/coordinate_case.xi_mock_parliament_motion.json",
+      "records": [
+        { "id": "coordinate_case.xi_mock_parliament_motion", "kind": "coordinate_case" }
+      ]
+    },
+    {
+      "path": "/coordinate_case/coordinate_case.xi_salt_analysis_budget.json",
+      "records": [
+        { "id": "coordinate_case.xi_salt_analysis_budget", "kind": "coordinate_case" }
       ]
     },
     {
@@ -406,15 +460,33 @@
       ]
     },
     {
+      "path": "/coordinate_case/coordinate_case.xi_slide_stain_bench.json",
+      "records": [
+        { "id": "coordinate_case.xi_slide_stain_bench", "kind": "coordinate_case" }
+      ]
+    },
+    {
       "path": "/coordinate_case/coordinate_case.xi_sports_day_stall.json",
       "records": [
         { "id": "coordinate_case.xi_sports_day_stall", "kind": "coordinate_case" }
       ]
     },
     {
+      "path": "/coordinate_case/coordinate_case.xi_teachers_day_programme.json",
+      "records": [
+        { "id": "coordinate_case.xi_teachers_day_programme", "kind": "coordinate_case" }
+      ]
+    },
+    {
       "path": "/coordinate_case/coordinate_case.xi_titration_report.json",
       "records": [
         { "id": "coordinate_case.xi_titration_report", "kind": "coordinate_case" }
+      ]
+    },
+    {
+      "path": "/coordinate_case/coordinate_case.xi_wall_magazine_pasteup.json",
+      "records": [
+        { "id": "coordinate_case.xi_wall_magazine_pasteup", "kind": "coordinate_case" }
       ]
     },
     {
@@ -490,9 +562,81 @@
       ]
     },
     {
+      "path": "/explain_case/explain_case.xi_ballygunge_rain_essay.json",
+      "records": [
+        { "id": "explain_case.xi_ballygunge_rain_essay", "kind": "explain_case" }
+      ]
+    },
+    {
+      "path": "/explain_case/explain_case.xi_bus_hub_pass_tariff.json",
+      "records": [
+        { "id": "explain_case.xi_bus_hub_pass_tariff", "kind": "explain_case" }
+      ]
+    },
+    {
       "path": "/explain_case/explain_case.xi_canal_log.json",
       "records": [
         { "id": "explain_case.xi_canal_log", "kind": "explain_case" }
+      ]
+    },
+    {
+      "path": "/explain_case/explain_case.xi_chitpur_jatra_scene.json",
+      "records": [
+        { "id": "explain_case.xi_chitpur_jatra_scene", "kind": "explain_case" }
+      ]
+    },
+    {
+      "path": "/explain_case/explain_case.xi_handloom_sari_cooperative.json",
+      "records": [
+        { "id": "explain_case.xi_handloom_sari_cooperative", "kind": "explain_case" }
+      ]
+    },
+    {
+      "path": "/explain_case/explain_case.xi_howrah_dock_petition.json",
+      "records": [
+        { "id": "explain_case.xi_howrah_dock_petition", "kind": "explain_case" }
+      ]
+    },
+    {
+      "path": "/explain_case/explain_case.xi_indigo_ryot_deposition.json",
+      "records": [
+        { "id": "explain_case.xi_indigo_ryot_deposition", "kind": "explain_case" }
+      ]
+    },
+    {
+      "path": "/explain_case/explain_case.xi_industrial_yard_waybill.json",
+      "records": [
+        { "id": "explain_case.xi_industrial_yard_waybill", "kind": "explain_case" }
+      ]
+    },
+    {
+      "path": "/explain_case/explain_case.xi_jute_mill_petitions.json",
+      "records": [
+        { "id": "explain_case.xi_jute_mill_petitions", "kind": "explain_case" }
+      ]
+    },
+    {
+      "path": "/explain_case/explain_case.xi_laboratory_breakage_clause.json",
+      "records": [
+        { "id": "explain_case.xi_laboratory_breakage_clause", "kind": "explain_case" }
+      ]
+    },
+    {
+      "path": "/explain_case/explain_case.xi_old_market_fish_ice.json",
+      "records": [
+        { "id": "explain_case.xi_old_market_fish_ice", "kind": "explain_case" }
+      ]
+    },
+    {
+      "path": "/explain_case/explain_case.xi_polyclinic_queue_circular.json",
+      "records": [
+        { "id": "explain_case.xi_polyclinic_queue_circular", "kind": "explain_case" }
+      ]
+    },
+    {
+      "path": "/explain_case/explain_case.xi_stage_curtain_monologue.json",
+      "records": [
+        { "id": "explain_case.xi_stage_curtain_monologue", "kind": "explain_case" }
       ]
     },
     {
@@ -652,9 +796,21 @@
       ]
     },
     {
+      "path": "/investigate_case/investigate_case.xi_bell_timer_contactor.json",
+      "records": [
+        { "id": "investigate_case.xi_bell_timer_contactor", "kind": "investigate_case" }
+      ]
+    },
+    {
       "path": "/investigate_case/investigate_case.xi_bicycle_lamp.json",
       "records": [
         { "id": "investigate_case.xi_bicycle_lamp", "kind": "investigate_case" }
+      ]
+    },
+    {
+      "path": "/investigate_case/investigate_case.xi_burette_titration_drift.json",
+      "records": [
+        { "id": "investigate_case.xi_burette_titration_drift", "kind": "investigate_case" }
       ]
     },
     {
@@ -670,9 +826,69 @@
       ]
     },
     {
+      "path": "/investigate_case/investigate_case.xi_lab_lan_switch.json",
+      "records": [
+        { "id": "investigate_case.xi_lab_lan_switch", "kind": "investigate_case" }
+      ]
+    },
+    {
+      "path": "/investigate_case/investigate_case.xi_marksheet_rank_script.json",
+      "records": [
+        { "id": "investigate_case.xi_marksheet_rank_script", "kind": "investigate_case" }
+      ]
+    },
+    {
+      "path": "/investigate_case/investigate_case.xi_microscope_lamp_stage.json",
+      "records": [
+        { "id": "investigate_case.xi_microscope_lamp_stage", "kind": "investigate_case" }
+      ]
+    },
+    {
+      "path": "/investigate_case/investigate_case.xi_pa_horn_amplifier.json",
+      "records": [
+        { "id": "investigate_case.xi_pa_horn_amplifier", "kind": "investigate_case" }
+      ]
+    },
+    {
+      "path": "/investigate_case/investigate_case.xi_sewing_machine_bobbin.json",
+      "records": [
+        { "id": "investigate_case.xi_sewing_machine_bobbin", "kind": "investigate_case" }
+      ]
+    },
+    {
+      "path": "/investigate_case/investigate_case.xi_sonometer_tuning_fork.json",
+      "records": [
+        { "id": "investigate_case.xi_sonometer_tuning_fork", "kind": "investigate_case" }
+      ]
+    },
+    {
+      "path": "/investigate_case/investigate_case.xi_timetable_csv_import.json",
+      "records": [
+        { "id": "investigate_case.xi_timetable_csv_import", "kind": "investigate_case" }
+      ]
+    },
+    {
       "path": "/investigate_case/investigate_case.xi_torch_circuit.json",
       "records": [
         { "id": "investigate_case.xi_torch_circuit", "kind": "investigate_case" }
+      ]
+    },
+    {
+      "path": "/investigate_case/investigate_case.xi_water_cooler_relay.json",
+      "records": [
+        { "id": "investigate_case.xi_water_cooler_relay", "kind": "investigate_case" }
+      ]
+    },
+    {
+      "path": "/investigate_case/investigate_case.xi_weather_logger_serial.json",
+      "records": [
+        { "id": "investigate_case.xi_weather_logger_serial", "kind": "investigate_case" }
+      ]
+    },
+    {
+      "path": "/investigate_case/investigate_case.xi_wheatstone_bridge_null.json",
+      "records": [
+        { "id": "investigate_case.xi_wheatstone_bridge_null", "kind": "investigate_case" }
       ]
     },
     {
@@ -802,6 +1018,30 @@
       ]
     },
     {
+      "path": "/problem_case/problem_case.xi_calorimeter_cooling.json",
+      "records": [
+        { "id": "problem_case.xi_calorimeter_cooling", "kind": "problem_case" }
+      ]
+    },
+    {
+      "path": "/problem_case/problem_case.xi_chai_stall_milk_urn.json",
+      "records": [
+        { "id": "problem_case.xi_chai_stall_milk_urn", "kind": "problem_case" }
+      ]
+    },
+    {
+      "path": "/problem_case/problem_case.xi_club_subscription_ledger.json",
+      "records": [
+        { "id": "problem_case.xi_club_subscription_ledger", "kind": "problem_case" }
+      ]
+    },
+    {
+      "path": "/problem_case/problem_case.xi_coop_petty_cash.json",
+      "records": [
+        { "id": "problem_case.xi_coop_petty_cash", "kind": "problem_case" }
+      ]
+    },
+    {
       "path": "/problem_case/problem_case.xi_cricket_required_rate.json",
       "records": [
         { "id": "problem_case.xi_cricket_required_rate", "kind": "problem_case" }
@@ -811,6 +1051,30 @@
       "path": "/problem_case/problem_case.xi_daybook_cash_box.json",
       "records": [
         { "id": "problem_case.xi_daybook_cash_box", "kind": "problem_case" }
+      ]
+    },
+    {
+      "path": "/problem_case/problem_case.xi_dc_series_parallel.json",
+      "records": [
+        { "id": "problem_case.xi_dc_series_parallel", "kind": "problem_case" }
+      ]
+    },
+    {
+      "path": "/problem_case/problem_case.xi_east_kolkata_bheri.json",
+      "records": [
+        { "id": "problem_case.xi_east_kolkata_bheri", "kind": "problem_case" }
+      ]
+    },
+    {
+      "path": "/problem_case/problem_case.xi_ferry_ghat_waiting.json",
+      "records": [
+        { "id": "problem_case.xi_ferry_ghat_waiting", "kind": "problem_case" }
+      ]
+    },
+    {
+      "path": "/problem_case/problem_case.xi_laterite_well_recharge.json",
+      "records": [
+        { "id": "problem_case.xi_laterite_well_recharge", "kind": "problem_case" }
       ]
     },
     {
@@ -826,15 +1090,39 @@
       ]
     },
     {
+      "path": "/problem_case/problem_case.xi_printing_press_reams.json",
+      "records": [
+        { "id": "problem_case.xi_printing_press_reams", "kind": "problem_case" }
+      ]
+    },
+    {
       "path": "/problem_case/problem_case.xi_roof_rainwater_tank.json",
       "records": [
         { "id": "problem_case.xi_roof_rainwater_tank", "kind": "problem_case" }
       ]
     },
     {
+      "path": "/problem_case/problem_case.xi_seedling_nursery_plot.json",
+      "records": [
+        { "id": "problem_case.xi_seedling_nursery_plot", "kind": "problem_case" }
+      ]
+    },
+    {
+      "path": "/problem_case/problem_case.xi_spring_mass_shm.json",
+      "records": [
+        { "id": "problem_case.xi_spring_mass_shm", "kind": "problem_case" }
+      ]
+    },
+    {
       "path": "/problem_case/problem_case.xi_stationery_notebooks.json",
       "records": [
         { "id": "problem_case.xi_stationery_notebooks", "kind": "problem_case" }
+      ]
+    },
+    {
+      "path": "/problem_case/problem_case.xi_sundarbans_tide_creek.json",
+      "records": [
+        { "id": "problem_case.xi_sundarbans_tide_creek", "kind": "problem_case" }
       ]
     },
     {

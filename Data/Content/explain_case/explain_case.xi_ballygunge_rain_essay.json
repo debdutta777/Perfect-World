@@ -1,0 +1,31 @@
+{
+  "type": "explain_case",
+  "id": "explain_case.xi_ballygunge_rain_essay",
+  "family": "explain_family.xi_claim_evidence_limit",
+  "name": "The old violinist at his window",
+  "subject": "literature",
+  "question": "meaning",
+  "role": "researcher",
+  "scarce": "help",
+  "method": "method.close_reading",
+  "brief": "Your literature group reads a short personal essay set on Ballygunge Circular Road. On the afternoon of the first heavy monsoon shower, an old violinist watches the schoolchildren splashing past his ground-floor window. What does the essay do with the rain and the window? You are the researcher, gathering the details from the text, but Ms Basu is busy with the other half of the room and nobody can explain the Bengali phrases in it.",
+  "claims": [
+    { "id": "c_shared_renewal", "name": "The essay makes the first rain a brief truce that brings the shut-in musician back into the life of the street", "defensible": true },
+    { "id": "c_kept_distance", "name": "The essay uses the iron grille to show that memory lets him watch youth with affection without pretending to rejoin it", "defensible": true },
+    { "id": "c_resentment", "name": "The narrator despises the noisy children and wishes the lane were closed to them", "defensible": false }
+  ],
+  "evidence": [
+    { "id": "e_shutters", "name": "At the smell of wet dust he unhooks both teak shutters and sets his tea cup on the sill", "supports": ["c_shared_renewal"], "against": ["c_resentment"] },
+    { "id": "e_paper_boat", "name": "He hums a boatman's bhatiali phrase in time with an exercise-book page floating along the kerb", "supports": ["c_shared_renewal", "c_kept_distance"], "against": ["c_resentment"] },
+    { "id": "e_umbrella", "name": "He passes his spare umbrella through the bars to two drenched boys sheltering under the cornice", "supports": ["c_shared_renewal"], "against": ["c_resentment"] },
+    { "id": "e_fingers_inside", "name": "His fingers stay inside the rusted bars even when a boy calls up to ask the time", "supports": ["c_kept_distance"], "against": [] },
+    { "id": "e_old_pegs", "name": "He wipes the damp bow before closing the case and says the monsoon loosens old pegs faster than young knees", "supports": ["c_kept_distance"], "against": [] },
+    { "id": "e_annual_page", "name": "The essay appeared on page fourteen of the school's autumn annual in twelve-point type", "supports": [], "against": [] }
+  ],
+  "limitations": [
+    { "id": "l_few_words", "name": "He speaks only a sentence to the boys, so the truce is mostly in his own listening", "bounds": ["c_shared_renewal"] },
+    { "id": "l_umbrella_crosses", "name": "The umbrella passes through the bars, which crosses the very boundary the grille draws", "bounds": ["c_kept_distance"] },
+    { "id": "l_one_shower", "name": "The essay records one twenty-minute shower and nothing of the rest of the season", "bounds": ["c_shared_renewal", "c_kept_distance"] }
+  ],
+  "note": "Set in Kolkata (Ballygunge Circular Road is real); the essay is an invented teaching text, with Ms Basu (npc_ms_basu) as class teacher. Two readings are defensible, one about belonging and one about distance, and each is bounded by something the text itself does. The resentment reading is contradicted by the shutters, the song and the umbrella. The page number is beside the point."
+}

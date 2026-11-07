@@ -1,0 +1,31 @@
+{
+  "type": "explain_case",
+  "id": "explain_case.xi_old_market_fish_ice",
+  "family": "explain_family.xi_claim_evidence_limit",
+  "name": "Why the fish stalls earned less in May",
+  "subject": "economics",
+  "question": "cause",
+  "role": "recorder",
+  "scarce": "time",
+  "method": "method.reading_figures",
+  "brief": "Your economics sheet gives four weeks of May figures from the fish-stall cooperative at Nabapara Old Market. Rohu arrivals rose by twelve per cent and retail prices held steady, yet the stalls' net earnings fell from 620 rupees a stall-day in April to 540 in May. The bell rings in ten minutes and, as recorder, you must write down what squeezed the stalls' margin.",
+  "claims": [
+    { "id": "c_ice_cost", "name": "Hotter mornings forced the stalls to buy far more ice to keep the fish from spoiling", "defensible": true },
+    { "id": "c_afternoon_markdown", "name": "Unsold stock had to be cleared at a discount because the market's cold room was out of use", "defensible": true },
+    { "id": "c_wholesale_rise", "name": "Wholesale prices at the dawn landing rose sharply and squeezed the stalls", "defensible": false }
+  ],
+  "evidence": [
+    { "id": "e_ice_chits", "name": "Cooperative ice-chute chits rose from 45 rupees to 85 rupees per stall-day between April and May", "supports": ["c_ice_cost"], "against": [] },
+    { "id": "e_noon_temperature", "name": "Shade thermometer logs in the market averaged 39 degrees Celsius at noon over the four May weeks", "supports": ["c_ice_cost"], "against": [] },
+    { "id": "e_late_sales", "name": "Sales after eleven o'clock averaged 30 rupees a kilogram below the board price at opening", "supports": ["c_afternoon_markdown"], "against": [] },
+    { "id": "e_cold_room_book", "name": "The market superintendent's book records the overnight cold room shut for twelve days awaiting a valve", "supports": ["c_afternoon_markdown"], "against": [] },
+    { "id": "e_landing_sheet", "name": "The dawn landing sheet shows wholesale rates four per cent lower than in April", "supports": [], "against": ["c_wholesale_rise"] },
+    { "id": "e_pan_weights", "name": "The brass and iron pan weights were stamped by the inspectors in April", "supports": [], "against": [] }
+  ],
+  "limitations": [
+    { "id": "l_eight_stalls", "name": "The cooperative's table covers only its eight licensed stalls and leaves out the basket sellers by the gate", "bounds": ["c_ice_cost", "c_afternoon_markdown"] },
+    { "id": "l_family_fish", "name": "Fish taken home by stall families at closing time is counted in with the discounted sales", "bounds": ["c_afternoon_markdown"] },
+    { "id": "l_pooled_boxes", "name": "Two senior stalls own insulated boxes whose ice use is pooled into the cooperative total", "bounds": ["c_ice_cost"] }
+  ],
+  "note": "Nabapara Old Market (loc_old_market) is from INDIA_WORLD_BIBLE.md; the figures are invented. The ice outlay explains 40 of the 80 rupees lost a stall-day, so a second cause is needed, and the markdowns supply it; that is why two claims are defensible. The wholesale claim is contradicted by the landing sheet. The pan weights are beside the point."
+}

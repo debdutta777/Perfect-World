@@ -1,0 +1,28 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_calorimeter_cooling",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "The calorimeter that warmed too little",
+  "subject": "physics",
+  "unknown": "stock",
+  "role": "experimenter",
+  "scarce": "readings",
+  "fault": "hidden_flow",
+  "method": "method.balance_stock",
+  "brief": "In the physics laboratory Ishan Sheikh heats 200 grams of water in a copper calorimeter with an immersion coil that delivers 25 watts. The water and calorimeter hold 4,350 joules above room temperature when the coil is switched on, and a felt jacket lets heat out at an average of 15 watts. The thermometer rose less than he expected. How much heat should the water and calorimeter hold above room temperature after the coil has run 180 seconds, from the flows the group logged? The lab keeps only one thermometer reading at the start and one at the end.",
+  "quantities": [
+    { "id": "q_stored_heat", "name": "Heat held above room temperature in joules", "kind": "stock", "given": false },
+    { "id": "q_coil_power", "name": "Heat from the coil in joules a second", "kind": "inflow", "given": true },
+    { "id": "q_jacket_loss", "name": "Heat lost through the felt jacket in joules a second", "kind": "outflow", "given": true },
+    { "id": "q_run_seconds", "name": "Seconds the coil ran", "kind": "time", "given": true },
+    { "id": "q_copper_mass", "name": "Mass of the copper calorimeter", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_coil_adds", "from": "q_coil_power", "to": "q_stored_heat", "effect": "adds", "sound": true },
+    { "id": "l_jacket_subtracts", "from": "q_jacket_loss", "to": "q_stored_heat", "effect": "subtracts", "sound": true },
+    { "id": "l_seconds_accumulate", "from": "q_run_seconds", "to": "q_stored_heat", "effect": "adds", "sound": true },
+    { "id": "l_copper_subtracts", "from": "q_copper_mass", "to": "q_stored_heat", "effect": "subtracts", "sound": false },
+    { "id": "l_jacket_adds", "from": "q_jacket_loss", "to": "q_stored_heat", "effect": "adds", "sound": false }
+  ],
+  "note": "Heat as a stock in the physics laboratory (loc_nhss); Ishan Sheikh (npc_ishan_sheikh) runs the practical. Worked answer: the coil adds 25 x 180 = 4,500 J, the jacket takes out 15 x 180 = 2,700 J, so the stock changes by +1,800 J and ends at 4,350 + 1,800 = 6,150 J. For scale, 200 g of water and the copper hold about 870 J per degree, so that is a rise of about 7 degrees above room temperature. The hidden flow is a damp gap under the wooden lid that lets steam carry heat away and is not in the jacket figure: the logged flows give an upper bound of 6,150 J, and the real stock is lower. The honest claim is a bounded estimate."
+}

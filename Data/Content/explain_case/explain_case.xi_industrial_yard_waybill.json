@@ -1,0 +1,31 @@
+{
+  "type": "explain_case",
+  "id": "explain_case.xi_industrial_yard_waybill",
+  "family": "explain_family.xi_claim_evidence_limit",
+  "name": "The three crates held overnight at the riverside yard",
+  "subject": "interpretation",
+  "question": "cause",
+  "role": "recorder",
+  "scarce": "help",
+  "method": "method.reading_figures",
+  "brief": "For a commerce and civics exercise Ms Basu has lent your class a blanked-out specimen packet from Sen Riverside Works: an inward weighbridge slip, a crane-bay tally and a gatehouse hold endorsement for three crates of salvaged copper bus-bars from a licensed clearance. You are the recorder, writing down why the consignment was held overnight, and no one in the room can explain what a tare weight is.",
+  "claims": [
+    { "id": "c_wrong_tare", "name": "The load was held because the weighbridge slip used the plain-timber tare instead of the lead-lined crate tare, so the weights disagreed", "defensible": true },
+    { "id": "c_unsigned_release", "name": "The load was held because the assay release box on the gatehouse copy was left unsigned", "defensible": true },
+    { "id": "c_crate_missing", "name": "The load was held because one of the three crates vanished between the crane bay and the gatehouse", "defensible": false }
+  ],
+  "evidence": [
+    { "id": "e_tare_codes", "name": "The weighbridge slip prints tare code T-12, 40 kilograms for a plain pine crate, but the crane-bay tally lists T-19, 68 kilograms for a lined crate", "supports": ["c_wrong_tare"], "against": [] },
+    { "id": "e_eighty_four", "name": "The gap between the two weights is 84 kilograms, which is exactly three crates at 28 kilograms apiece, the difference between T-12 and T-19", "supports": ["c_wrong_tare"], "against": ["c_crate_missing"] },
+    { "id": "e_blank_box_six", "name": "Box 6, 'Assay release countersignature', on the gatehouse copy holds only a pencilled query mark", "supports": ["c_unsigned_release"], "against": [] },
+    { "id": "e_standing_order", "name": "Yard Standing Order 9 holds any load overnight if the weights differ by more than 50 kilograms or an assay box is unsigned", "supports": ["c_wrong_tare", "c_unsigned_release"], "against": [] },
+    { "id": "e_seal_numbers", "name": "The crane-bay log at 4.15 p.m. and the gatehouse book at 5.30 p.m. both record seals 441, 442 and 443 intact", "supports": [], "against": ["c_crate_missing"] },
+    { "id": "e_lorry_plate", "name": "The carrier was a six-wheel lorry registered in Howrah", "supports": [], "against": [] }
+  ],
+  "limitations": [
+    { "id": "l_next_morning_blanked", "name": "The next morning's release note is blacked out, so we cannot tell which defect was cleared first", "bounds": ["c_wrong_tare", "c_unsigned_release"] },
+    { "id": "l_zero_test_missing", "name": "The weighbridge's weekly zero-test slip is not in the packet, so the scale itself is untested", "bounds": ["c_wrong_tare"] },
+    { "id": "l_phone_log_missing", "name": "Nothing records whether the gatekeeper telephoned the assay clerk before locking the bay", "bounds": ["c_unsigned_release"] }
+  ],
+  "note": "Sen Riverside Works (loc_industrial_yard) is from INDIA_WORLD_BIBLE.md; it is the only place in the case that touches the Gate world, and only as the yard that handles licensed salvage (1 of the 4 Gate-adjacent cases permitted in C1). The papers are invented. Both the tare error and the missing signature would trigger Standing Order 9, so two causes are defensible. The theft claim is contradicted by the intact seals and by the weight gap, which is 84 kg, not a whole crate. The lorry plate is beside the point."
+}
