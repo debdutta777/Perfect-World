@@ -29,19 +29,25 @@ enum class EHair : uint8
 {
     SilverStreaked, FullDark, TiedBackBun, Bob, ShortWavy, Thinning, LowBun, FlatCap, Ponytail,
     /** Round 4 (R4-06), appended: close-cropped grey, pinned grey coil, saffron head-wrap, neat side parting, long plait. */
-    CloseCrop, PinnedCoil, HeadWrap, SidePart, LongPlait, ShortCurls
+    CloseCrop, PinnedCoil, HeadWrap, SidePart, LongPlait, ShortCurls,
+    /** R6-04, appended: grey hair in a low knot; a cropped buzz cut. */
+    GreyKnot, BuzzCut
 };
 enum class EGarment : uint8
 {
     Overshirt, BeltedShirt, WaistApron, Pinafore, BibApron, Workwear, Saree, Waistcoat, Kurta,
     /** Round 4 (R4-06), appended: leather work apron over rolled sleeves, open cardigan, heavy shawl, office shirt. */
-    LeatherApron, Cardigan, ShawlWrap, OfficeShirt
+    LeatherApron, Cardigan, ShawlWrap, OfficeShirt,
+    /** R6-04, appended: a hi-vis dispatch vest over a shirt. */
+    DispatchVest
 };
 enum class EAccessory : uint8
 {
     None, KeyPouch, Satchel, Clipboard, ClothBag, Glasses,
     /** Round 4 (R4-06), appended: head loupe and sleeve garters, tape measure and ledger, waist money pouch, messenger bag, furled umbrella. */
-    LoupeGarters, TapeAndLedger, MoneyPouch, MessengerBag, Umbrella, TapeAndChalk
+    LoupeGarters, TapeAndLedger, MoneyPouch, MessengerBag, Umbrella, TapeAndChalk,
+    /** R6-04, appended: a manila file folder; a handheld parcel scanner. */
+    DocumentFolder, HandScanner
 };
 enum class EBuild : uint8
 {
@@ -64,7 +70,9 @@ enum class ELook : uint8
 {
     Outfit, Mira, Anindita, Subrata, Rupa, Nirmal, Sahana,
     /** Round 4 (R4-06): the two proprietors, the vendor and the two passers-by. */
-    Debashis, Mahua, Purnima, Arun, Rekha, Prabir, Ishita, Satyajit
+    Debashis, Mahua, Purnima, Arun, Rekha, Prabir, Ishita, Satyajit,
+    /** R6-04: the alley-house and stair-flats residents. */
+    Madhabi, Arup
 };
 
 /** One row of the cast table: the stable person id, the standing height (LANE_LIFE_PLAN section B) and the look. */

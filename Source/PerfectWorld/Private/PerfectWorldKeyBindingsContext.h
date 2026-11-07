@@ -26,6 +26,7 @@ struct FKbContextActions
     const UInputAction* CycleTarget = nullptr;
     const UInputAction* Map = nullptr;
     const UInputAction* Quests = nullptr;
+    const UInputAction* Inventory = nullptr; // R88
 };
 
 /**

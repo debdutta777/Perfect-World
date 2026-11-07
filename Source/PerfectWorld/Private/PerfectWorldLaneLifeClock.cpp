@@ -12,6 +12,8 @@
 #include "PerfectWorldReadingPresenter.h"
 #include "PerfectWorldLaneLifePersistence.h"
 #include "PerfectWorldPlayerCharacter.h"
+#include "PerfectWorldBuyPresenter.h" // R88
+#include "PerfectWorldCommerceText.h" // R88
 #include "UI/SPWClockReadout.h"
 #include "Widgets/SWeakWidget.h"
 
@@ -126,7 +128,9 @@ void UPWLaneLifeSubsystem::BuildWorld()
 
 void UPWLaneLifeSubsystem::ResetWorld()
 {
+    if (auto* Buy = UPWBuyPresenter::Get(this)) Buy->Close(); // R88
     BuildWorld();
+    R88InstallCommerce(); // R88
     KnockedDoors.Reset(); // F5: an answered ring belongs to one visit; a fresh world remembers none
     for (const TWeakObjectPtr<APWDoorActor>& Weak : RegisteredDoors)
     {
@@ -197,7 +201,9 @@ bool UPWLaneLifeSubsystem::LoadWorldSlot(const std::string& Path, PerfectWorld::
 
 void UPWLaneLifeSubsystem::AdoptSavedWorld(TUniquePtr<PerfectWorld::WorldSim> Prepared)
 {
+    if (auto* Buy = UPWBuyPresenter::Get(this)) Buy->Close(); // R88
     Sim = MoveTemp(Prepared);
+    R88InstallCommerce(); // R88: restored sim must borrow commerce catalogues too
     ClockMode = PerfectWorld::TimeModeState{};
     RealMsFraction = 0.0;
     LastClockRefusal.Reset();
@@ -347,6 +353,10 @@ bool UPWLaneLifeSubsystem::UpdateClockHold()
     {
         Hold = EPWClockHold::Reading; // reading is free
     }
+    else if (UPWBuyPresenter::IsOpenIn(this)) // R88
+    {
+        Hold = EPWClockHold::Commerce;
+    }
     else if (!FApp::HasFocus())
     {
         Hold = EPWClockHold::Unfocused;
@@ -356,7 +366,7 @@ bool UPWLaneLifeSubsystem::UpdateClockHold()
     // The core's mode controller turns real time into minutes only in free roam with no overlay. Menus, the conversation and the
     // reading are its ui_paused overlay; the window losing focus is handled here, before real time is offered to it. The overlay is
     // set only when it changes: setting it drops the sub-minute carry.
-    const bool bOverlay = Hold == EPWClockHold::Menu || Hold == EPWClockHold::Conversation || Hold == EPWClockHold::Reading;
+    const bool bOverlay = Hold == EPWClockHold::Menu || Hold == EPWClockHold::Conversation || Hold == EPWClockHold::Reading || Hold == EPWClockHold::Commerce; // R88
     if (bOverlay != ClockMode.UiOpen)
     {
         PerfectWorld::SetUiPause(ClockMode, bOverlay);
@@ -424,6 +434,11 @@ void UPWLaneLifeSubsystem::EnsureClockReadout()
     // The widget reads this subsystem through a weak pointer only; it never keeps the subsystem (or any widget) alive.
     const TWeakObjectPtr<UPWLaneLifeSubsystem> Weak(this);
     ClockReadout = SNew(SPWClockReadout)
+        .WalletText_Lambda([Weak]() // R88
+        {
+            const auto* Life = Weak.Get();
+            return Life != nullptr ? PWCommerce::CmHudWalletText(Life->GetWorld()) : FText::GetEmpty();
+        })
         .TimeText(TAttribute<FText>::CreateLambda([Weak]()
         {
             const UPWLaneLifeSubsystem* Life = Weak.Get();

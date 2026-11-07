@@ -39,6 +39,8 @@ const FNlPerson NlPeople[] = {
     {TEXT("person.prabir_chatterjee"), 169.0, EPWNpcOutfit::HouseholdAdult, true},
     {TEXT("person.ishita_banerjee"), 165.0, EPWNpcOutfit::ParentHousehold, true},
     {TEXT("person.satyajit_dutta"), 167.0, EPWNpcOutfit::ShopProprietor, true},
+    {TEXT("person.madhabi_das"), 156.0, EPWNpcOutfit::HouseholdAdult, true},
+    {TEXT("person.arup_basu"), 179.0, EPWNpcOutfit::ParentHousehold, true},
 };
 
 constexpr double NlCapsuleRadius = 34.0;
@@ -400,6 +402,29 @@ bool FR52LooksFeaturesTest::RunTest(const FString& Parameters)
         { return B.Tint == FColor(38, 30, 32) && B.Size.X == 8 && B.Centre.Z + B.Size.Z * 0.5 <= 165; }));
     TestTrue(TEXT("R52 Ishita: canvas shoulder bag"), NlHasBlock(R52IshitaBlocks, [](const FPWNpcBlock& B)
         { return B.Tint == FColor(182, 166, 125) && B.Centre.Y == 29 && B.Size.Z == 24; }));
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FR64LooksFeaturesTest, "PerfectWorld.NpcLooks.ResidentsR6Features",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FR64LooksFeaturesTest::RunTest(const FString& Parameters)
+{
+    using namespace PWNpcLooksTest;
+    const auto Madhabi = NlBlocks({TEXT("person.madhabi_das"), 156, EPWNpcOutfit::HouseholdAdult, true});
+    const auto Arup = NlBlocks({TEXT("person.arup_basu"), 179, EPWNpcOutfit::ParentHousehold, true});
+    TestTrue(TEXT("R64 Madhabi: dusty-blue saree wrapped over the legs"), NlHasBlock(Madhabi, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(88, 102, 138) && B.Group == EPWNpcPartGroup::LegLeft && B.Size.Z > 0.4 * 156; }));
+    TestTrue(TEXT("R64 Madhabi: grey knot at the back, under her height"), NlHasBlock(Madhabi, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(176, 174, 172) && B.Centre.X < -9 && B.Centre.Z + B.Size.Z * 0.5 <= 156; }));
+    TestTrue(TEXT("R64 Madhabi: manila file folder at her left hip"), NlHasBlock(Madhabi, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(208, 176, 108) && B.Centre.Y < -28 && B.Size.Z == 24; }));
+    TestTrue(TEXT("R64 Arup: orange dispatch vest with a reflective band"), NlHasBlock(Arup, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(226, 118, 38) && B.Group == EPWNpcPartGroup::Body && B.Size.Y == 44; })
+        && NlHasBlock(Arup, [](const FPWNpcBlock& B) { return B.Tint == FColor(222, 226, 170); }));
+    TestTrue(TEXT("R64 Arup: close buzz cut whose top is his height"), NlHasBlock(Arup, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(30, 26, 26) && B.Size.Z == 5 && FMath::IsNearlyEqual(B.Centre.Z + B.Size.Z * 0.5, 179.0, 0.05); }));
+    TestTrue(TEXT("R64 Arup: handheld scanner at his right hip"), NlHasBlock(Arup, [](const FPWNpcBlock& B)
+        { return B.Tint == FColor(36, 38, 44) && B.Centre.Y > 27 && B.Size.Z == 14; }));
     return true;
 }
 
