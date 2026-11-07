@@ -1,7 +1,7 @@
 {
   "schema": "pw.content_manifest/1",
-  "fileCount": 226,
-  "recordCount": 285,
+  "fileCount": 228,
+  "recordCount": 287,
   "files": [
     {
       "path": "/ability_recipe/ability_recipe.agni_assay_flame.json",
@@ -916,6 +916,12 @@
       ]
     },
     {
+      "path": "/npc_schedule/npc_schedule.arup_basu.json",
+      "records": [
+        { "id": "npc_schedule.arup_basu", "kind": "npc_schedule" }
+      ]
+    },
+    {
       "path": "/npc_schedule/npc_schedule.care_worker.json",
       "records": [
         { "id": "npc_schedule.care_worker", "kind": "npc_schedule" }
@@ -937,6 +943,12 @@
       "path": "/npc_schedule/npc_schedule.ishita_banerjee.json",
       "records": [
         { "id": "npc_schedule.ishita_banerjee", "kind": "npc_schedule" }
+      ]
+    },
+    {
+      "path": "/npc_schedule/npc_schedule.madhabi_das.json",
+      "records": [
+        { "id": "npc_schedule.madhabi_das", "kind": "npc_schedule" }
       ]
     },
     {
