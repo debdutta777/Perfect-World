@@ -409,6 +409,45 @@ void R52IshitaLook(const double H, TArray<FPWNpcBlock>& Out)
     PutBlock(Out, FVector(-11, 12, 0.64 * H), FVector(1.5, 4, 0.34 * H), Canvas);
     AppendFace(H, 0, Out);
 }
+
+void R64MadhabiLook(const double H, TArray<FPWNpcBlock>& Out)
+{
+    // 156 cm; a slight 58-year-old records clerk: dusty-blue cotton saree with a cream border tucked at the waist, cream blouse,
+    // grey hair in a low knot, a manila file folder held at her left hip.
+    FNlFigure F;
+    F.Skin = F.Forearm = FColor(176, 128, 96);
+    F.Legs = FColor(88, 102, 138); F.Top = F.Sleeves = FColor(234, 228, 214);
+    F.LegW = 14; F.LegOff = 8; F.TorsoX = 19; F.TorsoY = 39; F.ArmOff = 24.5; F.ArmT = 11; F.bHands = true;
+    NlAddFigure(F, H, Out);
+    const FColor Saree(88, 102, 138), Border(226, 214, 176), Grey(176, 174, 172), Folder(208, 176, 108);
+    for (const double Side : {-1.0, 1.0})
+        PutBlock(Out, FVector(0, Side * F.LegOff, 6), FVector(F.LegW + 1, F.LegW + 1, 3), Border, LegGroup(Side), FVector(0, Side * F.LegOff, 0.48 * H));
+    PutBlock(Out, FVector(0, 0, 0.40 * H), FVector(24, 40, 0.24 * H), Saree);    // the drape over the hips and thighs
+    PutBlock(Out, FVector(12.5, 0, 0.40 * H), FVector(2, 12, 0.22 * H), Border); // the pleats' cream edge
+    PutBlock(Out, FVector(0, 0, H - 3.5), FVector(22, 22, 7), Grey);            // grey hair over the crown
+    PutBlock(Out, FVector(-11, 0, H - 11), FVector(8, 12, 12), Grey);           // in a low knot
+    PutBlock(Out, FVector(2, -29, 0.42 * H), FVector(10, 4, 24), Folder);       // the manila folder
+    AppendFace(H, 0, Out);
+}
+
+void R64ArupLook(const double H, TArray<FPWNpcBlock>& Out)
+{
+    // 179 cm; a medium build in navy trousers, a pale shirt under an orange dispatch vest with reflective bands, a close
+    // buzz cut and a handheld parcel scanner at his right hip.
+    FNlFigure F;
+    F.Skin = F.Forearm = FColor(186, 138, 102);
+    F.Legs = FColor(54, 60, 72); F.Top = F.Sleeves = FColor(226, 226, 220);
+    F.TorsoY = 42; F.ArmOff = 27; F.ArmT = 12;
+    NlAddFigure(F, H, Out);
+    const FColor Vest(226, 118, 38), Band(222, 226, 170), Hair(30, 26, 26), Scanner(36, 38, 44), Screen(120, 190, 210);
+    PutBlock(Out, FVector(0, 0, 0.66 * H), FVector(23, 44, 0.34 * H), Vest);
+    PutBlock(Out, FVector(0, 0, 0.60 * H), FVector(23.4, 44.4, 3), Band);
+    PutBlock(Out, FVector(0, 0, 0.74 * H), FVector(23.4, 44.4, 3), Band);
+    PutBlock(Out, FVector(0, 0, H - 2.5), FVector(21, 21, 5), Hair);            // the close crop, top at his height
+    PutBlock(Out, FVector(6, 28, 0.50 * H), FVector(6, 6, 14), Scanner);        // the handheld scanner
+    PutBlock(Out, FVector(9.2, 28, 0.50 * H + 3), FVector(0.6, 4, 6), Screen);  // and its screen
+    AppendFace(H, 0, Out);
+}
 } // namespace
 
 bool AppendCastLook(const ELook Look, const double H, TArray<FPWNpcBlock>& Out)
@@ -429,6 +468,8 @@ bool AppendCastLook(const ELook Look, const double H, TArray<FPWNpcBlock>& Out)
     case ELook::Prabir: R52PrabirLook(H, Out); return true;
     case ELook::Ishita: R52IshitaLook(H, Out); return true;
     case ELook::Satyajit: R66AppendTailorLook(H, Out); return true;
+    case ELook::Madhabi: R64MadhabiLook(H, Out); return true;
+    case ELook::Arup: R64ArupLook(H, Out); return true;
     default: return false;
     }
 }
