@@ -1,0 +1,14 @@
+{
+  "type": "school_followup",
+  "id": "school_followup.p2.scholarship",
+  "outcome": "all",
+  "offerId": "offer.tower.scholarship",
+  "appointmentId": "appointment.p2.scholarship",
+  "kind": "appointment",
+  "titleTextKey": "phase2.a8.scholarship.title",
+  "briefTextKey": "phase2.a8.scholarship.brief",
+  "destination": "place.school",
+  "dayOffset": 5,
+  "minute": 960,
+  "durationMinutes": 15
+}
