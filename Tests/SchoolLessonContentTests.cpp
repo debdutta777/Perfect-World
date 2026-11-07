@@ -135,7 +135,7 @@ void A1Mutations(const std::vector<ContentFile>& files)
 {
     const std::string science = "p2.science.json", school = "p2.school.json";
     A1Refused(files, science, "\"subject\": \"chemistry\"", "\"subject\": \"english\"", "does not match the bell schedule");
-    A1Refused(files, science, "\"familySubject\": \"practicals\"", "\"familySubject\": \"debate\"", "no authored case");
+    A1Refused(files, science, "\"familySubject\": \"practicals\"", "\"familySubject\": \"events\"", "no authored case"); // C1 authored a debate scribe case, so events + scribe is the unauthored pairing
     A1Refused(files, science, "\"familySubject\": \"practicals\"", "\"familySubject\": \"cooking\"", "does not teach");
     A1Refused(files, science, "\"family\": \"coordinate_family.xi_group_work\"", "\"family\": \"explain_family.xi_claim_evidence_limit\"", "wrong type");
     A1Refused(files, science, "\"period\": 5", "\"period\": 4", "two lessons bind period 4");
