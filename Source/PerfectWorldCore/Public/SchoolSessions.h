@@ -32,6 +32,9 @@ struct SchoolLessonBinding
     std::string TitleTextKey;
     std::string BriefTextKey;
     std::string RoleTextKey;
+    /** Case constraints from school_lesson content. Empty tokens leave that dimension unrestricted. */
+    std::string FamilySubject;
+    std::string Role;
     friend bool operator==(const SchoolLessonBinding&, const SchoolLessonBinding&) = default;
 };
 struct SchoolSessionCatalogues

@@ -223,7 +223,7 @@ TowerScenarioResult LoadTowerScenario(const ContentRecord& record)
         result.Error = "scenario route, floor, method, runner, or text key contract mismatch";
         return result;
     }
-    const bool isModel = HasPrefix(s.ClassroomModelId, "model.xi.");
+    const bool isModel = HasPrefix(s.ClassroomModelId, "problem_case.");
     const bool validModel = (s.Floor == 2)
         ? (isModel && HasPrefix(s.ChangedRuleKey, "p2.a7."))
         : ((s.ClassroomModelId == "none" || isModel) && (s.ChangedRuleKey.empty() || HasPrefix(s.ChangedRuleKey, "p2.a7.")));
@@ -290,6 +290,16 @@ TowerScenarioCatalogueResult LoadTowerScenarioCatalogue(const ContentDb& db, boo
         if (record.Type != "tower_scenario") continue;
         TowerScenarioResult parsed = LoadTowerScenario(record);
         if (!parsed.Ok()) { out.Issues.push_back({record.File, id, parsed.Error}); continue; }
+        if (parsed.Value->ClassroomModelId != "none")
+        {
+            // Resolve here like school_lesson: a hard schema Ref would suppress all semantic validation.
+            const auto* target = db.Find(parsed.Value->ClassroomModelId);
+            if (target == nullptr || target->Type != "problem_case")
+            {
+                out.Issues.push_back({record.File, id, "classroomModel must name an existing problem_case: " + parsed.Value->ClassroomModelId});
+                continue;
+            }
+        }
         if (!seenRoutes.insert(parsed.Value->RouteId).second)
         {
             out.Issues.push_back({record.File, id, "duplicate scenario for route \"" + parsed.Value->RouteId + "\""});
@@ -316,10 +326,12 @@ TowerScenarioCatalogueResult LoadTowerScenarioCatalogue(const ContentDb& db, boo
     return out;
 }
 
-TowerScenarioCatalogueResult LoadTowerScenarioFiles(std::span<const ContentFile> files, bool requireFullRouteCoverage)
+TowerScenarioCatalogueResult LoadTowerScenarioFiles(std::span<const ContentFile> files, bool requireFullRouteCoverage,
+    const ContentDb& classroomCases)
 {
     TowerScenarioCatalogueResult out;
     ContentDb db;
+    for (const auto* record : classroomCases.OfType("problem_case")) db.Records.emplace(record->Id, *record);
     for (const auto& file : files)
     {
         JsonParseResult parsed = ParseJson(file.Text);

@@ -7,7 +7,7 @@
   "runner": "tower.runner.changed_rule",
   "primaryMethod": "analysis",
   "allowsCombat": false,
-  "classroomModel": "model.xi.stock_and_flow_tank",
+  "classroomModel": "problem_case.xi_overhead_tank_draw",
   "changedRuleKey": "p2.a7.changed_rule.changed_rule",
   "titleKey": "p2.a7.changed_rule.title",
   "setupKey": "p2.a7.changed_rule.setup",

@@ -87,6 +87,7 @@ struct TowerScenario
     std::string RunnerId;
     TowerMethod PrimaryMethod = TowerMethod::Analysis;
     bool AllowsCombat = false;
+    /** Existing problem_case ID, or "none" outside floor 2. Resolved by catalogue validation. */
     std::string ClassroomModelId;
     std::string ChangedRuleKey;
     std::string TitleKey;
@@ -134,7 +135,7 @@ struct TowerScenarioRunResult
     std::int32_t RecoveriesUsed = 0;
 };
 
-/** Decode and validate a single tower_scenario record. */
+/** Decode a single tower_scenario's shape and local rules. Catalogue loading resolves classroomModel references. */
 [[nodiscard]] PERFECTWORLDCORE_API TowerScenarioResult LoadTowerScenario(const ContentRecord& record);
 
 /** Decode and validate all tower_scenario records in a ContentDb, including 9-route and 6-method coverage when complete. */
@@ -142,10 +143,11 @@ struct TowerScenarioRunResult
     const ContentDb& db,
     bool requireFullRouteCoverage = false);
 
-/** Standalone loader for tower_scenario ContentFiles (usable before or after TopLevelSchemas registration). */
+/** Standalone loader for tower_scenario files. Supply the problem_case records used by classroomModel. */
 [[nodiscard]] PERFECTWORLDCORE_API TowerScenarioCatalogueResult LoadTowerScenarioFiles(
     std::span<const ContentFile> files,
-    bool requireFullRouteCoverage = true);
+    bool requireFullRouteCoverage = true,
+    const ContentDb& classroomCases = {});
 
 /** Collect all localization text keys referenced by a scenario. */
 [[nodiscard]] PERFECTWORLDCORE_API std::vector<std::string> CollectTowerScenarioTextKeys(
