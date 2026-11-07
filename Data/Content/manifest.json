@@ -1,12 +1,7 @@
 {
   "schema": "pw.content_manifest/1",
-<<<<<<< HEAD
-  "fileCount": 259,
-  "recordCount": 318,
-=======
-  "fileCount": 223,
-  "recordCount": 282,
->>>>>>> content/c2-school-scenes
+  "fileCount": 271,
+  "recordCount": 330,
   "files": [
     {
       "path": "/ability_recipe/ability_recipe.agni_assay_flame.json",
