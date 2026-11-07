@@ -1,0 +1,26 @@
+{
+  "type": "investigate_case",
+  "id": "investigate_case.xi_burette_titration_drift",
+  "family": "investigate_family.xi_fault_finding",
+  "name": "The titre that came out five millilitres high",
+  "subject": "practical_science",
+  "symptom": "wrong_output",
+  "role": "experimenter",
+  "scarce": "time",
+  "method": "method.read_the_meter",
+  "brief": "In the Class XI volumetric practical, your bench is titrating 20.0 millilitres of standard oxalic acid against potassium permanganate. The board says the endpoint should fall near 20.0 millilitres, but your three concordant runs all take 24.5 millilitres. Only ten minutes remain before the laboratory assistant collects the burettes.",
+  "causes": [
+    { "id": "c_air_bubble_jet", "name": "An air bubble trapped in the burette nozzle escaped during the first run", "fault": false },
+    { "id": "c_wet_burette_rinse", "name": "The burette was rinsed with distilled water and filled without a permanganate rinse, diluting the titrant", "fault": true },
+    { "id": "c_chipped_pipette_tip", "name": "The 20-millilitre pipette tip is chipped and delivers too little oxalic acid", "fault": false },
+    { "id": "c_cold_water_bath", "name": "The conical flask was not warmed to 60 degrees Celsius before running in the permanganate", "fault": false }
+  ],
+  "tests": [
+    { "id": "t_inspect_burette_neck", "name": "Look at the burette jet for bubbles and at the upper glass wall for beads of plain water", "kind": "observe", "units": 1, "implicates": ["c_air_bubble_jet", "c_wet_burette_rinse"] },
+    { "id": "t_inspect_pipette_mark", "name": "Examine the pipette tip and ask who rinsed the burette before clamping it", "kind": "observe", "units": 2, "implicates": ["c_wet_burette_rinse", "c_chipped_pipette_tip"] },
+    { "id": "t_weigh_pipette_water", "name": "Deliver one pipetteful into a tared beaker on the top-pan balance and check the first-run offset", "kind": "measure", "units": 2, "implicates": ["c_air_bubble_jet", "c_chipped_pipette_tip"] },
+    { "id": "t_colorimeter_sample", "name": "Compare the optical density of a sample from your burette tap against the stock bottle", "kind": "measure", "units": 3, "implicates": ["c_wet_burette_rinse"] },
+    { "id": "t_warm_fresh_flask", "name": "Run a test flask heated to 65 degrees Celsius on the tripod thermometer", "kind": "swap", "units": 3, "implicates": ["c_cold_water_bath"] }
+  ],
+  "note": "Set in the chemistry laboratory at Nabapara Vidyalaya (loc_nhss). Three concordant runs at 24.5 mL rule out a one-off bubble. Rinsing the burette with distilled water and filling it without a permanganate rinse dilutes the titrant, so more of it is needed to reach the endpoint: 20.0 mL expected against 24.5 mL found is a dilution to about 20.0 / 24.5 = 82 per cent of the intended strength."
+}

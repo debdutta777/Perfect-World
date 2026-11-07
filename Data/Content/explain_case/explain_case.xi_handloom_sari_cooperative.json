@@ -1,0 +1,31 @@
+{
+  "type": "explain_case",
+  "id": "explain_case.xi_handloom_sari_cooperative",
+  "family": "explain_family.xi_claim_evidence_limit",
+  "name": "Yarn advances on the weavers' balance sheet",
+  "subject": "economics",
+  "question": "meaning",
+  "role": "researcher",
+  "scarce": "time",
+  "method": "method.reading_figures",
+  "brief": "In the Class XI commerce period your table shares one printed balance sheet from a handloom weavers' cooperative in Hooghly district. Between March and September the line 'Advances to members in dyed cotton yarn' grew from 1,20,000 rupees to 2,10,000 rupees. What does the rise mean? You are the researcher, and the period is half over.",
+  "claims": [
+    { "id": "c_festival_stock", "name": "The rise is seasonal working capital, with yarn issued to looms ahead of the festival weaving season", "defensible": true },
+    { "id": "c_slow_settlement", "name": "Part of the rise is saris waiting unsold in the city showroom, so the advances against them have not yet been cleared", "defensible": true },
+    { "id": "c_cash_misused", "name": "The line means the treasurer lent cash to members for private purposes", "defensible": false }
+  ],
+  "evidence": [
+    { "id": "e_dye_issues", "name": "Schedule B shows hanks issued in July and August were four-fifths higher than in the spring quarter", "supports": ["c_festival_stock"], "against": [] },
+    { "id": "e_last_september", "name": "The comparative column shows a similar peak last September, 1,95,000 rupees, which had cleared by November", "supports": ["c_festival_stock"], "against": [] },
+    { "id": "e_showroom_stock", "name": "Footnote 4 records 640 saris held on consignment at the city showroom awaiting October billing", "supports": ["c_slow_settlement"], "against": [] },
+    { "id": "e_settlement_days", "name": "Average settlement time from the city buyer rose from 28 days to 45 days in the summer quarter", "supports": ["c_slow_settlement"], "against": [] },
+    { "id": "e_auditor_note", "name": "The auditor certifies that every advance was issued in weighed bundles of dyed yarn against loom cards, never in cash", "supports": [], "against": ["c_cash_misused"] },
+    { "id": "e_shuttle_wood", "name": "The members' fly-shuttles are turned from seasoned tamarind wood", "supports": [], "against": [] }
+  ],
+  "limitations": [
+    { "id": "l_half_year", "name": "The statement closes on 30 September, before the main festival sales clear the showroom stock", "bounds": ["c_festival_stock", "c_slow_settlement"] },
+    { "id": "l_yarn_price", "name": "Yarn prices rose by nine per cent over the summer, which inflates the rupee figures for the same weight of thread", "bounds": ["c_festival_stock"] },
+    { "id": "l_returns_unknown", "name": "The footnote does not say how many showroom saris might come back as faulty", "bounds": ["c_slow_settlement"] }
+  ],
+  "note": "Class XI accountancy and economics, set in the commerce stream at Nabapara Vidyalaya (loc_nhss); the balance sheet is invented. The rise is 90,000 rupees, three quarters of the March figure, so one cause need not explain all of it. The misuse claim is contradicted by the auditor's note. The shuttle wood is beside the point."
+}

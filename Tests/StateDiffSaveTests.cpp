@@ -22,7 +22,8 @@ namespace
 CharacterCreationSave WeekSaveCreation()
 {
     CharacterCreator creator;
-    WeekExpect(creator.ApplyPreset("balanced_scholar").Succeeded(), "preset applies");
+    // R8-04: a Household Resources rank-0 life, matching the seed-only worlds (MakeWorldState) it saves.
+    WeekExpect(creator.ApplyPreset("independent_generalist").Succeeded(), "preset applies");
     WeekExpect(creator.SetHouseholdTemplate("parent_household").Succeeded(), "household applies");
     WeekExpect(creator.SetIdentity({"Ananya", "Sen", "she/her", "Kolkata", "Bengali"}).Succeeded(), "identity applies");
     WeekExpect(creator.StartLife().Succeeded(), "life starts");

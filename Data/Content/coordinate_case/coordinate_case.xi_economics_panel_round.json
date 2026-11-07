@@ -1,0 +1,28 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.xi_economics_panel_round",
+  "family": "coordinate_family.xi_group_work",
+  "name": "The inter-section panel on neighbourhood transport fares",
+  "subject": "debate",
+  "constraint": "budget",
+  "role": "scribe",
+  "scarce": "space",
+  "method": "method.settle_by_ledger",
+  "seam": false,
+  "brief": "Three of you represent Section A in an inter-section economics panel on feeder-auto and bus fares at the Nabapara Bus Stand: presenting the commuter survey, defending the stage-fare table, and fielding floor questions. You are the scribe, and the corridor outside the hall has nowhere quiet to spread out the sheets.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 2, "self": true },
+    { "id": "m_ishan", "name": "Ishan Sheikh", "capacity": 2, "self": false },
+    { "id": "m_tara", "name": "Tara Das", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_survey_talk", "name": "Present the fifty-rider morning commuter survey", "load": 2, "fits": ["m_ishan", "m_you"] },
+    { "id": "t_tariff_defence", "name": "Walk through the stage-fare comparison table", "load": 1, "fits": ["m_you", "m_tara"] },
+    { "id": "t_floor_qa", "name": "Note and answer questions from the floor", "load": 1, "fits": ["m_tara", "m_ishan"] }
+  ],
+  "facts": [
+    { "id": "f_handout_cap", "holder": "m_ishan", "text": "The commerce department allows only 60 rupees for panel handouts, and forty cyclostyled sheets plus card folders would cost 95 rupees", "critical": true },
+    { "id": "f_tara_stop", "holder": "m_tara", "text": "Tara rides the Route 2B auto from the canal bridge every wet morning", "critical": false }
+  ],
+  "note": "Uses the Nabapara Bus Stand (loc_bus_hub), Ishan Sheikh (npc_ishan_sheikh), and Tara Das (npc_tara_das) from INDIA_WORLD_BIBLE.md. The constraint is the 60-rupee handout reproduction budget known to Ishan."
+}

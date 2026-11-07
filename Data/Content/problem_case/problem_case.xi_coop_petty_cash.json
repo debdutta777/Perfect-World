@@ -1,0 +1,28 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_coop_petty_cash",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "How long the cooperative tin lasts",
+  "subject": "accounting",
+  "unknown": "time",
+  "role": "critic",
+  "scarce": "readings",
+  "fault": "none",
+  "method": "method.time_to_target",
+  "brief": "The Class XI commerce cooperative keeps a locked tin for geometry-box and graph-pad vouchers. On Monday morning the tin holds 2,400 rupees. Counter sales bring in 350 rupees a day and supplier vouchers take out 650 rupees a day. The cooperative's rule is that the tin must never drop below 900 rupees. A group has worked out that the tin can run for 8 days before it reaches that float. You are the critic, and there is only the daybook's one pair of readings to test it against.",
+  "quantities": [
+    { "id": "q_tin_cash", "name": "Rupees held in the petty-cash tin", "kind": "stock", "given": true },
+    { "id": "q_counter_sales", "name": "Rupees paid in at the counter a day", "kind": "inflow", "given": true },
+    { "id": "q_voucher_payments", "name": "Rupees paid out on supplier vouchers a day", "kind": "outflow", "given": true },
+    { "id": "q_working_days", "name": "Working days until the tin reaches the 900-rupee float", "kind": "time", "given": false },
+    { "id": "q_pad_price", "name": "Shop price of one graph pad", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_sales_add", "from": "q_counter_sales", "to": "q_tin_cash", "effect": "adds", "sound": true },
+    { "id": "l_vouchers_subtract", "from": "q_voucher_payments", "to": "q_tin_cash", "effect": "subtracts", "sound": true },
+    { "id": "l_days_accumulate", "from": "q_working_days", "to": "q_tin_cash", "effect": "adds", "sound": true },
+    { "id": "l_pad_price_adds", "from": "q_pad_price", "to": "q_tin_cash", "effect": "adds", "sound": false },
+    { "id": "l_vouchers_drive_sales", "from": "q_voucher_payments", "to": "q_counter_sales", "effect": "subtracts", "sound": false }
+  ],
+  "note": "Set in the commerce classroom at Nabapara Vidyalaya (loc_nhss). Worked answer: the tin loses 650 - 350 = 300 rupees a day, and it may fall from 2,400 to the 900-rupee float, a drop of 1,500 rupees, which takes 1,500 / 300 = 5 working days. The group's 8 days is the plausible mistake: 2,400 / 300 = 8 forgets that the float must stay in the tin. There is no fault in the figures."
+}

@@ -1,0 +1,313 @@
+{
+  "type": "school_scene",
+  "id": "p2.football_or_coaching",
+  "note": "Order C2 scene 3: choosing between the school football eleven on Banyan Maidan and an evening coaching/revision batch, negotiated with Tara Das, Ishan Sheikh, Amrita Basu, household adult and care worker (INDIA_WORLD_BIBLE.md named cast: Tara Das, Ishan Sheikh, Amrita Basu).",
+  "arcKind": "household_responsibility",
+  "titleKey": "school_scene.p2.football_or_coaching.title",
+  "summaryKey": "school_scene.p2.football_or_coaching.summary",
+  "institution": "institution.nabapara_vidyalaya",
+  "calendar": "calendar.nabapara_2042_43",
+  "term": "term_2",
+  "calendarSpan": "sports_day",
+  "threadTemplate": "thread.evening_rota",
+  "entryScene": "scene_maidan_squad_notice",
+  "cast": [
+    {
+      "person": "person.tara_das",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.ishan_sheikh",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.amrita_basu",
+      "role": "teacher",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.household_adult",
+      "role": "family_adult",
+      "originVariant": "family",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.care_worker",
+      "role": "care_adult",
+      "originVariant": "care_home",
+      "proposedNewCast": false
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_maidan_squad_notice",
+      "titleKey": "school_scene.p2.football_or_coaching.notice.title",
+      "promptKey": "school_scene.p2.football_or_coaching.notice.prompt",
+      "speaker": "person.tara_das",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "school_break",
+        "bellSchedule": "bell_schedule.nabapara_xi_humanities",
+        "periodIndex": -1,
+        "zone": "nhss.court",
+        "startMinute": 770,
+        "endMinute": 800
+      },
+      "conversationTopic": "topic.tara_das.football_coaching_overlap",
+      "choices": [
+        {
+          "id": "discuss_family_coaching_hours",
+          "labelKey": "school_scene.p2.football_or_coaching.notice.family.label",
+          "outcomeKey": "school_scene.p2.football_or_coaching.notice.family.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_family_coaching_clash",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.football.family_timings_raised",
+            "factSet": "school.football.talking_family_timings"
+          }
+        },
+        {
+          "id": "discuss_care_coaching_hours",
+          "labelKey": "school_scene.p2.football_or_coaching.notice.care.label",
+          "outcomeKey": "school_scene.p2.football_or_coaching.notice.care.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_care_coaching_clash",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.football.care_timings_raised",
+            "factSet": "school.football.talking_care_timings"
+          }
+        },
+        {
+          "id": "decline_football_sheet_refusal",
+          "labelKey": "school_scene.p2.football_or_coaching.notice.refuse.label",
+          "outcomeKey": "school_scene.p2.football_or_coaching.notice.refuse.outcome",
+          "costMinutes": 0,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.tara_das",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.football.kept_coaching_priority",
+            "factSet": "school.football.stayed_with_coaching"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_family_coaching_clash",
+      "titleKey": "school_scene.p2.football_or_coaching.family.title",
+      "promptKey": "school_scene.p2.football_or_coaching.family.prompt",
+      "speaker": "person.household_adult",
+      "originVariant": "family",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.player_home",
+        "startMinute": 1095,
+        "endMinute": 1155
+      },
+      "conversationTopic": "topic.household_adult.coaching_batch_swap",
+      "choices": [
+        {
+          "id": "move_coaching_to_saturday_batch",
+          "labelKey": "school_scene.p2.football_or_coaching.family.redesign.label",
+          "outcomeKey": "school_scene.p2.football_or_coaching.family.redesign.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_evening_coaching_balance",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.football.family_batch_shifted",
+            "threadEvent": "obligation_covered",
+            "factSet": "school.football.family_batch_redesigned",
+            "journalAgreementFact": "c2_football_family_redesigned"
+          }
+        },
+        {
+          "id": "alternate_football_and_coaching_days",
+          "labelKey": "school_scene.p2.football_or_coaching.family.share.label",
+          "outcomeKey": "school_scene.p2.football_or_coaching.family.share.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_evening_coaching_balance",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.football.family_days_split",
+            "threadEvent": "jobs_shared",
+            "factSet": "school.football.family_days_alternated",
+            "journalAgreementFact": "c2_football_family_shared"
+          }
+        },
+        {
+          "id": "keep_full_coaching_batch_refusal",
+          "labelKey": "school_scene.p2.football_or_coaching.family.refuse.label",
+          "outcomeKey": "school_scene.p2.football_or_coaching.family.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.football.family_coaching_unchanged",
+            "factSet": "school.football.kept_family_coaching"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_care_coaching_clash",
+      "titleKey": "school_scene.p2.football_or_coaching.care.title",
+      "promptKey": "school_scene.p2.football_or_coaching.care.prompt",
+      "speaker": "person.care_worker",
+      "originVariant": "care_home",
+      "schedule": {
+        "slotKind": "care_handover",
+        "periodIndex": -1,
+        "zone": "location.nabapara.care_home",
+        "startMinute": 850,
+        "endMinute": 895
+      },
+      "conversationTopic": "topic.care_worker.football_return_pass",
+      "choices": [
+        {
+          "id": "shift_evening_prep_for_maidan",
+          "labelKey": "school_scene.p2.football_or_coaching.care.redesign.label",
+          "outcomeKey": "school_scene.p2.football_or_coaching.care.redesign.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_evening_coaching_balance",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.football.care_prep_shifted",
+            "threadEvent": "obligation_covered",
+            "factSet": "school.football.care_prep_redesigned",
+            "journalAgreementFact": "c2_football_care_redesigned"
+          }
+        },
+        {
+          "id": "alternate_maidan_and_study_days",
+          "labelKey": "school_scene.p2.football_or_coaching.care.share.label",
+          "outcomeKey": "school_scene.p2.football_or_coaching.care.share.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_evening_coaching_balance",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.football.care_days_split",
+            "threadEvent": "jobs_shared",
+            "factSet": "school.football.care_days_alternated",
+            "journalAgreementFact": "c2_football_care_shared"
+          }
+        },
+        {
+          "id": "keep_existing_care_prep_refusal",
+          "labelKey": "school_scene.p2.football_or_coaching.care.refuse.label",
+          "outcomeKey": "school_scene.p2.football_or_coaching.care.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.football.care_prep_unchanged",
+            "factSet": "school.football.kept_care_prep"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_evening_coaching_balance",
+      "titleKey": "school_scene.p2.football_or_coaching.balance.title",
+      "promptKey": "school_scene.p2.football_or_coaching.balance.prompt",
+      "speaker": "person.ishan_sheikh",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.evening_study",
+        "startMinute": 1170,
+        "endMinute": 1230
+      },
+      "conversationTopic": "topic.ishan_sheikh.football_and_coaching_plan",
+      "choices": [
+        {
+          "id": "settle_weekend_batch_and_squad",
+          "labelKey": "school_scene.p2.football_or_coaching.balance.redesigned.label",
+          "outcomeKey": "school_scene.p2.football_or_coaching.balance.redesigned.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "redesigned",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.football.weekend_batch_settled",
+            "threadEvent": "rota_renegotiated",
+            "factSet": "school.football.settled_redesigned"
+          }
+        },
+        {
+          "id": "settle_split_weekday_training",
+          "labelKey": "school_scene.p2.football_or_coaching.balance.shared.label",
+          "outcomeKey": "school_scene.p2.football_or_coaching.balance.shared.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "shared_out",
+          "consequence": {
+            "targetPerson": "person.tara_das",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.football.split_days_settled",
+            "threadEvent": "jobs_shared",
+            "factSet": "school.football.settled_shared_out"
+          }
+        },
+        {
+          "id": "drop_back_to_coaching_only_refusal",
+          "labelKey": "school_scene.p2.football_or_coaching.balance.refuse.label",
+          "outcomeKey": "school_scene.p2.football_or_coaching.balance.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.football.returned_to_coaching_hours",
+            "factSet": "school.football.reverted_to_coaching",
+            "factCleared": "school.football.talking_family_timings"
+          }
+        }
+      ]
+    }
+  ],
+  "resolutions": [
+    "redesigned",
+    "shared_out",
+    "stayed_as_was"
+  ]
+}

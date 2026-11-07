@@ -1,0 +1,40 @@
+{
+  "type": "npc_schedule",
+  "id": "npc_schedule.madhabi_das",
+  "note": "Madhabi Das, 58, is a municipal records clerk nearing retirement who lives alone in the alley house. Every day she sleeps 22:00-05:30, washes, cooks breakfast 06:00-06:30, eats until 07:00 and reads. Monday-Friday she leaves at 08:45 for the municipal records office, works 09:00-14:30 with a half-hour lunch at her desk 12:30-13:00, and is home again at 14:45 to rest until 16:00. Saturday and Sunday she stays home: reading, cooking lunch 11:30-12:00, a protected nap 13:30-14:30 and rest until 16:00. She is awake at home through the entire private door visiting window, 16:00-19:30, every day. Supper preparation starts only at 19:30; she eats 20:00-20:30, reads, and goes to bed at 22:00. Home remains the exact door location for host admission. The office is explicitly off-lane: its 2100 cm route length is authored (ceil(2100/140) = 15 minutes each way), not a measured built path. The alley house interior is shorter, so the visible stretch from the bedside to the doorstep is retained and never padded. Stocking is the provisional coarse role for filing and sorting records.",
+  "person": "person.madhabi_das",
+  "home": "location.nabapara.alley_house",
+  "workplace": "location.nabapara.madhabi_work",
+  "door": "door.nabapara.alley_house_front",
+  "speedCmPerMinute": 140,
+  "routine": [
+    { "days": 127, "start": 0, "end": 330, "zone": "location.nabapara.alley_house", "role": "sleeping" },
+    { "days": 127, "start": 330, "end": 360, "zone": "location.nabapara.alley_house", "role": "at_home" },
+    { "days": 127, "start": 360, "end": 390, "zone": "location.nabapara.alley_house", "role": "cooking" },
+    { "days": 127, "start": 390, "end": 420, "zone": "location.nabapara.alley_house", "role": "break" },
+    { "days": 62, "start": 420, "end": 525, "zone": "location.nabapara.alley_house", "role": "reading" },
+    { "days": 62, "start": 540, "end": 750, "zone": "location.nabapara.madhabi_work", "role": "stocking" },
+    { "days": 62, "start": 750, "end": 780, "zone": "location.nabapara.madhabi_work", "role": "break" },
+    { "days": 62, "start": 780, "end": 870, "zone": "location.nabapara.madhabi_work", "role": "stocking" },
+    { "days": 62, "start": 885, "end": 960, "zone": "location.nabapara.alley_house", "role": "resting" },
+    { "days": 65, "start": 420, "end": 690, "zone": "location.nabapara.alley_house", "role": "reading" },
+    { "days": 65, "start": 690, "end": 720, "zone": "location.nabapara.alley_house", "role": "cooking" },
+    { "days": 65, "start": 720, "end": 750, "zone": "location.nabapara.alley_house", "role": "break" },
+    { "days": 65, "start": 750, "end": 810, "zone": "location.nabapara.alley_house", "role": "reading" },
+    { "days": 65, "start": 810, "end": 870, "zone": "location.nabapara.alley_house", "role": "sleeping" },
+    { "days": 65, "start": 870, "end": 960, "zone": "location.nabapara.alley_house", "role": "resting" },
+    { "days": 127, "start": 960, "end": 1020, "zone": "location.nabapara.alley_house", "role": "at_home" },
+    { "days": 127, "start": 1020, "end": 1170, "zone": "location.nabapara.alley_house", "role": "reading" },
+    { "days": 127, "start": 1170, "end": 1200, "zone": "location.nabapara.alley_house", "role": "cooking" },
+    { "days": 127, "start": 1200, "end": 1230, "zone": "location.nabapara.alley_house", "role": "break" },
+    { "days": 127, "start": 1230, "end": 1290, "zone": "location.nabapara.alley_house", "role": "reading" },
+    { "days": 127, "start": 1290, "end": 1320, "zone": "location.nabapara.alley_house", "role": "at_home" },
+    { "days": 127, "start": 1320, "end": 1440, "zone": "location.nabapara.alley_house", "role": "sleeping" }
+  ],
+  "routes": [
+    { "id": "route.madhabi.home_to_work", "from": "location.nabapara.alley_house", "to": "location.nabapara.madhabi_work", "lengthCm": 2100 }
+  ],
+  "travel": [
+    { "from": "location.nabapara.alley_house", "to": "location.nabapara.madhabi_work", "minutes": 15, "routes": ["route.madhabi.home_to_work"] }
+  ]
+}

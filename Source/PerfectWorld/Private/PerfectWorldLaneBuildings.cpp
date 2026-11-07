@@ -2,6 +2,7 @@
 
 #include "NeighbourhoodPlan.h"
 
+#include "PerfectWorldLaneEndInteriors.h"
 #include "PerfectWorldLaneInteriors.h"
 #include "PerfectWorldLaneShops.h"
 #include "PerfectWorldLaneCareInterior.h"
@@ -251,6 +252,13 @@ void BuildFull(FLaneScene& S, const FLaneBuilding& B)
         // R4-01: the unstaffed browsing shops (market_stalls_a, market_stalls_b, end_shop) keep their open stalls, brought forward out of
         // the niche the kit's wall no longer allows, and post their hours. A no-op for every other kit frontage. See PerfectWorldLaneKitStalls.h.
         BuildKitPublicFace(S, B, KitFrontage);
+    }
+    else if (LE::EndHall EndHall; IsLaneEndHall(B, EndHall))
+    {
+        // R6-05: the two masses that close the lane are public halls (community hall west, market hall east), entered through a
+        // doorless archway on the lane axis. The generic sealed ground floor is replaced for these two buildings only. See
+        // PerfectWorldLaneEndInteriors.h.
+        BuildLaneEndHall(S, B, EndHall);
     }
     else
     {

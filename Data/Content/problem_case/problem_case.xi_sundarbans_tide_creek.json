@@ -1,0 +1,28 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_sundarbans_tide_creek",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "The creek basin at the rising tide",
+  "subject": "geography",
+  "unknown": "stock",
+  "role": "recorder",
+  "scarce": "time",
+  "fault": "scale",
+  "method": "method.balance_stock",
+  "brief": "A bunded creek basin near Gosaba in the Sundarbans held 4,200 cubic metres at slack low water. During the next 6 hours of rising tide the sluice register logs 650 cubic metres an hour coming in through the lifted shutter. The off-take register for the irrigation channels shows 125 in each entry, and in small print the column is headed cubic metres per half-hour. How many cubic metres will the basin hold at the end of the 6 hours? You are the recorder, and the period is nearly over.",
+  "quantities": [
+    { "id": "q_basin_volume", "name": "Cubic metres of water in the basin", "kind": "stock", "given": false },
+    { "id": "q_sluice_inflow", "name": "Cubic metres through the sluice an hour", "kind": "inflow", "given": true },
+    { "id": "q_channel_offtake", "name": "Cubic metres into the irrigation channels an hour", "kind": "outflow", "given": true },
+    { "id": "q_tide_hours", "name": "Hours of rising tide", "kind": "time", "given": true },
+    { "id": "q_bund_height", "name": "Height of the ring bund above datum in metres", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_sluice_adds", "from": "q_sluice_inflow", "to": "q_basin_volume", "effect": "adds", "sound": true },
+    { "id": "l_offtake_subtracts", "from": "q_channel_offtake", "to": "q_basin_volume", "effect": "subtracts", "sound": true },
+    { "id": "l_hours_accumulate", "from": "q_tide_hours", "to": "q_basin_volume", "effect": "adds", "sound": true },
+    { "id": "l_bund_adds", "from": "q_bund_height", "to": "q_basin_volume", "effect": "adds", "sound": false },
+    { "id": "l_offtake_adds", "from": "q_channel_offtake", "to": "q_basin_volume", "effect": "adds", "sound": false }
+  ],
+  "note": "Sundarbans tidal hydrology for Class XI geography; Gosaba is a real island in the delta. Worked answer: the off-take of 125 cubic metres per half-hour is 125 x 2 = 250 cubic metres an hour. The basin gains (650 - 250) = 400 cubic metres an hour, over 6 hours that is 400 x 6 = 2,400, and the basin ends at 4,200 + 2,400 = 6,600 cubic metres. The scale fault is the mixed units: reading 125 as an hourly figure would give (650 - 125) x 6 = 3,150 more and a final 7,350 cubic metres, which is wrong by 750."
+}

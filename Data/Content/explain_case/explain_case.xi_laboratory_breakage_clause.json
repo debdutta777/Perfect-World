@@ -1,0 +1,31 @@
+{
+  "type": "explain_case",
+  "id": "explain_case.xi_laboratory_breakage_clause",
+  "family": "explain_family.xi_claim_evidence_limit",
+  "name": "Who pays for the cracked burette",
+  "subject": "interpretation",
+  "question": "judgement",
+  "role": "author",
+  "scarce": "sources",
+  "method": "method.source_criticism",
+  "brief": "In the chemistry laboratory at Nabapara Vidyalaya the burette on Bench 7 cracked at the stopcock collar during a titration, and the breakage slip has to be settled. You hold the issue register, the laboratory rules and the bench notebook. Should Bench 7 pay? You are the author of the group's judgement, and each further paper means a walk to the lab assistant's room.",
+  "claims": [
+    { "id": "c_no_charge", "name": "Bench 7 should not pay for the burette, because the flaw was recorded before the burette was issued", "defensible": true },
+    { "id": "c_late_notice_fee", "name": "Bench 7 should pay the half-rate late-notice charge, because it reported the crack only after two titrations", "defensible": true },
+    { "id": "c_full_price", "name": "Bench 7 should pay the full replacement price because it dropped the burette on the floor", "defensible": false }
+  ],
+  "evidence": [
+    { "id": "e_register_asterisk", "name": "The assistant's issue register has a pencilled asterisk against Burette 14: 'faint star-line near stopcock collar'", "supports": ["c_no_charge"], "against": [] },
+    { "id": "e_rule_four_a", "name": "Rule 4(a) says glassware that fails from a flaw noted at issue is written off to the store, not to the student deposit", "supports": ["c_no_charge"], "against": [] },
+    { "id": "e_found_in_clamp", "name": "The assistant found the burette upright in its clamp at 11.25, seeping at the collar and not shattered", "supports": ["c_no_charge"], "against": ["c_full_price"] },
+    { "id": "e_rule_four_b", "name": "Rule 4(b) says a student who sees a defect must call the assistant before running titrant, or a 50 per cent late-notice charge applies", "supports": ["c_late_notice_fee"], "against": [] },
+    { "id": "e_two_titres", "name": "The bench notebook records two completed titres before the seeping stopcock was brought to the counter at 11.22", "supports": ["c_late_notice_fee"], "against": [] },
+    { "id": "e_amber_bottle", "name": "The bench tray also held a 250 millilitre amber bottle of permanganate solution", "supports": [], "against": [] }
+  ],
+  "limitations": [
+    { "id": "l_ran_two_titres", "name": "Two full titrations were run before the crack was reported, which is what Rule 4(b) penalises", "bounds": ["c_no_charge"] },
+    { "id": "l_store_already_knew", "name": "The assistant had already pencilled the flaw at issue, so the late report told the store nothing new", "bounds": ["c_late_notice_fee"] },
+    { "id": "l_waiver_book", "name": "The sheet leaves out the head's term-end waiver book, where breaches of this kind are often excused", "bounds": ["c_no_charge", "c_late_notice_fee"] }
+  ],
+  "note": "Set in the chemistry laboratory at Nabapara Vidyalaya (loc_nhss); the rules, register and slip are invented. The two defensible claims are compatible: the store bears the cost of the flawed glass, and the bench may still owe a charge for the late report. The floor-drop claim is contradicted by the burette standing in its clamp. The amber bottle is beside the point."
+}

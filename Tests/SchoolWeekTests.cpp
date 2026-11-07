@@ -34,6 +34,10 @@ int main(int argc, char** argv)
     }
     world.DayLoop = firstDay;
     P2CExpect(!world.Clock.AdvanceTo(firstDay.Now).Rejected, "align test baseline clock");
+    // As the reducer does on every time path (R8-03/R8-04), the allowance settles over exactly the interval the clock moved.
+    const CommerceStateResult settled = SettleAllowance(world.Commerce, world.Commerce.AllowanceSettledThrough, world.Clock.Now());
+    P2CExpect(settled.Ok(), "the allowance settles with the clock");
+    world.Commerce = settled.State;
     WorldSim nextWeek(world, MaxEventsPerAdvance, cats.Day);
     P2CExpect(nextWeek.Submit({CommandSource::System, AdvanceTime{CalendarDayStartInstant(7) + 360 - firstDay.Now}}).Accepted, "advance to next week");
     world = nextWeek.State();

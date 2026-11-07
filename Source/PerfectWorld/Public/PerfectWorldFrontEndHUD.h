@@ -37,6 +37,8 @@ public:
 
     /** F3: the quests key while playing pauses straight onto the quest window. */
     void OpenQuestWindow();
+    void OpenInventoryWindow(); // R88: same pause flow, opened directly by the binding store
+    bool R88TakeInventoryRequest() { const bool Value = bR88InventoryRequested; bR88InventoryRequested = false; return Value; }
 
     /** Resets the creator to a fresh draft and opens the first creation page. */
     void BeginNewCreation();
@@ -90,4 +92,5 @@ private:
 
     /** The slot the running life saves to, or -1 when it has none yet. */
     int32 ActiveSlot = -1;
+    bool bR88InventoryRequested = false;
 };

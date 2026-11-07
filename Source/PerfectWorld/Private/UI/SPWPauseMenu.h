@@ -7,7 +7,7 @@
 
 class SBox;
 
-/** The in-world pause menu: Resume, Today (the day's journal), Quests, Settings, Save, Return to Title, Quit. */
+/** The in-world pause menu: Resume, Today, Quests, Inventory (R88), Settings, Save, Return to Title, Quit. */
 class SPWPauseMenu : public SCompoundWidget
 {
 public:
@@ -21,6 +21,8 @@ public:
 
     /** The space the menu lays out in (the viewport, or a test's override); shared with the swapped-in panels. */
     static FVector2D PauseSpaceOf(const TWeakPtr<SWidget>& Self);
+    void OpenInventory(bool bFromWorld = false); // R88
+    TSharedPtr<class SPWInventoryPanel> R88GetInventory() const { return R88InventoryPanel; }
 
 private:
     enum class EPendingExit : uint8
@@ -41,6 +43,7 @@ private:
     /** F3: the quest window; opened from the menu, or straight away when the quests key paused the game (closing then resumes play). */
     void OpenQuests(bool bFromWorld);
     void CloseQuests();
+    void CloseInventory(); // R88
     /** F4: settings (with the Controls tab) while playing; closing returns focus to the Settings entry. */
     void OpenSettings();
     void CloseSettings();
@@ -50,6 +53,8 @@ private:
     TSharedPtr<SWidget> MenuContent;
     TSharedPtr<SWidget> TodayButton;
     TSharedPtr<SWidget> QuestsButton;
+    TSharedPtr<SWidget> R88InventoryButton;
+    TSharedPtr<class SPWInventoryPanel> R88InventoryPanel;
     TSharedPtr<SWidget> SettingsButton;
     TSharedPtr<SWidget> ReturnToTitleButton;
     TSharedPtr<SWidget> QuitButton;
@@ -59,6 +64,7 @@ private:
     bool bQuestsOpen = false;
     bool bQuestsFromWorld = false;
     bool bSettingsOpen = false;
+    bool bR88InventoryFromWorld = false;
     FText Status;
     bool bStatusIsError = false;
 };

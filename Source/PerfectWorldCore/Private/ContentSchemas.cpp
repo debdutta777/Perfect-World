@@ -2,9 +2,13 @@
 
 #include "CharacterCreation.h"
 #include "CommerceContent.h"
+#include "SchoolFollowupContent.h"
 #include "ContentSchemaBuilders.h"
 #include "SchoolLessonContent.h"
 #include "FaridaSchedule.h"
+#include "SchoolLifeContent.h"
+#include "TowerScenarioContent.h"
+#include "TutorialContent.h"
 
 #include <algorithm>
 #include <array>
@@ -224,7 +228,8 @@ const std::vector<const TypeSchema*>& TopLevelSchemas()
                                                        &AssessmentPaperSchema(), &AbilityRecipeSchema(),
                                                        &ThreadTemplateSchema(), &NpcScheduleSchema(),
                                                        &R82CommerceItemSchema(), &R82CommerceShopSchema(), &R82CommerceFundingSchema(),
-                                                       &SchoolLessonSchema()};
+                                                       &R93TutorialSchema(), &SchoolSceneSchema(), &TowerScenarioSchema(),
+                                                        &SchoolFollowupSchema(), &SchoolLessonSchema()};
     return all;
 }
 
@@ -292,6 +297,10 @@ void CheckSemantics(const ContentDb& db, std::vector<ContentIssue>& issues)
     CheckThreadSemantics(db, issues);
     ValidateNpcScheduleSemantics(db, issues);
     ValidateCommerceContentSemantics(db, issues);
+    ValidateSchoolSceneSemantics(db, issues);
+    ValidateTowerScenarioSemantics(db, issues);
+    ValidateSchoolFollowupSemantics(db, issues);
+    ValidateTutorialContentSemantics(db, issues);
     ValidateSchoolLessonSemantics(db, issues);
     for (const ContentRecord* skill : db.OfType("skill"))
         SeedCheck(issues, *skill, "xpByRank");

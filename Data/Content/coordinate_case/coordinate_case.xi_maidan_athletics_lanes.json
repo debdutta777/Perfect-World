@@ -1,0 +1,29 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.xi_maidan_athletics_lanes",
+  "family": "coordinate_family.xi_group_work",
+  "name": "Marking the 200-metre lanes on the Banyan Maidan",
+  "subject": "events",
+  "constraint": "capacity",
+  "role": "treasurer",
+  "scarce": "space",
+  "method": "method.split_the_list",
+  "seam": true,
+  "brief": "Four of you are laying out the Saturday morning inter-house heats on the Banyan Maidan: wheeling the lime marker along the curves, pegging the staggered start strings, and writing out the lane-draw board. You keep the sports-fund tally, and morning walkers plus a junior football kick-about leave almost no clear turf to meet.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 2, "self": true },
+    { "id": "m_ishan", "name": "Ishan Sheikh", "capacity": 2, "self": false },
+    { "id": "m_tara", "name": "Tara Das", "capacity": 1, "self": false },
+    { "id": "m_nasrin", "name": "Nasrin Khatun", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_lime_wheel", "name": "Wheel the wet-lime hopper around the four lane curves", "load": 2, "fits": ["m_ishan", "m_you"] },
+    { "id": "t_stagger_pegs", "name": "Measure and peg the 200-metre stagger offsets", "load": 1, "fits": ["m_tara", "m_you"] },
+    { "id": "t_heat_board", "name": "Chalk the heat numbers and lane draws on the blackboard", "load": 1, "fits": ["m_nasrin", "m_ishan"] }
+  ],
+  "facts": [
+    { "id": "f_tara_ankle", "holder": "m_tara", "text": "Tara taped her ankle before the district trials and must not push the heavy lime hopper", "critical": true },
+    { "id": "f_nasrin_chalk", "holder": "m_nasrin", "text": "Nasrin has two boxes of dustless coloured chalk from the games cupboard", "critical": false }
+  ],
+  "note": "Uses the Banyan Maidan (loc_banyan_maidan), Tara Das (npc_tara_das) and Ishan Sheikh (npc_ishan_sheikh) from INDIA_WORLD_BIBLE.md. The constraint is capacity: Tara's taped ankle means she cannot push the heavy lime hopper, which only talking to her shows, so the work must be rebalanced. The seam: the pegged staggers are measured in metres and the lane-draw board assumes lane widths in feet."
+}

@@ -45,6 +45,8 @@ FText AgreementText(const FString& ShortTextKey)
         if (Is(TEXT("mahua_saha.sort_promised"))) return NSLOCTEXT("PerfectWorldJournal", "AgrMahuaSort", "Help sort loose screws one quiet afternoon.");
         if (Is(TEXT("prabir_chatterjee.lane_stories_agreed"))) return NSLOCTEXT("PerfectWorldJournal", "AgrPrabirStories", "Talk about the lane with Prabir another afternoon.");
         if (Is(TEXT("ishita_banerjee.quiet_evening_agreed"))) return NSLOCTEXT("PerfectWorldJournal", "AgrIshitaEvening", "Another quiet evening talking with Ishita.");
+        if (Is(TEXT("madhabi_das.ward_records_agreed"))) return NSLOCTEXT("PerfectWorldJournal", "AgrMadhabiRecords", "Talk about the old ward records with Madhabi another evening.");
+        if (Is(TEXT("arup_basu.parcel_round_agreed"))) return NSLOCTEXT("PerfectWorldJournal", "AgrArupRound", "Hear about Arup's parcel round another evening.");
         if (Is(TEXT("satyajit_dutta.bring_garment_agreed"))) return NSLOCTEXT("PerfectWorldJournal", "AgrTailorGarment", "Bring a garment to discuss alterations. No order placed.");
     }
     return NSLOCTEXT("PerfectWorldJournal", "AgrFallback", "An agreement you made.");

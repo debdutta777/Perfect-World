@@ -108,9 +108,30 @@ std::vector<std::pair<std::string, std::uint64_t>> RefSections(const WorldState&
     R4JJournal.N(w.Journal.Encounters.size());
     for (const auto& row : w.Journal.Encounters)
         R4JJournal.I(row.Day), R4JJournal.S(row.PersonId), R4JJournal.I(row.FirstMetMinute);
+    // R8-04 commerce: every CommerceState field in declaration order; all twelve slots; receipt kinds by stable name.
+    const CommerceState& c = w.Commerce;
+    RefBytes R84Commerce;
+    R84Commerce.I(c.WalletPaise);
+    R84Commerce.N(c.Inventory.size());
+    for (const CommerceStack& slot : c.Inventory)
+        R84Commerce.S(slot.ItemId), R84Commerce.I(slot.Quantity);
+    R84Commerce.I(c.Funding.HouseholdResourcesRank), R84Commerce.I(c.Funding.StartingWalletPaise), R84Commerce.I(c.Funding.WeeklyAllowancePaise);
+    R84Commerce.I(c.InitialisedAt), R84Commerce.I(c.AllowanceSettledThrough), R84Commerce.I(c.NextAllowanceDue);
+    R84Commerce.U(c.TransactionRevision);
+    R84Commerce.N(c.RecentReceipts.size());
+    for (const CommerceReceipt& r : c.RecentReceipts)
+    {
+        R84Commerce.S(r.Kind == CommerceReceiptKind::Allowance ? "allowance" : "purchase");
+        R84Commerce.U(r.Revision), R84Commerce.I(r.At), R84Commerce.S(r.ShopId), R84Commerce.S(r.ItemId), R84Commerce.I(r.Quantity);
+        R84Commerce.I(r.UnitPricePaise), R84Commerce.I(r.TotalPaise), R84Commerce.I(r.BalanceBeforePaise), R84Commerce.I(r.BalanceAfterPaise);
+    }
+    R84Commerce.U(c.FoldedReceiptCount), R84Commerce.U(c.FoldedThroughRevision);
+    R84Commerce.I(c.FoldedCreditsPaise), R84Commerce.I(c.FoldedDebitsPaise);
+    R84Commerce.I(c.NextTeaEligibleAt), R84Commerce.I(c.NextConsumptionEligibleAt);
     return {{"meta", RefFnv1a(meta.Data)},   {"clock", RefFnv1a(clock.Data)}, {"flags", RefFnv1a(flags.Data)},
             {"gates", RefFnv1a(gates.Data)}, {"rng", RefFnv1a(rng.Data)},     {"dayloop", RefFnv1a(dayloop.Data)},
-            {"conversations", RefFnv1a(conversations.Data)}, {"doors", RefFnv1a(doors.Data)}, {"journal", RefFnv1a(R4JJournal.Data)}};
+            {"conversations", RefFnv1a(conversations.Data)}, {"doors", RefFnv1a(doors.Data)}, {"journal", RefFnv1a(R4JJournal.Data)},
+            {"commerce", RefFnv1a(R84Commerce.Data)}};
 }
 
 std::uint64_t RefWorld(const WorldState& w)
@@ -218,6 +239,9 @@ WorldState EdgeWorld()
 // R6-01 re-pin 2026-10-20 with PW_PRINT_GOLDEN=1 (RefWorld agreed): only three appended closed doors (alley_house_front,
 // stair_flats_front, corner_stalls_front), 26 -> 29; hash v6, schema 9. HandBuilt 0x832d0686a39d0654 -> 0x31c97d2112adf354;
 // Edge 0x978f919032309840 -> 0xbf05781049342e08.
-constexpr std::uint64_t GoldenHandBuilt = 0x31c97d2112adf354ULL;
-constexpr std::uint64_t GoldenEdge = 0xbf05781049342e08ULL;
+// R8-04 re-pin 2026-10-24 with PW_PRINT_GOLDEN=1 (RefWorld agreed section by section first): WorldHashVersion 7 appends the
+// commerce section (the default CommerceState of both hand-built worlds), schema 10. HandBuilt 0x31c97d2112adf354 ->
+// 0x4669aa0cccdecff5; Edge 0xbf05781049342e08 -> 0x69bf838b3ba0a9e9. The nine earlier section encodings are unchanged.
+constexpr std::uint64_t GoldenHandBuilt = 0x4669aa0cccdecff5ULL;
+constexpr std::uint64_t GoldenEdge = 0x69bf838b3ba0a9e9ULL;
 } // namespace

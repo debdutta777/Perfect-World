@@ -5,6 +5,7 @@
 #include "GateSites.h"
 #include "IdentityRegistry.h"
 #include "WorldReducer.h"
+#include "WorldCountdown.h"
 
 #include <algorithm>
 #include <utility>
@@ -149,10 +150,10 @@ void CountdownSettle(const WorldState& after, CountdownState& state, const WeekR
             state.Requests.push_back({state.Player, record.Person, RelationshipActKind::Help, record.Id, record.Start + record.Minutes});
     }
     state.PaddedMinutes += padded;
-    if (now == state.End)
+    if (now >= state.End)
     {
         state.Closed = true;
-        CountdownAddLedger(state, now, CountdownLedgerKind::Closed, "exam_morning", state.PaddedMinutes, 0);
+        CountdownAddLedger(state, state.End, CountdownLedgerKind::Closed, "exam_morning", state.PaddedMinutes, 0);
     }
     // Chronological whatever the batching: the days resolved in one call or several give the same state.
     std::stable_sort(state.Ledger.begin() + static_cast<std::ptrdiff_t>(firstNew), state.Ledger.end(),
@@ -162,7 +163,11 @@ void CountdownSettle(const WorldState& after, CountdownState& state, const WeekR
 }
 } // namespace
 
-CountdownOpenResult OpenCountdown(const WorldState& world, const CountdownContext& context, const DayLoopCatalogues& catalogues)
+namespace
+{
+CountdownOpenResult R95OpenCountdown(const WorldState& world, const CountdownContext& context,
+                                    const DayLoopCatalogues& catalogues, bool allowLate,
+                                    std::vector<DomainEvent>* events = nullptr)
 {
     CountdownOpenResult result;
     result.World = world;
@@ -174,12 +179,26 @@ CountdownOpenResult OpenCountdown(const WorldState& world, const CountdownContex
         return refuse(CountdownMakeIssue(CountdownError::MissingCatalogue, "no activity catalogue"));
     if (catalogues.Calendar == nullptr)
         return refuse(CountdownMakeIssue(CountdownError::MissingCalendar, "the school calendar is what keeps the ten days from being marked as absences"));
-    if (const CountdownIssue busy = CountdownCheckWorld(world); !busy.Ok())
-        return refuse(busy);
-    // Design choice (M4-03): the countdown opens at exactly 18:00 on Awakening Day. Whatever the tutorial dungeon leaves of the day
-    // before that is the integration's to spend (the day loop's evening phase starts at 18:00 as well).
-    if (world.Clock.Now() != CountdownStartInstant())
+    if (!allowLate)
+    {
+        if (const CountdownIssue busy = CountdownCheckWorld(world); !busy.Ok())
+            return refuse(busy);
+    }
+    // R95: RunTimeTo can reach this boundary while completing an activity:
+    // DayLoop.Now already follows the clock, but the runner is cleared only
+    // when the staged completed day is published. The scheduled opening must
+    // not wait for that player action. The outer transaction validates its
+    // final day; the public SynchroniseWorldCountdown adapter validates complete
+    // snapshots before using this lower-level boundary entry.
+    else if (world.Clock.Now() != world.DayLoop.Now)
+        return refuse(CountdownMakeIssue(CountdownError::InvalidWorld, "world and day clocks disagree"));
+    // Keep the standalone exact-minute API; the world adapter can catch up after
+    // a make-up without moving the fixed span or any authored opportunity window.
+    const GameInstant now = world.Clock.Now();
+    if ((!allowLate && now != CountdownStartInstant()) || now < CountdownStartInstant())
         return refuse(CountdownMakeIssue(CountdownError::NotAtStart, "the countdown opens at 18:00 on Awakening Day"));
+    if (now >= CountdownEndInstant())
+        return refuse(CountdownMakeIssue(CountdownError::BeyondExam, "cannot create a new countdown after the fixed deadline"));
     if (const CountdownIssue bad = CountdownCheckContext(context); !bad.Ok())
         return refuse(bad);
     if (catalogues.Calendar->AwakeningDay != CalendarDayOfInstant(CountdownStartInstant()) ||
@@ -188,6 +207,9 @@ CountdownOpenResult OpenCountdown(const WorldState& world, const CountdownContex
     if (const std::vector<std::string> issues = ValidateCountdownContent(*catalogues.Activities); !issues.empty())
         return refuse(CountdownMakeIssue(CountdownError::ContentInvalid, issues.front()));
     const CountdownWorldEventDef& event = CountdownWorldEvent();
+    if (now >= CountdownInstantOf(event.Day, event.Minute))
+        return refuse(CountdownMakeIssue(CountdownError::InvalidWorld,
+            "missing scheduled countdown; cannot invent a past Gate onset"));
     const std::string gate(event.GateId);
     if (world.Gates.find(gate) != world.Gates.end())
         return refuse(CountdownMakeIssue(CountdownError::EventExists, gate));
@@ -207,12 +229,35 @@ CountdownOpenResult OpenCountdown(const WorldState& world, const CountdownContex
         record.Id = std::string(def.Id);
         record.Person = person;
         record.Start = CountdownInstantOf(def.Day, def.StartMinute);
+        if (allowLate && record.Start < now)
+            continue; // No invented history or reward for commitments before entry.
         record.Minutes = def.Minutes;
         state.Obligations.push_back(std::move(record));
     }
-    CountdownAddLedger(state, state.Start, CountdownLedgerKind::Opened, "awakening_evening", static_cast<std::int32_t>(state.Obligations.size()), 0);
+    CountdownAddLedger(state, now, CountdownLedgerKind::Opened, "awakening_evening", static_cast<std::int32_t>(state.Obligations.size()), 0);
 
-    // The event is the Gate system's: registered contained, its onset on the clock. It cannot be prevented.
+    // R95: the reducer boundary is already inside a command. Reuse the Gate
+    // rules on a staged copy without recursively entering WorldSim::Submit.
+    if (allowLate)
+    {
+        WorldState staged = world;
+        std::vector<DomainEvent> stagedEvents;
+        const Command commands[] = {
+            {CommandSource::System, GateRegister{gate, event.Rank, GateStatus::Contained}},
+            {CommandSource::System, GateScheduleOnset{gate, state.EventOnset}}};
+        for (const auto& command : commands)
+        {
+            if (const auto issue = ValidateGateCommand(staged, command))
+                return refuse(CountdownMakeIssue(CountdownError::ContentInvalid, issue->Code));
+            ApplyGateCommand(staged, command, stagedEvents);
+        }
+        result.World = std::move(staged);
+        result.State = std::move(state);
+        if (events != nullptr)
+            events->insert(events->end(), stagedEvents.begin(), stagedEvents.end());
+        return result;
+    }
+    // Preserve the standalone API's two Gate commands and their sequence.
     WorldSim sim(world);
     const CommandResult registered = sim.Submit({CommandSource::System, GateRegister{gate, event.Rank, GateStatus::Contained}});
     const CommandResult scheduled =
@@ -222,6 +267,41 @@ CountdownOpenResult OpenCountdown(const WorldState& world, const CountdownContex
     result.World = sim.State();
     result.State = std::move(state);
     return std::move(result);
+}
+} // namespace
+
+CountdownOpenResult OpenCountdown(const WorldState& world, const CountdownContext& context, const DayLoopCatalogues& catalogues)
+{
+    return R95OpenCountdown(world, context, catalogues, false);
+}
+
+CountdownOpenResult OpenCountdownAtCurrentTime(const WorldState& world, const CountdownContext& context,
+                                               const DayLoopCatalogues& catalogues, std::vector<DomainEvent>* events)
+{
+    return R95OpenCountdown(world, context, catalogues, true, events);
+}
+
+CountdownTakeResult ObserveCountdownTime(const WorldState& world, const CountdownState& state)
+{
+    CountdownTakeResult result;
+    result.State = state;
+    if (!IsWorldDayInStep(world) || world.Clock.Now() < state.Start)
+    {
+        result.Issue = CountdownMakeIssue(CountdownError::InvalidWorld, "countdown and clocks disagree");
+        return result;
+    }
+    if (state.Closed)
+        return result;
+    for (const auto& block : CountdownReservedBlocks(state))
+    {
+        if (block.Start < world.Clock.Now())
+        {
+            result.Issue = CountdownMakeIssue(CountdownError::PlanConflict, block.Id);
+            return result;
+        }
+    }
+    CountdownSettle(world, result.State, WeekResult{}, 0);
+    return result;
 }
 
 CountdownResolveResult ResolveCountdownDays(const WorldState& world, const CountdownState& state, const std::vector<WeekDayPlan>& days,

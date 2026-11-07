@@ -54,16 +54,26 @@ void TestExplainRules(const std::vector<ContentFile>& files)
     // The variation must be real, and every listed value used.
     Refuses(files, {{"xi_annex_notice", "\"role\": \"recorder\"", "\"role\": \"author\""}, {"xi_annex_notice", "\"scarce\": \"sources\"", "\"scarce\": \"time\""}},
             "repeats the question, role and scarce resource of explain_case.xi_annex_notice");
-    Refuses(files, {{"xi_annex_notice", "\"subject\": \"interpretation\"", "\"subject\": \"literature\""}}, "no case uses the subject interpretation the family lists");
-    Refuses(files, {{"xi_tea_price", "\"method\": \"method.reading_figures\"", "\"method\": \"method.source_criticism\""}},
+    Refuses(files, {{"xi_annex_notice", "\"subject\": \"interpretation\"", "\"subject\": \"literature\""},
+                    {"xi_laboratory_breakage_clause", "\"subject\": \"interpretation\"", "\"subject\": \"literature\""},
+                    {"xi_polyclinic_queue_circular", "\"subject\": \"interpretation\"", "\"subject\": \"literature\""},
+                    {"xi_industrial_yard_waybill", "\"subject\": \"interpretation\"", "\"subject\": \"literature\""}},
+            "no case uses the subject interpretation the family lists");
+    Refuses(files, {{"xi_tea_price", "\"method\": \"method.reading_figures\"", "\"method\": \"method.source_criticism\""},
+                    {"xi_bus_hub_pass_tariff", "\"method\": \"method.reading_figures\"", "\"method\": \"method.source_criticism\""},
+                    {"xi_old_market_fish_ice", "\"method\": \"method.reading_figures\"", "\"method\": \"method.source_criticism\""},
+                    {"xi_handloom_sari_cooperative", "\"method\": \"method.reading_figures\"", "\"method\": \"method.source_criticism\""},
+                    {"xi_industrial_yard_waybill", "\"method\": \"method.reading_figures\"", "\"method\": \"method.source_criticism\""}},
             "no case uses the method method.reading_figures the family lists");
     Refuses(files, {{"xi_tea_price", "\"method\": \"method.reading_figures\"", "\"method\": \"method.nope\""}}, "the method method.nope is not one of the family's methods");
 
     // Four cases for a classroom family that declares four; and at least three declared.
     std::vector<ContentFile> fewer;
+    int casesKept = 0;
     for (const ContentFile& file : files)
     {
-        if (file.Path.find("xi_tea_price") == std::string::npos)
+        // The library now holds more than the declared minimum, so keep three explain cases and every other file.
+        if (file.Path.find("explain_case.") == std::string::npos || ++casesKept <= 3)
             fewer.push_back(file);
     }
     Check(HasIssue(LoadContent(fewer), "needs at least 4 cases, found 3"), "three cases are too few for a family that declares four");
@@ -107,9 +117,16 @@ void TestInvestigateRules(const std::vector<ContentFile>& files)
     Refuses(files, {{InvestigateFamilyFile, "\"minTests\": 4", "\"minTests\": 6"}}, "the family template wants 6 to 6 tests, found 5");
     Refuses(files, {{InvestigateFamilyFile, "\"maxCauses\": 5", "\"maxCauses\": 4"}}, "the family template wants 4 to 4 causes, found 5");
     Refuses(files, {{InvestigateFamilyFile, "\"symptoms\": [\"wrong_output\", ", "\"symptoms\": ["}}, "its symptom wrong_output is not a symptom the family allows");
-    Refuses(files, {{"xi_cash_total", "\"scarce\": \"time\"", "\"scarce\": \"access\""}}, "no case uses the scarce resource time the family lists");
+    Refuses(files, {{"xi_cash_total", "\"scarce\": \"time\"", "\"scarce\": \"access\""},
+                    {"xi_burette_titration_drift", "\"scarce\": \"time\"", "\"scarce\": \"access\""},
+                    {"xi_water_cooler_relay", "\"scarce\": \"time\"", "\"scarce\": \"access\""},
+                    {"xi_sewing_machine_bobbin", "\"scarce\": \"time\"", "\"scarce\": \"access\""}}, "no case uses the scarce resource time the family lists");
     Refuses(files, {{"xi_classroom_fan", "\"method\": \"method.half_split\"", "\"method\": \"method.read_the_meter\""},
-                    {"xi_cash_total", "\"method\": \"method.half_split\"", "\"method\": \"method.read_the_meter\""}},
+                    {"xi_cash_total", "\"method\": \"method.half_split\"", "\"method\": \"method.read_the_meter\""},
+                    {"xi_timetable_csv_import", "\"method\": \"method.half_split\"", "\"method\": \"method.read_the_meter\""},
+                    {"xi_marksheet_rank_script", "\"method\": \"method.half_split\"", "\"method\": \"method.read_the_meter\""},
+                    {"xi_microscope_lamp_stage", "\"method\": \"method.half_split\"", "\"method\": \"method.read_the_meter\""},
+                    {"xi_bell_timer_contactor", "\"method\": \"method.half_split\"", "\"method\": \"method.read_the_meter\""}},
             "no case uses the method method.half_split the family lists");
     Refuses(files, {{"xi_cash_total", "\"role\": \"critic\"", "\"role\": \"inspector\""}, {"xi_cash_total", "\"scarce\": \"time\"", "\"scarce\": \"access\""},
                     {"xi_cash_total", "\"symptom\": \"wrong_output\"", "\"symptom\": \"intermittent\""}, {"xi_bicycle_lamp", "\"role\": \"repairer\"", "\"role\": \"inspector\""}},
@@ -144,9 +161,17 @@ void TestCoordinateRules(const std::vector<ContentFile>& files)
     Refuses(files, {{CoordinateFamilyFile, "\"minMembers\": 3", "\"minMembers\": 4"}}, "the family template wants 4 to 4 members, found 3");
     Refuses(files, {{CoordinateFamilyFile, "\"maxTasks\": 4", "\"maxTasks\": 2"}}, "the template's minTasks is above its maxTasks");
     Refuses(files, {{CoordinateFamilyFile, "\"constraints\": [\"capacity\", ", "\"constraints\": ["}}, "its constraint capacity is not a constraint the family allows");
-    Refuses(files, {{"xi_debate_hall", "\"scarce\": \"space\"", "\"scarce\": \"time\""}}, "no case uses the scarce resource space the family lists");
+    Refuses(files, {{"xi_debate_hall", "\"scarce\": \"space\"", "\"scarce\": \"time\""},
+                    {"xi_canal_chart_survey", "\"scarce\": \"space\"", "\"scarce\": \"time\""},
+                    {"xi_economics_panel_round", "\"scarce\": \"space\"", "\"scarce\": \"time\""},
+                    {"xi_maidan_athletics_lanes", "\"scarce\": \"space\"", "\"scarce\": \"time\""},
+                    {"xi_teachers_day_programme", "\"scarce\": \"space\"", "\"scarce\": \"time\""}}, "no case uses the scarce resource space the family lists");
     Refuses(files, {{"xi_titration_report", "\"method\": \"method.run_a_check_in\"", "\"method\": \"method.split_the_list\""},
-                    {"xi_debate_hall", "\"method\": \"method.run_a_check_in\"", "\"method\": \"method.split_the_list\""}},
+                    {"xi_debate_hall", "\"method\": \"method.run_a_check_in\"", "\"method\": \"method.split_the_list\""},
+                    {"xi_autumn_drama_rehearsal", "\"method\": \"method.run_a_check_in\"", "\"method\": \"method.split_the_list\""},
+                    {"xi_history_moot_bench", "\"method\": \"method.run_a_check_in\"", "\"method\": \"method.split_the_list\""},
+                    {"xi_slide_stain_bench", "\"method\": \"method.run_a_check_in\"", "\"method\": \"method.split_the_list\""},
+                    {"xi_teachers_day_programme", "\"method\": \"method.run_a_check_in\"", "\"method\": \"method.split_the_list\""}},
             "no case uses the method method.run_a_check_in the family lists");
     Refuses(files, {{CoordinateStructureFile, "[\"assign\", \"exchange\", \"settle\", \"submit\"]", "[\"assign\", \"settle\", \"exchange\", \"submit\"]"}},
             "the coordinate structure's beats must be assign, exchange, settle, submit, in that order");
@@ -180,7 +205,7 @@ void TestCatalogueRules(const std::vector<ContentFile>& files)
 {
     const ContentLoadResult real = LoadContent(files);
     const ExplainCatalogueResult explain = LoadExplainCatalogue(real.Db);
-    Check(explain.Ok() && explain.Catalogue.Families.size() == 1 && explain.Catalogue.Families.front().Cases.size() == 4, "the real content loads as one explain family of four");
+    Check(explain.Ok() && explain.Catalogue.Families.size() == 1 && explain.Catalogue.Families.front().Cases.size() == 16, "the real content loads as one explain family of sixteen");
     const ExplainFamilyDef& eFamily = explain.Catalogue.Families.front();
     Check(eFamily.SkillId == "skill.academics" && eFamily.MinCases == 4 && eFamily.Methods.size() == 3, "the family names its skill, minimum and methods");
     const ExplainCaseDef* tram = explain.Catalogue.FindCase("explain_case.xi_tram_poem");
@@ -193,7 +218,7 @@ void TestCatalogueRules(const std::vector<ContentFile>& files)
     Check(explain.Catalogue.FindCase("explain_case.xi_nope") == nullptr && explain.Catalogue.FindFamily("explain_family.nope") == nullptr, "unknown IDs are not found");
 
     const InvestigateCatalogueResult investigate = LoadInvestigateCatalogue(real.Db);
-    Check(investigate.Ok() && investigate.Catalogue.Families.size() == 1 && investigate.Catalogue.Families.front().Cases.size() == 4, "the real content loads as one investigate family of four");
+    Check(investigate.Ok() && investigate.Catalogue.Families.size() == 1 && investigate.Catalogue.Families.front().Cases.size() == 16, "the real content loads as one investigate family of sixteen");
     const InvestigateCaseDef* fan = investigate.Catalogue.FindCase("investigate_case.xi_classroom_fan");
     Check(fan != nullptr && fan->Symptom == InvestigateSymptom::WrongOutput && fan->Role == InvestigateRole::Inspector && fan->Scarce == InvestigateScarce::Equipment &&
               fan->Causes.size() == 4 && fan->Tests.size() == 5 && fan->Tests[3].Kind == InvestigateTestKind::Measure && fan->Tests[3].Units == 2 &&
@@ -201,7 +226,7 @@ void TestCatalogueRules(const std::vector<ContentFile>& files)
           "the fan case is read");
 
     const CoordinateCatalogueResult coordinate = LoadCoordinateCatalogue(real.Db);
-    Check(coordinate.Ok() && coordinate.Catalogue.Families.size() == 1 && coordinate.Catalogue.Families.front().Cases.size() == 4, "the real content loads as one coordinate family of four");
+    Check(coordinate.Ok() && coordinate.Catalogue.Families.size() == 1 && coordinate.Catalogue.Families.front().Cases.size() == 16, "the real content loads as one coordinate family of sixteen");
     const CoordinateCaseDef* stall = coordinate.Catalogue.FindCase("coordinate_case.xi_science_stall");
     Check(stall != nullptr && stall->Constraint == CoordinateConstraint::Capacity && stall->Role == CoordinateRole::Chair && stall->Scarce == CoordinateScarce::Time && !stall->Seam &&
               stall->Members.size() == 3 && stall->Members.front().Self && stall->Tasks.size() == 3 && stall->Facts.size() == 2 && stall->Facts.front().Critical &&

@@ -55,7 +55,8 @@ void R4JMidday(WorldSim& sim)
 WorldSaveData R4JSave(const WorldState& world)
 {
     CharacterCreator creator;
-    R4JExpect(creator.ApplyPreset("balanced_scholar").Succeeded(), "preset applies");
+    // R8-04: a Household Resources rank-0 life, matching the seed-only sims (and replays) whose worlds it saves.
+    R4JExpect(creator.ApplyPreset("independent_generalist").Succeeded(), "preset applies");
     R4JExpect(creator.StartLife().Succeeded(), "life starts");
     WorldSaveData data;
     R4JExpect(BeginWorldFromCreation(creator.CaptureSave(), world.WorldSeed, data).Succeeded(), "save begins");
@@ -187,7 +188,7 @@ void R4JRoundTripAndDamage()
     const std::string text = SerializeWorldSave(data);
     WorldSaveData loaded;
     const auto result = DeserializeWorldSave(text, loaded);
-    R4JExpect(result.Succeeded() && result.SourceVersion == 9 && result.HashVerified, "v9 round trip authenticates");
+    R4JExpect(result.Succeeded() && result.SourceVersion == WorldSaveSchemaVersion && result.HashVerified, "current-schema round trip authenticates");
     R4JExpect(loaded.World.Journal == sim.State().Journal && HashWorldState(loaded.World) == HashWorldState(sim.State()) &&
               SerializeWorldSave(loaded) == text, "journal round trip is canonical and hash stable");
     const auto day = GameClock::DayNumber(0);
@@ -250,8 +251,8 @@ void R4JMigration()
     std::string old = SerializeWorldSave(data);
     const auto start = old.find(",\n    \"journal\":");
     old.erase(start, old.find("\n  }", start) - start);
-    old = R4JReplace(old, "\"schemaVersion\": 9", "\"schemaVersion\": 8");
-    old = R4JReplace(old, "\"hashVersion\": 6", "\"hashVersion\": 5");
+    old = R4JReplace(old, "\"schemaVersion\": " + std::to_string(WorldSaveSchemaVersion), "\"schemaVersion\": 8");
+    old = R4JReplace(old, "\"hashVersion\": " + std::to_string(WorldHashVersion), "\"hashVersion\": 5");
     old = R4JReplace(old, R4JHex(HashWorldState(data.World)),
         R4JHex(HashWorldStateWithDoorsText(data.World, SerialiseDoorState(data.World.Doors), 5)));
     WorldSaveData loaded;
@@ -261,7 +262,7 @@ void R4JMigration()
     const auto day = GameClock::DayNumber(sim.State().Clock.Now());
     R4JExpect(LaneJournalToday(loaded.World, day).AgreementsRemembered == LaneJournalToday(sim.State(), day).AgreementsRemembered,
               "older save retains agreements derived from facts");
-    R4JExpect(DeserializeWorldSave(SerializeWorldSave(loaded), loaded).HashVerified, "migrated world becomes certified on v9 resave");
+    R4JExpect(DeserializeWorldSave(SerializeWorldSave(loaded), loaded).HashVerified, "migrated world becomes certified on current-schema resave");
     WorldSim resumed(loaded.World);
     R4JAt(resumed, GameClock::StartOfDay(resumed.State().Clock.Now()) + 960); // 16:00, Farida serving the afternoon.
     R4JTalk(resumed, "person.farida_qadri", "choice.farida_qadri.decline_tea");
