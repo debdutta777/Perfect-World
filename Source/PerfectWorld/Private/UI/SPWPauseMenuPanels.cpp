@@ -13,7 +13,7 @@
 
 void SPWPauseMenu::OpenToday()
 {
-    if (bTodayOpen || R88InventoryPanel.IsValid() || PendingExit != EPendingExit::None) // R88
+    if (bTodayOpen || R88InventoryPanel.IsValid() || bS03PlannerOpen || PendingExit != EPendingExit::None) // R88
     {
         return;
     }
@@ -38,7 +38,7 @@ void SPWPauseMenu::CloseToday()
 
 void SPWPauseMenu::OpenQuests(const bool bFromWorld)
 {
-    if (bQuestsOpen || bTodayOpen || bSettingsOpen || R88InventoryPanel.IsValid() || PendingExit != EPendingExit::None) // R88
+    if (bQuestsOpen || bTodayOpen || bSettingsOpen || R88InventoryPanel.IsValid() || bS03PlannerOpen || PendingExit != EPendingExit::None) // R88
     {
         return;
     }
@@ -73,7 +73,7 @@ void SPWPauseMenu::CloseQuests()
 
 void SPWPauseMenu::OpenSettings()
 {
-    if (bSettingsOpen || bTodayOpen || bQuestsOpen || R88InventoryPanel.IsValid() || PendingExit != EPendingExit::None) // R88
+    if (bSettingsOpen || bTodayOpen || bQuestsOpen || R88InventoryPanel.IsValid() || bS03PlannerOpen || PendingExit != EPendingExit::None) // R88
     {
         return;
     }

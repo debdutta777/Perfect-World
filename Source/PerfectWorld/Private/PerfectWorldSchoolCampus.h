@@ -7,6 +7,7 @@
 class AActor;
 class APWSchoolBoardActor;
 class APWSchoolGateActor;
+class APWSchoolSeatActor; // S03
 class APWShopHoursSignActor;
 class UWorld;
 
@@ -169,6 +170,7 @@ struct FScSpawnResult
     AActor* BlocksActor = nullptr;
     APWSchoolGateActor* Gate = nullptr;
     APWSchoolBoardActor* Board = nullptr;
+    APWSchoolSeatActor* Seat = nullptr; // S03: "Take your seat", on the classroom's centre aisle
     int32 TextSigns = 0;
     int32 Lights = 0;
 };
