@@ -94,7 +94,8 @@ FVector APWCounterBuyActor::GetInteractionPoint() const
 
 int32 APWCounterBuyActor::GetInteractionPriority() const
 {
-    return PWShopDisplay::InteractionPriority;
+    // R810: a qualifying customer counter wins over Talk (20); cycling still pins the keeper.
+    return 25;
 }
 
 void APWCounterBuyActor::Say(APawn* By, const FText& Words)

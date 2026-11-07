@@ -444,4 +444,48 @@ bool FR89HomeKitchenRouteTest::RunTest(const FString& Parameters)
     return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FR810HomeBackDoorTest, "PerfectWorld.Home.DefaultBedroomAndWashroomLeavesClearLivingRoute",
+                                 EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FR810HomeBackDoorTest::RunTest(const FString& Parameters)
+{
+    using namespace PWHomeLayoutTest;
+    FHome R810Home;
+    BuildHome(R810Home);
+    if (!TestTrue(TEXT("opening home built"), R810Home.bBuilt)) return false;
+    const TCHAR* R810Ids[] = {TEXT("door.nabapara.home_bedroom"), TEXT("door.nabapara.home_washroom")};
+    const std::string_view R810CoreIds[] = {"door.nabapara.home_bedroom", "door.nabapara.home_washroom"};
+    for (int32 R810Index = 0; R810Index < UE_ARRAY_COUNT(R810Ids); ++R810Index)
+    {
+        const FLaneDoorSpec* R810Door = FindDoor(R810Home, R810Ids[R810Index]);
+        const auto* R810Def = PerfectWorld::FindDoor(R810CoreIds[R810Index]);
+        if (!TestTrue(TEXT("layout and core door exist"), R810Door != nullptr && R810Def != nullptr)) return false;
+        // Both start closed; exercise the default open side explicitly, as when restoring an open save.
+        const double R810Yaw = FMath::DegreesToRadians(R810Door->ClosedYaw + R810Def->PreferredSwingSide * PWDoor::OpenAngleDegrees);
+        const FVector R810Tip = R810Door->Hinge + FVector(FMath::Cos(R810Yaw), FMath::Sin(R810Yaw), 0) * PWDoor::LeafWidth;
+        double R810HingeU = 0, R810HingeV = 0, R810TipU = 0, R810TipV = 0;
+        ToLocal(R810Home.Building.Frame, R810Door->Hinge, R810HingeU, R810HingeV);
+        ToLocal(R810Home.Building.Frame, R810Tip, R810TipU, R810TipV);
+        TestTrue(R810Ids[R810Index], R810TipV > R810HingeV);
+        const double R810HalfThickness = PWDoor::LeafThickness / 2.0;
+        const FRect R810Leaf{FMath::Min(R810HingeU, R810TipU) - R810HalfThickness,
+            FMath::Max(R810HingeU, R810TipU) + R810HalfThickness,
+            FMath::Min(R810HingeV, R810TipV) - R810HalfThickness,
+            FMath::Max(R810HingeV, R810TipV) + R810HalfThickness};
+        for (const FHomeSolid& R810Solid : R810Home.Solids)
+        {
+            if (R810Solid.H1 > 5.0 && R810Solid.H0 < PWDoor::LeafHeight)
+                TestFalse(TEXT("default open leaf clears furniture"), Overlaps(R810Leaf, RectOf(R810Solid)));
+        }
+        // Across the west living-room passage, between the almirah and the bedroom opening.
+        // The old west hinge left only ~58 cm beside the almirah: too narrow for a diameter-68 capsule.
+        for (int32 R810Sample = 0; R810Sample <= 100; ++R810Sample)
+        {
+            const double R810U = 130.0 + 170.0 * R810Sample / 100.0;
+            TestTrue(TEXT("living passage clears shell and furniture"), MinDistToBodyBlocks(R810Home, R810U, 365) > HomePersonRadiusCm);
+            TestTrue(TEXT("living passage clears default open leaf"), DistToRect(R810U, 365, R810Leaf) > HomePersonRadiusCm);
+        }
+    }
+    return true;
+}
+
 #endif // WITH_DEV_AUTOMATION_TESTS && !UE_BUILD_SHIPPING

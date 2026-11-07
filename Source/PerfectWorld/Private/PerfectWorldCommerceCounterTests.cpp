@@ -1,3 +1,5 @@
+#include "PerfectWorldCommerceCounter.h"
+
 // R8-05 counter interaction (PerfectWorldCommerceCounter.h): "Buy" at a staffed counter asks the commerce seam for service and, when the
 // core says no, shows the precise reason; when it says yes the paused panel opens (not provable without a viewport, so the release of the
 // service when the panel cannot open is what is tested here; the real open is the commerce acceptance scenario's). Run in the editor
@@ -8,9 +10,9 @@
 #if WITH_DEV_AUTOMATION_TESTS && !UE_BUILD_SHIPPING
 
 #include "Engine/World.h"
-#include "PerfectWorldCommerceCounter.h"
 #include "PerfectWorldCommerceTestSupport.h"
 #include "PerfectWorldInteractionComponent.h"
+#include "PerfectWorldNpcCharacter.h"
 #include "PerfectWorldPlayerCharacter.h"
 #include "PerfectWorldShopDisplayActor.h"
 
@@ -74,7 +76,8 @@ bool FCmCounterBasicsTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("the verb is Buy"), Fixture.Counter->GetInteractionVerb(Fixture.Player).ToString(), FString(TEXT("Buy")));
     TestEqual(TEXT("the shop"), Fixture.Counter->GetShopId(), FName(TEXT("shop.shanti_chai")));
     TestTrue(TEXT("the tag"), Fixture.Counter->ActorHasTag(FName(TEXT("interaction.nabapara.shanti_chai.buy"))));
-    TestEqual(TEXT("the same priority as the browse shelf (below people)"), Fixture.Counter->GetInteractionPriority(), PWShopDisplay::InteractionPriority);
+    TestTrue(TEXT("Buy outranks Talk at a qualifying counter"), Fixture.Counter->GetInteractionPriority() > PWNpc::InteractionPriority);
+    TestTrue(TEXT("browse shelves still rank below Talk"), PWShopDisplay::InteractionPriority < PWNpc::InteractionPriority);
     TestTrue(TEXT("the point is the counter's"), Fixture.Counter->GetInteractionPoint().Equals(FVector(1200.0, 300.0, 0.0), 0.5));
 
     // No seam installed: a plain message, no crash, no panel.
@@ -204,6 +207,33 @@ bool FCmCounterReleaseTest::RunTest(const FString& Parameters)
     Fixture.Press();
     TestEqual(TEXT("requested again"), Fake->BeginCalls, 2);
     TestEqual(TEXT("released again"), Fake->EndCalls, 2);
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FR810CounterSelectionTest, "PerfectWorld.CommerceUi.Counter.BuyFirstAndTalkStaysPinned",
+                                 EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FR810CounterSelectionTest::RunTest(const FString& Parameters)
+{
+    FCmCounterFixture R810Fixture;
+    if (!TestTrue(TEXT("transient world fixture"), R810Fixture.Ok())) return false;
+    // No map, viewport or conversation session: use the real selector with the keeper behind the customer point.
+    FActorSpawnParameters R810Spawn;
+    R810Spawn.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    APWNpcCharacter* R810Keeper = R810Fixture.World->SpawnActor<APWNpcCharacter>(FVector(170, 0, 500), FRotator::ZeroRotator, R810Spawn);
+    if (!TestTrue(TEXT("keeper spawned"), R810Keeper != nullptr)) return false;
+    R810Fixture.Interaction->TickComponent(0.1f, LEVELTICK_All, &R810Fixture.Interaction->PrimaryComponentTick);
+    TestTrue(TEXT("Talk qualifies before the counter is in reach"), R810Fixture.Interaction->GetTarget() == R810Keeper);
+    R810Fixture.Counter->SetActorLocation(FVector(120, 0, 500));
+    R810Fixture.Interaction->TickComponent(0.1f, LEVELTICK_All, &R810Fixture.Interaction->PrimaryComponentTick);
+    TestTrue(TEXT("approach selects Buy without cycling"), R810Fixture.Interaction->GetTarget() == R810Fixture.Counter);
+    TestEqual(TEXT("visible Buy verb"), R810Fixture.Interaction->GetPromptVerb().ToString(), FString(TEXT("Buy")));
+    TestFalse(TEXT("cycling hint remains available"), R810Fixture.Interaction->GetCycleHint().IsEmpty());
+    R810Fixture.Interaction->CycleTarget();
+    TestTrue(TEXT("Talk remains selectable"), R810Fixture.Interaction->GetTarget() == R810Keeper);
+    R810Fixture.Interaction->TickComponent(0.1f, LEVELTICK_All, &R810Fixture.Interaction->PrimaryComponentTick);
+    TestTrue(TEXT("higher Buy priority does not steal pinned Talk"), R810Fixture.Interaction->GetTarget() == R810Keeper);
+    R810Fixture.Interaction->CycleTarget();
+    TestTrue(TEXT("cycling returns to Buy"), R810Fixture.Interaction->GetTarget() == R810Fixture.Counter);
     return true;
 }
 
