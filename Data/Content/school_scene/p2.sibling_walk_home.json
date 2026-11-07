@@ -1,0 +1,314 @@
+{
+  "type": "school_scene",
+  "id": "p2.sibling_walk_home",
+  "note": "Order C2 scene 8: a younger sibling or junior care-home resident needs walking home from the primary lane when afternoon road repairs delay the route, coordinated with Tara Das, Amrita Basu, Mira Sen, household adult and care worker (INDIA_WORLD_BIBLE.md named cast: Tara Das, Amrita Basu, Mira Sen).",
+  "arcKind": "household_responsibility",
+  "titleKey": "school_scene.p2.sibling_walk_home.title",
+  "summaryKey": "school_scene.p2.sibling_walk_home.summary",
+  "institution": "institution.nabapara_vidyalaya",
+  "calendar": "calendar.nabapara_2042_43",
+  "term": "term_2",
+  "calendarSpan": "unit_test_2",
+  "threadTemplate": "thread.evening_rota",
+  "entryScene": "scene_afternoon_gate_message",
+  "cast": [
+    {
+      "person": "person.tara_das",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.amrita_basu",
+      "role": "teacher",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.mira_sen",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.household_adult",
+      "role": "family_adult",
+      "originVariant": "family",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.care_worker",
+      "role": "care_adult",
+      "originVariant": "care_home",
+      "proposedNewCast": false
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_afternoon_gate_message",
+      "titleKey": "school_scene.p2.sibling_walk_home.message.title",
+      "promptKey": "school_scene.p2.sibling_walk_home.message.prompt",
+      "speaker": "person.tara_das",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "timetable_period",
+        "bellSchedule": "bell_schedule.nabapara_xi_humanities",
+        "periodIndex": 4,
+        "subject": "sociology",
+        "zone": "nhss.room_xi_humanities",
+        "startMinute": 855,
+        "endMinute": 900
+      },
+      "conversationTopic": "topic.tara_das.primary_lane_diversion",
+      "choices": [
+        {
+          "id": "coordinate_family_sibling_walk",
+          "labelKey": "school_scene.p2.sibling_walk_home.message.family.label",
+          "outcomeKey": "school_scene.p2.sibling_walk_home.message.family.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_family_walk_home_rota",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.sibling_walk.family_plan_started",
+            "factSet": "school.sibling_walk.planning_family_pickup"
+          }
+        },
+        {
+          "id": "coordinate_care_junior_walk",
+          "labelKey": "school_scene.p2.sibling_walk_home.message.care.label",
+          "outcomeKey": "school_scene.p2.sibling_walk_home.message.care.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_care_walk_home_handover",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.sibling_walk.care_plan_started",
+            "factSet": "school.sibling_walk.planning_care_escort"
+          }
+        },
+        {
+          "id": "keep_afternoon_independent_refusal",
+          "labelKey": "school_scene.p2.sibling_walk_home.message.refuse.label",
+          "outcomeKey": "school_scene.p2.sibling_walk_home.message.refuse.outcome",
+          "costMinutes": 0,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.tara_das",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.sibling_walk.kept_usual_route",
+            "factSet": "school.sibling_walk.kept_solo_walk"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_family_walk_home_rota",
+      "titleKey": "school_scene.p2.sibling_walk_home.family.title",
+      "promptKey": "school_scene.p2.sibling_walk_home.family.prompt",
+      "speaker": "person.household_adult",
+      "originVariant": "family",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.player_home",
+        "startMinute": 1095,
+        "endMinute": 1155
+      },
+      "conversationTopic": "topic.household_adult.primary_gate_walk_home",
+      "choices": [
+        {
+          "id": "pair_dismissal_walk_with_errand",
+          "labelKey": "school_scene.p2.sibling_walk_home.family.redesign.label",
+          "outcomeKey": "school_scene.p2.sibling_walk_home.family.redesign.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_evening_walk_settlement",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.sibling_walk.family_route_combined",
+            "threadEvent": "obligation_covered",
+            "factSet": "school.sibling_walk.family_route_redesigned",
+            "journalAgreementFact": "c2_sibling_family_redesigned"
+          }
+        },
+        {
+          "id": "alternate_pickup_days_at_home",
+          "labelKey": "school_scene.p2.sibling_walk_home.family.share.label",
+          "outcomeKey": "school_scene.p2.sibling_walk_home.family.share.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_evening_walk_settlement",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.sibling_walk.family_days_alternated",
+            "threadEvent": "jobs_shared",
+            "factSet": "school.sibling_walk.family_days_shared",
+            "journalAgreementFact": "c2_sibling_family_shared"
+          }
+        },
+        {
+          "id": "leave_pickup_unchanged_refusal",
+          "labelKey": "school_scene.p2.sibling_walk_home.family.refuse.label",
+          "outcomeKey": "school_scene.p2.sibling_walk_home.family.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.sibling_walk.family_hours_kept",
+            "factSet": "school.sibling_walk.family_kept_old_route"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_care_walk_home_handover",
+      "titleKey": "school_scene.p2.sibling_walk_home.care.title",
+      "promptKey": "school_scene.p2.sibling_walk_home.care.prompt",
+      "speaker": "person.care_worker",
+      "originVariant": "care_home",
+      "schedule": {
+        "slotKind": "care_handover",
+        "periodIndex": -1,
+        "zone": "location.nabapara.care_home",
+        "startMinute": 850,
+        "endMinute": 895
+      },
+      "conversationTopic": "topic.care_worker.junior_resident_walk_home",
+      "choices": [
+        {
+          "id": "log_paired_primary_lane_escort",
+          "labelKey": "school_scene.p2.sibling_walk_home.care.redesign.label",
+          "outcomeKey": "school_scene.p2.sibling_walk_home.care.redesign.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_evening_walk_settlement",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.sibling_walk.care_escort_redesigned",
+            "threadEvent": "obligation_covered",
+            "factSet": "school.sibling_walk.care_route_redesigned",
+            "journalAgreementFact": "c2_sibling_care_redesigned"
+          }
+        },
+        {
+          "id": "alternate_junior_escort_with_seniors",
+          "labelKey": "school_scene.p2.sibling_walk_home.care.share.label",
+          "outcomeKey": "school_scene.p2.sibling_walk_home.care.share.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_evening_walk_settlement",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.sibling_walk.care_days_alternated",
+            "threadEvent": "jobs_shared",
+            "factSet": "school.sibling_walk.care_days_shared",
+            "journalAgreementFact": "c2_sibling_care_shared"
+          }
+        },
+        {
+          "id": "keep_separate_return_walk_refusal",
+          "labelKey": "school_scene.p2.sibling_walk_home.care.refuse.label",
+          "outcomeKey": "school_scene.p2.sibling_walk_home.care.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.sibling_walk.care_walk_unchanged",
+            "factSet": "school.sibling_walk.care_kept_old_route"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_evening_walk_settlement",
+      "titleKey": "school_scene.p2.sibling_walk_home.settlement.title",
+      "promptKey": "school_scene.p2.sibling_walk_home.settlement.prompt",
+      "speaker": "person.mira_sen",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.evening_study",
+        "startMinute": 1170,
+        "endMinute": 1230
+      },
+      "conversationTopic": "topic.mira_sen.afternoon_lane_walking_group",
+      "choices": [
+        {
+          "id": "confirm_combined_afternoon_walk",
+          "labelKey": "school_scene.p2.sibling_walk_home.settlement.redesigned.label",
+          "outcomeKey": "school_scene.p2.sibling_walk_home.settlement.redesigned.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "redesigned",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.sibling_walk.combined_walk_settled",
+            "threadEvent": "rota_renegotiated",
+            "factSet": "school.sibling_walk.settled_redesigned"
+          }
+        },
+        {
+          "id": "confirm_alternating_lane_rosters",
+          "labelKey": "school_scene.p2.sibling_walk_home.settlement.shared.label",
+          "outcomeKey": "school_scene.p2.sibling_walk_home.settlement.shared.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "shared_out",
+          "consequence": {
+            "targetPerson": "person.tara_das",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.sibling_walk.shared_roster_settled",
+            "threadEvent": "jobs_shared",
+            "factSet": "school.sibling_walk.settled_shared_out"
+          }
+        },
+        {
+          "id": "return_to_solo_dismissal_refusal",
+          "labelKey": "school_scene.p2.sibling_walk_home.settlement.refuse.label",
+          "outcomeKey": "school_scene.p2.sibling_walk_home.settlement.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.mira_sen",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.sibling_walk.returned_to_solo_hours",
+            "factSet": "school.sibling_walk.reverted_to_solo_walk",
+            "factCleared": "school.sibling_walk.planning_family_pickup"
+          }
+        }
+      ]
+    }
+  ],
+  "resolutions": [
+    "redesigned",
+    "shared_out",
+    "stayed_as_was"
+  ]
+}

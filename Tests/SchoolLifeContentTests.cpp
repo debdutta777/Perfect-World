@@ -88,7 +88,8 @@ void ExpectRefused(const std::vector<ContentFile>& files, std::string_view arcId
 
 void AuditCatalogueAndSimulation(const SchoolSceneCatalogue& catalogue, const SchoolTextTable& textTable)
 {
-    Expect(catalogue.Arcs.size() == 3, "exactly three Phase 2 A4 school_scene arcs load");
+    // An arc kind is a category: several scenes may share one (C2 added twelve), but every kind keeps its A4 anchor arc.
+    Expect(catalogue.Arcs.size() >= 3, "at least the three Phase 2 A4 school_scene arcs load");
     Expect(catalogue.FindArc(SchoolArcChangingFriendshipId) != nullptr, "p2.changing_friendship exists");
     Expect(catalogue.FindArc(SchoolArcGroupProjectId) != nullptr, "p2.group_project exists");
     Expect(catalogue.FindArc(SchoolArcHouseholdResponsibilityId) != nullptr, "p2.household_responsibility exists");

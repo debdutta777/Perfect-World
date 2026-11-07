@@ -143,7 +143,6 @@ std::string ValidateSchoolSceneShape(const JsonValue& data) { return ValidateObj
 
 void ValidateSchoolSceneSemantics(const ContentDb& db, std::vector<ContentIssue>& issues)
 {
-    std::set<SchoolArcKind> seenKinds;
     for (const ContentRecord* record : db.OfType(SchoolSceneTypeName))
     {
         if (const std::string shapeErr = ValidateObjectShape(record->Data, SchoolSceneSchema(), &db); !shapeErr.empty())
@@ -155,8 +154,6 @@ void ValidateSchoolSceneSemantics(const ContentDb& db, std::vector<ContentIssue>
         const SchoolSceneArc arc = ParseSchoolSceneRecord(*record, problems);
         for (const std::string& p : problems) issues.push_back({record->File, record->Id, p});
         for (const std::string& p : ValidateSchoolSceneArc(arc, db)) issues.push_back({record->File, record->Id, p});
-        if (!seenKinds.insert(arc.Kind).second)
-            issues.push_back({record->File, record->Id, "duplicate school_scene arcKind " + std::string(SchoolArcKindName(arc.Kind))});
     }
 }
 } // namespace ContentSchema
