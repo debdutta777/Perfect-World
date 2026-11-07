@@ -1,7 +1,7 @@
 {
   "schema": "pw.content_manifest/1",
-  "fileCount": 228,
-  "recordCount": 287,
+  "fileCount": 259,
+  "recordCount": 318,
   "files": [
     {
       "path": "/ability_recipe/ability_recipe.agni_assay_flame.json",
@@ -1192,6 +1192,138 @@
       ]
     },
     {
+      "path": "/school_followup/school_followup.p2.apprenticeship.json",
+      "records": [
+        { "id": "school_followup.p2.apprenticeship", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.community_practice.json",
+      "records": [
+        { "id": "school_followup.p2.community_practice", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.declined.json",
+      "records": [
+        { "id": "school_followup.p2.declined", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.deferred.json",
+      "records": [
+        { "id": "school_followup.p2.deferred", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.enterprise.json",
+      "records": [
+        { "id": "school_followup.p2.enterprise", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.equipment.json",
+      "records": [
+        { "id": "school_followup.p2.equipment", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.licence.json",
+      "records": [
+        { "id": "school_followup.p2.licence", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.middle.json",
+      "records": [
+        { "id": "school_followup.p2.middle", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.patronage.json",
+      "records": [
+        { "id": "school_followup.p2.patronage", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.poor.json",
+      "records": [
+        { "id": "school_followup.p2.poor", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.public_portfolio.json",
+      "records": [
+        { "id": "school_followup.p2.public_portfolio", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.rest.json",
+      "records": [
+        { "id": "school_followup.p2.rest", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.retake.json",
+      "records": [
+        { "id": "school_followup.p2.retake", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.scholarship.json",
+      "records": [
+        { "id": "school_followup.p2.scholarship", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.school.json",
+      "records": [
+        { "id": "school_followup.p2.school", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.strong.json",
+      "records": [
+        { "id": "school_followup.p2.strong", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.study.json",
+      "records": [
+        { "id": "school_followup.p2.study", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.study_bridge.json",
+      "records": [
+        { "id": "school_followup.p2.study_bridge", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.withdrawn.json",
+      "records": [
+        { "id": "school_followup.p2.withdrawn", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_scene/p2.changing_friendship.json",
+      "records": [
+        { "id": "p2.changing_friendship", "kind": "school_scene" }
+      ]
+    },
+    {
+      "path": "/school_scene/p2.group_project.json",
+      "records": [
+        { "id": "p2.group_project", "kind": "school_scene" }
+      ]
+    },
+    {
+      "path": "/school_scene/p2.household_responsibility.json",
+      "records": [
+        { "id": "p2.household_responsibility", "kind": "school_scene" }
+      ]
+    },
+    {
       "path": "/school_type/school_type.government.json",
       "records": [
         { "id": "school_type.government", "kind": "school_type" }
@@ -1369,6 +1501,60 @@
       "path": "/thread_template/thread.sports_day_rival.json",
       "records": [
         { "id": "thread.sports_day_rival", "kind": "thread_template" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.alliance.json",
+      "records": [
+        { "id": "p2.alliance", "kind": "tower_scenario" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.changed_rule.json",
+      "records": [
+        { "id": "p2.changed_rule", "kind": "tower_scenario" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.design.json",
+      "records": [
+        { "id": "p2.design", "kind": "tower_scenario" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.encounter.json",
+      "records": [
+        { "id": "p2.encounter", "kind": "tower_scenario" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.mediation.json",
+      "records": [
+        { "id": "p2.mediation", "kind": "tower_scenario" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.pace.json",
+      "records": [
+        { "id": "p2.pace", "kind": "tower_scenario" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.stabilise.json",
+      "records": [
+        { "id": "p2.stabilise", "kind": "tower_scenario" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.supply.json",
+      "records": [
+        { "id": "p2.supply", "kind": "tower_scenario" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.team_transit.json",
+      "records": [
+        { "id": "p2.team_transit", "kind": "tower_scenario" }
       ]
     },
     {
