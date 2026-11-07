@@ -23,20 +23,20 @@ void APWAwakeningPadActor::Configure(APWAwakeningFloorActor* InFloor, const PWAw
 
 FText APWAwakeningPadActor::GetInteractionVerb(const APawn* /*By*/) const
 {
-    const APWAwakeningFloorActor* Owner = Floor.Get();
-    return Owner != nullptr ? Owner->GetPadVerb(Spec) : FText::GetEmpty();
+    const APWAwakeningFloorActor* FloorActor = Floor.Get();
+    return FloorActor != nullptr ? FloorActor->GetPadVerb(Spec) : FText::GetEmpty();
 }
 
 int32 APWAwakeningPadActor::GetInteractionPriority() const
 {
-    const APWAwakeningFloorActor* Owner = Floor.Get();
-    return Owner != nullptr ? Owner->GetPadPriority(Spec) : 21;
+    const APWAwakeningFloorActor* FloorActor = Floor.Get();
+    return FloorActor != nullptr ? FloorActor->GetPadPriority(Spec) : 21;
 }
 
 void APWAwakeningPadActor::Interact(APawn* By)
 {
-    if (APWAwakeningFloorActor* Owner = Floor.Get())
+    if (APWAwakeningFloorActor* FloorActor = Floor.Get())
     {
-        Owner->HandlePad(Spec, By);
+        FloorActor->HandlePad(Spec, By);
     }
 }

@@ -58,7 +58,7 @@ FLinearColor A6StateColour(const PerfectWorld::AptitudeFacetState State)
     return Style.TextSecondary;
 }
 
-bool A6IsBack(const FKey& Key)
+bool A6PIsBack(const FKey& Key)
 {
     return Key == EKeys::Escape || Key == EKeys::Gamepad_FaceButton_Right || Key == EKeys::Gamepad_Special_Right || Key == EKeys::Gamepad_LeftShoulder;
 }
@@ -552,7 +552,7 @@ FReply SPWSchoolProjection::OnKeyDown(const FGeometry& MyGeometry, const FKeyEve
 {
     constexpr float A6ScrollStep = 72.0f;
     const FKey Key = InKeyEvent.GetKey();
-    if (A6IsBack(Key))
+    if (A6PIsBack(Key))
     {
         if (!InKeyEvent.IsRepeat())
         {
