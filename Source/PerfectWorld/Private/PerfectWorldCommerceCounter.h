@@ -42,8 +42,8 @@ int32 SpawnCommerceCounters(UWorld& World, const TArray<FCmCounterSpec>& Specs);
  * when the core says no, the player reads the reason as a notice (closed, keeper away, finishing a step, not enough money, bag full);
  * when it says yes, the paused buy panel opens (UPWBuyPresenter). The actor decides nothing and holds no price.
  *
- * Priority 15 like the browse shelf, so the keeper (Talk, 20) keeps the prompt when both are in reach; the player cycles between them with
- * the interaction component's cycle key, which also shows the hint.
+ * R810: priority 25 makes Buy visible before the keeper's Talk (20) when the counter qualifies under the shared targeting rules.
+ * The player can still cycle to Talk; the interaction component pins that choice while it remains eligible.
  */
 UCLASS()
 class PERFECTWORLD_API APWCounterBuyActor : public AActor, public IPWInteractable
