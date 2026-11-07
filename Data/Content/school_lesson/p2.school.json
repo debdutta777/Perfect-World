@@ -1,0 +1,225 @@
+{
+  "type": "school_lesson",
+  "id": "p2.school",
+  "scope": "school",
+  "calendar": "calendar.nabapara_2042_43",
+  "closures": [
+    {
+      "kind": "weekend",
+      "textKey": "phase2.a1.closure.weekend.generic"
+    },
+    {
+      "kind": "holiday",
+      "textKey": "phase2.a1.closure.holiday.generic"
+    },
+    {
+      "kind": "break",
+      "textKey": "phase2.a1.closure.break.generic"
+    },
+    {
+      "kind": "outside_year",
+      "textKey": "phase2.a1.closure.outside_year.generic"
+    },
+    {
+      "kind": "outside_term",
+      "textKey": "phase2.a1.closure.outside_term.generic"
+    },
+    {
+      "kind": "holiday",
+      "textKey": "phase2.a1.closure.holiday.independence_day",
+      "span": "independence_day"
+    },
+    {
+      "kind": "holiday",
+      "textKey": "phase2.a1.closure.holiday.gandhi_jayanti",
+      "span": "gandhi_jayanti"
+    },
+    {
+      "kind": "holiday",
+      "textKey": "phase2.a1.closure.holiday.durga_puja",
+      "span": "durga_puja"
+    },
+    {
+      "kind": "holiday",
+      "textKey": "phase2.a1.closure.holiday.kali_puja_diwali",
+      "span": "kali_puja_diwali"
+    },
+    {
+      "kind": "holiday",
+      "textKey": "phase2.a1.closure.holiday.christmas",
+      "span": "christmas"
+    },
+    {
+      "kind": "holiday",
+      "textKey": "phase2.a1.closure.holiday.republic_day",
+      "span": "republic_day"
+    },
+    {
+      "kind": "holiday",
+      "textKey": "phase2.a1.closure.holiday.saraswati_puja",
+      "span": "saraswati_puja"
+    },
+    {
+      "kind": "break",
+      "textKey": "phase2.a1.closure.break.puja_vacation",
+      "span": "puja_vacation"
+    },
+    {
+      "kind": "break",
+      "textKey": "phase2.a1.closure.break.winter_break",
+      "span": "winter_break"
+    },
+    {
+      "kind": "break",
+      "textKey": "phase2.a1.closure.break.ten_days",
+      "span": "ten_days"
+    }
+  ],
+  "explanations": [
+    {
+      "code": "closed_day",
+      "textKey": "phase2.a1.unavailable.closed_day.reason",
+      "recoveryKey": "phase2.a1.unavailable.closed_day.recovery"
+    },
+    {
+      "code": "period_used",
+      "textKey": "phase2.a1.unavailable.period_used.reason",
+      "recoveryKey": "phase2.a1.unavailable.period_used.recovery"
+    },
+    {
+      "code": "busy",
+      "textKey": "phase2.a1.unavailable.busy.reason",
+      "recoveryKey": "phase2.a1.unavailable.busy.recovery"
+    },
+    {
+      "code": "not_at_bell",
+      "textKey": "phase2.a1.unavailable.not_at_bell.reason",
+      "recoveryKey": "phase2.a1.unavailable.not_at_bell.recovery"
+    },
+    {
+      "code": "not_attending",
+      "textKey": "phase2.a1.unavailable.not_attending.reason",
+      "recoveryKey": "phase2.a1.unavailable.not_attending.recovery"
+    },
+    {
+      "code": "history_full",
+      "textKey": "phase2.a1.unavailable.history_full.reason",
+      "recoveryKey": "phase2.a1.unavailable.history_full.recovery"
+    },
+    {
+      "code": "invalid_state",
+      "textKey": "phase2.a1.unavailable.invalid_state.reason",
+      "recoveryKey": "phase2.a1.unavailable.invalid_state.recovery"
+    },
+    {
+      "code": "foreground_limit",
+      "textKey": "phase2.a1.unavailable.foreground_limit.reason",
+      "recoveryKey": "phase2.a1.unavailable.foreground_limit.recovery"
+    },
+    {
+      "code": "not_secure",
+      "textKey": "phase2.a1.unavailable.not_secure.reason",
+      "recoveryKey": "phase2.a1.unavailable.not_secure.recovery"
+    },
+    {
+      "code": "missed_absent",
+      "textKey": "phase2.a1.unavailable.missed_absent.reason",
+      "recoveryKey": "phase2.a1.unavailable.missed_absent.recovery"
+    },
+    {
+      "code": "missed_attended",
+      "textKey": "phase2.a1.unavailable.missed_attended.reason",
+      "recoveryKey": "phase2.a1.unavailable.missed_attended.recovery"
+    },
+    {
+      "code": "after_absence",
+      "textKey": "phase2.a1.unavailable.after_absence.reason",
+      "recoveryKey": "phase2.a1.unavailable.after_absence.recovery"
+    }
+  ],
+  "goals": [
+    {
+      "structure": "model",
+      "goal": "understand_model",
+      "textKey": "phase2.a1.goal.model.understand_model"
+    },
+    {
+      "structure": "model",
+      "goal": "test_measurements",
+      "textKey": "phase2.a1.goal.model.test_measurements"
+    },
+    {
+      "structure": "model",
+      "goal": "explain_to_group",
+      "textKey": "phase2.a1.goal.model.explain_to_group"
+    },
+    {
+      "structure": "explain",
+      "goal": "argue_claim",
+      "textKey": "phase2.a1.goal.explain.argue_claim"
+    },
+    {
+      "structure": "explain",
+      "goal": "weigh_evidence",
+      "textKey": "phase2.a1.goal.explain.weigh_evidence"
+    },
+    {
+      "structure": "explain",
+      "goal": "state_limits",
+      "textKey": "phase2.a1.goal.explain.state_limits"
+    },
+    {
+      "structure": "investigate",
+      "goal": "inspect",
+      "textKey": "phase2.a1.goal.investigate.inspect"
+    },
+    {
+      "structure": "investigate",
+      "goal": "measure",
+      "textKey": "phase2.a1.goal.investigate.measure"
+    },
+    {
+      "structure": "investigate",
+      "goal": "swap_parts",
+      "textKey": "phase2.a1.goal.investigate.swap_parts"
+    },
+    {
+      "structure": "coordinate",
+      "goal": "organise_work",
+      "textKey": "phase2.a1.goal.coordinate.organise_work"
+    },
+    {
+      "structure": "coordinate",
+      "goal": "hear_everyone",
+      "textKey": "phase2.a1.goal.coordinate.hear_everyone"
+    },
+    {
+      "structure": "coordinate",
+      "goal": "settle_constraint",
+      "textKey": "phase2.a1.goal.coordinate.settle_constraint"
+    },
+    {
+      "structure": "coordinate",
+      "goal": "submit_cleanly",
+      "textKey": "phase2.a1.goal.coordinate.submit_cleanly"
+    }
+  ],
+  "modes": [
+    {
+      "mode": "foreground",
+      "titleKey": "phase2.a1.mode.foreground.title",
+      "briefKey": "phase2.a1.mode.foreground.brief"
+    },
+    {
+      "mode": "routine",
+      "titleKey": "phase2.a1.mode.routine.title",
+      "briefKey": "phase2.a1.mode.routine.brief"
+    },
+    {
+      "mode": "attend",
+      "titleKey": "phase2.a1.mode.attend.title",
+      "briefKey": "phase2.a1.mode.attend.brief"
+    }
+  ],
+  "note": "Phase 2 A1: what is shared by the whole school. Every holiday and break of the calendar is explained by name, then each closed-day kind has a generic line. Every reason a period can be unavailable has a reason and a recovery."
+}

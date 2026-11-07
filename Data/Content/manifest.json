@@ -1,7 +1,7 @@
 {
   "schema": "pw.content_manifest/1",
-  "fileCount": 271,
-  "recordCount": 330,
+  "fileCount": 275,
+  "recordCount": 334,
   "files": [
     {
       "path": "/ability_recipe/ability_recipe.agni_assay_flame.json",
@@ -1303,6 +1303,30 @@
       "path": "/school_followup/school_followup.p2.withdrawn.json",
       "records": [
         { "id": "school_followup.p2.withdrawn", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_lesson/p2.commerce.json",
+      "records": [
+        { "id": "p2.commerce", "kind": "school_lesson" }
+      ]
+    },
+    {
+      "path": "/school_lesson/p2.humanities.json",
+      "records": [
+        { "id": "p2.humanities", "kind": "school_lesson" }
+      ]
+    },
+    {
+      "path": "/school_lesson/p2.school.json",
+      "records": [
+        { "id": "p2.school", "kind": "school_lesson" }
+      ]
+    },
+    {
+      "path": "/school_lesson/p2.science.json",
+      "records": [
+        { "id": "p2.science", "kind": "school_lesson" }
       ]
     },
     {
