@@ -808,6 +808,22 @@ add_executable(PerfectWorldNeighbourhoodTrafficTests Tests/NeighbourhoodTrafficT
 target_link_libraries(PerfectWorldNeighbourhoodTrafficTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldNeighbourhoodTrafficTests COMMAND PerfectWorldNeighbourhoodTrafficTests)
 
+# R65: the two lane-end masses opened as public halls (community hall west, market hall east); doorless archways, no roster or save change.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/LaneEndLayouts.cpp
+    Source/PerfectWorldCore/Private/LaneEndHallCommunity.cpp
+    Source/PerfectWorldCore/Private/LaneEndHallMarket.cpp)
+add_executable(PerfectWorldLaneEndLayoutsTests Tests/LaneEndLayoutsTests.cpp)
+target_link_libraries(PerfectWorldLaneEndLayoutsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLaneEndLayoutsTests COMMAND PerfectWorldLaneEndLayoutsTests)
+# R6-04: the two remaining private homes get a resident each (Madhabi Das, alley house; Arup Basu, stair flats).
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ConversationResidentsR6.cpp)
+add_executable(PerfectWorldResidentsR6Tests Tests/ResidentsR6Tests.cpp)
+target_include_directories(PerfectWorldResidentsR6Tests PRIVATE Source/PerfectWorldCore/Private)
+target_link_libraries(PerfectWorldResidentsR6Tests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldResidentsR6Tests COMMAND PerfectWorldResidentsR6Tests
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.madhabi_das.json
+    ${CMAKE_SOURCE_DIR}/Data/Content/npc_schedule/npc_schedule.arup_basu.json)
 # R83: reducer commerce/service inputs, every time path and atomic refusals; save/hash remain R8-04's.
 target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldCommerce.cpp)
 add_executable(PerfectWorldWorldCommerceTests Tests/WorldCommerceTests.cpp)
@@ -893,3 +909,7 @@ add_executable(PerfectWorldSchoolFollowupContentTests Tests/SchoolFollowupConten
 target_link_libraries(PerfectWorldSchoolFollowupContentTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldSchoolFollowupContentTests
     COMMAND PerfectWorldSchoolFollowupContentTests ${CMAKE_SOURCE_DIR}/Data/Content)
+# Crowd voices: every anonymous exchange key is authored in Data/Text/en/ambient.crowd.json.
+add_executable(PerfectWorldCrowdVoicesTests Tests/CrowdVoicesTests.cpp)
+target_link_libraries(PerfectWorldCrowdVoicesTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldCrowdVoicesTests COMMAND PerfectWorldCrowdVoicesTests ${CMAKE_SOURCE_DIR}/Data/Text/en/ambient.crowd.json)

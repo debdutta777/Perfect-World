@@ -1,7 +1,7 @@
 {
   "schema": "pw.content_manifest/1",
-  "fileCount": 190,
-  "recordCount": 249,
+  "fileCount": 211,
+  "recordCount": 270,
   "files": [
     {
       "path": "/ability_recipe/ability_recipe.agni_assay_flame.json",
@@ -700,6 +700,12 @@
       ]
     },
     {
+      "path": "/npc_schedule/npc_schedule.arup_basu.json",
+      "records": [
+        { "id": "npc_schedule.arup_basu", "kind": "npc_schedule" }
+      ]
+    },
+    {
       "path": "/npc_schedule/npc_schedule.care_worker.json",
       "records": [
         { "id": "npc_schedule.care_worker", "kind": "npc_schedule" }
@@ -721,6 +727,12 @@
       "path": "/npc_schedule/npc_schedule.ishita_banerjee.json",
       "records": [
         { "id": "npc_schedule.ishita_banerjee", "kind": "npc_schedule" }
+      ]
+    },
+    {
+      "path": "/npc_schedule/npc_schedule.madhabi_das.json",
+      "records": [
+        { "id": "npc_schedule.madhabi_das", "kind": "npc_schedule" }
       ]
     },
     {
@@ -889,6 +901,120 @@
       "path": "/resource/resource.time.json",
       "records": [
         { "id": "resource.time", "kind": "resource" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.apprenticeship.json",
+      "records": [
+        { "id": "school_followup.p2.apprenticeship", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.community_practice.json",
+      "records": [
+        { "id": "school_followup.p2.community_practice", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.declined.json",
+      "records": [
+        { "id": "school_followup.p2.declined", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.deferred.json",
+      "records": [
+        { "id": "school_followup.p2.deferred", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.enterprise.json",
+      "records": [
+        { "id": "school_followup.p2.enterprise", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.equipment.json",
+      "records": [
+        { "id": "school_followup.p2.equipment", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.licence.json",
+      "records": [
+        { "id": "school_followup.p2.licence", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.middle.json",
+      "records": [
+        { "id": "school_followup.p2.middle", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.patronage.json",
+      "records": [
+        { "id": "school_followup.p2.patronage", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.poor.json",
+      "records": [
+        { "id": "school_followup.p2.poor", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.public_portfolio.json",
+      "records": [
+        { "id": "school_followup.p2.public_portfolio", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.rest.json",
+      "records": [
+        { "id": "school_followup.p2.rest", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.retake.json",
+      "records": [
+        { "id": "school_followup.p2.retake", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.scholarship.json",
+      "records": [
+        { "id": "school_followup.p2.scholarship", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.school.json",
+      "records": [
+        { "id": "school_followup.p2.school", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.strong.json",
+      "records": [
+        { "id": "school_followup.p2.strong", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.study.json",
+      "records": [
+        { "id": "school_followup.p2.study", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.study_bridge.json",
+      "records": [
+        { "id": "school_followup.p2.study_bridge", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.withdrawn.json",
+      "records": [
+        { "id": "school_followup.p2.withdrawn", "kind": "school_followup" }
       ]
     },
     {

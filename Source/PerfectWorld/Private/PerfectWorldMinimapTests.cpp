@@ -363,8 +363,9 @@ bool FMpDescribeTest::RunTest(const FString& Parameters)
     FPWMapSnapshot Mine = MpSnapshot(*Scene, 600);
     Mine.PlayerHomeBuilding = Care;
     TestTrue(TEXT("the player's own home says so"), PWMap::DescribeBuilding(*Scene, Mine, Care).ToString().StartsWith(TEXT("Your home.")));
-    const FString Sealed = PWMap::DescribeBuilding(*Scene, MpSnapshot(*Scene, 600), West).ToString();
-    TestTrue(TEXT("a sealed building is described without a door"), Sealed.Contains(TEXT("Shuttered building")) && !Sealed.Contains(TEXT("Open")));
+    // R6-05: the end masses are open halls; they have no door, so they are named and typed but carry no door line.
+    const FString Hall = PWMap::DescribeBuilding(*Scene, MpSnapshot(*Scene, 600), West).ToString();
+    TestTrue(TEXT("the west end is the community hall, described without a door"), Hall.Contains(TEXT("Community hall")) && Hall.Contains(TEXT("Public hall")) && !Hall.Contains(TEXT("Shuttered")) && !Hall.Contains(TEXT("Open")));
     TestTrue(TEXT("an invalid index describes nothing"), PWMap::DescribeBuilding(*Scene, MpSnapshot(*Scene, 600), 9999).IsEmpty());
     return true;
 }

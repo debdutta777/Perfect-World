@@ -1,3 +1,5 @@
+#include "PerfectWorldHomeLayoutTestSupport.h"
+
 // Layout rules of the opening home (PerfectWorld.Home.*): door clear widths, routes, swing zones, the household adult's
 // spot, the seat and readable anchors, the reserved stair, ceiling fans and room lights. The home is built exactly as the
 // lane builds it (BuildOpeningHome plus the furniture footprints), so these tests read the real collision boxes.
@@ -7,7 +9,8 @@
 
 #if WITH_DEV_AUTOMATION_TESTS && !UE_BUILD_SHIPPING
 
-#include "PerfectWorldHomeLayoutTestSupport.h"
+#include "Doors.h"
+#include "PerfectWorldDoorActor.h"
 
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPWHomeDoorWidthsTest, "PerfectWorld.Home.DoorClearWidths",
@@ -394,6 +397,92 @@ bool FPWHomeLightingTest::RunTest(const FString& Parameters)
             {
                 AddError(FString::Printf(TEXT("%s: furniture up to %.0f cm high is under the blades"), *Where, Solid.H1));
             }
+        }
+    }
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FR89HomeKitchenRouteTest, "PerfectWorld.Home.RestoredKitchenLeafClearsChairRoute",
+                                 EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FR89HomeKitchenRouteTest::RunTest(const FString& Parameters)
+{
+    using namespace PWHomeLayoutTest;
+    FHome R89Home;
+    BuildHome(R89Home);
+    const FLaneDoorSpec* R89Door = FindDoor(R89Home, TEXT("door.nabapara.home_kitchen"));
+    const auto* R89Def = PerfectWorld::FindDoor("door.nabapara.home_kitchen");
+    if (!TestTrue(TEXT("authored kitchen door and core definition exist"), R89Door != nullptr && R89Def != nullptr)) return false;
+    TestTrue(TEXT("core starts the kitchen door open"), R89Def->bInitiallyOpen);
+    // RegisterDoor/StartLife restore the core side, which may differ from the layout preference.
+    const double R89Yaw = FMath::DegreesToRadians(R89Door->ClosedYaw + R89Def->PreferredSwingSide * PWDoor::OpenAngleDegrees);
+    const FVector R89Tip = R89Door->Hinge + FVector(FMath::Cos(R89Yaw), FMath::Sin(R89Yaw), 0) * PWDoor::LeafWidth;
+    double R89HingeU = 0, R89HingeV = 0, R89TipU = 0, R89TipV = 0;
+    ToLocal(R89Home.Building.Frame, R89Door->Hinge, R89HingeU, R89HingeV);
+    ToLocal(R89Home.Building.Frame, R89Tip, R89TipU, R89TipV);
+    TestTrue(TEXT("restored leaf opens into kitchen"), R89TipV > R89HingeV);
+    const FRect R89Leaf{FMath::Min(R89HingeU, R89TipU) - 2, FMath::Max(R89HingeU, R89TipU) + 2,
+        FMath::Min(R89HingeV, R89TipV) - 2, FMath::Max(R89HingeV, R89TipV) + 2};
+    TestTrue(TEXT("reported stuck position is clear of restored leaf"), DistToRect(485, 366, R89Leaf) > HomePersonRadiusCm);
+    // Exercise the unchanged chair route against the real shell/furniture and the core-restored leaf, without a map.
+    const FVector2D R89Points[] = {{630, 365}, {560, 375}, {440, 370}, {405, 265}, {393, 215}};
+    const auto R89Adult = HomeAdultSpot();
+    for (int32 R89Segment = 1; R89Segment < UE_ARRAY_COUNT(R89Points); ++R89Segment)
+    {
+        for (int32 R89Sample = 0; R89Sample <= 100; ++R89Sample)
+        {
+            const FVector2D R89At = R89Points[R89Segment - 1] +
+                (R89Points[R89Segment] - R89Points[R89Segment - 1]) * (R89Sample / 100.0);
+            if (MinDistToBodyBlocks(R89Home, R89At.X, R89At.Y) <= HomePersonRadiusCm ||
+                DistToRect(R89At.X, R89At.Y, R89Leaf) <= HomePersonRadiusCm ||
+                FVector2D::Distance(R89At, FVector2D(R89Adult.U, R89Adult.V)) <= 2 * HomePersonRadiusCm)
+            {
+                AddError(FString::Printf(TEXT("chair route blocked at U %.1f V %.1f"), R89At.X, R89At.Y));
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FR810HomeBackDoorTest, "PerfectWorld.Home.DefaultBedroomAndWashroomLeavesClearLivingRoute",
+                                 EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FR810HomeBackDoorTest::RunTest(const FString& Parameters)
+{
+    using namespace PWHomeLayoutTest;
+    FHome R810Home;
+    BuildHome(R810Home);
+    if (!TestTrue(TEXT("opening home built"), R810Home.bBuilt)) return false;
+    const TCHAR* R810Ids[] = {TEXT("door.nabapara.home_bedroom"), TEXT("door.nabapara.home_washroom")};
+    const std::string_view R810CoreIds[] = {"door.nabapara.home_bedroom", "door.nabapara.home_washroom"};
+    for (int32 R810Index = 0; R810Index < UE_ARRAY_COUNT(R810Ids); ++R810Index)
+    {
+        const FLaneDoorSpec* R810Door = FindDoor(R810Home, R810Ids[R810Index]);
+        const auto* R810Def = PerfectWorld::FindDoor(R810CoreIds[R810Index]);
+        if (!TestTrue(TEXT("layout and core door exist"), R810Door != nullptr && R810Def != nullptr)) return false;
+        // Both start closed; exercise the default open side explicitly, as when restoring an open save.
+        const double R810Yaw = FMath::DegreesToRadians(R810Door->ClosedYaw + R810Def->PreferredSwingSide * PWDoor::OpenAngleDegrees);
+        const FVector R810Tip = R810Door->Hinge + FVector(FMath::Cos(R810Yaw), FMath::Sin(R810Yaw), 0) * PWDoor::LeafWidth;
+        double R810HingeU = 0, R810HingeV = 0, R810TipU = 0, R810TipV = 0;
+        ToLocal(R810Home.Building.Frame, R810Door->Hinge, R810HingeU, R810HingeV);
+        ToLocal(R810Home.Building.Frame, R810Tip, R810TipU, R810TipV);
+        TestTrue(R810Ids[R810Index], R810TipV > R810HingeV);
+        const double R810HalfThickness = PWDoor::LeafThickness / 2.0;
+        const FRect R810Leaf{FMath::Min(R810HingeU, R810TipU) - R810HalfThickness,
+            FMath::Max(R810HingeU, R810TipU) + R810HalfThickness,
+            FMath::Min(R810HingeV, R810TipV) - R810HalfThickness,
+            FMath::Max(R810HingeV, R810TipV) + R810HalfThickness};
+        for (const FHomeSolid& R810Solid : R810Home.Solids)
+        {
+            if (R810Solid.H1 > 5.0 && R810Solid.H0 < PWDoor::LeafHeight)
+                TestFalse(TEXT("default open leaf clears furniture"), Overlaps(R810Leaf, RectOf(R810Solid)));
+        }
+        // Across the west living-room passage, between the almirah and the bedroom opening.
+        // The old west hinge left only ~58 cm beside the almirah: too narrow for a diameter-68 capsule.
+        for (int32 R810Sample = 0; R810Sample <= 100; ++R810Sample)
+        {
+            const double R810U = 130.0 + 170.0 * R810Sample / 100.0;
+            TestTrue(TEXT("living passage clears shell and furniture"), MinDistToBodyBlocks(R810Home, R810U, 365) > HomePersonRadiusCm);
+            TestTrue(TEXT("living passage clears default open leaf"), DistToRect(R810U, 365, R810Leaf) > HomePersonRadiusCm);
         }
     }
     return true;
