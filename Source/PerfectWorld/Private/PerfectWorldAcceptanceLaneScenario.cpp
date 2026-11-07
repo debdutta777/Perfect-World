@@ -6,6 +6,7 @@
 #include "PerfectWorldAcceptanceTailor.h"
 #include "PerfectWorldAcceptanceFrontagesR6.h"
 #include "PerfectWorldAcceptanceStreetsR7.h"
+#include "PerfectWorldAcceptanceLaneEnds.h"
 #include "PerfectWorldAcceptanceSchoolR7.h"
 #include "PerfectWorldAcceptanceTrafficR7.h"
 #include "PerfectWorldAcceptanceCrowdR7.h"
@@ -467,6 +468,7 @@ bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps)
         {TEXT("frontages_round6"), AppendFrontagesRound6Steps},
         {TEXT("homes_round6"), AppendHomesRound6Steps},
         {TEXT("frontages_round5"), AppendFrontagesRound5Steps},
+        {TEXT("lane_ends"), AppendLaneEndsSteps},
         {TEXT("mahua_workday"), AppendMahuaWorkdaySteps},
         {TEXT("tailor_workday"), AppendTailorWorkdaySteps},
         {TEXT("streets_round7"), AppendStreetsRound7Steps},
