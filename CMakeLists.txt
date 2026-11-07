@@ -836,6 +836,18 @@ add_executable(PerfectWorldCommerceContentTests Tests/CommerceContentTests.cpp)
 target_link_libraries(PerfectWorldCommerceContentTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldCommerceContentTests COMMAND PerfectWorldCommerceContentTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
+# P2C: frozen Phase 2 school/tower contracts. This is the single appended block.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/SchoolSessions.cpp
+    Source/PerfectWorldCore/Private/SchoolWork.cpp
+    Source/PerfectWorldCore/Private/SchoolLife.cpp
+    Source/PerfectWorldCore/Private/SchoolWeek.cpp
+    Source/PerfectWorldCore/Private/TowerSession.cpp)
+foreach(P2C_SYSTEM SchoolSessions SchoolWork SchoolLife SchoolWeek TowerSession)
+    add_executable(PerfectWorld${P2C_SYSTEM}Tests Tests/${P2C_SYSTEM}Tests.cpp)
+    target_link_libraries(PerfectWorld${P2C_SYSTEM}Tests PRIVATE PerfectWorldCore)
+    add_test(NAME PerfectWorld${P2C_SYSTEM}Tests COMMAND PerfectWorld${P2C_SYSTEM}Tests ${CMAKE_SOURCE_DIR}/Data/Content)
+endforeach()
 # R84: commerce persistence (pw.commerce/1, schema 10, hash 7), legacy authentication and household migration.
 target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldSaveCommerce.cpp)
 add_executable(PerfectWorldWorldSaveCommerceTests Tests/WorldSaveCommerceTests.cpp Tests/WorldSaveCommerceFixtureTests.cpp)
@@ -876,6 +888,27 @@ target_link_libraries(PerfectWorldTutorialContentTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldTutorialContentTests COMMAND PerfectWorldTutorialContentTests
     ${CMAKE_SOURCE_DIR}/Data/Content ${CMAKE_SOURCE_DIR}/Data/Text/en/tutorial.awakening.json)
 
+# Phase 2 A4 (Gemini Argon): teachers, classmates and home obligations - school_scene content.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/SchoolLifeContent.cpp)
+add_executable(PerfectWorldSchoolLifeContentTests Tests/SchoolLifeContentTests.cpp)
+target_link_libraries(PerfectWorldSchoolLifeContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSchoolLifeContentTests COMMAND PerfectWorldSchoolLifeContentTests
+    ${CMAKE_SOURCE_DIR}/Data/Content ${CMAKE_SOURCE_DIR}/Data/Text/en/phase2_a4.json)
+
+# Phase 2 A7 (Gemini Argon): tower scenario content - tower_scenario.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/TowerScenarioContent.cpp
+    Source/PerfectWorldCore/Private/TowerScenarioSchema.cpp)
+add_executable(PerfectWorldTowerScenarioContentTests Tests/TowerScenarioContentTests.cpp)
+target_link_libraries(PerfectWorldTowerScenarioContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldTowerScenarioContentTests COMMAND PerfectWorldTowerScenarioContentTests
+    ${CMAKE_SOURCE_DIR}/Data/Content/tower_scenario ${CMAKE_SOURCE_DIR}/Data/Text/en/phase2_a7.json)
+
+# A8: playable follow-ups after every tower outcome (school_followup content).
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/SchoolFollowupContent.cpp)
+add_executable(PerfectWorldSchoolFollowupContentTests Tests/SchoolFollowupContentTests.cpp)
+target_link_libraries(PerfectWorldSchoolFollowupContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSchoolFollowupContentTests
+    COMMAND PerfectWorldSchoolFollowupContentTests ${CMAKE_SOURCE_DIR}/Data/Content)
 # Crowd voices: every anonymous exchange key is authored in Data/Text/en/ambient.crowd.json.
 add_executable(PerfectWorldCrowdVoicesTests Tests/CrowdVoicesTests.cpp)
 target_link_libraries(PerfectWorldCrowdVoicesTests PRIVATE PerfectWorldCore)
