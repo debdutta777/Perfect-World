@@ -236,6 +236,10 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
     R88InventoryButton = CpPauseButton(LOCTEXT("Inventory", "Inventory"), PWUI::EButtonKind::Secondary,
         FOnClicked::CreateSPLambda(this, [this]() { OpenInventory(); return FReply::Handled(); })); // R88
     R88InventoryButton->SetTag(TEXT("R88PauseInventory"));
+    // S03: the week planner entry, placed after Inventory.
+    S03PlannerButton = CpPauseButton(LOCTEXT("S03Planner", "Week planner"), PWUI::EButtonKind::Secondary,
+        FOnClicked::CreateSPLambda(this, [this]() { OpenPlanner(); return FReply::Handled(); }));
+    S03PlannerButton->SetTag(TEXT("S03PauseWeekPlanner"));
 
     SettingsButton = CpPauseButton(
         LOCTEXT("Settings", "Settings"), PWUI::EButtonKind::Secondary,
@@ -389,6 +393,7 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[TodayButton.ToSharedRef()]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[QuestsButton.ToSharedRef()]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[R88InventoryButton.ToSharedRef()] // R88
+            + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[S03PlannerButton.ToSharedRef()] // S03
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[SettingsButton.ToSharedRef()]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[SaveButton]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[SaveFeedback]
@@ -452,6 +457,11 @@ FReply SPWPauseMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InK
     if (bTodayOpen && (Key == EKeys::Escape || Key == EKeys::Gamepad_FaceButton_Right || Key == EKeys::Gamepad_Special_Right))
     {
         CloseToday();
+        return FReply::Handled();
+    }
+    if (bS03PlannerOpen && (Key == EKeys::Escape || Key == EKeys::Gamepad_FaceButton_Right || Key == EKeys::Gamepad_Special_Right)) // S03
+    {
+        ClosePlanner();
         return FReply::Handled();
     }
     if (bQuestsOpen && (Key == EKeys::Escape || Key == EKeys::J || Key == EKeys::Gamepad_FaceButton_Right || Key == EKeys::Gamepad_Special_Right))

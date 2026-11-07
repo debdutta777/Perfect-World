@@ -44,6 +44,9 @@ private:
     void OpenQuests(bool bFromWorld);
     void CloseQuests();
     void CloseInventory(); // R88
+    /** S03: the school week planner, after Inventory; closing returns focus to its menu entry. */
+    void OpenPlanner();
+    void ClosePlanner();
     /** F4: settings (with the Controls tab) while playing; closing returns focus to the Settings entry. */
     void OpenSettings();
     void CloseSettings();
@@ -55,6 +58,7 @@ private:
     TSharedPtr<SWidget> QuestsButton;
     TSharedPtr<SWidget> R88InventoryButton;
     TSharedPtr<class SPWInventoryPanel> R88InventoryPanel;
+    TSharedPtr<SWidget> S03PlannerButton;
     TSharedPtr<SWidget> SettingsButton;
     TSharedPtr<SWidget> ReturnToTitleButton;
     TSharedPtr<SWidget> QuitButton;
@@ -65,6 +69,7 @@ private:
     bool bQuestsFromWorld = false;
     bool bSettingsOpen = false;
     bool bR88InventoryFromWorld = false;
+    bool bS03PlannerOpen = false;
     FText Status;
     bool bStatusIsError = false;
 };

@@ -17,6 +17,7 @@
 #include "PerfectWorldPresentationSettings.h"
 #include "PerfectWorldTitleView.h"
 #include "PerfectWorldBuyPresenter.h" // R88
+#include "PerfectWorldSchoolPresenter.h" // S03
 #include "UI/PWDelegates.h"
 #include "UI/PWStartAcknowledgement.h"
 #include "UI/PWQuestText.h"
@@ -139,6 +140,11 @@ void APerfectWorldFrontEndHUD::ToggleInWorldMenu()
     if (UPWBuyPresenter::IsOpenIn(this)) // R88: Back closes the service before any pause menu
     {
         UPWBuyPresenter::Get(this)->Close();
+        return;
+    }
+    if (UPWSchoolPresenter::IsOpenIn(this)) // S03: Back leaves the school panel before any pause menu
+    {
+        UPWSchoolPresenter::Get(this)->Close();
         return;
     }
     if (!Root.IsValid())

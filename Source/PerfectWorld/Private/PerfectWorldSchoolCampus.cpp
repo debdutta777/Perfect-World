@@ -8,6 +8,7 @@
 #include "EngineUtils.h"
 #include "Materials/MaterialInterface.h"
 #include "PerfectWorldSchoolCampusParts.h"
+#include "PerfectWorldSchoolActors.h" // S03
 #include "PerfectWorldSchoolGate.h"
 #include "PerfectWorldShopDisplayActor.h"
 
@@ -240,6 +241,12 @@ FScSpawnResult SpawnSchoolCampus(UWorld& World, const PWLane::FLaneScene& /*Scen
     {
         Result.Board->Configure(Built->Points.BoardPoint, Built->Points.BoardTextLocation, Built->Points.BoardTextYaw,
                                 Built->Points.BoardTextSizeCm);
+    }
+    // S03: the player's seat, on the classroom's centre aisle at desk height (within the 2 m reach of the aisle).
+    Result.Seat = World.SpawnActor<APWSchoolSeatActor>(Built->Points.ClassroomAisle + FVector(0.0, 0.0, 90.0), FRotator::ZeroRotator, Params);
+    if (Result.Seat != nullptr)
+    {
+        Result.Seat->Configure(Built->Points.ClassroomAisle + FVector(0.0, 0.0, 90.0));
     }
     Result.Lights = ScSpawnLights(World, Built->IndoorLights, true) + ScSpawnLights(World, Built->OutdoorLights, false);
     Result.bBuilt = Result.BlocksActor != nullptr && Result.Gate != nullptr && Result.Board != nullptr;
