@@ -102,8 +102,9 @@ std::string R84Downgrade(const std::string& current, const WorldState& world, in
     const std::size_t at = old.find(version == 9 ? ",\n    \"commerce\":" : ",\n    \"journal\":");
     Check(at != std::string::npos, "the section to drop exists");
     old.erase(at, old.find("\n  }", at) - at);
-    old = ReplaceOnce(old, "\"schemaVersion\": 10", "\"schemaVersion\": " + std::to_string(version));
-    old = ReplaceOnce(old, "\"hashVersion\": 7", version == 9 ? "\"hashVersion\": 6" : "\"hashVersion\": 5");
+    // S04: the current writer also appends school after commerce; the erase above already dropped it.
+    old = ReplaceOnce(old, "\"schemaVersion\": " + std::to_string(WorldSaveSchemaVersion), "\"schemaVersion\": " + std::to_string(version));
+    old = ReplaceOnce(old, "\"hashVersion\": " + std::to_string(WorldHashVersion), version == 9 ? "\"hashVersion\": 6" : "\"hashVersion\": 5");
     const std::uint32_t hashVersion = version == 9 ? 6 : 5;
     old.replace(old.find("\"stateHash\": ") + 13, 20, R84HashText(HashWorldStateWithDoorsText(world, SerialiseDoorState(world.Doors), hashVersion)));
     return old;
@@ -160,9 +161,9 @@ void R84RoundTrip()
     Check(R84Creator(creation).GetTraitRank(HouseholdResourcesTraitId) == 1, "the test life has household rank 1");
     const WorldSaveData data = R84Save(creation, R84History(1, 70));
     const std::string text = SerializeWorldSave(data);
-    Check(text.find("\"schemaVersion\": 10") != std::string::npos && text.find("\"hashVersion\": 7") != std::string::npos &&
+    Check(text.find("\"schemaVersion\": 11") != std::string::npos && text.find("\"hashVersion\": 8") != std::string::npos &&
               text.find("\"commerce\": \"pw.commerce/1\\nwallet=") != std::string::npos,
-          "the writer emits schema 10, hash 7 and the commerce envelope");
+          "the writer emits schema 11, hash 8 and the commerce envelope");
     WorldSaveData loaded;
     const WorldSaveResult result = DeserializeWorldSave(text, loaded);
     Check(result.Succeeded() && result.HashVerified && result.SourceVersion == WorldSaveSchemaVersion && !result.Migrated,
@@ -222,9 +223,9 @@ void R84WriterAndReaderRefusals()
     Check(ErrorOf(ReplaceOnce(text, tea, "tea_eligible=" + std::to_string(data.World.Commerce.NextTeaEligibleAt - 1))) == WorldSaveError::HashMismatch,
           "a valid but altered eligibility instant fails the checksum");
     Check(ErrorOf(ReplaceOnce(text, ",\n    \"commerce\": " + envelope, "")) == WorldSaveError::Malformed, "v10 requires commerce");
-    Check(ErrorOf(ReplaceOnce(text, "\"schemaVersion\": 10", "\"schemaVersion\": 9")) == WorldSaveError::Malformed,
+    Check(ErrorOf(ReplaceOnce(text, "\"schemaVersion\": 11", "\"schemaVersion\": 9")) == WorldSaveError::Malformed,
           "a v9 record refuses the commerce section");
-    Check(ErrorOf(ReplaceOnce(text, "\"schemaVersion\": 10", "\"schemaVersion\": 11")) == WorldSaveError::UnsupportedVersion,
+    Check(ErrorOf(ReplaceOnce(text, "\"schemaVersion\": 11", "\"schemaVersion\": 12")) == WorldSaveError::UnsupportedVersion,
           "a newer schema is refused");
     Check(ErrorOf(ReplaceOnce(text, envelope, "17")) == WorldSaveError::InvalidWorld, "commerce must be text");
 }

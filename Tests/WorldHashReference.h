@@ -4,6 +4,7 @@
 // Included by WorldHashTests.cpp only; it relies on that file's Check().
 
 #include "WorldHash.h"
+#include "WorldSave.h"
 
 #include <cstdint>
 #include <limits>
@@ -128,10 +129,13 @@ std::vector<std::pair<std::string, std::uint64_t>> RefSections(const WorldState&
     R84Commerce.U(c.FoldedReceiptCount), R84Commerce.U(c.FoldedThroughRevision);
     R84Commerce.I(c.FoldedCreditsPaise), R84Commerce.I(c.FoldedDebitsPaise);
     R84Commerce.I(c.NextTeaEligibleAt), R84Commerce.I(c.NextConsumptionEligibleAt);
+    // S04 school: one text field, the canonical pw.school/1 envelope of the three school slices (the doors precedent).
+    RefBytes S04School;
+    S04School.S(SerialiseSchoolState(w));
     return {{"meta", RefFnv1a(meta.Data)},   {"clock", RefFnv1a(clock.Data)}, {"flags", RefFnv1a(flags.Data)},
             {"gates", RefFnv1a(gates.Data)}, {"rng", RefFnv1a(rng.Data)},     {"dayloop", RefFnv1a(dayloop.Data)},
             {"conversations", RefFnv1a(conversations.Data)}, {"doors", RefFnv1a(doors.Data)}, {"journal", RefFnv1a(R4JJournal.Data)},
-            {"commerce", RefFnv1a(R84Commerce.Data)}};
+            {"commerce", RefFnv1a(R84Commerce.Data)}, {"school", RefFnv1a(S04School.Data)}};
 }
 
 std::uint64_t RefWorld(const WorldState& w)
@@ -242,6 +246,9 @@ WorldState EdgeWorld()
 // R8-04 re-pin 2026-10-24 with PW_PRINT_GOLDEN=1 (RefWorld agreed section by section first): WorldHashVersion 7 appends the
 // commerce section (the default CommerceState of both hand-built worlds), schema 10. HandBuilt 0x31c97d2112adf354 ->
 // 0x4669aa0cccdecff5; Edge 0xbf05781049342e08 -> 0x69bf838b3ba0a9e9. The nine earlier section encodings are unchanged.
-constexpr std::uint64_t GoldenHandBuilt = 0x4669aa0cccdecff5ULL;
-constexpr std::uint64_t GoldenEdge = 0x69bf838b3ba0a9e9ULL;
+// S04 re-pin 2026-11-07 with PW_PRINT_GOLDEN=1 (RefWorld agreed section by section first): WorldHashVersion 8 appends the
+// school section (the empty pw.school/1 envelope of both hand-built worlds), schema 11. HandBuilt 0x4669aa0cccdecff5 ->
+// 0x190d7b75bff8532d; Edge 0x69bf838b3ba0a9e9 -> 0xec18c2377c28ddf9. The ten earlier section encodings are unchanged.
+constexpr std::uint64_t GoldenHandBuilt = 0x190d7b75bff8532dULL;
+constexpr std::uint64_t GoldenEdge = 0xec18c2377c28ddf9ULL;
 } // namespace

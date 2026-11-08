@@ -1,6 +1,9 @@
 #pragma once
 
 #include "GameClock.h"
+#include "SchoolWeekState.h"
+#include "SchoolWork.h"
+#include "WeekCompression.h"
 #include "WorldState.h"
 
 #include <cstdint>
@@ -217,10 +220,66 @@ struct WorldDayCommand
     DayCommand Day;
 };
 
+/**
+ * S04: open the bound A1 lesson at its bell (SchoolSessions.h OpenSchoolLesson), resolving BindingId through the sim's
+ * borrowed lesson catalogue, never from a widget. The skill level, seed and known alternatives are the reducer's. Free:
+ * the class activity starts at the current instant. Refused with the contract's school.session.* / dayloop.* codes, or
+ * "world.unsettled", "school.invalid_state", "school.conversation_open", "commerce.service_active", "school.paper_open".
+ */
+struct SchoolLessonOpen
+{
+    static constexpr std::string_view TypeId = "school.lesson.open";
+    std::string BindingId;
+    SchoolLessonMode Mode = SchoolLessonMode::Attend;
+    SchoolLessonGoal Goal = ModelGoal::UnderstandModel;
+};
+
+/** S04: one runner action of the open lesson (ChooseSchoolLesson). Units are within the bell period; no world time passes. */
+struct SchoolLessonChoose
+{
+    static constexpr std::string_view TypeId = "school.lesson.choose";
+    std::uint64_t Session = 0;
+    SchoolLessonAction Action;
+};
+
+/**
+ * S04: Record (Cancel false) or leave early (Cancel true, ElapsedMinutes 0..duration-1) through CloseSchoolLesson, then the
+ * day's movement is charged through the world clock in the same command. All-or-nothing: an event-capped charge refuses
+ * "school.lesson.charge_interrupted" and nothing changes. Completion learning is published once as its DayLoopEvent.
+ */
+struct SchoolLessonClose
+{
+    static constexpr std::string_view TypeId = "school.lesson.close";
+    std::uint64_t Session = 0;
+    bool Cancel = false;
+    std::int32_t ElapsedMinutes = 0;
+};
+
+/** S04: upsert or remove one standing order (SetSchoolStandingOrder). Free; refused while a lesson or paper is open. */
+struct SchoolWeekOrder
+{
+    static constexpr std::string_view TypeId = "school.week.order";
+    SchoolStandingOrder Order;
+    bool Remove = false;
+};
+
+/**
+ * S04: build the school week from the standing orders and `Base` (BuildSchoolWeekPlan), compress it (CompressSchoolWeek)
+ * and commit its day loop and lesson sessions together, the time charged through the world clock once. The actual
+ * SchoolWeekResult is published as WorldSim::LastSchoolWeekResult for the planner recap.
+ */
+struct SchoolWeekResolve
+{
+    static constexpr std::string_view TypeId = "school.week.resolve";
+    WeekPlan Base;
+};
+
+// SchoolWorkCommand ("school.work.apply") is SchoolWork.h's delivered command type, routed as is.
 using CommandPayload = std::variant<AdvanceTime, ScheduleWorldEvent, SetWorldFlag, GateRegister, GateScheduleOnset, GateContain, GateSeal,
                                     SettleDueEvents, ConversationOpen, ConversationChoose, ConversationLeave, DoorSet, DoorSettle,
                                     SchoolPlanDay, SchoolArrive, CommerceServiceRequest, CommerceServiceClose,
-                                    CommerceBuy, InventoryConsume, WorldDayCommand>;
+                                    CommerceBuy, InventoryConsume, WorldDayCommand, SchoolLessonOpen, SchoolLessonChoose,
+                                    SchoolLessonClose, SchoolWorkCommand, SchoolWeekOrder, SchoolWeekResolve>;
 
 struct Command
 {

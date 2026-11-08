@@ -926,3 +926,18 @@ add_test(NAME PerfectWorldSchoolFollowupContentTests
 add_executable(PerfectWorldCrowdVoicesTests Tests/CrowdVoicesTests.cpp)
 target_link_libraries(PerfectWorldCrowdVoicesTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldCrowdVoicesTests COMMAND PerfectWorldCrowdVoicesTests ${CMAKE_SOURCE_DIR}/Data/Text/en/ambient.crowd.json)
+
+# S04: Phase 2 school commands through WorldSim, and pw.school/1 persistence (save schema 11, hash 8).
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/WorldSchool.cpp
+    Source/PerfectWorldCore/Private/WorldSchoolWeek.cpp
+    Source/PerfectWorldCore/Private/WorldSaveSchool.cpp
+    Source/PerfectWorldCore/Private/WorldSaveSchoolDecode.cpp
+    Source/PerfectWorldCore/Private/WorldSaveSchoolRules.cpp)
+add_executable(PerfectWorldWorldSchoolTests Tests/WorldSchoolTests.cpp)
+target_link_libraries(PerfectWorldWorldSchoolTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldSchoolTests COMMAND PerfectWorldWorldSchoolTests ${CMAKE_SOURCE_DIR}/Data/Content)
+add_executable(PerfectWorldWorldSaveSchoolTests Tests/WorldSaveSchoolTests.cpp)
+target_link_libraries(PerfectWorldWorldSaveSchoolTests PRIVATE PerfectWorldCore)
+target_compile_definitions(PerfectWorldWorldSaveSchoolTests PRIVATE PW_SCHOOL_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
+add_test(NAME PerfectWorldWorldSaveSchoolTests COMMAND PerfectWorldWorldSaveSchoolTests ${CMAKE_SOURCE_DIR}/Data/Content)

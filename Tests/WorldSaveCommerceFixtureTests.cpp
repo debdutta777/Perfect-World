@@ -1,8 +1,9 @@
 // R8-04: frozen historical saves through the commerce migration. world_v9_doors_29.json was written by the UNCHANGED
 // Tools/DoorFixtures generator built against `git archive 5ffc9dda1ee7ca4f37d25b372699c37b0d7b3d79` (schema 9, hash 6,
-// 29 doors), the parent of the commerce persistence change. world_v9_doors_29_migrated_v10.json is its expected migrated
-// result as this build's writer saves it; set PW_WRITE_MIGRATED=<path> to write that text (only when the migration is
-// meant to change, for example when a new door roster edition is appended).
+// 29 doors), the parent of the commerce persistence change. world_v9_doors_29_migrated_v10.json was its expected migrated
+// result as the R8-04 writer saved it (now a historical v10 save); world_v9_doors_29_migrated_v11.json is the result as
+// this build's writer saves it (S04: schema 11, empty school slices). Set PW_WRITE_MIGRATED=<path> to write that text (only
+// when the migration is meant to change, for example when a new door roster edition is appended).
 #include "WorldSave.h"
 
 #include "WorldHash.h"
@@ -62,13 +63,20 @@ void R84FrozenV9()
         out << migrated;
         Check(static_cast<bool>(out), "the migrated result is written");
     }
-    const std::string frozen = R84Fixture("world_v9_doors_29_migrated_v10.json");
-    Check(migrated == frozen, "the migration produces exactly the frozen expected v10 save");
+    // S04: the current writer is schema 11 (empty school slices for this world); the migrated_v10 file stays as the commerce
+    // era's own v10 output, now itself a historical save that authenticates in hash 7 and loads unverified.
+    const std::string frozen = R84Fixture("world_v9_doors_29_migrated_v11.json");
+    Check(migrated == frozen, "the migration produces exactly the frozen expected v11 save");
     WorldSaveData frozenLoaded;
     const WorldSaveResult frozenResult = DeserializeWorldSave(frozen, frozenLoaded);
-    Check(frozenResult.Succeeded() && frozenResult.HashVerified && frozenResult.SourceVersion == 10 && frozenLoaded.World.Commerce == commerce,
-          "the expected migrated save is a certified v10 world");
+    Check(frozenResult.Succeeded() && frozenResult.HashVerified && frozenResult.SourceVersion == 11 && frozenLoaded.World.Commerce == commerce,
+          "the expected migrated save is a certified v11 world");
     CheckSame(loaded, frozenLoaded, "the expected migrated save holds the migrated world");
+    WorldSaveData eraLoaded;
+    const WorldSaveResult eraResult = DeserializeWorldSave(R84Fixture("world_v9_doors_29_migrated_v10.json"), eraLoaded);
+    Check(eraResult.Succeeded() && !eraResult.HashVerified && eraResult.SourceVersion == 10 && eraLoaded.World.Commerce == commerce,
+          "the commerce era's v10 output authenticates its hash-7 checksum and loads unverified");
+    CheckSame(loaded, eraLoaded, "the commerce era's v10 output holds the same world");
 
     for (std::size_t cut = 0; cut < text.size(); ++cut)
         Check(ErrorOf(text.substr(0, cut)) != WorldSaveError::None, "every prefix of the v9 fixture is refused");

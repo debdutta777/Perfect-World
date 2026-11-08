@@ -8,6 +8,9 @@
 #include "GameClock.h"
 #include "LaneJournal.h"
 #include "RandomStreams.h"
+#include "SchoolSessions.h"
+#include "SchoolWeekState.h"
+#include "SchoolWork.h"
 
 #include <cstdint>
 #include <map>
@@ -104,6 +107,15 @@ struct WorldState
     DoorState Doors = MakeInitialDoorState();
     /** R8-03 authoritative slice. R8-04 owns its later save/hash encoding. */
     CommerceState Commerce;
+    /**
+     * S04: the Phase 2 school slices (SchoolSessions.h, SchoolWork.h, SchoolWeekState.h), changed only by the
+     * school.lesson.*, school.work.apply and school.week.* commands (WorldSchool.cpp, WorldSchoolWeek.cpp). Since world
+     * v11 saved together as one "pw.school/1" text and hashed as the "school" section. Every earlier world starts with
+     * all three empty: attendance and receipts are never evidence of a lesson, a paper or a standing order.
+     */
+    SchoolSessionsState SchoolSessions;
+    SchoolWorkState SchoolWork;
+    SchoolWeekState SchoolWeek;
 };
 
 /** A fresh world: the clock at the campaign epoch (2 Jun 2042 06:00), no flags or Gates, RNG streams seeded from the world seed, a fresh day. */

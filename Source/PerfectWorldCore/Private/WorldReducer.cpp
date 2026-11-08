@@ -48,23 +48,36 @@ Rejection R83Reject(std::string code, std::string message)
 {
     return Rejection{std::move(code), std::move(message)};
 }
+
+/** S04: player commands that would move time or start unrelated play while a lesson or paper is open. */
+bool S04SuspendedBySchoolPlay(const CommandPayload& payload)
+{
+    return std::holds_alternative<AdvanceTime>(payload) || std::holds_alternative<ConversationOpen>(payload) ||
+           std::holds_alternative<SchoolPlanDay>(payload) || std::holds_alternative<SchoolArrive>(payload) ||
+           std::holds_alternative<CommerceServiceRequest>(payload) || std::holds_alternative<CommerceBuy>(payload) ||
+           std::holds_alternative<InventoryConsume>(payload) || std::holds_alternative<WorldDayCommand>(payload) ||
+           std::holds_alternative<SchoolWeekOrder>(payload) || std::holds_alternative<SchoolWeekResolve>(payload);
+}
 } // namespace
 
-WorldSim::WorldSim(std::uint64_t worldSeed, std::size_t eventCap, DayLoopCatalogues school, WorldCommerceCatalogues commerce)
-    : EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap), School_(school), Commerce_(commerce)
+WorldSim::WorldSim(std::uint64_t worldSeed, std::size_t eventCap, DayLoopCatalogues school, WorldCommerceCatalogues commerce,
+                   WorldSchoolCatalogues lessons)
+    : EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap), School_(school), Commerce_(commerce), Lessons_(lessons)
 {
     State_ = MakeWorldState(worldSeed);
 }
 
 WorldSim::WorldSim(std::uint64_t worldSeed, const CharacterCreator& creation, std::size_t eventCap,
-                   DayLoopCatalogues school, WorldCommerceCatalogues commerce)
+                   DayLoopCatalogues school, WorldCommerceCatalogues commerce, WorldSchoolCatalogues lessons)
     : State_(MakeWorldState(worldSeed, creation)), EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap),
-      School_(school), Commerce_(commerce)
+      School_(school), Commerce_(commerce), Lessons_(lessons)
 {
 }
 
-WorldSim::WorldSim(WorldState state, std::size_t eventCap, DayLoopCatalogues school, WorldCommerceCatalogues commerce)
-    : State_(std::move(state)), EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap), School_(school), Commerce_(commerce)
+WorldSim::WorldSim(WorldState state, std::size_t eventCap, DayLoopCatalogues school, WorldCommerceCatalogues commerce,
+                   WorldSchoolCatalogues lessons)
+    : State_(std::move(state)), EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap), School_(school), Commerce_(commerce),
+      Lessons_(lessons)
 {
     // R8-04: the save reader supplies authenticated commerce (v10) or the one-time household initialisation (v6 to v9), so
     // the snapshot is taken exactly as given; a slice out of step with the clock refuses time commands rather than being repaired.
@@ -89,6 +102,13 @@ std::optional<Rejection> WorldSim::ValidateTimeCharge(std::int64_t minutes) cons
 
 std::optional<Rejection> WorldSim::Validate(const Command& command) const
 {
+    if (S04SuspendedBySchoolPlay(command.Payload))
+    {
+        if (std::optional<Rejection> open = SchoolPlayOpenRefusal(State_))
+            return open;
+    }
+    if (IsSchoolPhase2Command(command.Payload))
+        return ValidateSchoolPhase2(command);
     if (const auto* advance = std::get_if<AdvanceTime>(&command.Payload))
     {
         if (advance->Minutes <= 0)
@@ -254,6 +274,12 @@ std::optional<Rejection> WorldSim::Apply(const Command& command, CommandResult& 
     }
     else if (const auto* day = std::get_if<WorldDayCommand>(&command.Payload))
         return ApplyWorldDayCommand(*day, result);
+    else if (const auto* work = std::get_if<SchoolWorkCommand>(&command.Payload))
+        return ApplySchoolWorkCommand(*work, result);
+    else if (std::holds_alternative<SchoolWeekOrder>(command.Payload) || std::holds_alternative<SchoolWeekResolve>(command.Payload))
+        return ApplySchoolWeekCommand(command, result);
+    else if (IsSchoolPhase2Command(command.Payload))
+        return ApplySchoolLessonCommand(command, result);
     else
         return ApplyCommerceCommand(command);
     return std::nullopt;
@@ -273,8 +299,12 @@ CommandResult WorldSim::Submit(const Command& command)
     // Only a command whose application can still be refused pays for a copy of the world.
     std::optional<WorldState> before;
     if (NeedsRollbackSnapshot(command) || std::holds_alternative<AdvanceTime>(command.Payload) ||
-        std::holds_alternative<WorldDayCommand>(command.Payload))
+        std::holds_alternative<WorldDayCommand>(command.Payload) || IsSchoolPhase2Command(command.Payload))
         before = State_;
+    // S04: a school command's result is published only once the whole transaction is accepted.
+    StagedLesson_.reset();
+    StagedWork_.reset();
+    StagedWeek_.reset();
     std::optional<Rejection> late = Apply(command, result);
     if (!late && State_.Clock.Now() != result.From)
     {
@@ -299,6 +329,15 @@ CommandResult WorldSim::Submit(const Command& command)
     }
     State_.Seq += 1;
     Log_.push_back(command);
+    if (StagedLesson_)
+        LastLesson_ = std::move(StagedLesson_);
+    if (StagedWork_)
+        LastWork_ = std::move(StagedWork_);
+    if (StagedWeek_)
+        LastWeek_ = std::move(StagedWeek_);
+    StagedLesson_.reset();
+    StagedWork_.reset();
+    StagedWeek_.reset();
     result.Accepted = true;
     result.Seq = State_.Seq;
     result.To = State_.Clock.Now();

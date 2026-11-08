@@ -45,4 +45,18 @@ WorldSaveResult WorldSaveReadPlayer(const JsonValue& value, PlayerPlacement& pla
 std::string WorldSaveWriteCommerce(const WorldState& world, const CharacterCreationSave& creation);
 /** v10 reads and validates pw.commerce/1; v6 to v9 receive InitialiseCommerce(householdRank, saved instant) once. The clock must be read. */
 WorldSaveResult WorldSaveReadCommerce(const JsonValue& value, WorldState& world, std::int32_t version, std::int32_t householdRank);
+/** S04 (WorldSaveSchool.cpp): the writer's "school" member text, or empty when the school slices break a rule. */
+std::string WorldSaveWriteSchool(const WorldState& world);
+/** v11 reads and validates pw.school/1 against the world's clock and day; v6 to v10 start with empty school slices. */
+WorldSaveResult WorldSaveReadSchool(const JsonValue& value, WorldState& world, std::int32_t version);
+/** S04 pw.school/1 stable names, indexed by SchoolLessonMode and by ModelGrade / StructureGrade (shared by writer and reader). */
+inline constexpr std::string_view WorldSaveSchoolModeNames[] = {"foreground", "routine", "attend"};
+inline constexpr std::string_view WorldSaveSchoolGradeNames[] = {"sound", "partial", "unsound"};
+/** S04: a pw.school/1 text field: printable ASCII without spaces or commas, possibly empty. */
+bool WorldSaveSchoolSafeText(std::string_view text);
+/** S04 (WorldSaveSchool.cpp): the envelope without the world rules; empty when a field or native state cannot be written. */
+std::string WorldSaveSchoolEncode(const SchoolSessionsState& sessions, const SchoolWorkState& work, const SchoolWeekState& week);
+/** S04 (WorldSaveSchoolRules.cpp): the semantic rules of decoded school slices inside `world` (its clock and day loop). */
+bool WorldSaveSchoolValid(const SchoolSessionsState& sessions, const SchoolWorkState& work, const SchoolWeekState& week,
+                          const WorldState& world);
 } // namespace PerfectWorld

@@ -223,6 +223,9 @@ void CheckSame(const WorldSaveData& a, const WorldSaveData& b, const char* what)
     Check(a.World.Rng == b.World.Rng, what);
     Check(a.World.Conversations == b.World.Conversations && a.World.Doors == b.World.Doors, what);
     Check(a.World.Commerce == b.World.Commerce && a.World.Journal.Encounters == b.World.Journal.Encounters, what);
+    Check(a.World.SchoolSessions == b.World.SchoolSessions && a.World.SchoolWork == b.World.SchoolWork &&
+              SerialiseSchoolState(a.World) == SerialiseSchoolState(b.World),
+          what);
     Check(a.World.DayLoop == b.World.DayLoop && SerialiseDayLoop(a.World.DayLoop) == SerialiseDayLoop(b.World.DayLoop), what);
     Check(IsWorldDayInStep(a.World) == IsWorldDayInStep(b.World) && a.World.DayLoop.Now == a.World.Clock.Now(), what);
     Check(a.Player == b.Player, what);

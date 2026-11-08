@@ -123,7 +123,7 @@ void R84CommerceFieldEdits()
         apply(edited.Commerce);
         Check(!(edited.Commerce == base.Commerce), name);
         const auto sections = HashWorldSections(edited);
-        Check(sections.size() == baseSections.size() && sections.back().Name == "commerce", name);
+        Check(sections.size() == baseSections.size() && sections.size() == 11 && sections[9].Name == "commerce", name);
         for (std::size_t i = 0; i < sections.size(); ++i)
             Check((sections[i].Hash != baseSections[i].Hash) == (sections[i].Name == "commerce"), name);
         CheckAgainstReference(edited, name);
@@ -156,7 +156,7 @@ void R84FrozenFixtureAuthentication()
     all.U(6);
     for (const auto& [name, hash] : RefSections(loaded.World))
     {
-        if (name == "commerce")
+        if (name == "commerce" || name == "school")
             continue;
         all.S(name);
         all.U(hash);
@@ -165,7 +165,33 @@ void R84FrozenFixtureAuthentication()
     Check(HashWorldStateWithDoorsText(loaded.World, SerialiseDoorState(loaded.World.Doors), 6) == 0x49b5048af20be33aULL,
           "the library's hash-6 encoding agrees");
     Check(HashWorldState(loaded.World) != 0x49b5048af20be33aULL && RefWorld(loaded.World) == HashWorldState(loaded.World),
-          "the migrated world hashes differently, as version 7");
+          "the migrated world hashes differently, as the current version");
+}
+
+/** S04: the frozen v10 writer's checksum (ef218b8), recomputed by the independent reference with its ten hash-7 sections. */
+void S04FrozenV10Authentication()
+{
+    std::ifstream in(std::string(PW_COMMERCE_FIXTURE_DIR) + "/world_v10_doors_29.json", std::ios::binary);
+    Check(static_cast<bool>(in), "the frozen v10 fixture is readable");
+    const std::string text{std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
+    Check(text.size() == 4976 && text.find("\"stateHash\": \"0xbbf29a27855841cd\"") != std::string::npos, "the frozen v10 fixture is untouched");
+    WorldSaveData loaded;
+    const WorldSaveResult result = DeserializeWorldSave(text, loaded);
+    Check(result.Succeeded() && result.SourceVersion == 10 && !result.HashVerified && !result.Migrated, "the v10 fixture migrates honestly");
+    RefBytes all;
+    all.U(7);
+    for (const auto& [name, hash] : RefSections(loaded.World))
+    {
+        if (name == "school")
+            continue;
+        all.S(name);
+        all.U(hash);
+    }
+    Check(RefFnv1a(all.Data) == 0xbbf29a27855841cdULL, "the reference's hash-7 encoding reproduces the stored v10 checksum");
+    Check(HashWorldStateWithDoorsText(loaded.World, SerialiseDoorState(loaded.World.Doors), 7) == 0xbbf29a27855841cdULL,
+          "the library's hash-7 encoding agrees");
+    Check(HashWorldState(loaded.World) != 0xbbf29a27855841cdULL && RefWorld(loaded.World) == HashWorldState(loaded.World),
+          "the migrated world (empty school slices) hashes differently, as version 8");
 }
 #endif
 
@@ -261,6 +287,7 @@ int main()
     R84CommerceFieldEdits();
 #ifdef PW_COMMERCE_FIXTURE_DIR
     R84FrozenFixtureAuthentication();
+    S04FrozenV10Authentication();
 #else
     Check(false, "PW_COMMERCE_FIXTURE_DIR must be defined by CMakeLists.txt");
 #endif
