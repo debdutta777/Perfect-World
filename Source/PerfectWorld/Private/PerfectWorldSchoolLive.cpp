@@ -15,11 +15,6 @@
 
 namespace PWSchoolLive
 {
-FText UnwiredText()
-{
-    return LOCTEXT("S03Unwired", "School lessons, homework and the week plan are not connected to the world clock in this build yet, so nothing was started or recorded. Reading is unaffected.");
-}
-
 FString StreamOf(UWorld& World)
 {
     FString Stream = TEXT("science");
@@ -100,29 +95,26 @@ const FS03Content* SharedContent(UWorld& World, FString& OutWhy)
     return S03Cache.Add(Stream, MoveTemp(Built)).Get();
 }
 
-// ---- S03Port ----
+// ---- School state of the world ----
 
 bool CommandsRouted()
 {
-    return false;
+    return true; // S05: the reducer routes school.lesson.*, school.work.apply and school.week.* (S04)
 }
 
-const PerfectWorld::SchoolSessionsState& SessionsOf(const PerfectWorld::WorldState& /*State*/)
+const PerfectWorld::SchoolSessionsState& SessionsOf(const PerfectWorld::WorldState& State)
 {
-    static const PerfectWorld::SchoolSessionsState S03Empty;
-    return S03Empty; // historical worlds start empty; becomes State.SchoolSessions when the reducer owns it
+    return State.SchoolSessions;
 }
 
-const PerfectWorld::SchoolWorkState& WorkOf(const PerfectWorld::WorldState& /*State*/)
+const PerfectWorld::SchoolWorkState& WorkOf(const PerfectWorld::WorldState& State)
 {
-    static const PerfectWorld::SchoolWorkState S03Empty;
-    return S03Empty;
+    return State.SchoolWork;
 }
 
-const PerfectWorld::SchoolWeekState& StandingOf(const PerfectWorld::WorldState& /*State*/)
+const PerfectWorld::SchoolWeekState& StandingOf(const PerfectWorld::WorldState& State)
 {
-    static const PerfectWorld::SchoolWeekState S03Empty;
-    return S03Empty;
+    return State.SchoolWeek;
 }
 
 const PerfectWorld::SchoolLessonBinding* BindingForNow(UWorld& World)
@@ -171,6 +163,27 @@ const UPWLaneLifeSubsystem* S03Life(const TWeakObjectPtr<UWorld>& World)
     return Live != nullptr ? UPWLaneLifeSubsystem::Get(Live) : nullptr;
 }
 
+/** The core's refusal in words: A1's explanation for a school.session.<reason> code, else a neutral sentence. Never a code. */
+FText RefusalWords(const FS03Content& Content, const std::string& Code)
+{
+    constexpr std::string_view Prefix = "school.session.";
+    if (Code.rfind(Prefix.data(), 0) == 0)
+    {
+        if (const PerfectWorld::SchoolLessonExplanation* Explanation = PerfectWorld::FindSchoolLessonExplanation(Content.Lessons, Code.substr(Prefix.size())))
+        {
+            if (const std::string* Found = PerfectWorld::FindSchoolLessonText(Content.Lessons, Explanation->TextKey))
+            {
+                return PWLaneLife::ToText(*Found);
+            }
+        }
+    }
+    if (Code == "school.lesson_open" || Code == "school.paper_open")
+    {
+        return LOCTEXT("S05Held", "Finish your lesson or paper first.");
+    }
+    return LOCTEXT("S05Neutral", "The lesson cannot be opened right now.");
+}
+
 /** The school-day panel's bridge. Reads are the portable day view; opening is refused until the reducer routes school.lesson.open. */
 class FS03DayWorld final : public IPWSchoolDayWorld
 {
@@ -202,17 +215,59 @@ public:
         return true;
     }
 
-    virtual FText OpenLesson(const FString& /*BindingId*/, PerfectWorld::SchoolLessonMode /*Mode*/, const FString& /*GoalName*/) override
+    virtual FText OpenLesson(const FString& BindingId, PerfectWorld::SchoolLessonMode Mode, const FString& GoalName) override
     {
-        // S03Port: submit school.lesson.open here once the reducer routes it; a refusal's code goes through the phase2.a1.unavailable texts.
-        return UnwiredText();
+        UWorld* Live = World.Get();
+        UPWLaneLifeSubsystem* Life = Live != nullptr ? UPWLaneLifeSubsystem::Get(Live) : nullptr;
+        FString Why;
+        const FS03Content* Content = Live != nullptr ? SharedContent(*Live, Why) : nullptr;
+        if (Life == nullptr || Content == nullptr)
+        {
+            return LOCTEXT("S05NoSchool", "The school is not available right now.");
+        }
+        const std::string Id = TCHAR_TO_UTF8(*BindingId);
+        const PerfectWorld::SchoolLessonBinding* Binding = PerfectWorld::FindSchoolLessonBinding(Content->Lessons, Id);
+        if (Binding == nullptr)
+        {
+            return LOCTEXT("S05NoBinding", "That lesson is not on the timetable.");
+        }
+        PerfectWorld::SchoolLessonGoal Goal = PerfectWorld::ModelGoal::UnderstandModel;
+        if (Mode == PerfectWorld::SchoolLessonMode::Foreground)
+        {
+            // The goal comes from the content's own options, never from the widget: an unknown name is refused here.
+            const std::string Name = TCHAR_TO_UTF8(*GoalName);
+            bool bFound = false;
+            for (const PerfectWorld::SchoolLessonGoalOption& Option : PerfectWorld::SchoolLessonGoalOptions(Content->Lessons, Binding->Structure))
+            {
+                if (Option.Name == Name)
+                {
+                    Goal = Option.Goal;
+                    bFound = true;
+                    break;
+                }
+            }
+            if (!bFound)
+            {
+                return LOCTEXT("S05NoGoal", "Choose what you want from this lesson first.");
+            }
+        }
+        PerfectWorld::SchoolLessonOpen Open;
+        Open.BindingId = Id;
+        Open.Mode = Mode;
+        Open.Goal = Goal;
+        const PerfectWorld::CommandResult Done = Life->SubmitSchoolCommand(PerfectWorld::Command{PerfectWorld::CommandSource::Player, Open});
+        if (Done.Accepted)
+        {
+            return FText::GetEmpty();
+        }
+        return RefusalWords(*Content, Done.Why.Code);
     }
 
 private:
     TWeakObjectPtr<UWorld> World;
 };
 
-/** The lesson shell's bridge: every read is a portable query; every command is refused until routed. */
+/** The lesson shell's bridge: every read is a portable query; every command is a school.lesson.* reducer command (S05). */
 class FS03LessonBridge final : public PWClassLesson::IBridge
 {
 public:
@@ -242,7 +297,14 @@ public:
         const UPWLaneLifeSubsystem* Life = S03Life(World);
         return Life != nullptr ? PerfectWorld::QuerySchoolLesson(SessionsOf(Life->GetWorldState())) : PerfectWorld::SchoolLessonView{};
     }
-    virtual PerfectWorld::SchoolSessionResult OpenLesson(PerfectWorld::SchoolLessonMode, const PerfectWorld::SchoolLessonGoal&) override { return Refused(); }
+    virtual PerfectWorld::SchoolSessionResult OpenLesson(PerfectWorld::SchoolLessonMode Mode, const PerfectWorld::SchoolLessonGoal& Goal) override
+    {
+        PerfectWorld::SchoolLessonOpen Open;
+        Open.BindingId = Binding.Id;
+        Open.Mode = Mode;
+        Open.Goal = Goal;
+        return Submit(PerfectWorld::CommandPayload(MoveTemp(Open)));
+    }
     virtual PerfectWorld::SchoolLessonQuote QuoteAction(uint64 Session, const PerfectWorld::SchoolLessonAction& Action) const override
     {
         const UPWLaneLifeSubsystem* Life = S03Life(World);
@@ -254,8 +316,21 @@ public:
         }
         return PerfectWorld::QuoteSchoolLessonAction(SessionsOf(Life->GetWorldState()), GetCatalogues(), Session, Action);
     }
-    virtual PerfectWorld::SchoolSessionResult ChooseAction(uint64, const PerfectWorld::SchoolLessonAction&) override { return Refused(); }
-    virtual PerfectWorld::SchoolSessionResult CloseLesson(uint64, bool, int32) override { return Refused(); }
+    virtual PerfectWorld::SchoolSessionResult ChooseAction(uint64 Session, const PerfectWorld::SchoolLessonAction& Action) override
+    {
+        PerfectWorld::SchoolLessonChoose Choose;
+        Choose.Session = Session;
+        Choose.Action = Action;
+        return Submit(PerfectWorld::CommandPayload(MoveTemp(Choose)));
+    }
+    virtual PerfectWorld::SchoolSessionResult CloseLesson(uint64 Session, bool bCancel, int32 ElapsedMinutes) override
+    {
+        PerfectWorld::SchoolLessonClose Close;
+        Close.Session = Session;
+        Close.Cancel = bCancel;
+        Close.ElapsedMinutes = ElapsedMinutes;
+        return Submit(PerfectWorld::CommandPayload(MoveTemp(Close)));
+    }
     virtual FText ResolveText(const FString& Key) const override
     {
         FString Why;
@@ -276,11 +351,30 @@ private:
         FString Why;
         return World.IsValid() && SharedContent(*World.Get(), Why) != nullptr;
     }
-    static PerfectWorld::SchoolSessionResult Refused()
+    /** Submits one school.lesson.* command through the reducer and returns the sim's own result, or the core's refusal code unchanged. */
+    PerfectWorld::SchoolSessionResult Submit(PerfectWorld::CommandPayload Payload) const
     {
+        UWorld* Live = World.Get();
+        UPWLaneLifeSubsystem* Life = Live != nullptr ? UPWLaneLifeSubsystem::Get(Live) : nullptr;
         PerfectWorld::SchoolSessionResult Result;
-        Result.Issue = {std::string(TCHAR_TO_UTF8(UnwiredCode)), "school.lesson.* is not routed through the reducer"};
-        return Result;
+        if (Life == nullptr)
+        {
+            Result.Issue = {"school.session.invalid_state", "no world"};
+            return Result;
+        }
+        const PerfectWorld::CommandResult Done = Life->SubmitSchoolCommand(PerfectWorld::Command{PerfectWorld::CommandSource::Player, MoveTemp(Payload)});
+        if (!Done.Accepted)
+        {
+            Result.Issue = {Done.Why.Code, Done.Why.Message};
+            return Result;
+        }
+        const std::optional<PerfectWorld::SchoolSessionResult>& Last = Life->GetSim().LastSchoolLessonResult();
+        if (!Last.has_value())
+        {
+            Result.Issue = {"school.session.invalid_state", "the reducer accepted the command but published no result"};
+            return Result;
+        }
+        return *Last;
     }
 
     inline static const PerfectWorld::SchoolSessionCatalogues S03NoCats{};

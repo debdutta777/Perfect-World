@@ -5,7 +5,7 @@
 
 #define LOCTEXT_NAMESPACE "PerfectWorldSchoolLiveWork"
 
-// S03: the study-desk bridge and the week-planner bridge. Reads are portable views over the live world; mutations are refused (unrouted).
+// S03/S05: the study-desk bridge and the week-planner bridge. Reads are portable views over the live world; mutations are the real reducer commands (S05).
 
 namespace PWSchoolLive
 {
@@ -17,9 +17,16 @@ const UPWLaneLifeSubsystem* S03WorkLife(const TWeakObjectPtr<UWorld>& World)
     return Live != nullptr ? UPWLaneLifeSubsystem::Get(Live) : nullptr;
 }
 
-PerfectWorld::SchoolIssue S03WorkRefusal()
+UPWLaneLifeSubsystem* S05LiveLife(const TWeakObjectPtr<UWorld>& World)
 {
-    return {std::string(TCHAR_TO_UTF8(UnwiredCode)), "school.work.apply / school.week.* are not routed through the reducer"};
+    UWorld* Live = World.Get();
+    return Live != nullptr ? UPWLaneLifeSubsystem::Get(Live) : nullptr;
+}
+
+PerfectWorld::SchoolIssue S05StartPracticeRefusal()
+{
+    // No practice offers exist on the desk yet (PracticeOffers is empty), so a start can only be a stale click.
+    return {"school.practice.unavailable", "no practice offer is routed on the live desk"};
 }
 
 /** A5's desk bridge. Records come from QuerySchoolAcademicRecord; Apply and practice are refused until routed. */
@@ -54,11 +61,29 @@ public:
         return true;
     }
 
-    virtual PerfectWorld::SchoolWorkResult Apply(const PerfectWorld::SchoolWorkCommand&) override
+    virtual PerfectWorld::SchoolWorkResult Apply(const PerfectWorld::SchoolWorkCommand& Command) override
     {
         PerfectWorld::SchoolWorkResult Result;
-        Result.Issue = S03WorkRefusal(); // S03Port: school.work.apply through the reducer, one transaction
-        return Result;
+        UPWLaneLifeSubsystem* Life = S05LiveLife(World);
+        if (Life == nullptr)
+        {
+            Result.Issue = {"school.work.unavailable", "no world"};
+            return Result;
+        }
+        // school.work.apply: the reducer reserves the paper block at Begin and settles the time once at Submit or Cancel.
+        const PerfectWorld::CommandResult Done = Life->SubmitSchoolCommand(PerfectWorld::Command{PerfectWorld::CommandSource::Player, Command});
+        if (!Done.Accepted)
+        {
+            Result.Issue = {Done.Why.Code, Done.Why.Message};
+            return Result;
+        }
+        const std::optional<PerfectWorld::SchoolWorkResult>& Last = Life->GetSim().LastSchoolWorkResult();
+        if (!Last.has_value())
+        {
+            Result.Issue = {"school.work.unavailable", "the reducer accepted the command but published no result"};
+            return Result;
+        }
+        return *Last;
     }
 
     virtual PerfectWorld::AssessmentQuote Quote(std::string_view WorkId, const PerfectWorld::AssessmentAnswer& Answer) const override
@@ -91,7 +116,7 @@ public:
 
     virtual TArray<PWA5::FPracticeOffer> PracticeOffers() const override { return {}; }
 
-    virtual PerfectWorld::SchoolIssue StartPractice(std::string_view) override { return S03WorkRefusal(); }
+    virtual PerfectWorld::SchoolIssue StartPractice(std::string_view) override { return S05StartPracticeRefusal(); }
 
 private:
     TWeakObjectPtr<UWorld> World;
@@ -126,29 +151,64 @@ public:
             OutPreview.Activities = *Content->Cats.Day.Activities;
         }
         OutPreview.Sessions = SessionsOf(State);
-        PerfectWorld::WeekPlan Base;
-        Base.Days.resize(7);
+        const PerfectWorld::WeekPlan Base = MakeBase();
         const std::string Stream = TCHAR_TO_UTF8(*Content->Stream);
         OutPreview.Build = PerfectWorld::BuildSchoolWeekPlan(State, OutPreview.Standing, OutPreview.Sessions, Base,
             PerfectWorld::SchoolLessonBindings(Content->Lessons, Stream), Content->Cats);
         return true; // Known stays empty: no source of known promises is routed yet (A6 handoff, risk 4)
     }
 
-    virtual FPWPlannerOutcome SetOrder(const PerfectWorld::SchoolStandingOrder&, bool) override
+    virtual FPWPlannerOutcome SetOrder(const PerfectWorld::SchoolStandingOrder& Order, bool bRemove) override
     {
-        FPWPlannerOutcome Outcome; // S03Port: school.week.order
-        Outcome.Code = UnwiredCode;
+        FPWPlannerOutcome Outcome;
+        UPWLaneLifeSubsystem* Life = S05LiveLife(World);
+        if (Life == nullptr)
+        {
+            Outcome.Code = TEXT("school.week.unavailable");
+            return Outcome;
+        }
+        // school.week.order moves no clock; the core's code goes back unchanged and the planner words it.
+        const PerfectWorld::CommandResult Done = Life->SubmitSchoolCommand(PerfectWorld::Command{PerfectWorld::CommandSource::Player, PerfectWorld::SchoolWeekOrder{Order, bRemove}});
+        Outcome.bAccepted = Done.Accepted;
+        Outcome.Code = Done.Accepted ? FString() : PWLaneLife::ToFString(Done.Why.Code);
         return Outcome;
     }
 
     virtual FPWPlannerResolution Resolve() override
     {
-        FPWPlannerResolution Resolution; // S03Port: school.week.resolve, and publish the SchoolWeekResult for the recap
-        Resolution.Outcome.Code = UnwiredCode;
+        FPWPlannerResolution Resolution;
+        UPWLaneLifeSubsystem* Life = S05LiveLife(World);
+        FPWPlannerPreview Preview;
+        FString Why;
+        if (Life == nullptr || !ReadPreview(Preview, Why))
+        {
+            Resolution.Outcome.Code = TEXT("school.week.unavailable");
+            return Resolution;
+        }
+        // The reducer rebuilds the plan from State.SchoolWeek and this base at the same instant, so Preview.Build.Plan is what runs.
+        const PerfectWorld::CommandResult Done = Life->SubmitSchoolCommand(PerfectWorld::Command{PerfectWorld::CommandSource::Player, PerfectWorld::SchoolWeekResolve{MakeBase()}});
+        Resolution.Outcome.bAccepted = Done.Accepted;
+        Resolution.Outcome.Code = Done.Accepted ? FString() : PWLaneLife::ToFString(Done.Why.Code);
+        Resolution.Plan = Preview.Build.Plan;
+        if (Done.Accepted)
+        {
+            const std::optional<PerfectWorld::SchoolWeekResult>& Last = Life->GetSim().LastSchoolWeekResult();
+            if (Last.has_value())
+            {
+                Resolution.Result = *Last;
+            }
+        }
         return Resolution;
     }
 
 private:
+    static PerfectWorld::WeekPlan MakeBase()
+    {
+        PerfectWorld::WeekPlan Base;
+        Base.Days.resize(7);
+        return Base;
+    }
+
     TWeakObjectPtr<UWorld> World;
 };
 } // namespace
@@ -160,16 +220,6 @@ TSharedRef<PWA5::IStudyWorld> MakeStudyWorld(UWorld& World)
 
 TSharedRef<IPWSchoolPlannerWorld> MakePlannerWorld(UWorld& World)
 {
-    // The planner words a refusal through phase2.a6.refusal.<code>; serve ours.
-    PWSchoolPlanner::SetTextProvider([](const FString& Key, FText& Out)
-    {
-        if (Key == FString(TEXT("phase2.a6.refusal.")) + UnwiredCode)
-        {
-            Out = UnwiredText();
-            return true;
-        }
-        return false;
-    });
     return MakeShared<FS03PlannerWorld>(World);
 }
 } // namespace PWSchoolLive

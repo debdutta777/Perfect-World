@@ -64,6 +64,10 @@ FText BrRefusalText(const FString& Code)
     {
         return LOCTEXT("RefuseUnsettled", "Too much is happening at once. Try again in a moment.");
     }
+    if (Code == TEXT("school.lesson_open") || Code == TEXT("school.paper_open")) // S05
+    {
+        return LOCTEXT("RefuseSchoolOpen", "Finish your lesson or paper first. Time and everything else wait until you do.");
+    }
     if (Code == TEXT("conversation.already_open"))
     {
         return LOCTEXT("RefuseAlreadyOpen", "You are already in a conversation.");
