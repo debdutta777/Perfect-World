@@ -199,6 +199,10 @@ public:
     PerfectWorld::CommandResult R88CommerceSubmit(const PerfectWorld::Command& Command);
     void R88InstallCommerce();
 
+    // S05: the Phase 2 school commands (school.lesson.*, school.work.apply, school.week.*) go through the same one sim.
+    const PerfectWorld::WorldSim& GetSim() const { return *Sim; }
+    PerfectWorld::CommandResult SubmitSchoolCommand(const PerfectWorld::Command& Command) { return SubmitCommand(Command); }
+
 private:
     // ---- Clock (PerfectWorldLaneLifeClock.cpp) ----
     void BuildWorld();

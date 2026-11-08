@@ -27,6 +27,11 @@ struct FS03LessonRun
 {
     PerfectWorld::GameInstant ClockAtPanel = 0;
     FString SelectedId;
+    FString BindingId;
+    uint64 SessionId = 0;
+    PerfectWorld::GameInstant ClockAtOpen = 0;
+    int32 Choices = 0;
+    bool bReady = false;
     bool bLessonScreen = false;
 };
 
@@ -195,8 +200,7 @@ void AppendSchoolLessonRound9Steps(TArray<FStepDef>& Out)
     }));
     Out.Add(MakeShotStep(TEXT("shot_school_day_panel")));
 
-    // Open a lesson from the panel. Routed: a foreground lesson opens and the lesson screen takes over. Unrouted: the core path refuses in words
-    // and changes nothing, then the lesson screen is opened read-only for the period (Back leaves it).
+    // Open a foreground lesson from the panel: the core opens it (school.lesson.open through the reducer) and the lesson screen takes over.
     Out.Add(S03Action(TEXT("open_a_lesson_from_the_panel"), 15.0, [Run](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
     {
         UWorld* World = Sub.GetPlayWorld();
@@ -207,35 +211,30 @@ void AppendSchoolLessonRound9Steps(TArray<FStepDef>& Out)
         {
             return FStepOutcome::Fail(TEXT("the day panel is not open"));
         }
-        if (PWSchoolLive::CommandsRouted())
+        if (!PWSchoolLive::CommandsRouted())
         {
-            if (!Day->RequestOpen(PerfectWorld::SchoolLessonMode::Foreground))
-            {
-                return FStepOutcome::Fail(TEXT("the core refused the foreground lesson: ") + Day->GetNotice().ToString());
-            }
-            Run->bLessonScreen = S03LessonScreen(World).IsValid();
-            return Run->bLessonScreen ? FStepOutcome::Pass(TEXT("a foreground lesson opened and the lesson screen took over")) : FStepOutcome::Fail(TEXT("the lesson screen did not open"));
+            return FStepOutcome::Fail(TEXT("the school commands are not routed through the reducer"));
         }
-        const PerfectWorld::GameInstant Before = Life->GetNow();
-        if (Day->RequestOpen(PerfectWorld::SchoolLessonMode::Attend))
+        Run->ClockAtOpen = Life->GetNow();
+        if (!Day->RequestOpen(PerfectWorld::SchoolLessonMode::Foreground))
         {
-            return FStepOutcome::Fail(TEXT("the open was accepted although school.lesson.open is not routed"));
+            return FStepOutcome::Fail(TEXT("the core refused the foreground lesson: ") + Day->GetNotice().ToString());
         }
-        if (Day->GetNotice().IsEmpty() || Life->GetNow() != Before)
+        const PerfectWorld::SchoolLessonView View = PerfectWorld::QuerySchoolLesson(PWSchoolLive::SessionsOf(Life->GetWorldState()));
+        if (!View.Run.has_value() || !S03LessonScreen(World).IsValid())
         {
-            return FStepOutcome::Fail(TEXT("the refusal had no words, or the clock moved"));
+            return FStepOutcome::Fail(TEXT("the core holds no open lesson, or the lesson screen did not open"));
         }
-        if (!Presenter->OpenLesson(Run->SelectedId) || !S03LessonScreen(World).IsValid())
-        {
-            return FStepOutcome::Fail(TEXT("the read-only lesson screen did not open for the chosen period"));
-        }
+        Run->SessionId = View.Run->Session;
+        Run->BindingId = PWLaneLife::ToFString(View.Run->Binding.Id);
         Run->bLessonScreen = true;
-        return FStepOutcome::Pass(TEXT("UNWIRED: open refused in words (") + Day->GetNotice().ToString() + TEXT("); the lesson screen opened read-only"));
+        return FStepOutcome::Pass(FString::Printf(TEXT("the core opened lesson %s (session %llu); the lesson screen took over"), *Run->BindingId, Run->SessionId));
     }));
     Out.Add(MakeShotStep(TEXT("shot_lesson_screen")));
 
-    // One choice. Routed: a real structure decision; unrouted: the start is refused with the unwired code and nothing moves.
-    Out.Add(S03Action(TEXT("make_one_lesson_choice"), 15.0, [Run](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
+    // Real choices: press enabled rows of the lesson screen (each is one school.lesson.choose through the reducer) until the exercise is
+    // ready to record, or the budget is spent. At least one choice must be accepted by the core.
+    Out.Add(S03Action(TEXT("make_real_lesson_choices"), 30.0, [Run](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
     {
         UWorld* World = Sub.GetPlayWorld();
         const TSharedPtr<SPWClassLesson> Lesson = S03LessonScreen(World);
@@ -244,32 +243,63 @@ void AppendSchoolLessonRound9Steps(TArray<FStepDef>& Out)
         {
             return FStepOutcome::Fail(TEXT("no lesson screen"));
         }
-        const PerfectWorld::GameInstant Before = Life->GetNow();
-        if (PWSchoolLive::CommandsRouted())
+        for (int32 Guard = 0; Guard < 40 && !Lesson->GetFrame().bReadyToClose; ++Guard)
         {
-            if (!Lesson->GetFrame().bHasRun && !Lesson->ExecuteOpen(PerfectWorld::SchoolLessonMode::Foreground).Ok())
-            {
-                return FStepOutcome::Fail(TEXT("the lesson would not start: ") + Lesson->GetLastIssueCode());
-            }
+            bool bPressed = false;
             for (const FString& Key : Lesson->GetActionKeys())
             {
-                if (Lesson->IsActionEnabled(Key) && !Key.Contains(TEXT("back")) && !Key.Contains(TEXT("leave")) && Lesson->PressAction(Key))
+                if (Key == TEXT("open") || Key == TEXT("record") || !Lesson->IsActionEnabled(Key))
                 {
-                    return Lesson->GetLastResult().Ok() ? FStepOutcome::Pass(TEXT("one real lesson choice accepted: ") + Key) : FStepOutcome::Fail(TEXT("the core refused the choice: ") + Lesson->GetLastIssueCode());
+                    continue;
+                }
+                if (Lesson->PressAction(Key))
+                {
+                    bPressed = true;
+                    if (Lesson->GetLastResult().Ok() && Lesson->GetLastResult().Session == Run->SessionId)
+                    {
+                        ++Run->Choices;
+                    }
+                    break;
                 }
             }
-            return FStepOutcome::Fail(TEXT("the lesson screen offered no enabled choice"));
+            if (!bPressed)
+            {
+                break;
+            }
         }
-        const PerfectWorld::SchoolSessionResult Result = Lesson->ExecuteOpen(PerfectWorld::SchoolLessonMode::Attend);
-        if (Result.Ok() || Lesson->GetLastIssueCode() != PWSchoolLive::UnwiredCode || Life->GetNow() != Before)
+        if (Run->Choices < 1)
         {
-            return FStepOutcome::Fail(FString::Printf(TEXT("expected the unwired refusal with no time moved; got code '%s'"), *Lesson->GetLastIssueCode()));
+            return FStepOutcome::Fail(TEXT("the core accepted no lesson choice; last code '") + Lesson->GetLastIssueCode() + TEXT("'"));
         }
-        return FStepOutcome::Pass(TEXT("UNWIRED: the lesson start was refused (") + Lesson->GetLastIssueCode() + TEXT("); no choice could be made and no time moved"));
+        Run->bReady = Lesson->GetFrame().bReadyToClose;
+        return FStepOutcome::Pass(FString::Printf(TEXT("%d choices accepted by the core; ready to record: %d"), Run->Choices, Run->bReady));
     }));
 
-    // Close: Back leaves the lesson screen (to the day panel), then the panel closes; input and the clock come back.
-    Out.Add(S03Action(TEXT("close_the_lesson_and_the_panel"), 15.0, [](UPWAcceptanceSubsystem& Sub, FStepRuntime& Rt)
+    // Record the period (normal close when the exercise finished, else leave early); the core closes it and charges the time.
+    Out.Add(S03Action(TEXT("record_the_lesson"), 15.0, [Run](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
+    {
+        UWorld* World = Sub.GetPlayWorld();
+        const TSharedPtr<SPWClassLesson> Lesson = S03LessonScreen(World);
+        const UPWLaneLifeSubsystem* Life = UPWLaneLifeSubsystem::Get(World);
+        if (!Lesson.IsValid() || Life == nullptr)
+        {
+            return FStepOutcome::Fail(TEXT("no lesson screen"));
+        }
+        const PerfectWorld::SchoolSessionResult Result = Lesson->ExecuteClose(!Run->bReady);
+        if (!Result.Ok())
+        {
+            return FStepOutcome::Fail(TEXT("the core refused the close: ") + Lesson->GetLastIssueCode());
+        }
+        if (Life->GetNow() < Run->ClockAtOpen)
+        {
+            return FStepOutcome::Fail(TEXT("the clock went backwards"));
+        }
+        return FStepOutcome::Pass(FString::Printf(TEXT("the core closed the lesson (%s); the clock advanced %lld minutes"),
+            Run->bReady ? TEXT("recorded") : TEXT("left early"), static_cast<long long>(Life->GetNow() - Run->ClockAtOpen)));
+    }));
+
+    // Back leaves the summary (to the day panel); closing the panel restores game input and the clock.
+    Out.Add(S03Action(TEXT("close_the_panel_and_restore_play"), 15.0, [](UPWAcceptanceSubsystem& Sub, FStepRuntime& Rt)
     {
         UWorld* World = Sub.GetPlayWorld();
         UPWSchoolPresenter* Presenter = UPWSchoolPresenter::Get(World);
@@ -306,7 +336,7 @@ void AppendSchoolLessonRound9Steps(TArray<FStepDef>& Out)
         return Life != nullptr && Life->GetClockHold() == EPWClockHold::None ? FStepOutcome::Pass(TEXT("panel closed, game input and the clock restored")) : FStepOutcome::Wait();
     }));
 
-    // What the core recorded.
+    // What the core recorded: no open lesson, and a period record for the opened binding.
     Out.Add(S03Action(TEXT("core_recorded_the_lesson"), 10.0, [Run](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
     {
         const UPWLaneLifeSubsystem* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
@@ -315,15 +345,24 @@ void AppendSchoolLessonRound9Steps(TArray<FStepDef>& Out)
             return FStepOutcome::Fail(TEXT("no lane-life subsystem"));
         }
         const PerfectWorld::SchoolSessionsState& Sessions = PWSchoolLive::SessionsOf(Life->GetWorldState());
-        if (PWSchoolLive::CommandsRouted())
+        if (Sessions.Active.has_value())
         {
-            const bool bRecorded = !Sessions.Periods.empty() && Sessions.Periods.back().BindingId == std::string(TCHAR_TO_UTF8(*Run->SelectedId));
-            return bRecorded ? FStepOutcome::Pass(TEXT("the core's SchoolSessions holds the lesson's period record"))
-                             : FStepOutcome::Fail(TEXT("the core's SchoolSessions holds no record for the lesson"));
+            return FStepOutcome::Fail(TEXT("the core still holds an open lesson"));
         }
-        const bool bUnchanged = Sessions.Periods.empty() && !Sessions.Active.has_value() && !Life->GetWorldState().DayLoop.Attendance.Days.empty();
-        return bUnchanged ? FStepOutcome::Pass(TEXT("UNWIRED: the core recorded the school day's arrival and no lesson (none could be started); nothing was fabricated"))
-                          : FStepOutcome::Fail(TEXT("UNWIRED: unexpected school state"));
+        const std::string Id = TCHAR_TO_UTF8(*Run->BindingId);
+        for (const PerfectWorld::SchoolPeriodRecord& Record : Sessions.Periods)
+        {
+            if (Record.BindingId == Id)
+            {
+                if (Record.Completed != Run->bReady || Record.Cancelled == Run->bReady)
+                {
+                    return FStepOutcome::Fail(TEXT("the period record does not match how the lesson was closed"));
+                }
+                return FStepOutcome::Pass(FString::Printf(TEXT("the core's SchoolSessions holds the %s period for %s (mode foreground)"),
+                    Record.Completed ? TEXT("completed") : TEXT("cancelled"), *Run->BindingId));
+            }
+        }
+        return FStepOutcome::Fail(TEXT("the core's SchoolSessions holds no period record for the lesson"));
     }));
 }
 } // namespace PWAcceptance

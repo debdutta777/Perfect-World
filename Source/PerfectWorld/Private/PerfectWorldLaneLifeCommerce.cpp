@@ -7,6 +7,7 @@
 #include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "PerfectWorldNpcPresenceSubsystem.h"
 #include "PerfectWorldSchoolGate.h"
+#include "PerfectWorldSchoolLive.h" // S05
 
 // R88: keep commerce's borrowed content alive across resets and save adoption.
 void UPWLaneLifeSubsystem::R88InstallCommerce()
@@ -29,8 +30,15 @@ void UPWLaneLifeSubsystem::R88InstallCommerce()
             for (const auto& R88Row : R88Creator->GetSchoolStreams())
                 if (R88Row.bSelected) R88Stream = R88Row.Id.ToString();
     const auto* R88School = PWSchool::ScSharedSchoolContent(*GetWorld(), R88Stream, R88SchoolWhy);
+    // S05: the school content (lesson bindings, structure catalogues, papers) is bound to the ONE sim; FS03Content::Cats.Day is the same
+    // ScSharedSchoolContent binding as R88School, so the session catalogues agree.
+    FString S05Why;
+    const PWSchoolLive::FS03Content* S05School = PWSchoolLive::SharedContent(*GetWorld(), S05Why);
+    const PerfectWorld::WorldSchoolCatalogues S05Lessons = S05School != nullptr
+        ? PerfectWorld::WorldSchoolCatalogues{S05School->Cats.Structures, &S05School->Lessons, &S05School->Papers}
+        : PerfectWorld::WorldSchoolCatalogues{};
     Sim = MakeUnique<PerfectWorld::WorldSim>(Sim->State(), PerfectWorld::MaxEventsPerAdvance,
-        R88School != nullptr ? R88School->Binding : PerfectWorld::DayLoopCatalogues{}, R88CommerceContent->Catalogues());
+        R88School != nullptr ? R88School->Binding : PerfectWorld::DayLoopCatalogues{}, R88CommerceContent->Catalogues(), S05Lessons);
     const TWeakObjectPtr<UPWLaneLifeSubsystem> Weak(this);
     PWCommerce::FCmLiveAccess Access;
     Access.Lifetime = R88CommerceContent;
