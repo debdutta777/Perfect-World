@@ -94,7 +94,7 @@ struct CommerceContent;
  * flags 0/1, an absent instant an empty field, text fields printable ASCII without spaces or commas. A block is
  * "<key>=<byte length>" followed by exactly that many bytes of a native envelope (which ends in its own newline):
  *   pw.school/1, next_session=<u64>, active=none | active=<session>,<mode>,<openedAt>,<ready> then
- *   binding=<id>,<stream>,<subject>,<period>,<structure>,<family>,<title>,<brief>,<role> and outcome=<outcome>,
+ *   binding=<id>,<stream>,<subject>,<period>,<structure>,<family>,<title>,<brief>,<role>,<familySubject>,<caseRole> and outcome=<outcome>,
  *   periods=<n> then n pairs period=<day>,<period>,<bindingId>,<mode>,<completed>,<cancelled>,<instance> / outcome=<outcome>,
  *   blocks model (pw.structure_model), explain, investigate, coordinate, work=<n> then n of brief=<id>,<paperId>,<kind>,
  *   <availableAt>,<dueAt>,<title>,<brief>,<criteria>,<recovery> / times=<issuedAt>,<startedAt>,<submittedAt> / block paper
