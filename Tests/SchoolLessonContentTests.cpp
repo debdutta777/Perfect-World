@@ -104,6 +104,8 @@ void A1Catalogue(const P2CFixture& f, const SchoolLessonContent& content)
         for (std::size_t p = 0; p < stream.Lessons.size(); ++p)
         {
             const auto& b = stream.Lessons[p].Binding;
+            A1Expect(b.FamilySubject == stream.Lessons[p].FamilySubject && b.Role == stream.Lessons[p].Role,
+                "family subject and role survive binding lookup for session selection");
             A1Expect(b.Period == static_cast<std::int32_t>(p) && b.Stream == stream.Stream, "period order and stream");
             const auto issue = ValidateSchoolLessonBinding(b, cats);
             if (!issue.Ok()) std::cerr << b.Id << " " << issue.Code << '\n';

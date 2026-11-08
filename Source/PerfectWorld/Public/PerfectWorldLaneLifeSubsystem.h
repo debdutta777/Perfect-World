@@ -59,6 +59,8 @@ enum class EPWClockHold : uint8
     Conversation,
     Reading,
     Commerce, // R88: buy panel is a zero-minute reading overlay
+    /** S03: a school panel (day, lesson, study desk, paper) is open; reading and choosing hold the clock. */
+    School,
     /** The window is in the background. */
     Unfocused
 };

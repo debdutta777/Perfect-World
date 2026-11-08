@@ -13,6 +13,7 @@
 #include "PerfectWorldLaneLifePersistence.h"
 #include "PerfectWorldPlayerCharacter.h"
 #include "PerfectWorldBuyPresenter.h" // R88
+#include "PerfectWorldSchoolPresenter.h" // S03
 #include "PerfectWorldCommerceText.h" // R88
 #include "UI/SPWClockReadout.h"
 #include "Widgets/SWeakWidget.h"
@@ -357,6 +358,10 @@ bool UPWLaneLifeSubsystem::UpdateClockHold()
     {
         Hold = EPWClockHold::Commerce;
     }
+    else if (UPWSchoolPresenter::IsOpenIn(this)) // S03
+    {
+        Hold = EPWClockHold::School;
+    }
     else if (!FApp::HasFocus())
     {
         Hold = EPWClockHold::Unfocused;
@@ -366,7 +371,7 @@ bool UPWLaneLifeSubsystem::UpdateClockHold()
     // The core's mode controller turns real time into minutes only in free roam with no overlay. Menus, the conversation and the
     // reading are its ui_paused overlay; the window losing focus is handled here, before real time is offered to it. The overlay is
     // set only when it changes: setting it drops the sub-minute carry.
-    const bool bOverlay = Hold == EPWClockHold::Menu || Hold == EPWClockHold::Conversation || Hold == EPWClockHold::Reading || Hold == EPWClockHold::Commerce; // R88
+    const bool bOverlay = Hold == EPWClockHold::Menu || Hold == EPWClockHold::Conversation || Hold == EPWClockHold::Reading || Hold == EPWClockHold::Commerce || Hold == EPWClockHold::School; // R88, S03
     if (bOverlay != ClockMode.UiOpen)
     {
         PerfectWorld::SetUiPause(ClockMode, bOverlay);

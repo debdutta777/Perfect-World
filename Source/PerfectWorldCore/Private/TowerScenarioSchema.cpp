@@ -43,7 +43,9 @@ const TypeSchema& ScenarioBeatSchema()
 }
 } // namespace
 
-// Shape only; the route, floor, beat-graph and score rules are LoadTowerScenario's.
+// Shape only; classroomModel resolves in the semantic loader, like school_lesson's
+// bellSchedule. A hard Ref would suppress semantic validation for unrelated loaders.
+// The route, floor, beat-graph and score rules are LoadTowerScenario's.
 const TypeSchema& TowerScenarioSchema()
 {
     static const TypeSchema s{"tower_scenario", "p2.", Base({
