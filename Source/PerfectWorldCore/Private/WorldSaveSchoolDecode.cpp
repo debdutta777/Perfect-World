@@ -216,9 +216,9 @@ bool S04DOutcome(std::string_view value, SchoolLessonOutcome& out)
 bool S04DBinding(std::string_view value, SchoolLessonBinding& b)
 {
     std::vector<std::string_view> f;
-    if (!S04DSplit(value, f) || f.size() != 9)
+    if (!S04DSplit(value, f) || f.size() != 11)
         return false;
-    for (const std::size_t index : {0u, 1u, 2u, 5u, 6u, 7u, 8u})
+    for (const std::size_t index : {0u, 1u, 2u, 5u, 6u, 7u, 8u, 9u, 10u})
     {
         if (!S04DSafe(f[index]))
             return false;
@@ -230,6 +230,8 @@ bool S04DBinding(std::string_view value, SchoolLessonBinding& b)
     b.TitleTextKey = std::string(f[6]);
     b.BriefTextKey = std::string(f[7]);
     b.RoleTextKey = std::string(f[8]);
+    b.FamilySubject = std::string(f[9]); // S02 case constraints, possibly empty
+    b.Role = std::string(f[10]);
     return S04DNumber(f[3], b.Period) && S04DStructure(f[4], b.Structure);
 }
 

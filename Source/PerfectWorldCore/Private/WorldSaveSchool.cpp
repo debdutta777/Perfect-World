@@ -142,7 +142,8 @@ std::string WorldSaveSchoolEncode(const SchoolSessionsState& s, const SchoolWork
         const SchoolLessonBinding& b = run.Binding;
         line("active", S04Fields().Number(run.Session).Name(S04ModeName(run.Mode)).Number(run.OpenedAt).Flag(run.ReadyToClose));
         line("binding", S04Fields().Text(b.Id).Text(b.Stream).Text(b.Subject).Number(b.Period).Name(S04StructureName(b.Structure))
-                            .Text(b.FamilyId).Text(b.TitleTextKey).Text(b.BriefTextKey).Text(b.RoleTextKey));
+                            .Text(b.FamilyId).Text(b.TitleTextKey).Text(b.BriefTextKey).Text(b.RoleTextKey)
+                            .Text(b.FamilySubject).Text(b.Role));
         line("outcome", S04EncodeOutcome(run.Outcome));
     }
     line("periods", S04Fields().Number(s.Periods.size()));
