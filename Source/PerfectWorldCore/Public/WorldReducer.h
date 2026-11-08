@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Commands.h"
+#include "SchoolWeek.h"
 #include "WorldState.h"
 #include "WorldCommerce.h"
 
@@ -42,6 +43,21 @@ struct CommandResult
 /** Scheduled events one advance may fire before it stops and reports Partial. */
 constexpr std::size_t MaxEventsPerAdvance = 10'000;
 
+struct SchoolLessonContent;
+
+/**
+ * S04: the school content the school.lesson.*, school.work.apply and school.week.* commands borrow. Immutable, owned by the
+ * caller and alive as long as the sim; bind the same content on load and replay. The lesson catalogue resolves a command's
+ * BindingId (and gives the week its stream's bindings); the bell schedule and calendar stay the sim's DayLoopCatalogues, so
+ * the session catalogues are always {school day catalogues, Structures}. A missing piece refuses "school.missing_content".
+ */
+struct WorldSchoolCatalogues
+{
+    AssessmentStructures Structures;
+    const SchoolLessonContent* Lessons = nullptr;
+    const AssessmentCatalogue* Papers = nullptr;
+};
+
 /** Presentation-free school gate projection. All minute fields are local minutes of today's day. */
 struct SchoolArrivalView
 {
@@ -79,16 +95,17 @@ public:
      * School catalogues are borrowed, immutable and must outlive the sim; bind the same content on load/replay.
      */
     explicit WorldSim(std::uint64_t worldSeed, std::size_t eventCap = MaxEventsPerAdvance,
-                      DayLoopCatalogues school = {}, WorldCommerceCatalogues commerce = {});
+                      DayLoopCatalogues school = {}, WorldCommerceCatalogues commerce = {},
+                      WorldSchoolCatalogues lessons = {});
     explicit WorldSim(std::uint64_t worldSeed, const CharacterCreator& creation,
                       std::size_t eventCap = MaxEventsPerAdvance, DayLoopCatalogues school = {},
-                      WorldCommerceCatalogues commerce = {});
+                      WorldCommerceCatalogues commerce = {}, WorldSchoolCatalogues lessons = {});
     /**
      * Continue a loaded world (DeserializeWorldSave's World). The state must be in step
      * (IsWorldDayInStep); the command log starts empty, so it holds the commands since the load.
      */
     explicit WorldSim(WorldState state, std::size_t eventCap = MaxEventsPerAdvance, DayLoopCatalogues school = {},
-                      WorldCommerceCatalogues commerce = {});
+                      WorldCommerceCatalogues commerce = {}, WorldSchoolCatalogues lessons = {});
 
     /**
      * The only mutation entry point. Atomic: a rejected command, including a paid conversation choice whose charge
@@ -103,6 +120,17 @@ public:
     [[nodiscard]] CommerceQuote QuoteCommerce(std::string_view shopId, std::string_view itemId, std::int32_t quantity) const;
     /** Current keeper decision, including released service windows. Presentation uses this for work resumption. */
     [[nodiscard]] NpcDecision CommerceKeeperDecision(std::string_view shopId) const;
+    /** S04: {the bound school day catalogues, the borrowed structure catalogues}: what every school read must use. */
+    [[nodiscard]] SchoolSessionCatalogues SchoolCatalogues() const { return {School_, Lessons_.Structures}; }
+    [[nodiscard]] const WorldSchoolCatalogues& SchoolContent() const noexcept { return Lessons_; }
+    /**
+     * S04: the actual result of the last ACCEPTED school.lesson.*, school.work.apply and school.week.resolve command, for the
+     * panels' summaries and the planner recap. Session output only: never saved, empty after a load, and a refused command
+     * leaves the previous value. No result is ever rebuilt from state.
+     */
+    [[nodiscard]] const std::optional<SchoolSessionResult>& LastSchoolLessonResult() const noexcept { return LastLesson_; }
+    [[nodiscard]] const std::optional<SchoolWorkResult>& LastSchoolWorkResult() const noexcept { return LastWork_; }
+    [[nodiscard]] const std::optional<SchoolWeekResult>& LastSchoolWeekResult() const noexcept { return LastWeek_; }
 
 private:
     std::optional<Rejection> Validate(const Command& command) const;
@@ -132,16 +160,35 @@ private:
     // WorldCommerce.cpp: stage commerce and service inputs before commit; no persisted service context.
     std::optional<Rejection> ApplyCommerceCommand(const Command& command);
     std::optional<Rejection> ApplyWorldDayCommand(const WorldDayCommand& command, CommandResult& result);
+    // S04 school.lesson.* (WorldSchool.cpp) and school.work.apply / school.week.* (WorldSchoolWeek.cpp). Each stages copies,
+    // charges time through ChargeTime and commits only on success; Submit's snapshot restores a late refusal.
+    std::optional<Rejection> ValidateSchoolPhase2(const Command& command) const;
+    std::optional<Rejection> ApplySchoolLessonCommand(const Command& command, CommandResult& result);
+    std::optional<Rejection> ApplySchoolWorkCommand(const SchoolWorkCommand& command, CommandResult& result);
+    std::optional<Rejection> ApplySchoolWeekCommand(const Command& command, CommandResult& result);
 
     WorldState State_;
     std::vector<Command> Log_;
     std::size_t EventCap_ = MaxEventsPerAdvance;
     DayLoopCatalogues School_;
     WorldCommerceCatalogues Commerce_;
+    WorldSchoolCatalogues Lessons_;
+    std::optional<SchoolSessionResult> StagedLesson_, LastLesson_;
+    std::optional<SchoolWorkResult> StagedWork_, LastWork_;
+    std::optional<SchoolWeekResult> StagedWeek_, LastWeek_;
     std::string ServiceShop_;
     std::map<std::string, std::vector<NpcInterruptionWindow>, std::less<>> ServiceHistory_;
 };
 
 /** True for the conversation.* and door.* commands (WorldConversation.cpp). */
 [[nodiscard]] PERFECTWORLDCORE_API bool IsLaneCommand(const CommandPayload& payload) noexcept;
+
+/** S04: true for school.lesson.*, school.work.apply and school.week.* (WorldSchool.cpp). */
+[[nodiscard]] PERFECTWORLDCORE_API bool IsSchoolPhase2Command(const CommandPayload& payload) noexcept;
+
+/**
+ * S04: why the world cannot take a time-moving or unrelated player command while school play is open: a lesson session
+ * ("school.lesson_open") or a started, unsent paper ("school.paper_open"); empty when neither is open.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API std::optional<Rejection> SchoolPlayOpenRefusal(const WorldState& state);
 } // namespace PerfectWorld

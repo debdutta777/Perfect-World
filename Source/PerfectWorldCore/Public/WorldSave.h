@@ -19,9 +19,9 @@ namespace PerfectWorld
 struct CommerceContent;
 
 /**
- * The world save, schema v10 (ROADMAP M1-05, M2-12; lane order SV, R4-04; commerce R8-04).
+ * The world save, schema v11 (ROADMAP M1-05, M2-12; lane order SV, R4-04; commerce R8-04; school S04).
  *
- * A v10 slot is one JSON document holding the creation record (written and read
+ * A v11 slot is one JSON document holding the creation record (written and read
  * by CreationSaveSerialization, unchanged) plus a world snapshot: the clock, the
  * four RNG stream states, world flags and Gate sites by stable ID, the player's
  * day (the pw.dayloop/1 envelope text, which carries its own hash), and where
@@ -69,13 +69,13 @@ struct CommerceContent;
  * original encodings.
  *
  * Layout (key order as written; readers accept any order, but every key is required and unknown keys are refused):
- *   format "perfectworld.save", schemaVersion 10, creation {...},
+ *   format "perfectworld.save", schemaVersion 11, creation {...},
  *   world { seed, seq, clock{now,nextHandle,pending[{handle,when,id}]}, flags{id:bool},
  *           gates{id:{rank,status,since,onsets}}, rng[{stream,words[4],draws}], dayloop "<pw.dayloop/1 text>",
  *           conversations{personId:"<pw.conversation/2 text>"}, doors "<pw.doors/2 text>", journal "<pw.lane_journal/1 text>",
- *           commerce "<pw.commerce/1 text>" },
+ *           commerce "<pw.commerce/1 text>", school "<pw.school/1 text>" },
  *   player { zone, posCm[3], yawCdeg, pitchCdeg, camera }, hashVersion, stateHash.
- * V9 omits commerce; v8 also omits journal; v7 also omits conversations and doors; v6 also omits dayloop.
+ * V10 omits school; v9 also omits commerce; v8 also omits journal; v7 also omits conversations and doors; v6 also omits dayloop.
  *
  * pw.commerce/1 is lines of text, every number in canonical decimal, every field of CommerceState in declaration order:
  *   pw.commerce/1, wallet=<paise>, slot=<itemId>,<quantity> (exactly twelve; an empty slot is "slot=,0"),
@@ -83,8 +83,31 @@ struct CommerceContent;
  *   receipts=<n>, then n lines receipt=<allowance|purchase>,<revision>,<at>,<shopId>,<itemId>,<quantity>,<unitPaise>,
  *   <totalPaise>,<balanceBefore>,<balanceAfter>, folded=<count>,<throughRevision>,<creditsPaise>,<debitsPaise>,
  *   tea_eligible=<t>, consumption_eligible=<t>, end. Only the exact canonical spelling is accepted.
+ *
+ * v11 (S04) adds required school text, world key "school" after "commerce": the pw.school/1 envelope of the three school
+ * slices (SchoolSessions, SchoolWork, SchoolWeek). Every v6 to v10 world loads with all three EMPTY: attendance, receipts
+ * and conversation facts are never evidence of a lesson, a paper or a standing order. Historical v10/hash-v7 is
+ * authenticated with its original ten-section encoding first and loads unverified; its first v11 save is certified.
+ *
+ * pw.school/1 is lines of text ending in "\n"; numbers canonical decimal, enums by stable name (modes foreground/routine/
+ * attend, structures AssessmentStructureNames, work kinds homework/academic_assessment, grades sound/partial/unsound),
+ * flags 0/1, an absent instant an empty field, text fields printable ASCII without spaces or commas. A block is
+ * "<key>=<byte length>" followed by exactly that many bytes of a native envelope (which ends in its own newline):
+ *   pw.school/1, next_session=<u64>, active=none | active=<session>,<mode>,<openedAt>,<ready> then
+ *   binding=<id>,<stream>,<subject>,<period>,<structure>,<family>,<title>,<brief>,<role>,<familySubject>,<caseRole> and outcome=<outcome>,
+ *   periods=<n> then n pairs period=<day>,<period>,<bindingId>,<mode>,<completed>,<cancelled>,<instance> / outcome=<outcome>,
+ *   blocks model (pw.structure_model), explain, investigate, coordinate, work=<n> then n of brief=<id>,<paperId>,<kind>,
+ *   <availableAt>,<dueAt>,<title>,<brief>,<criteria>,<recovery> / times=<issuedAt>,<startedAt>,<submittedAt> / block paper
+ *   (pw.assessment), orders=<n> then order=<id>,<weekdays>,<attendSchool>,<mode>, scene_days=<n> then scene_day=<day>, end.
+ * <outcome> is none, model,<family>,<case>,<grade>,<failures>,<foreground>,<learning>,<units>,<missing>,<extra>,<secure>, or
+ * explain|investigate|coordinate|routine,<family>,<case>,<grade>,<failures>,<foreground>,<learning>,<units>,<secure> followed
+ * by explain's <placed>,<supporting>,<bounded>, investigate's <diagnosed>,<tests>,<redundant>,<remaining> or coordinate's
+ * <overloaded>,<mismatched>,<missed>,<idle> (routine is the generic StructureOutcome). Only the canonical spelling is accepted,
+ * and the decoded slices must keep IsSchoolStateValidInWorld.
  */
-constexpr std::int32_t WorldSaveSchemaVersion = 10;
+constexpr std::int32_t WorldSaveSchemaVersion = 11;
+/** S04: the last schema without the school slices: v6 to v10 load with empty lessons, papers and standing orders. */
+constexpr std::int32_t WorldSaveLastWithoutSchoolVersion = 10;
 /** The last schema without commerce: v6 to v9 receive the one-time household initialisation on load. */
 constexpr std::int32_t WorldSaveLastWithoutCommerceVersion = 9;
 /** The last schema whose world record has no day loop; it still loads, and gets a fresh day. */
@@ -172,13 +195,13 @@ struct WorldSaveResult
                                                                           std::uint64_t worldSeed, WorldSaveData& out);
 
 /**
- * Always the current schema (v10). Invalid lane or commerce authority returns an empty string, as does commerce whose funding
+ * Always the current schema (v11). Invalid lane, commerce or school authority returns an empty string, as does commerce whose funding
  * is not the creation record's Household Resources row or whose allowance cursor is not the world clock.
  */
 [[nodiscard]] PERFECTWORLDCORE_API std::string SerializeWorldSave(const WorldSaveData& data);
 
 /**
- * Reads v10, v9 (household commerce initialised at the saved instant), v8 (also an empty journal), v7 (authored lane defaults), v6 (also a fresh day), or migrates a v1 to v5 creation-only record (the migrated
+ * Reads v11, v10 (empty school slices), v9 (household commerce initialised at the saved instant), v8 (also an empty journal), v7 (authored lane defaults), v6 (also a fresh day), or migrates a v1 to v5 creation-only record (the migrated
  * world's seed is FNV-1a 64 of the file's bytes, so migrating the same file
  * twice gives the same world). Truncated, corrupt or inconsistent text is
  * refused with a message; `out` is untouched on any failure.
@@ -199,6 +222,21 @@ struct WorldSaveResult
 [[nodiscard]] PERFECTWORLDCORE_API std::string SerialiseCommerceState(const CommerceState& state);
 /** Strict, canonical-only parse of pw.commerce/1 into a valid state; false (and `out` untouched) otherwise. */
 [[nodiscard]] PERFECTWORLDCORE_API bool DeserialiseCommerceState(std::string_view text, CommerceState& out);
+
+/**
+ * S04: the rules the school slices keep inside `world`: bounded histories; unique, chronological (day, period) records with
+ * nonzero increasing activity instances and at most two foreground admissions a day; completed and cancelled exclusive; the
+ * one pending record exists exactly while a lesson is open, matches it, and is the day loop's running class activity at the
+ * world clock's instant; exactly one active native exposure while an unresolved foreground lesson is open, else none;
+ * typed outcomes only where a lesson resolved; papers sorted by ID, at most one started and unsent (at the world clock), a
+ * submitted paper finished 90 minutes after it started; standing orders as SetSchoolStandingOrder keeps them; scene days
+ * sorted and unique. Bindings and papers are not checked against content here.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API bool IsSchoolStateValidInWorld(const WorldState& world);
+/** The canonical pw.school/1 text of the world's school slices; empty when IsSchoolStateValidInWorld fails. */
+[[nodiscard]] PERFECTWORLDCORE_API std::string SerialiseSchoolState(const WorldState& world);
+/** Strict canonical parse into world.SchoolSessions/SchoolWork/SchoolWeek, validated in `world`; false and untouched otherwise. */
+[[nodiscard]] PERFECTWORLDCORE_API bool DeserialiseSchoolState(std::string_view text, WorldState& world);
 
 /** For WriteSaveFile and ReadSaveFile: a slot validates when DeserializeWorldSave accepts it. */
 [[nodiscard]] PERFECTWORLDCORE_API SaveValidator WorldSaveValidator();

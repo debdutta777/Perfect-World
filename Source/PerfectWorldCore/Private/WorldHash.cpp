@@ -1,5 +1,7 @@
 #include "WorldHash.h"
 
+#include "WorldSave.h"
+
 namespace PerfectWorld
 {
 namespace
@@ -223,10 +225,23 @@ std::uint64_t R84HashCommerceSection(const WorldState& state)
     return out.Result();
 }
 
-/** Sections a historical hash version did not have: v5 predates journal and commerce, v6 predates commerce. */
+/**
+ * S04: the school slices as their canonical pw.school/1 text (WorldSave.h), the doors precedent: the envelope already
+ * writes every persistent field in a fixed order, enums by stable name. A state the save rules refuse hashes as empty text,
+ * and neither the reader nor the reducer lets one into a world.
+ */
+std::uint64_t S04HashSchoolSection(const WorldState& state)
+{
+    WorldHashWriter out;
+    out.Text(SerialiseSchoolState(state));
+    return out.Result();
+}
+
+/** Sections a historical hash version did not have: v5 predates journal, v6 commerce, v7 school. */
 bool R84SectionAbsentIn(std::uint32_t hashVersion, std::string_view section)
 {
-    return (hashVersion == 5 && (section == "journal" || section == "commerce")) || (hashVersion == 6 && section == "commerce");
+    return (hashVersion == 5 && (section == "journal" || section == "commerce" || section == "school")) ||
+           (hashVersion == 6 && (section == "commerce" || section == "school")) || (hashVersion == 7 && section == "school");
 }
 
 template <typename Sim>
@@ -277,6 +292,7 @@ std::vector<WorldSectionHash> HashWorldSections(const WorldState& state)
     WorldHashAddSection(sections, "doors", WorldHashDoorsSection(state));
     WorldHashAddSection(sections, "journal", R4JHashSection(state));
     WorldHashAddSection(sections, "commerce", R84HashCommerceSection(state));
+    WorldHashAddSection(sections, "school", S04HashSchoolSection(state));
     return sections;
 }
 
@@ -310,13 +326,13 @@ std::uint64_t HashWorldStateWithDoorsText(const WorldState& state, std::string_v
 
 ReplayResult ReplayCommandLog(std::uint64_t worldSeed, const std::vector<Command>& log, const ReplayOptions& options)
 {
-    WorldSim sim(worldSeed, options.EventCap, options.School, options.Commerce);
+    WorldSim sim(worldSeed, options.EventCap, options.School, options.Commerce, options.Lessons);
     return R84Replay(sim, log, options);
 }
 
 ReplayResult ReplayCommandLogFromSnapshot(const WorldState& initial, const std::vector<Command>& log, const ReplayOptions& options)
 {
-    WorldSim sim(initial, options.EventCap, options.School, options.Commerce);
+    WorldSim sim(initial, options.EventCap, options.School, options.Commerce, options.Lessons);
     return R84Replay(sim, log, options);
 }
 } // namespace PerfectWorld
