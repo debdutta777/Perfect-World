@@ -2,6 +2,7 @@
 
 #include "Engine/World.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
+#include "PerfectWorldSchoolOffers.h" // P35
 
 #define LOCTEXT_NAMESPACE "PerfectWorldSchoolLiveWork"
 
@@ -23,10 +24,70 @@ UPWLaneLifeSubsystem* S05LiveLife(const TWeakObjectPtr<UWorld>& World)
     return Live != nullptr ? UPWLaneLifeSubsystem::Get(Live) : nullptr;
 }
 
-PerfectWorld::SchoolIssue S05StartPracticeRefusal()
+// P35: practice is the one routed activity the core permits at the desk, activity.study_at_home, run through day.apply.
+PerfectWorld::SchoolIssue P35PracticeIssue(const char* Code, const std::string& Detail)
 {
-    // No practice offers exist on the desk yet (PracticeOffers is empty), so a start can only be a stale click.
-    return {"school.practice.unavailable", "no practice offer is routed on the live desk"};
+    return {Code, Detail};
+}
+
+/** Undo a commit or start that a later step could not finish, so a refused practice leaves no half-run activity. Best effort; the core guards it. */
+void P35Abandon(UPWLaneLifeSubsystem& Life)
+{
+    PerfectWorld::DayCommand Cancel;
+    Cancel.Kind = PerfectWorld::DayCommandKind::Cancel;
+    Cancel.Minutes = 0;
+    (void)Life.SubmitSchoolCommand(PerfectWorld::Command{PerfectWorld::CommandSource::Player, PerfectWorld::WorldDayCommand{Cancel}});
+}
+
+/** A routed practice: (plan an empty day if none yet, free, as the gate does), commit with the known commitments it passes over, start, complete. */
+PerfectWorld::SchoolIssue P35RunPractice(UPWLaneLifeSubsystem& Life, const PerfectWorld::ActivityCatalogue& Activities, std::string_view OfferId)
+{
+    if (OfferId != P35StudyActivityId)
+    {
+        return P35PracticeIssue("school.practice.unavailable", "no such practice offer");
+    }
+    const PerfectWorld::WorldState& State = Life.GetWorldState();
+    const FP35PracticeStatus Status = P35ReadPractice(State, &Activities);
+    if (!Status.CanStart())
+    {
+        return P35PracticeIssue("school.practice.unavailable", "practice cannot start now");
+    }
+    const auto Fail = [](const PerfectWorld::CommandResult& Done) { return P35PracticeIssue("school.practice.refused", Done.Why.Code); };
+    if (!State.DayLoop.Planned)
+    {
+        const PerfectWorld::CommandResult Planned = Life.SubmitSchoolCommand(PerfectWorld::Command{PerfectWorld::CommandSource::Player, PerfectWorld::SchoolPlanDay{}});
+        if (!Planned.Accepted)
+        {
+            return Fail(Planned);
+        }
+    }
+    PerfectWorld::DayCommand Step;
+    Step.Kind = PerfectWorld::DayCommandKind::Commit;
+    Step.ActivityId = std::string(P35StudyActivityId);
+    Step.PlaceKind = std::string(P35StudyOfferPlace);
+    Step.Alternatives = P35PracticeAlternatives(Life.GetWorldState(), Activities, *Status.Def);
+    PerfectWorld::CommandResult Done = Life.SubmitSchoolCommand(PerfectWorld::Command{PerfectWorld::CommandSource::Player, PerfectWorld::WorldDayCommand{Step}});
+    if (!Done.Accepted)
+    {
+        return Fail(Done);
+    }
+    Step = PerfectWorld::DayCommand{};
+    Step.Kind = PerfectWorld::DayCommandKind::Start;
+    Done = Life.SubmitSchoolCommand(PerfectWorld::Command{PerfectWorld::CommandSource::Player, PerfectWorld::WorldDayCommand{Step}});
+    if (!Done.Accepted)
+    {
+        P35Abandon(Life);
+        return Fail(Done);
+    }
+    Step = PerfectWorld::DayCommand{};
+    Step.Kind = PerfectWorld::DayCommandKind::Complete;
+    Done = Life.SubmitSchoolCommand(PerfectWorld::Command{PerfectWorld::CommandSource::Player, PerfectWorld::WorldDayCommand{Step}});
+    if (!Done.Accepted)
+    {
+        P35Abandon(Life);
+        return Fail(Done);
+    }
+    return {};
 }
 
 /** A5's desk bridge. Records come from QuerySchoolAcademicRecord; Apply and practice are refused until routed. */
@@ -111,12 +172,53 @@ public:
         return Fallback;
     }
 
-    /** Read-only path: no case context is authored for the live desk yet, so the public prompt is empty (the panel shows the group's own name). */
-    virtual FText GroupPrompt(std::string_view, std::size_t) const override { return FText::GetEmpty(); }
+    /** P35: the public context of the selected group from the core's own catalogue (the question's name, and a model case's brief); empty, so hidden, when unknown. Never Trap or marking. */
+    virtual FText GroupPrompt(std::string_view WorkId, std::size_t Group) const override
+    {
+        UWorld* Live = World.Get();
+        const UPWLaneLifeSubsystem* Life = S03WorkLife(World);
+        FString Why;
+        const FS03Content* Content = Live != nullptr ? SharedContent(*Live, Why) : nullptr;
+        if (Life == nullptr || Content == nullptr)
+        {
+            return FText::GetEmpty();
+        }
+        for (const PerfectWorld::SchoolWorkRecord& Record : WorkOf(Life->GetWorldState()).Records)
+        {
+            if (Record.Brief.Id == WorkId)
+            {
+                return P35GroupContext(Content->Papers, Content->Model, Record.Brief.PaperId, Group);
+            }
+        }
+        return FText::GetEmpty();
+    }
 
-    virtual TArray<PWA5::FPracticeOffer> PracticeOffers() const override { return {}; }
+    /** P35: one offer (study at home) with its real cost and what it passes over, blocked with the reason when it cannot start; none when the catalogue lacks it. */
+    virtual TArray<PWA5::FPracticeOffer> PracticeOffers() const override
+    {
+        UWorld* Live = World.Get();
+        const UPWLaneLifeSubsystem* Life = S03WorkLife(World);
+        FString Why;
+        const FS03Content* Content = Live != nullptr ? SharedContent(*Live, Why) : nullptr;
+        if (Life == nullptr || Content == nullptr)
+        {
+            return {};
+        }
+        return P35PracticeOffers(Life->GetWorldState(), Content->Cats.Day.Activities);
+    }
 
-    virtual PerfectWorld::SchoolIssue StartPractice(std::string_view) override { return S05StartPracticeRefusal(); }
+    virtual PerfectWorld::SchoolIssue StartPractice(std::string_view OfferId) override
+    {
+        UWorld* Live = World.Get();
+        UPWLaneLifeSubsystem* Life = S05LiveLife(World);
+        FString Why;
+        const FS03Content* Content = Live != nullptr ? SharedContent(*Live, Why) : nullptr;
+        if (Life == nullptr || Content == nullptr || Content->Cats.Day.Activities == nullptr)
+        {
+            return P35PracticeIssue("school.practice.unavailable", "no world to practise in");
+        }
+        return P35RunPractice(*Life, *Content->Cats.Day.Activities, OfferId);
+    }
 
 private:
     TWeakObjectPtr<UWorld> World;
@@ -155,7 +257,14 @@ public:
         const std::string Stream = TCHAR_TO_UTF8(*Content->Stream);
         OutPreview.Build = PerfectWorld::BuildSchoolWeekPlan(State, OutPreview.Standing, OutPreview.Sessions, Base,
             PerfectWorld::SchoolLessonBindings(Content->Lessons, Stream), Content->Cats);
-        return true; // Known stays empty: no source of known promises is routed yet (A6 handoff, risk 4)
+        // P35: Known is what the world really records with a window (open morning-plan items, the committed or running activity); see PerfectWorldSchoolOffers.h.
+        if (Content->Cats.Day.Activities != nullptr)
+        {
+            FP35Known Known = P35KnownCommitments(State, *Content->Cats.Day.Activities);
+            OutPreview.Known = std::move(Known.Candidates);
+            OutPreview.KnownNames = std::move(Known.Lines);
+        }
+        return true;
     }
 
     virtual FPWPlannerOutcome SetOrder(const PerfectWorld::SchoolStandingOrder& Order, bool bRemove) override
