@@ -45,6 +45,7 @@ struct SchoolWeekResult
 PERFECTWORLDCORE_API SchoolIssue SetSchoolStandingOrder(SchoolWeekState& state,
     const SchoolStandingOrder& order, bool remove = false);
 /** Expands the current school's actual bells into school arrival + lesson entries.
+ * Attendance-only sports/assessment dates get arrival without ordinary lessons.
  * Extra commitments/known alternatives come from base, captured BEFORE compression.
  * Conflicting commitments refuse; firsts/choices retain WeekCompression semantics. */
 [[nodiscard]] PERFECTWORLDCORE_API SchoolWeekBuild BuildSchoolWeekPlan(const WorldState& world,
@@ -52,6 +53,7 @@ PERFECTWORLDCORE_API SchoolIssue SetSchoolStandingOrder(SchoolWeekState& state,
     const std::vector<SchoolLessonBinding>& bindings, const SchoolSessionCatalogues& catalogues);
 /** school.week.resolve: each ordinary entry through CompressWeek; each lesson through
  * SchoolSessions and the existing DayLoop. No latent-growth owner is introduced.
+ * CalendarHasOrdinaryPeriods also gates supplied lessons before resolving the plan.
  * Result learning must bind to R9 once in the SAME reducer transaction. */
 [[nodiscard]] PERFECTWORLDCORE_API SchoolWeekResult CompressSchoolWeek(const WorldState& world,
     const SchoolSessionsState& sessions, const SchoolWeekPlan& plan, const SchoolSessionCatalogues& catalogues);
