@@ -143,7 +143,9 @@ TSharedRef<SWidget> SPWStudyDesk::BuildBody()
             Rows->AddSlot().AutoHeight().Padding(0, 10)[PWUI::MakePanel(Detail, FMargin(12))];
         }
         Rows->AddSlot().AutoHeight()[PWUI::MakeText(LOCTEXT("Practice", "Method practice"), 22, Style.Accent, true, true)];
-        for (const auto& Offer : World->PracticeOffers())
+        const auto PracticeOffers = World->PracticeOffers(); // P35
+        if (PracticeOffers.IsEmpty()) Rows->AddSlot().AutoHeight()[PWUI::MakeText(LOCTEXT("NoPractice", "Practice is not available yet."), 18, Style.TextSecondary, false, true)];
+        for (const auto& Offer : PracticeOffers)
         {
             const std::string Id = Offer.Id;
             const FString Key = TEXT("practice.") + FString(UTF8_TO_TCHAR(Id.c_str()));

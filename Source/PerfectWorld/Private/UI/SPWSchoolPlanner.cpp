@@ -527,7 +527,8 @@ FPWPlannerModel BuildModel(const FPWPlannerPreview& Preview, const FPWRecapModel
                 for (const ReceiptDisplaced& Passed : DecideDisplaced(Commitment, Candidates))
                 {
                     FPWDisplacedRow& Alt = Row.Displaced.AddDefaulted_GetRef();
-                    Alt.Name = A6AlternativeName(Passed.Id);
+                    const FText* P35Line = Preview.KnownNames.Find(PWLaneLife::ToFString(Passed.Id)); // P35
+                    Alt.Name = P35Line != nullptr ? *P35Line : A6AlternativeName(Passed.Id);
                     Alt.OverlapMinutes = Passed.OverlapMinutes;
                 }
             }

@@ -136,7 +136,8 @@ TSharedRef<SWidget> SPWAcademicAssessment::BuildPaper(const PerfectWorld::School
     if (Draft.Group < Work.Paper.Groups.size())
     {
         const auto& Group = Work.Paper.Groups[Draft.Group];
-        Rows->AddSlot().AutoHeight()[PWUI::MakeText(World->GroupPrompt(WorkId, Draft.Group), 20, Style.TextPrimary, false, true)];
+        const FText GroupContext = World->GroupPrompt(WorkId, Draft.Group); // P35: shown only when the core supplies public case context
+        if (!GroupContext.IsEmpty()) Rows->AddSlot().AutoHeight()[PWUI::MakeText(GroupContext, 20, Style.TextPrimary, false, true)];
         Command.Kind = SchoolWorkActionKind::Allocate;
         Command.Group = Draft.Group;
         Command.Units = Group.Allocated - 1;

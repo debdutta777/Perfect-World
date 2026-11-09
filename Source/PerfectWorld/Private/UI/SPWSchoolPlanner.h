@@ -126,6 +126,8 @@ struct FPWPlannerPreview
     PerfectWorld::SchoolSessionsState Sessions;
     /** Commitments the player already knows about (promises, appointments) as receipt candidates: the "known displaced commitments". */
     std::vector<PerfectWorld::ReceiptCandidate> Known;
+    /** P35: a readable line for each Known candidate by its id ("Name (your plan today at 16:00; worth about 2.4 learning, ...)"). An id without a line reads neutrally. */
+    TMap<FString, FText> KnownNames;
 };
 
 /** school.week.resolve as the bridge saw it. Plan and Result are the actual ones; nothing is built afterwards. */
