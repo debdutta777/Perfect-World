@@ -122,6 +122,16 @@ struct WorldCountdownPracticeResult
     [[nodiscard]] bool Ok() const noexcept { return Transition.Ok(); }
 };
 
+/** R9-04: the receipt candidates a practice disclosure weighs (known alternatives, today's plan, reserved blocks), the
+ * commitment it records and the stale-disclosure comparison, shared by RunWorldCountdownPractice and WorldSim's
+ * countdown.practice.confirm so both decide displacement and staleness by one rule.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API std::vector<ReceiptCandidate> WorldCountdownPracticeCandidates(const WorldState& world,
+    const CountdownState& state, const ActivityCatalogue& activities, std::span<const ReceiptCandidate> knownAlternatives);
+[[nodiscard]] PERFECTWORLDCORE_API ReceiptCommitment WorldCountdownPracticeCommitment(GameInstant at, std::int32_t minutes);
+[[nodiscard]] PERFECTWORLDCORE_API bool WorldCountdownSameDisclosure(const WorldCountdownPracticeOffer& a,
+    const WorldCountdownPracticeOffer& b);
+
 /** Explicit confirmation only. Recomputes the disclosure and refuses a stale
  * preview. Charges both clocks through the reducer, records displaced intentions
  * in DayLoop.Receipts, and calls existing Practise on the live profile at quality

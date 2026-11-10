@@ -229,6 +229,9 @@ std::optional<Rejection> WorldSim::ApplyWorldDayCommand(const WorldDayCommand& c
         if (result.Partial)
             return Rejection{"day.charge_interrupted", "Settle the scheduled time before retrying the day action."};
     }
+    // R9-04: a completed day activity grows the one owner exactly once, in this same command.
+    if (std::optional<Rejection> refusal = CreditActivities(applied.Events))
+        return refusal;
     State_.DayLoop = std::move(day);
     for (const auto& event : applied.Events)
         result.Events.push_back({0, event.At, event});

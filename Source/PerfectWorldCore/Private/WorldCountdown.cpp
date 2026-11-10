@@ -120,6 +120,22 @@ bool R95SameDisclosure(const WorldCountdownPracticeOffer& a, const WorldCountdow
 }
 } // namespace
 
+std::vector<ReceiptCandidate> WorldCountdownPracticeCandidates(const WorldState& world, const CountdownState& state,
+    const ActivityCatalogue& activities, std::span<const ReceiptCandidate> knownAlternatives)
+{
+    return R95Candidates(world, state, activities, knownAlternatives);
+}
+
+ReceiptCommitment WorldCountdownPracticeCommitment(GameInstant at, std::int32_t minutes)
+{
+    return R95PracticeCommitment(at, minutes);
+}
+
+bool WorldCountdownSameDisclosure(const WorldCountdownPracticeOffer& a, const WorldCountdownPracticeOffer& b)
+{
+    return R95SameDisclosure(a, b);
+}
+
 WorldCountdownResult SynchroniseWorldCountdown(const WorldState& world, const AwakeningState& awakening,
     const std::optional<CountdownState>& state, const CountdownContext& context, const DayLoopCatalogues& catalogues)
 {

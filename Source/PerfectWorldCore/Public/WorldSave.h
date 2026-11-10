@@ -19,9 +19,9 @@ namespace PerfectWorld
 struct CommerceContent;
 
 /**
- * The world save, schema v11 (ROADMAP M1-05, M2-12; lane order SV, R4-04; commerce R8-04; school S04).
+ * The world save, schema v12 (ROADMAP M1-05, M2-12; lane order SV, R4-04; commerce R8-04; school S04; awakening R9-04).
  *
- * A v11 slot is one JSON document holding the creation record (written and read
+ * A v12 slot is one JSON document holding the creation record (written and read
  * by CreationSaveSerialization, unchanged) plus a world snapshot: the clock, the
  * four RNG stream states, world flags and Gate sites by stable ID, the player's
  * day (the pw.dayloop/1 envelope text, which carries its own hash), and where
@@ -69,7 +69,7 @@ struct CommerceContent;
  * original encodings.
  *
  * Layout (key order as written; readers accept any order, but every key is required and unknown keys are refused):
- *   format "perfectworld.save", schemaVersion 11, creation {...},
+ *   format "perfectworld.save", schemaVersion 12, creation {...},
  *   world { seed, seq, clock{now,nextHandle,pending[{handle,when,id}]}, flags{id:bool},
  *           gates{id:{rank,status,since,onsets}}, rng[{stream,words[4],draws}], dayloop "<pw.dayloop/1 text>",
  *           conversations{personId:"<pw.conversation/2 text>"}, doors "<pw.doors/2 text>", journal "<pw.lane_journal/1 text>",
@@ -104,8 +104,31 @@ struct CommerceContent;
  * by explain's <placed>,<supporting>,<bounded>, investigate's <diagnosed>,<tests>,<redundant>,<remaining> or coordinate's
  * <overloaded>,<mismatched>,<missed>,<idle> (routine is the generic StructureOutcome). Only the canonical spelling is accepted,
  * and the decoded slices must keep IsSchoolStateValidInWorld.
+ *
+ * v12 (R9-04) adds required awakening text, world key "awakening" after "school": the pw.awakening/1 envelope of the four
+ * Round 9 slices (Awakening, Tutorial, CountdownText, LiveAwakenedProfile). Every v6 to v11 world loads with all four EMPTY
+ * (unseeded): no past school year, conduct, session, countdown or grant is invented. Historical v11/hash-v8 is authenticated
+ * with its original eleven-section encoding first and loads unverified; its first v12 save is certified.
+ *
+ * pw.awakening/1 is lines of text ending in "\n"; numbers canonical decimal, enums by their declared ordinal, flags 0/1, an
+ * absent instant an empty field, text printable ASCII without spaces or commas, a ';'-joined list one field, blocks as in
+ * pw.school/1:
+ *   pw.awakening/1, seeded=<0|1>,<worldSeed>, attributes=<6>, skills=<n> then n skill=<id>,<milli>, evidence=<6>,
+ *   block projection (pw.aptitude/1), applied=<n> then n instance=<id>, block conduct (pw_conduct), appointment=<at>,<exam>,
+ *   makeup=<phase>,<at>, grant=none | grant=<at> then input_attributes=<6>, input_skills=<n> / input_skill=..., paths=<n>
+ *   then path=<path>,<band>,<coverage>,<facet:state;...>,<facet;...>,<evidenceId;...>, observed=<0|1>, signals=<13>,
+ *   tattva_milli=<5>, tattva_percent=<5>, five cause lists, rating=<6>, latent_rating=<6>, conduct_rating=<6>, six cause lists,
+ *   ability=<recipe>,<origin>,<rank>,<fallback>,<score> and its cause list (a cause list is causes=<n> then n
+ *   cause=<signal>,<reading>,<contribution>,<source>,<test>,<choice>); tutorial=<phase>,<next>,<recovery>,<withdrawn>,<started>,
+ *   <lastAction>,<completed>; countdown=none | block countdown (pw_countdown); live=none | live=<affinity 5>,<rating 6>,
+ *   <peak 6>,<lastPracticeDay 6>,<decaySettledDay 6>,<window 6x7 of day,minutes,gain>,<grade>,<supervisedMinutes>,<retakeDay>;
+ *   end. The grant's conduct summary, world seed and starting profile are not stored: they are SummariseConduct(conduct), the
+ *   seed and AwakenedStartingProfile(result, grant day). Only the canonical spelling is accepted, and the decoded slices must
+ *   keep IsAwakeningStateValidInWorld.
  */
-constexpr std::int32_t WorldSaveSchemaVersion = 11;
+constexpr std::int32_t WorldSaveSchemaVersion = 12;
+/** R9-04: the last schema without the Awakening slices: v6 to v11 load unseeded, with no session, countdown or profile. */
+constexpr std::int32_t WorldSaveLastWithoutAwakeningVersion = 11;
 /** S04: the last schema without the school slices: v6 to v10 load with empty lessons, papers and standing orders. */
 constexpr std::int32_t WorldSaveLastWithoutSchoolVersion = 10;
 /** The last schema without commerce: v6 to v9 receive the one-time household initialisation on load. */
@@ -195,13 +218,13 @@ struct WorldSaveResult
                                                                           std::uint64_t worldSeed, WorldSaveData& out);
 
 /**
- * Always the current schema (v11). Invalid lane, commerce or school authority returns an empty string, as does commerce whose funding
+ * Always the current schema (v12). Invalid lane, commerce, school or awakening authority returns an empty string, as does commerce whose funding
  * is not the creation record's Household Resources row or whose allowance cursor is not the world clock.
  */
 [[nodiscard]] PERFECTWORLDCORE_API std::string SerializeWorldSave(const WorldSaveData& data);
 
 /**
- * Reads v11, v10 (empty school slices), v9 (household commerce initialised at the saved instant), v8 (also an empty journal), v7 (authored lane defaults), v6 (also a fresh day), or migrates a v1 to v5 creation-only record (the migrated
+ * Reads v12, v11 (empty Awakening slices), v10 (also empty school slices), v9 (household commerce initialised at the saved instant), v8 (also an empty journal), v7 (authored lane defaults), v6 (also a fresh day), or migrates a v1 to v5 creation-only record (the migrated
  * world's seed is FNV-1a 64 of the file's bytes, so migrating the same file
  * twice gives the same world). Truncated, corrupt or inconsistent text is
  * refused with a message; `out` is untouched on any failure.
@@ -237,6 +260,21 @@ struct WorldSaveResult
 [[nodiscard]] PERFECTWORLDCORE_API std::string SerialiseSchoolState(const WorldState& world);
 /** Strict canonical parse into world.SchoolSessions/SchoolWork/SchoolWeek, validated in `world`; false and untouched otherwise. */
 [[nodiscard]] PERFECTWORLDCORE_API bool DeserialiseSchoolState(std::string_view text, WorldState& world);
+
+/**
+ * R9-04: the rules the Awakening slices keep inside `world`. Unseeded: all four exactly empty. Seeded: the world's seed, the
+ * fixed appointment and examination instants, sorted non-negative stats, a valid observed projection ledger with no future
+ * item, consumed runner instances ascending, nonzero and within the runner's count, a canonical conduct ledger, the tutorial
+ * valid with its Awakening (IsTutorialDungeonStateValid) with no future instant and an unfinished session standing at the
+ * world clock, a grant in the past whose conduct summary is the frozen ledger's and whose starting profile is
+ * AwakenedStartingProfile of its result, a live profile exactly while granted (same affinity and grade), and a canonical
+ * countdown that agrees with the world's clock, seed and Gate history (QueryWorldCountdown). Content is not consulted.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API bool IsAwakeningStateValidInWorld(const WorldState& world);
+/** The canonical pw.awakening/1 text of the world's Awakening slices; empty when IsAwakeningStateValidInWorld fails. */
+[[nodiscard]] PERFECTWORLDCORE_API std::string SerialiseAwakeningState(const WorldState& world);
+/** Strict canonical parse into the four Awakening slices of `world`, validated there; false and untouched otherwise. */
+[[nodiscard]] PERFECTWORLDCORE_API bool DeserialiseAwakeningState(std::string_view text, WorldState& world);
 
 /** For WriteSaveFile and ReadSaveFile: a slot validates when DeserializeWorldSave accepts it. */
 [[nodiscard]] PERFECTWORLDCORE_API SaveValidator WorldSaveValidator();

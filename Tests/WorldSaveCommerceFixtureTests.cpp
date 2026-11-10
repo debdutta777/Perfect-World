@@ -65,13 +65,19 @@ void R84FrozenV9()
     }
     // S04: the current writer is schema 11 (empty school slices for this world); the migrated_v10 file stays as the commerce
     // era's own v10 output, now itself a historical save that authenticates in hash 7 and loads unverified.
-    const std::string frozen = R84Fixture("world_v9_doors_29_migrated_v11.json");
-    Check(migrated == frozen, "the migration produces exactly the frozen expected v11 save");
+    // R9-04: the current writer is schema 12 (empty Awakening slices); S04's migrated_v11 output is now historical too.
+    const std::string frozen = R84Fixture("world_v9_doors_29_migrated_v12.json");
+    Check(migrated == frozen, "the migration produces exactly the frozen expected v12 save");
     WorldSaveData frozenLoaded;
     const WorldSaveResult frozenResult = DeserializeWorldSave(frozen, frozenLoaded);
-    Check(frozenResult.Succeeded() && frozenResult.HashVerified && frozenResult.SourceVersion == 11 && frozenLoaded.World.Commerce == commerce,
-          "the expected migrated save is a certified v11 world");
+    Check(frozenResult.Succeeded() && frozenResult.HashVerified && frozenResult.SourceVersion == 12 && frozenLoaded.World.Commerce == commerce,
+          "the expected migrated save is a certified v12 world");
     CheckSame(loaded, frozenLoaded, "the expected migrated save holds the migrated world");
+    WorldSaveData s04Loaded;
+    const WorldSaveResult s04Result = DeserializeWorldSave(R84Fixture("world_v9_doors_29_migrated_v11.json"), s04Loaded);
+    Check(s04Result.Succeeded() && !s04Result.HashVerified && s04Result.SourceVersion == 11 && s04Loaded.World.Commerce == commerce,
+          "S04's v11 output authenticates its hash-8 checksum and loads unverified");
+    CheckSame(loaded, s04Loaded, "S04's v11 output holds the same world");
     WorldSaveData eraLoaded;
     const WorldSaveResult eraResult = DeserializeWorldSave(R84Fixture("world_v9_doors_29_migrated_v10.json"), eraLoaded);
     Check(eraResult.Succeeded() && !eraResult.HashVerified && eraResult.SourceVersion == 10 && eraLoaded.World.Commerce == commerce,

@@ -352,7 +352,8 @@ WorldSaveResult WorldSaveReadWorld(const JsonValue& value, WorldState& world, st
     const bool withDayLoop = version > WorldSaveLastWithoutDayLoopVersion;
     std::string error;
     const JsonValue* clock = value.IsObject() ? value.Find("clock") : nullptr;
-    const bool keys = version >= 11 ? WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng", "dayloop", "conversations", "doors", "journal", "commerce", "school"})
+    const bool keys = version >= 12 ? WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng", "dayloop", "conversations", "doors", "journal", "commerce", "school", "awakening"})
+                     : version >= 11 ? WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng", "dayloop", "conversations", "doors", "journal", "commerce", "school"})
                      : version >= 10 ? WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng", "dayloop", "conversations", "doors", "journal", "commerce"})
                      : version >= 9 ? WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng", "dayloop", "conversations", "doors", "journal"})
                      : version >= 8 ? WorldSaveExactKeys(value, {"seed", "seq", "clock", "flags", "gates", "rng", "dayloop", "conversations", "doors"})

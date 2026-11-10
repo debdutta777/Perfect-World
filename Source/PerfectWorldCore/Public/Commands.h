@@ -4,6 +4,7 @@
 #include "SchoolWeekState.h"
 #include "SchoolWork.h"
 #include "WeekCompression.h"
+#include "WorldCountdown.h"
 #include "WorldState.h"
 
 #include <cstdint>
@@ -274,12 +275,82 @@ struct SchoolWeekResolve
     WeekPlan Base;
 };
 
+/**
+ * R9-04: the R9-02 supervised tutorial session (TutorialDungeon.h) through WorldSim (WorldAwakening.cpp). Every instant is
+ * the world clock's, never a payload's (except TutorialMakeUp's slot); refusals keep the contract's tutorial.* codes. Entry
+ * needs a seeded Awakening, an idle settled world and the bound ability recipes; playing, reading and recovering are free.
+ * The act or withdrawal that makes the session ReadyToGrant also exits it in the same command: the disclosed hour
+ * (TutorialSessionMinutes) is charged once through the world clock and the grant is committed (GrantTutorialAwakening),
+ * the live practice profile starting as the grant's StartingProfile. A failure anywhere refuses the whole command.
+ */
+struct TutorialEnter
+{
+    static constexpr std::string_view TypeId = "tutorial.enter";
+};
+
+/** A COMPLETED contextual action at the current station (CompleteTutorialChoice). */
+struct TutorialAct
+{
+    static constexpr std::string_view TypeId = "tutorial.act";
+    std::string StationId;
+    std::string ChoiceId;
+};
+
+struct TutorialAssist
+{
+    static constexpr std::string_view TypeId = "tutorial.assist";
+};
+
+struct TutorialRecover
+{
+    static constexpr std::string_view TypeId = "tutorial.recover";
+};
+
+/** Safe withdrawal, available at any point of an active session; it still exits and grants. */
+struct TutorialWithdraw
+{
+    static constexpr std::string_view TypeId = "tutorial.withdraw";
+};
+
+/** System only (the appointment authority): the student was not there; a make-up is required, never a grant. */
+struct TutorialAbsent
+{
+    static constexpr std::string_view TypeId = "tutorial.absent";
+};
+
+/** A supervised make-up slot at `At` (ScheduleTutorialMakeUp); the original appointment and examination never move. */
+struct TutorialMakeUp
+{
+    static constexpr std::string_view TypeId = "tutorial.make_up";
+    GameInstant At = 0;
+};
+
+/** System only: the exit-and-grant continuation for a loaded ReadyToGrant session. Never a player refusal gate. */
+struct TutorialFinish
+{
+    static constexpr std::string_view TypeId = "tutorial.finish";
+};
+
+/**
+ * R9-04: confirm optional supervised countdown practice. `Accepted` is the disclosure WorldSim::PreviewCountdownPractice
+ * returned; the reducer recomputes it and refuses a stale or altered one (countdown.bad_plan), then charges the minutes
+ * through the world clock, records the displaced intentions as a receipt and practises the live profile once. Declining
+ * is sending nothing.
+ */
+struct CountdownPracticeConfirm
+{
+    static constexpr std::string_view TypeId = "countdown.practice.confirm";
+    WorldCountdownPracticeOffer Accepted;
+};
+
 // SchoolWorkCommand ("school.work.apply") is SchoolWork.h's delivered command type, routed as is.
 using CommandPayload = std::variant<AdvanceTime, ScheduleWorldEvent, SetWorldFlag, GateRegister, GateScheduleOnset, GateContain, GateSeal,
                                     SettleDueEvents, ConversationOpen, ConversationChoose, ConversationLeave, DoorSet, DoorSettle,
                                     SchoolPlanDay, SchoolArrive, CommerceServiceRequest, CommerceServiceClose,
                                     CommerceBuy, InventoryConsume, WorldDayCommand, SchoolLessonOpen, SchoolLessonChoose,
-                                    SchoolLessonClose, SchoolWorkCommand, SchoolWeekOrder, SchoolWeekResolve>;
+                                    SchoolLessonClose, SchoolWorkCommand, SchoolWeekOrder, SchoolWeekResolve, TutorialEnter,
+                                    TutorialAct, TutorialAssist, TutorialRecover, TutorialWithdraw, TutorialAbsent,
+                                    TutorialMakeUp, TutorialFinish, CountdownPracticeConfirm>;
 
 struct Command
 {

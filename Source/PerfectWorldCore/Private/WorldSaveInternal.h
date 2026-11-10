@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <initializer_list>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -59,4 +60,28 @@ std::string WorldSaveSchoolEncode(const SchoolSessionsState& sessions, const Sch
 /** S04 (WorldSaveSchoolRules.cpp): the semantic rules of decoded school slices inside `world` (its clock and day loop). */
 bool WorldSaveSchoolValid(const SchoolSessionsState& sessions, const SchoolWorkState& work, const SchoolWeekState& week,
                           const WorldState& world);
+
+/** R9-04: the four Awakening slices one pw.awakening/1 envelope carries. */
+struct WorldSaveAwakeningSlices
+{
+    AwakeningState Awakening;
+    TutorialDungeonState Tutorial;
+    std::string Countdown;
+    std::optional<AwakenedProfile> Live;
+};
+/** R9-04 (WorldSaveAwakening.cpp): the writer's "awakening" member text, or empty when the slices break a rule. */
+std::string WorldSaveWriteAwakening(const WorldState& world);
+/** v12 reads and validates pw.awakening/1 against the world (clock, day, Gates); v6 to v11 start with all four empty. */
+WorldSaveResult WorldSaveReadAwakening(const JsonValue& value, WorldState& world, std::int32_t version);
+/** R9-04: a pw.awakening/1 text field: printable ASCII without spaces or commas, possibly empty. */
+bool WorldSaveAwakeningSafeText(std::string_view text);
+/** R9-04: the canonical comma-joined fields of a profile (the live line; also how two profiles are compared). */
+std::string WorldSaveAwakeningProfileText(const AwakenedProfile& profile);
+/** R9-04: the envelope without the world rules; empty when a field or native ledger cannot be written. */
+std::string WorldSaveAwakeningEncode(const WorldSaveAwakeningSlices& slices);
+WorldSaveAwakeningSlices WorldSaveAwakeningOf(const WorldState& world);
+/** R9-04 (WorldSaveAwakeningDecode.cpp): strict parse, derived grant fields filled; false (out unspecified) otherwise. */
+bool WorldSaveAwakeningDecode(std::string_view text, WorldSaveAwakeningSlices& out);
+/** R9-04 (WorldSaveAwakeningRules.cpp): the semantic rules of the world's Awakening slices inside that world. */
+bool WorldSaveAwakeningValid(const WorldState& world);
 } // namespace PerfectWorld
