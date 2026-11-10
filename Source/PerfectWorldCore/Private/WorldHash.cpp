@@ -237,9 +237,19 @@ std::uint64_t S04HashSchoolSection(const WorldState& state)
     return out.Result();
 }
 
-/** Sections a historical hash version did not have: v5 predates journal, v6 commerce, v7 school. */
+/** R9-04: the Awakening slices as their canonical pw.awakening/1 text (the school precedent); a refused state hashes empty. */
+std::uint64_t R94HashAwakeningSection(const WorldState& state)
+{
+    WorldHashWriter out;
+    out.Text(SerialiseAwakeningState(state));
+    return out.Result();
+}
+
+/** Sections a historical hash version did not have: v5 predates journal, v6 commerce, v7 school, v5 to v8 awakening. */
 bool R84SectionAbsentIn(std::uint32_t hashVersion, std::string_view section)
 {
+    if (section == "awakening")
+        return hashVersion >= 5 && hashVersion <= 8;
     return (hashVersion == 5 && (section == "journal" || section == "commerce" || section == "school")) ||
            (hashVersion == 6 && (section == "commerce" || section == "school")) || (hashVersion == 7 && section == "school");
 }
@@ -293,6 +303,7 @@ std::vector<WorldSectionHash> HashWorldSections(const WorldState& state)
     WorldHashAddSection(sections, "journal", R4JHashSection(state));
     WorldHashAddSection(sections, "commerce", R84HashCommerceSection(state));
     WorldHashAddSection(sections, "school", S04HashSchoolSection(state));
+    WorldHashAddSection(sections, "awakening", R94HashAwakeningSection(state));
     return sections;
 }
 
@@ -326,13 +337,13 @@ std::uint64_t HashWorldStateWithDoorsText(const WorldState& state, std::string_v
 
 ReplayResult ReplayCommandLog(std::uint64_t worldSeed, const std::vector<Command>& log, const ReplayOptions& options)
 {
-    WorldSim sim(worldSeed, options.EventCap, options.School, options.Commerce, options.Lessons);
+    WorldSim sim(worldSeed, options.EventCap, options.School, options.Commerce, options.Lessons, options.Awakening);
     return R84Replay(sim, log, options);
 }
 
 ReplayResult ReplayCommandLogFromSnapshot(const WorldState& initial, const std::vector<Command>& log, const ReplayOptions& options)
 {
-    WorldSim sim(initial, options.EventCap, options.School, options.Commerce, options.Lessons);
+    WorldSim sim(initial, options.EventCap, options.School, options.Commerce, options.Lessons, options.Awakening);
     return R84Replay(sim, log, options);
 }
 } // namespace PerfectWorld

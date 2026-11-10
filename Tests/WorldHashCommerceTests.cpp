@@ -123,7 +123,7 @@ void R84CommerceFieldEdits()
         apply(edited.Commerce);
         Check(!(edited.Commerce == base.Commerce), name);
         const auto sections = HashWorldSections(edited);
-        Check(sections.size() == baseSections.size() && sections.size() == 11 && sections[9].Name == "commerce", name);
+        Check(sections.size() == baseSections.size() && sections.size() == 12 && sections[9].Name == "commerce", name);
         for (std::size_t i = 0; i < sections.size(); ++i)
             Check((sections[i].Hash != baseSections[i].Hash) == (sections[i].Name == "commerce"), name);
         CheckAgainstReference(edited, name);
@@ -156,7 +156,7 @@ void R84FrozenFixtureAuthentication()
     all.U(6);
     for (const auto& [name, hash] : RefSections(loaded.World))
     {
-        if (name == "commerce" || name == "school")
+        if (name == "commerce" || name == "school" || name == "awakening")
             continue;
         all.S(name);
         all.U(hash);
@@ -182,7 +182,7 @@ void S04FrozenV10Authentication()
     all.U(7);
     for (const auto& [name, hash] : RefSections(loaded.World))
     {
-        if (name == "school")
+        if (name == "school" || name == "awakening")
             continue;
         all.S(name);
         all.U(hash);
@@ -191,7 +191,33 @@ void S04FrozenV10Authentication()
     Check(HashWorldStateWithDoorsText(loaded.World, SerialiseDoorState(loaded.World.Doors), 7) == 0xbbf29a27855841cdULL,
           "the library's hash-7 encoding agrees");
     Check(HashWorldState(loaded.World) != 0xbbf29a27855841cdULL && RefWorld(loaded.World) == HashWorldState(loaded.World),
-          "the migrated world (empty school slices) hashes differently, as version 8");
+          "the migrated world (empty school slices) hashes differently, as the current version");
+}
+
+/** R9-04: the frozen v11 writer's checksum (e995956), recomputed by the independent reference with its eleven hash-8 sections. */
+void R94FrozenV11Authentication()
+{
+    std::ifstream in(std::string(PW_COMMERCE_FIXTURE_DIR) + "/world_v11_doors_29.json", std::ios::binary);
+    Check(static_cast<bool>(in), "the frozen v11 fixture is readable");
+    const std::string text{std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
+    Check(text.size() == 5429 && text.find("\"stateHash\": \"0xece29e9ddd41d0a5\"") != std::string::npos, "the frozen v11 fixture is untouched");
+    WorldSaveData loaded;
+    const WorldSaveResult result = DeserializeWorldSave(text, loaded);
+    Check(result.Succeeded() && result.SourceVersion == 11 && !result.HashVerified && !result.Migrated, "the v11 fixture migrates honestly");
+    RefBytes all;
+    all.U(8);
+    for (const auto& [name, hash] : RefSections(loaded.World))
+    {
+        if (name == "awakening")
+            continue;
+        all.S(name);
+        all.U(hash);
+    }
+    Check(RefFnv1a(all.Data) == 0xece29e9ddd41d0a5ULL, "the reference's hash-8 encoding reproduces the stored v11 checksum");
+    Check(HashWorldStateWithDoorsText(loaded.World, SerialiseDoorState(loaded.World.Doors), 8) == 0xece29e9ddd41d0a5ULL,
+          "the library's hash-8 encoding agrees");
+    Check(HashWorldState(loaded.World) != 0xece29e9ddd41d0a5ULL && RefWorld(loaded.World) == HashWorldState(loaded.World),
+          "the migrated world (empty Awakening slices) hashes differently, as version 9");
 }
 #endif
 
@@ -288,6 +314,7 @@ int main()
 #ifdef PW_COMMERCE_FIXTURE_DIR
     R84FrozenFixtureAuthentication();
     S04FrozenV10Authentication();
+    R94FrozenV11Authentication();
 #else
     Check(false, "PW_COMMERCE_FIXTURE_DIR must be defined by CMakeLists.txt");
 #endif

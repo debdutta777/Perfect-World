@@ -23,10 +23,14 @@ Rejection S04WFromIssue(const SchoolIssue& issue)
     return Rejection{issue.Code, issue.Detail.empty() ? std::string("The school rules refused that action.") : issue.Detail};
 }
 
-/** S04 seam (R9 not routable): R9's Awakening.Stats.Skills as (SkillId, LevelMilli). No owner in WorldState yet: none known. */
-AssessmentSkills S04WorkSkills(const WorldState& /*world*/)
+/** S04 seam, filled by R9-04: the one growth owner's Awakening.Stats.Skills as (SkillId, LevelMilli); none while unseeded. */
+AssessmentSkills S04WorkSkills(const WorldState& world)
 {
-    return {};
+    AssessmentSkills skills;
+    skills.reserve(world.Awakening.Stats.Skills.size());
+    for (const SkillLevel& skill : world.Awakening.Stats.Skills)
+        skills.push_back({skill.SkillId, skill.LevelMilli});
+    return skills;
 }
 
 bool S04SameClock(const GameClock& a, const GameClock& b)
@@ -115,6 +119,11 @@ std::optional<Rejection> WorldSim::ApplySchoolWeekCommand(const Command& command
     const GameInstant end = compressed.World.Clock.Now();
     if (end < now || compressed.World.DayLoop.Now != end)
         return S04WRefusal("school.invalid_state", "The compressed week left the day and the clock apart.");
+    // R9-04: the compressed copy cannot open the countdown (its helper sims are unbound), so a routed week may not reach the
+    // 18:00 opening on Awakening Day: resolve up to the evening, let it open, then plan the ten days.
+    if (CountdownRouted() && State_.CountdownText.empty() && now < CountdownStartInstant() && end >= CountdownStartInstant())
+        return S04WRefusal(std::string(CountdownErrorCode(CountdownError::NotAtStart)),
+                           "The week reaches the countdown's 18:00 opening; resolve the days before Awakening Day evening first.");
     if (end != now)
     {
         ChargeTime(end - now, result);
@@ -123,6 +132,9 @@ std::optional<Rejection> WorldSim::ApplySchoolWeekCommand(const Command& command
     }
     if (!S04SameConsequences(State_, compressed.World))
         return S04WRefusal("school.week.world_mismatch", "The week's world events differ from the world clock's own.");
+    // R9-04: the week's per-instance completions grow the one owner exactly once (never the segments' totals as well).
+    if (std::optional<Rejection> refusal = CreditActivities(compressed.ActivityEvents))
+        return refusal;
     // Only the day and the sessions come from the copy; commerce settles at the commit gate over the same interval.
     State_.DayLoop = compressed.World.DayLoop;
     State_.SchoolSessions = compressed.Sessions;

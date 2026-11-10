@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AwakeningInputs.h"
 #include "Conversation.h"
 #include "CharacterCreation.h"
 #include "Commerce.h"
@@ -11,6 +12,7 @@
 #include "SchoolSessions.h"
 #include "SchoolWeekState.h"
 #include "SchoolWork.h"
+#include "TutorialDungeon.h"
 
 #include <cstdint>
 #include <map>
@@ -116,6 +118,20 @@ struct WorldState
     SchoolSessionsState SchoolSessions;
     SchoolWorkState SchoolWork;
     SchoolWeekState SchoolWeek;
+    /**
+     * R9-04: the Round 9 Awakening slices, changed only through WorldSim (WorldAwakening.cpp, the countdown boundary in
+     * RunTimeTo and the school credits). Awakening (AwakeningInputs.h) is the one latent-stat and growth owner: unseeded
+     * until creation confirmation seeds it (SeedAwakeningInputs), and while unseeded nothing grows, opens or grants.
+     * Tutorial is the R9-02 supervised session (TutorialDungeon.h). CountdownText is the canonical SerialiseCountdown text
+     * of the ten days (Countdown.h includes this header, so the state is held as its text), empty until the 18:00 opening
+     * on Awakening Day. LiveAwakenedProfile is the live practice owner, set once from the grant's StartingProfile (which
+     * stays an immutable snapshot) and changed only by countdown practice. Since world v12 saved together as one
+     * "pw.awakening/1" text and hashed as the "awakening" section; every earlier world loads with all four empty.
+     */
+    AwakeningState Awakening;
+    TutorialDungeonState Tutorial;
+    std::string CountdownText;
+    std::optional<AwakenedProfile> LiveAwakenedProfile;
 };
 
 /** A fresh world: the clock at the campaign epoch (2 Jun 2042 06:00), no flags or Gates, RNG streams seeded from the world seed, a fresh day. */

@@ -283,7 +283,7 @@ std::uint64_t LaneHistoricalHash(const WorldState& world, std::string_view doors
     };
     std::string bytes = "u" + number(5);
     for (const auto& section : HashWorldSections(world))
-        if (section.Name != "journal" && section.Name != "commerce" && section.Name != "school")
+        if (section.Name != "journal" && section.Name != "commerce" && section.Name != "school" && section.Name != "awakening")
             bytes += text(section.Name) + "u" + number(section.Name == "doors" ? fnv(text(doors)) : section.Hash);
     return fnv(bytes);
 }

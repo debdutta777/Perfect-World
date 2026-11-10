@@ -28,14 +28,108 @@ bool S04HasStructures(const AssessmentStructures& structures)
            structures.Coordinate != nullptr;
 }
 
-/**
- * S04 seam (R9 not routable): the authoritative skill for a lesson is R9's Awakening.Stats.FindSkill(family skill).LevelMilli,
- * zero when absent. WorldState holds no AwakeningState yet, so every skill is absent and reads zero, exactly as
- * CompressSchoolWeek already opens its lessons. Replace this body (and S04WorkSkills) once R9-04 adds the owner.
- */
-std::int32_t S04LessonSkillMilli(const WorldState& /*world*/, const SchoolLessonBinding& /*binding*/)
+/** R9-04: the skill the lesson's problem family trains (its catalogue's SkillId), empty when the family is unknown. */
+std::string_view R94FamilySkill(const AssessmentStructures& structures, const SchoolLessonBinding& binding)
 {
-    return 0;
+    switch (binding.Structure)
+    {
+    case SchoolStructure::Model:
+        if (const auto* family = structures.Model != nullptr ? structures.Model->FindFamily(binding.FamilyId) : nullptr)
+            return family->SkillId;
+        break;
+    case SchoolStructure::Explain:
+        if (const auto* family = structures.Explain != nullptr ? structures.Explain->FindFamily(binding.FamilyId) : nullptr)
+            return family->SkillId;
+        break;
+    case SchoolStructure::Investigate:
+        if (const auto* family = structures.Investigate != nullptr ? structures.Investigate->FindFamily(binding.FamilyId) : nullptr)
+            return family->SkillId;
+        break;
+    case SchoolStructure::Coordinate:
+        if (const auto* family = structures.Coordinate != nullptr ? structures.Coordinate->FindFamily(binding.FamilyId) : nullptr)
+            return family->SkillId;
+        break;
+    }
+    return {};
+}
+
+/**
+ * S04 seam, filled by R9-04: the authoritative skill for a lesson is the one growth owner's
+ * Awakening.Stats.FindSkill(family skill).LevelMilli, zero when absent (an unseeded life has no skills and reads zero).
+ */
+std::int32_t S04LessonSkillMilli(const WorldState& world, const AssessmentStructures& structures, const SchoolLessonBinding& binding)
+{
+    const SkillLevel* skill = world.Awakening.Stats.FindSkill(R94FamilySkill(structures, binding));
+    return skill != nullptr ? skill->LevelMilli : 0;
+}
+
+struct R94Observed
+{
+    AptitudeSource Source = AptitudeSource::StructureModel;
+    AptitudeFacet Facet = AptitudeFacet::Analysis;
+};
+
+/** The classroom structure's own source and facet (AptitudeProjection.h: a structure evidences only its own facet). */
+R94Observed R94StructureEvidence(SchoolStructure structure)
+{
+    switch (structure)
+    {
+    case SchoolStructure::Explain: return {AptitudeSource::StructureExplain, AptitudeFacet::Interpretation};
+    case SchoolStructure::Investigate: return {AptitudeSource::StructureInvestigate, AptitudeFacet::FaultFinding};
+    case SchoolStructure::Coordinate: return {AptitudeSource::StructureCoordinate, AptitudeFacet::Teamwork};
+    default: return {AptitudeSource::StructureModel, AptitudeFacet::Analysis};
+    }
+}
+
+/** A resolved lesson outcome's (family, grade index Sound/Partial/Unsound); false for no observation. */
+bool R94OutcomeGrade(const SchoolLessonOutcome& outcome, std::string& family, std::size_t& grade)
+{
+    if (const auto* m = std::get_if<ModelOutcome>(&outcome))
+    {
+        family = m->FamilyId;
+        grade = static_cast<std::size_t>(m->Grade);
+        return true;
+    }
+    const StructureOutcome* o = nullptr;
+    if (const auto* e = std::get_if<ExplainOutcome>(&outcome))
+        o = e;
+    else if (const auto* i = std::get_if<InvestigateOutcome>(&outcome))
+        o = i;
+    else if (const auto* c = std::get_if<CoordinateOutcome>(&outcome))
+        o = c;
+    else if (const auto* r = std::get_if<StructureOutcome>(&outcome))
+        o = r;
+    if (o == nullptr)
+        return false;
+    family = o->FamilyId;
+    grade = static_cast<std::size_t>(o->Grade);
+    return true;
+}
+
+/**
+ * R9-04: the projection evidence a paid close actually observed: a completed foreground or routine lesson with a resolved
+ * outcome, id "school.lesson.<activity instance>", its structure's source and facet, the family as subject, the grade as
+ * result (a routine exposure is Sound by definition). Attendance-only, cancelled and unresolved lessons observe nothing.
+ */
+std::optional<AptitudeEvidence> R94LessonEvidence(const SchoolPeriodRecord& record, const SchoolLessonBinding& binding, GameInstant at)
+{
+    if (!record.Completed || record.Cancelled || record.Mode == SchoolLessonMode::Attend || record.ActivityInstance == 0)
+        return std::nullopt;
+    std::string family;
+    std::size_t grade = 0;
+    if (!R94OutcomeGrade(record.Outcome, family, grade))
+        return std::nullopt;
+    const R94Observed observed = R94StructureEvidence(binding.Structure);
+    constexpr AptitudeResult results[] = {AptitudeResult::Sound, AptitudeResult::Partial, AptitudeResult::Unsound};
+    AptitudeEvidence item;
+    item.Id = "school.lesson." + std::to_string(record.ActivityInstance);
+    item.Source = observed.Source;
+    item.Facet = observed.Facet;
+    item.Subject = std::move(family);
+    item.Routine = record.Mode == SchoolLessonMode::Routine;
+    item.Result = item.Routine ? AptitudeResult::Sound : grade < std::size(results) ? results[grade] : AptitudeResult::Unsound;
+    item.At = at;
+    return item;
 }
 } // namespace
 
@@ -109,8 +203,8 @@ std::optional<Rejection> WorldSim::ApplySchoolLessonCommand(const Command& comma
         const SchoolLessonBinding* binding = FindSchoolLessonBinding(*Lessons_.Lessons, open->BindingId);
         if (binding == nullptr)
             return S04Refusal("school.session.bad_binding", "No lesson of this school has that binding.");
-        applied = OpenSchoolLesson(sessions, day, cats, *binding, open->Mode, open->Goal, S04LessonSkillMilli(State_, *binding),
-                                   State_.WorldSeed, {});
+        applied = OpenSchoolLesson(sessions, day, cats, *binding, open->Mode, open->Goal,
+                                   S04LessonSkillMilli(State_, Lessons_.Structures, *binding), State_.WorldSeed, {});
     }
     else if (const auto* choose = std::get_if<SchoolLessonChoose>(&command.Payload))
         applied = ChooseSchoolLesson(sessions, cats, choose->Session, choose->Action);
@@ -129,9 +223,36 @@ std::optional<Rejection> WorldSim::ApplySchoolLessonCommand(const Command& comma
         if (result.Partial || State_.Clock.Now() != day.Now)
             return S04Refusal("school.lesson.charge_interrupted", "Settle the scheduled time before recording the lesson.");
     }
+    // R9-04: the close's completions grow the one owner exactly once, and a paid close adds the evidence it observed.
+    if (State_.Awakening.Seeded && std::holds_alternative<SchoolLessonClose>(command.Payload))
+    {
+        AwakeningState staged = State_.Awakening;
+        const AwakeningCreditsResult credited = ApplyActivityCredits(staged, applied.Events);
+        if (!credited.Ok())
+            return S04Refusal("school.learning_refused", credited.Error);
+        for (const DayLoopEvent& event : applied.Events)
+        {
+            if (event.Kind != DayLoopEventKind::Completed)
+                continue;
+            for (const SchoolPeriodRecord& record : sessions.Periods)
+            {
+                if (record.ActivityInstance != event.Instance)
+                    continue;
+                const SchoolLessonBinding* bound = FindSchoolLessonBinding(*Lessons_.Lessons, record.BindingId);
+                const std::optional<AptitudeEvidence> item =
+                    bound != nullptr ? R94LessonEvidence(record, *bound, day.Now) : std::nullopt;
+                if (!item)
+                    continue;
+                const AptitudeAddResult added = AptitudeAddEvidence(staged.ProjectionEvidence, *item);
+                if (!added.Ok())
+                    return S04Refusal("school.learning_refused", std::string(AptitudeErrorCode(added.Error)));
+            }
+        }
+        State_.Awakening = std::move(staged);
+    }
     State_.SchoolSessions = std::move(sessions);
     State_.DayLoop = std::move(day);
-    // Completion learning leaves the reducer exactly once, as the day loop emitted it (R9's ApplyActivityCredits input).
+    // Completion learning leaves the reducer exactly once, as the day loop emitted it (and was credited above).
     for (const DayLoopEvent& event : applied.Events)
         result.Events.push_back({0, event.At, event});
     StagedLesson_ = std::move(applied);

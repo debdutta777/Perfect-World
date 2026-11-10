@@ -941,3 +941,18 @@ add_executable(PerfectWorldWorldSaveSchoolTests Tests/WorldSaveSchoolTests.cpp)
 target_link_libraries(PerfectWorldWorldSaveSchoolTests PRIVATE PerfectWorldCore)
 target_compile_definitions(PerfectWorldWorldSaveSchoolTests PRIVATE PW_SCHOOL_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
 add_test(NAME PerfectWorldWorldSaveSchoolTests COMMAND PerfectWorldWorldSaveSchoolTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# R9-04: Awakening, tutorial and countdown through WorldSim; pw.awakening/1 persistence (save schema 12, hash 9).
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/WorldAwakening.cpp
+    Source/PerfectWorldCore/Private/WorldCountdownRoute.cpp
+    Source/PerfectWorldCore/Private/WorldSaveAwakening.cpp
+    Source/PerfectWorldCore/Private/WorldSaveAwakeningDecode.cpp
+    Source/PerfectWorldCore/Private/WorldSaveAwakeningRules.cpp)
+add_executable(PerfectWorldWorldAwakeningTests Tests/WorldAwakeningTests.cpp)
+target_link_libraries(PerfectWorldWorldAwakeningTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldAwakeningTests COMMAND PerfectWorldWorldAwakeningTests ${CMAKE_SOURCE_DIR}/Data/Content)
+add_executable(PerfectWorldWorldSaveAwakeningTests Tests/WorldSaveAwakeningTests.cpp)
+target_link_libraries(PerfectWorldWorldSaveAwakeningTests PRIVATE PerfectWorldCore)
+target_compile_definitions(PerfectWorldWorldSaveAwakeningTests PRIVATE PW_AWAKENING_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
+add_test(NAME PerfectWorldWorldSaveAwakeningTests COMMAND PerfectWorldWorldSaveAwakeningTests ${CMAKE_SOURCE_DIR}/Data/Content)

@@ -58,26 +58,35 @@ bool S04SuspendedBySchoolPlay(const CommandPayload& payload)
            std::holds_alternative<InventoryConsume>(payload) || std::holds_alternative<WorldDayCommand>(payload) ||
            std::holds_alternative<SchoolWeekOrder>(payload) || std::holds_alternative<SchoolWeekResolve>(payload);
 }
+
+/** R9-04: what may still run while the supervised session holds the paused clock: its own commands and system bookkeeping. */
+bool R94AllowedDuringTutorial(const CommandPayload& payload)
+{
+    return IsAwakeningCommand(payload) || std::holds_alternative<ScheduleWorldEvent>(payload) ||
+           std::holds_alternative<SetWorldFlag>(payload) || std::holds_alternative<SettleDueEvents>(payload) || IsGateCommand(payload);
+}
 } // namespace
 
 WorldSim::WorldSim(std::uint64_t worldSeed, std::size_t eventCap, DayLoopCatalogues school, WorldCommerceCatalogues commerce,
-                   WorldSchoolCatalogues lessons)
-    : EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap), School_(school), Commerce_(commerce), Lessons_(lessons)
+                   WorldSchoolCatalogues lessons, WorldAwakeningCatalogues awakening)
+    : EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap), School_(school), Commerce_(commerce), Lessons_(lessons),
+      Awakening_(std::move(awakening))
 {
     State_ = MakeWorldState(worldSeed);
 }
 
 WorldSim::WorldSim(std::uint64_t worldSeed, const CharacterCreator& creation, std::size_t eventCap,
-                   DayLoopCatalogues school, WorldCommerceCatalogues commerce, WorldSchoolCatalogues lessons)
+                   DayLoopCatalogues school, WorldCommerceCatalogues commerce, WorldSchoolCatalogues lessons,
+                   WorldAwakeningCatalogues awakening)
     : State_(MakeWorldState(worldSeed, creation)), EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap),
-      School_(school), Commerce_(commerce), Lessons_(lessons)
+      School_(school), Commerce_(commerce), Lessons_(lessons), Awakening_(std::move(awakening))
 {
 }
 
 WorldSim::WorldSim(WorldState state, std::size_t eventCap, DayLoopCatalogues school, WorldCommerceCatalogues commerce,
-                   WorldSchoolCatalogues lessons)
+                   WorldSchoolCatalogues lessons, WorldAwakeningCatalogues awakening)
     : State_(std::move(state)), EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap), School_(school), Commerce_(commerce),
-      Lessons_(lessons)
+      Lessons_(lessons), Awakening_(std::move(awakening))
 {
     // R8-04: the save reader supplies authenticated commerce (v10) or the one-time household initialisation (v6 to v9), so
     // the snapshot is taken exactly as given; a slice out of step with the clock refuses time commands rather than being repaired.
@@ -102,6 +111,13 @@ std::optional<Rejection> WorldSim::ValidateTimeCharge(std::int64_t minutes) cons
 
 std::optional<Rejection> WorldSim::Validate(const Command& command) const
 {
+    if (!R94AllowedDuringTutorial(command.Payload))
+    {
+        if (std::optional<Rejection> open = TutorialOpenRefusal(State_))
+            return open;
+    }
+    if (IsAwakeningCommand(command.Payload))
+        return ValidateAwakeningCommand(command);
     if (S04SuspendedBySchoolPlay(command.Payload))
     {
         if (std::optional<Rejection> open = SchoolPlayOpenRefusal(State_))
@@ -178,6 +194,14 @@ void WorldSim::RunTimeTo(GameInstant target, CommandResult& result)
     };
     for (;;)
     {
+        // R9-04: the countdown opens at exactly 18:00 on Awakening Day, before anything else happens at that instant and
+        // whatever the player was doing (R95OpenBoundary). A refusal stops the path; Submit refuses the whole command.
+        if (std::optional<Rejection> refused = OpenCountdownBoundary(result))
+        {
+            Boundary_ = std::move(refused);
+            result.Partial = true;
+            return;
+        }
         // First whatever is due at this very instant (scheduled for now, left by a capped advance, or scheduled by a
         // system reacting to an event here), without a minute passing.
         if (State_.Clock.HasDueEvents())
@@ -206,6 +230,10 @@ void WorldSim::RunTimeTo(GameInstant target, CommandResult& result)
         const GameInstant nextEvent = State_.Clock.NextEventInstant();
         if (nextEvent >= 0 && nextEvent < step)
             step = nextEvent;
+        // R9-04: a routed world with no countdown yet never steps past its scheduled opening (the R9-05 clamp): long skips,
+        // sleep, activities, paid choices and lessons all stop there and open it, then carry on.
+        if (CountdownRouted() && State_.CountdownText.empty() && now < CountdownStartInstant())
+            step = std::min(step, CountdownStartInstant());
         const AdvanceResult advanced = State_.Clock.AdvanceToCapped(step, EventCap_ - fired);
         if (State_.Clock.Now() == now)
         {
@@ -280,6 +308,8 @@ std::optional<Rejection> WorldSim::Apply(const Command& command, CommandResult& 
         return ApplySchoolWeekCommand(command, result);
     else if (IsSchoolPhase2Command(command.Payload))
         return ApplySchoolLessonCommand(command, result);
+    else if (IsAwakeningCommand(command.Payload))
+        return ApplyAwakeningCommand(command, result);
     else
         return ApplyCommerceCommand(command);
     return std::nullopt;
@@ -298,14 +328,21 @@ CommandResult WorldSim::Submit(const Command& command)
     }
     // Only a command whose application can still be refused pays for a copy of the world.
     std::optional<WorldState> before;
+    // R9-04: in a seeded world any command may meet the countdown boundary, its synchronisation or a learning credit.
     if (NeedsRollbackSnapshot(command) || std::holds_alternative<AdvanceTime>(command.Payload) ||
-        std::holds_alternative<WorldDayCommand>(command.Payload) || IsSchoolPhase2Command(command.Payload))
+        std::holds_alternative<WorldDayCommand>(command.Payload) || IsSchoolPhase2Command(command.Payload) ||
+        IsAwakeningCommand(command.Payload) || State_.Awakening.Seeded)
         before = State_;
     // S04: a school command's result is published only once the whole transaction is accepted.
     StagedLesson_.reset();
     StagedWork_.reset();
     StagedWeek_.reset();
+    StagedPractice_.reset();
+    Boundary_.reset();
     std::optional<Rejection> late = Apply(command, result);
+    if (Boundary_)
+        late = std::move(Boundary_); // The countdown boundary's own reason, not the caller's "charge interrupted".
+    Boundary_.reset();
     if (!late && State_.Clock.Now() != result.From)
     {
         // One settlement for the ACTUAL interval, including event-capped advances. Paid choices,
@@ -316,6 +353,8 @@ CommandResult WorldSim::Submit(const Command& command)
         else
             State_.Commerce = std::move(settled.State);
     }
+    if (!late)
+        late = SyncCountdown(result);
     if (late)
     {
         if (before)
@@ -335,9 +374,12 @@ CommandResult WorldSim::Submit(const Command& command)
         LastWork_ = std::move(StagedWork_);
     if (StagedWeek_)
         LastWeek_ = std::move(StagedWeek_);
+    if (StagedPractice_)
+        LastPractice_ = std::move(StagedPractice_);
     StagedLesson_.reset();
     StagedWork_.reset();
     StagedWeek_.reset();
+    StagedPractice_.reset();
     result.Accepted = true;
     result.Seq = State_.Seq;
     result.To = State_.Clock.Now();

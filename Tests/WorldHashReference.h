@@ -132,10 +132,14 @@ std::vector<std::pair<std::string, std::uint64_t>> RefSections(const WorldState&
     // S04 school: one text field, the canonical pw.school/1 envelope of the three school slices (the doors precedent).
     RefBytes S04School;
     S04School.S(SerialiseSchoolState(w));
+    // R9-04 awakening: one text field, the canonical pw.awakening/1 envelope of the four Round 9 slices (the school precedent).
+    RefBytes R94Awakening;
+    R94Awakening.S(SerialiseAwakeningState(w));
     return {{"meta", RefFnv1a(meta.Data)},   {"clock", RefFnv1a(clock.Data)}, {"flags", RefFnv1a(flags.Data)},
             {"gates", RefFnv1a(gates.Data)}, {"rng", RefFnv1a(rng.Data)},     {"dayloop", RefFnv1a(dayloop.Data)},
             {"conversations", RefFnv1a(conversations.Data)}, {"doors", RefFnv1a(doors.Data)}, {"journal", RefFnv1a(R4JJournal.Data)},
-            {"commerce", RefFnv1a(R84Commerce.Data)}, {"school", RefFnv1a(S04School.Data)}};
+            {"commerce", RefFnv1a(R84Commerce.Data)}, {"school", RefFnv1a(S04School.Data)},
+            {"awakening", RefFnv1a(R94Awakening.Data)}};
 }
 
 std::uint64_t RefWorld(const WorldState& w)
@@ -249,6 +253,9 @@ WorldState EdgeWorld()
 // S04 re-pin 2026-11-07 with PW_PRINT_GOLDEN=1 (RefWorld agreed section by section first): WorldHashVersion 8 appends the
 // school section (the empty pw.school/1 envelope of both hand-built worlds), schema 11. HandBuilt 0x4669aa0cccdecff5 ->
 // 0x190d7b75bff8532d; Edge 0x69bf838b3ba0a9e9 -> 0xec18c2377c28ddf9. The ten earlier section encodings are unchanged.
-constexpr std::uint64_t GoldenHandBuilt = 0x190d7b75bff8532dULL;
-constexpr std::uint64_t GoldenEdge = 0xec18c2377c28ddf9ULL;
+// R9-04 re-pin 2026-11-10 with PW_PRINT_GOLDEN=1 (RefWorld agreed section by section first): WorldHashVersion 9 appends the
+// awakening section (the empty pw.awakening/1 envelope of both hand-built worlds), schema 12. HandBuilt 0x190d7b75bff8532d ->
+// 0x8b6f3c05844b59bc; Edge 0xec18c2377c28ddf9 -> 0x1bfa4f976c943770. The eleven earlier section encodings are unchanged.
+constexpr std::uint64_t GoldenHandBuilt = 0x8b6f3c05844b59bcULL;
+constexpr std::uint64_t GoldenEdge = 0x1bfa4f976c943770ULL;
 } // namespace

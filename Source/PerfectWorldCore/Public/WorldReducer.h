@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <map>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -58,6 +59,21 @@ struct WorldSchoolCatalogues
     const AssessmentCatalogue* Papers = nullptr;
 };
 
+/**
+ * R9-04: what the Awakening commands and the countdown boundary borrow. Recipes are the validated ability recipes the
+ * supervised grant resolves with (LoadAbilityRecipes), owned by the caller and alive as long as the sim. Countdown is the
+ * trusted countdown context (the player's identity, the relationship book and the people by role), never a presentation
+ * payload. The countdown is ROUTED only in a sim whose Countdown.Player is set and whose world's Awakening is seeded: such a
+ * sim stops every time path at 18:00 on Awakening Day and opens the countdown there (OpenCountdownAtCurrentTime), and
+ * synchronises an open countdown after every accepted command (SynchroniseWorldCountdown). Nested helper sims (week
+ * compression, the countdown adapters) bind none of this, so they never open, synchronise or grant.
+ */
+struct WorldAwakeningCatalogues
+{
+    const AbilityRecipeSet* Recipes = nullptr;
+    CountdownContext Countdown;
+};
+
 /** Presentation-free school gate projection. All minute fields are local minutes of today's day. */
 struct SchoolArrivalView
 {
@@ -96,16 +112,18 @@ public:
      */
     explicit WorldSim(std::uint64_t worldSeed, std::size_t eventCap = MaxEventsPerAdvance,
                       DayLoopCatalogues school = {}, WorldCommerceCatalogues commerce = {},
-                      WorldSchoolCatalogues lessons = {});
+                      WorldSchoolCatalogues lessons = {}, WorldAwakeningCatalogues awakening = {});
     explicit WorldSim(std::uint64_t worldSeed, const CharacterCreator& creation,
                       std::size_t eventCap = MaxEventsPerAdvance, DayLoopCatalogues school = {},
-                      WorldCommerceCatalogues commerce = {}, WorldSchoolCatalogues lessons = {});
+                      WorldCommerceCatalogues commerce = {}, WorldSchoolCatalogues lessons = {},
+                      WorldAwakeningCatalogues awakening = {});
     /**
      * Continue a loaded world (DeserializeWorldSave's World). The state must be in step
      * (IsWorldDayInStep); the command log starts empty, so it holds the commands since the load.
      */
     explicit WorldSim(WorldState state, std::size_t eventCap = MaxEventsPerAdvance, DayLoopCatalogues school = {},
-                      WorldCommerceCatalogues commerce = {}, WorldSchoolCatalogues lessons = {});
+                      WorldCommerceCatalogues commerce = {}, WorldSchoolCatalogues lessons = {},
+                      WorldAwakeningCatalogues awakening = {});
 
     /**
      * The only mutation entry point. Atomic: a rejected command, including a paid conversation choice whose charge
@@ -131,6 +149,19 @@ public:
     [[nodiscard]] const std::optional<SchoolSessionResult>& LastSchoolLessonResult() const noexcept { return LastLesson_; }
     [[nodiscard]] const std::optional<SchoolWorkResult>& LastSchoolWorkResult() const noexcept { return LastWork_; }
     [[nodiscard]] const std::optional<SchoolWeekResult>& LastSchoolWeekResult() const noexcept { return LastWeek_; }
+    /** R9-04: the bound Awakening content and countdown context. */
+    [[nodiscard]] const WorldAwakeningCatalogues& AwakeningContent() const noexcept { return Awakening_; }
+    /** R9-04: the stored countdown (ParseCountdown of State().CountdownText), empty before the 18:00 opening. */
+    [[nodiscard]] std::optional<CountdownState> Countdown() const;
+    /** R9-04: the phone/handoff projection (QueryWorldCountdown) over the stored Awakening and countdown. Pure. */
+    [[nodiscard]] WorldCountdownView CountdownView() const;
+    /**
+     * R9-04: the disclosure for optional supervised practice starting now (PreviewWorldCountdownPractice) with the bound
+     * context and the day's catalogues. Reading it changes nothing; confirm by sending CountdownPracticeConfirm with it.
+     */
+    [[nodiscard]] WorldCountdownPracticeOffer PreviewCountdownPractice(PowerDimension dimension, std::int32_t minutes) const;
+    /** R9-04: the Practise result of the last ACCEPTED countdown.practice.confirm. Session output only, never saved. */
+    [[nodiscard]] const std::optional<PracticeResult>& LastCountdownPracticeResult() const noexcept { return LastPractice_; }
 
 private:
     std::optional<Rejection> Validate(const Command& command) const;
@@ -166,6 +197,20 @@ private:
     std::optional<Rejection> ApplySchoolLessonCommand(const Command& command, CommandResult& result);
     std::optional<Rejection> ApplySchoolWorkCommand(const SchoolWorkCommand& command, CommandResult& result);
     std::optional<Rejection> ApplySchoolWeekCommand(const Command& command, CommandResult& result);
+    // R9-04 tutorial.* and countdown.practice.confirm (WorldAwakening.cpp) and the countdown boundary (WorldCountdownRoute.cpp).
+    std::optional<Rejection> ValidateAwakeningCommand(const Command& command) const;
+    std::optional<Rejection> ApplyAwakeningCommand(const Command& command, CommandResult& result);
+    std::optional<Rejection> ApplyCountdownPractice(const CountdownPracticeConfirm& command, CommandResult& result);
+    /** Exit the ReadyToGrant session: charge the disclosed hour once, commit the grant and start the live profile. */
+    std::optional<Rejection> FinishTutorial(CommandResult& result);
+    /** True when this sim routes the countdown for its world (seeded Awakening and a bound countdown context). */
+    [[nodiscard]] bool CountdownRouted() const noexcept;
+    /** At exactly 18:00 on Awakening Day with no countdown yet: open it (R95OpenBoundary). A refusal leaves State_ as it was. */
+    std::optional<Rejection> OpenCountdownBoundary(CommandResult& result);
+    /** After the final day and allowance settlement: synchronise an open countdown (R95SyncSnapshot). */
+    std::optional<Rejection> SyncCountdown(CommandResult& result);
+    /** R9 growth: credit the completions once to a staged copy of the one owner and commit it (seeded worlds only). */
+    std::optional<Rejection> CreditActivities(std::span<const DayLoopEvent> events);
 
     WorldState State_;
     std::vector<Command> Log_;
@@ -173,9 +218,13 @@ private:
     DayLoopCatalogues School_;
     WorldCommerceCatalogues Commerce_;
     WorldSchoolCatalogues Lessons_;
+    WorldAwakeningCatalogues Awakening_;
+    /** R9-04: a countdown boundary refusal inside RunTimeTo, turned into the command's late refusal by Submit. */
+    std::optional<Rejection> Boundary_;
     std::optional<SchoolSessionResult> StagedLesson_, LastLesson_;
     std::optional<SchoolWorkResult> StagedWork_, LastWork_;
     std::optional<SchoolWeekResult> StagedWeek_, LastWeek_;
+    std::optional<PracticeResult> StagedPractice_, LastPractice_;
     std::string ServiceShop_;
     std::map<std::string, std::vector<NpcInterruptionWindow>, std::less<>> ServiceHistory_;
 };
@@ -191,4 +240,13 @@ private:
  * ("school.lesson_open") or a started, unsent paper ("school.paper_open"); empty when neither is open.
  */
 [[nodiscard]] PERFECTWORLDCORE_API std::optional<Rejection> SchoolPlayOpenRefusal(const WorldState& state);
+
+/** R9-04: true for tutorial.* and countdown.practice.confirm (WorldAwakening.cpp). */
+[[nodiscard]] PERFECTWORLDCORE_API bool IsAwakeningCommand(const CommandPayload& payload) noexcept;
+
+/**
+ * R9-04: "tutorial.active" while the supervised session is Active or ReadyToGrant: the world clock is paused there, so time,
+ * the day, conversations, commerce and school play wait until the session exits. Empty otherwise.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API std::optional<Rejection> TutorialOpenRefusal(const WorldState& state);
 } // namespace PerfectWorld

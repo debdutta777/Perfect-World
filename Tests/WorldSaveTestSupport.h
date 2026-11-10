@@ -226,6 +226,9 @@ void CheckSame(const WorldSaveData& a, const WorldSaveData& b, const char* what)
     Check(a.World.SchoolSessions == b.World.SchoolSessions && a.World.SchoolWork == b.World.SchoolWork &&
               SerialiseSchoolState(a.World) == SerialiseSchoolState(b.World),
           what);
+    Check(SerialiseAwakeningState(a.World) == SerialiseAwakeningState(b.World) && a.World.CountdownText == b.World.CountdownText &&
+              a.World.Tutorial == b.World.Tutorial,
+          what);
     Check(a.World.DayLoop == b.World.DayLoop && SerialiseDayLoop(a.World.DayLoop) == SerialiseDayLoop(b.World.DayLoop), what);
     Check(IsWorldDayInStep(a.World) == IsWorldDayInStep(b.World) && a.World.DayLoop.Now == a.World.Clock.Now(), what);
     Check(a.Player == b.Player, what);
