@@ -488,4 +488,27 @@ bool FR810HomeBackDoorTest::RunTest(const FString& Parameters)
     return true;
 }
 
+// S06: the home study desk's interaction point (U 300, V 815, 85 cm up; APWStudyDeskActor) is reachable from open floor: the player stands
+// south of the chair (U 295, V 700), a 90 cm route reaches that floor from the front door, and the point is within the 200 cm interaction reach.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FS06HomeStudyDeskReachTest, "PerfectWorld.Home.StudyDeskPointIsReachable",
+                                 EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FS06HomeStudyDeskReachTest::RunTest(const FString& Parameters)
+{
+    using namespace PWHomeLayoutTest;
+    FHome S06Home;
+    BuildHome(S06Home);
+    if (!TestTrue(TEXT("the opening home builds"), S06Home.bBuilt)) return false;
+    const TArray<FRect> S06Obstacles = WalkObstacles(S06Home);
+    const FRect S06Floor{25.0, 975.0, 25.0, 875.0};
+    const TArray<uint8> S06Reach = FloodRoutes(S06Obstacles, 45.0, S06Floor, 730.0, 85.0);
+    const double S06StandU = 295.0;
+    const double S06StandV = 700.0;
+    TestTrue(TEXT("a 90 cm route reaches the floor south of the desk chair"), IsReached(S06Reach, S06StandU, S06StandV));
+    TestTrue(TEXT("a 34 cm capsule stands clear of every body-height box there"), MinDistToBodyBlocks(S06Home, S06StandU, S06StandV) > HomePersonRadiusCm);
+    const double S06Ground = FVector2D::Distance(FVector2D(S06StandU, S06StandV), FVector2D(300.0, 815.0));
+    // The point is 85 cm up and the capsule axis spans the standing body, so the reach is the ground distance.
+    TestTrue(*FString::Printf(TEXT("the desk point is %.0f cm away, inside the 200 cm reach"), S06Ground), S06Ground <= 200.0);
+    return true;
+}
+
 #endif // WITH_DEV_AUTOMATION_TESTS && !UE_BUILD_SHIPPING
