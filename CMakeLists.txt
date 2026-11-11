@@ -966,3 +966,14 @@ add_executable(PerfectWorldSchoolCalendarEligibilityTests Tests/SchoolCalendarEl
 target_link_libraries(PerfectWorldSchoolCalendarEligibilityTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldSchoolCalendarEligibilityTests
     COMMAND PerfectWorldSchoolCalendarEligibilityTests ${CMAKE_SOURCE_DIR}/Data/Content)
+# P34: authored homework briefs and pure calendar-boundary issuance (P3-04).
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/SchoolWorkBriefContent.cpp
+    Source/PerfectWorldCore/Private/SchoolWorkIssuance.cpp)
+add_executable(PerfectWorldSchoolWorkBriefContentTests Tests/SchoolWorkBriefContentTests.cpp)
+target_link_libraries(PerfectWorldSchoolWorkBriefContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSchoolWorkBriefContentTests COMMAND PerfectWorldSchoolWorkBriefContentTests
+    ${CMAKE_SOURCE_DIR}/Data/Content ${CMAKE_SOURCE_DIR}/Data/Text/en/phase3_p304.json)
+add_executable(PerfectWorldSchoolWorkIssuanceTests Tests/SchoolWorkIssuanceTests.cpp)
+target_link_libraries(PerfectWorldSchoolWorkIssuanceTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSchoolWorkIssuanceTests COMMAND PerfectWorldSchoolWorkIssuanceTests ${CMAKE_SOURCE_DIR}/Data/Content)

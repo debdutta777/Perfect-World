@@ -1,0 +1,19 @@
+{
+  "type": "school_work_brief",
+  "id": "school.work.term1_science_middle",
+  "calendar": "calendar.nabapara_2042_43",
+  "bellSchedule": "bell_schedule.nabapara_xi_science",
+  "stream": "science",
+  "subject": "english",
+  "term": "term_1",
+  "issueDate": "2042-08-18",
+  "period": 3,
+  "dueDate": "2042-08-25",
+  "dueMinute": 1080,
+  "paper": "assessment_paper.xi_half_yearly_mixed",
+  "titleKey": "phase3.p304.science.middle.title",
+  "briefKey": "phase3.p304.science.middle.brief",
+  "criteriaKey": "phase3.p304.criteria",
+  "recoveryKey": "phase3.p304.recovery",
+  "note": "P3-04 starter assignment. English hosts a cross-subject mixed-method rehearsal; the existing mixed paper is deliberately reused. Dates, timetable and deadlines are authored production assumptions, not a new syllabus or a cultural-review claim."
+}
