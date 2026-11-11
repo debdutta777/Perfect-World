@@ -1,0 +1,19 @@
+{
+  "type": "school_work_brief",
+  "id": "school.work.term3_commerce_closing",
+  "calendar": "calendar.nabapara_2042_43",
+  "bellSchedule": "bell_schedule.nabapara_xi_commerce",
+  "stream": "commerce",
+  "subject": "bengali",
+  "term": "term_3",
+  "issueDate": "2043-02-16",
+  "period": 5,
+  "dueDate": "2043-02-23",
+  "dueMinute": 1080,
+  "paper": "assessment_paper.xi_half_yearly_mixed",
+  "titleKey": "phase3.p304.term3.commerce.closing.title",
+  "briefKey": "phase3.p304.term3.commerce.closing.brief",
+  "criteriaKey": "phase3.p304.term3.commerce.closing.criteria",
+  "recoveryKey": "phase3.p304.term3.commerce.closing.recovery",
+  "note": "C3 Term 3 assignment. Bengali hosts a trade-petition summary and group-report synthesis rehearsal; the existing mixed paper is deliberately reused. Dates, timetable and deadlines are authored production assumptions, not a new syllabus or a cultural-review claim."
+}
