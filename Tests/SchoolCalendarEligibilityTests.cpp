@@ -6,6 +6,8 @@
 #include "SchoolWeek.h"
 #include "WorldState.h"
 
+#include <utility>
+
 using namespace PerfectWorld;
 
 namespace
@@ -123,6 +125,48 @@ void P33PassTo(DayLoopState& day, const DayLoopCatalogues& cats, GameInstant tar
     P33Expect(ApplyDayCommand(day, cats, pass).Ok(), "manual wait reaches next bell");
 }
 
+void P33WeekParity(CalendarDay first, std::string_view stream, const SchoolWeekResult& compressed,
+    const WeekResult& fine)
+{
+    auto fineDay = fine.World.DayLoop;
+    const auto& schoolDay = compressed.World.DayLoop;
+    fineDay.Seq = schoolDay.Seq; // Pass granularity and segment planning change command count only.
+    const std::pair<std::string_view, bool> fields[] = {
+        {"Condition", fineDay.Condition == schoolDay.Condition},
+        {"Runner", fineDay.Runner == schoolDay.Runner},
+        {"Practice", fineDay.Practice == schoolDay.Practice},
+        {"Receipts", fineDay.Receipts == schoolDay.Receipts},
+        {"Attendance", fineDay.Attendance == schoolDay.Attendance},
+        {"Now", fineDay.Now == schoolDay.Now},
+        {"Phase", fineDay.Phase == schoolDay.Phase},
+        {"Wakes", fineDay.Wakes == schoolDay.Wakes},
+        {"Planned", fineDay.Planned == schoolDay.Planned},
+        {"Plan", fineDay.Plan == schoolDay.Plan},
+        {"Asleep", fineDay.Asleep == schoolDay.Asleep},
+        {"SleptAt", fineDay.SleptAt == schoolDay.SleptAt},
+        {"SchoolUntil", fineDay.SchoolUntil == schoolDay.SchoolUntil},
+        {"HasCommitment", fineDay.HasCommitment == schoolDay.HasCommitment},
+        {"Commitment", fineDay.Commitment == schoolDay.Commitment},
+        {"HasLastAction", fineDay.HasLastAction == schoolDay.HasLastAction},
+        {"Last", fineDay.Last == schoolDay.Last},
+        {"Clock.Now", fine.World.Clock.Now() == compressed.World.Clock.Now()},
+    };
+    for (const auto& [field, equal] : fields)
+    {
+        if (equal) continue;
+        std::cerr << "P33 week start=" << FormatCalendarDate(first) << " day=" << first
+            << " stream=" << stream << " differs: " << field << '\n';
+        if (field == "Plan")
+            std::cerr << "  manual items=" << fineDay.Plan.size() << " compressed items=" << schoolDay.Plan.size() << '\n';
+        P33Expect(false, "full calendar weeks agree on every day-loop field except command count");
+    }
+    // Retain the aggregate comparison so future state fields cannot escape this test.
+    if (!(fineDay == schoolDay))
+        std::cerr << "P33 week start=" << FormatCalendarDate(first) << " day=" << first
+            << " stream=" << stream << " differs: unlisted DayLoop field\n";
+    P33Expect(fineDay == schoolDay, "full calendar weeks agree on every day-loop field except command count");
+}
+
 void P33WholeCalendar(const P2CFixture& fixture, std::string_view stream)
 {
     const auto cats = fixture.Cats(stream);
@@ -215,12 +259,26 @@ void P33WholeCalendar(const P2CFixture& fixture, std::string_view stream)
         P33Expect(compressed.Ok() && compressed.Stop == WeekStop::None, "calendar week compresses through actual lesson owner");
         const auto fine = PlayWeekStepByStep(world, built.Plan.Week, cats.Day);
         P33Expect(fine.Ok(), "calendar week resolves through fine-grained day commands");
-        auto fineDay = fine.World.DayLoop;
-        fineDay.Seq = compressed.World.DayLoop.Seq; // Existing command-count equivalence exclusion.
-        P33Expect(fineDay == compressed.World.DayLoop && fine.World.Clock.Now() == compressed.World.Clock.Now(),
-            "full calendar weeks agree on every day-loop field except command count");
+        P33WeekParity(first, stream, compressed, fine);
         for (const auto& entry : compressed.World.DayLoop.Attendance.Days)
             P33Expect(CalendarRequiresAttendance(calendar, entry.Day), "compressed week never invents a closed-date absence");
+    }
+    // Ending on an ordinary school day must retain its intentions. A Sunday-only
+    // final spend used to hide the empty plans produced by one-entry segments.
+    for (const std::size_t days : {std::size_t{1}, std::size_t{5}})
+    {
+        const auto first = calendar.FirstDay + WeekMaxDays;
+        const auto world = P33WorldAt(first, school);
+        WeekPlan week;
+        week.Days.resize(days);
+        week.Days.back().Entries.push_back(finish);
+        const auto built = BuildSchoolWeekPlan(world, standing, known, week, bindings, cats);
+        P33Expect(built.Ok(), "short school week builds");
+        const auto compressed = CompressSchoolWeek(world, known, built.Plan, cats);
+        const auto fine = PlayWeekStepByStep(world, built.Plan.Week, cats.Day);
+        P33Expect(compressed.Ok() && compressed.Stop == WeekStop::None && fine.Ok(), "short school week resolves");
+        P33WeekParity(first, stream, compressed, fine);
+        P33Expect(compressed.World.DayLoop.Plan.size() == bindings.size(), "school-day ending keeps all morning intentions");
     }
 }
 
