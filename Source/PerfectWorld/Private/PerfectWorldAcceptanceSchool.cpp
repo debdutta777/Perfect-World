@@ -108,12 +108,9 @@ void AppendSchoolLessonRound9Steps(TArray<FStepDef>& Out)
     Out.Add(ScARecordStep(TEXT("core_recorded_on_time"), PerfectWorld::AttendanceOutcome::OnTime, TEXT("on time")));
 
     // To the classroom seat.
-    TArray<FVector> ToSeat;
-    ToSeat.Add(FVector(P.GateCentre.X, P.GateCentre.Y + 1000.0, ScAFloor));
-    ToSeat.Add(FVector(P.ClassroomDoor.X, P.ClassroomDoor.Y - 150.0, ScAFloor));
-    ToSeat.Add(FVector(P.ClassroomDoor.X, P.ClassroomDoor.Y - 40.0, ScAFloor));
-    ToSeat.Add(FVector(P.ClassroomDoor.X, P.ClassroomDoor.Y + 60.0, ScAFloor));
-    ToSeat.Add(P.ClassroomAisle);
+    // S06: the verandah's pillars stand every 500 cm; the straight diagonal from the forecourt to the doorway ran into the one at (7250, 6175).
+    // PWSchool::ScClassroomSeatRoute goes up the office bay and along the verandah walk (checked clear for the capsule by PerfectWorld.SchoolCampus.SeatRoute).
+    const TArray<FVector> ToSeat = PWSchool::ScClassroomSeatRoute(PWSchool::ScReadCampus(), P);
     const FVector SeatPoint = P.ClassroomAisle + FVector(0.0, 0.0, 90.0);
     Out.Add(ScAPointsWalk(TEXT("walk_to_the_classroom_seat"), ToSeat, 90.0, &SeatPoint));
 

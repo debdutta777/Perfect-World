@@ -75,6 +75,19 @@ FScCampus ScReadCampus()
     return ScReadCampus(PerfectWorld::BuildNeighbourhoodPlan(0));
 }
 
+TArray<FVector> ScClassroomSeatRoute(const FScCampus& Campus, const FScPoints& Points)
+{
+    const double Z = ScGroundZ;
+    TArray<FVector> Route;
+    Route.Add(FVector(Campus.OfficeDoorX, Campus.Forecourt.Y1 - 200.0, Z));       // the forecourt, in line with the verandah bay
+    Route.Add(FVector(Campus.OfficeDoorX, Campus.Teaching.Y0 - 150.0, Z));        // under the verandah, between two pillars
+    Route.Add(FVector(Campus.ClassroomDoorX, Campus.Teaching.Y0 - 150.0, Z));     // along the verandah walk to the classroom bay
+    Route.Add(FVector(Campus.ClassroomDoorX, Campus.Teaching.Y0 - 40.0, Z));      // at the doorway
+    Route.Add(FVector(Campus.ClassroomDoorX, Campus.Teaching.Y0 + 60.0, Z));      // inside
+    Route.Add(FVector(Points.ClassroomAisle.X, Points.ClassroomAisle.Y - ScSeatStandBackCm, Z));
+    return Route;
+}
+
 bool ScBlocksPlayer(PWLane::ELaneColour Colour)
 {
     const int32 Index = static_cast<int32>(Colour);

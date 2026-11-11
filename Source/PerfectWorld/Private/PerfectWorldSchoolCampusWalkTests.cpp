@@ -260,4 +260,38 @@ bool FScSchoolCampusReachabilityTest::RunTest(const FString& Parameters)
     return true;
 }
 
+// S06: school_lesson_round9's route to the classroom seat. The first version ran a straight diagonal from the forecourt to the doorway and
+// the pawn stopped at (7202, 6214): the verandah pillar at (7250, 6175) (40 cm square on a 48 cm plinth) is inside that line once inflated by the
+// 34 cm capsule. The doorway, the verandah walk and the aisle all admit the capsule; only that route was wrong.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FScSchoolSeatRouteTest, "PerfectWorld.SchoolCampus.SeatRoute",
+                                 EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FScSchoolSeatRouteTest::RunTest(const FString& Parameters)
+{
+    FScBuilt B;
+    FScCampus C;
+    if (!TestTrue(TEXT("the campus builds"), ScWBuild(B, C)))
+    {
+        return false;
+    }
+    FScTGrid Grid(B);
+    const TArray<FVector> Route = ScClassroomSeatRoute(C, B.Points);
+    FVector BlockedAt = FVector::ZeroVector;
+    const bool bRouteClear = ScTPolylineClear(Grid, Route, BlockedAt);
+    TestTrue(*FString::Printf(TEXT("the seat route is clear for the 34 cm capsule (blocked at %.0f, %.0f)"), BlockedAt.X, BlockedAt.Y), bRouteClear);
+    // The old straight diagonal is not a route.
+    TArray<FVector> Old;
+    Old.Add(FVector(C.OfficeDoorX, C.Forecourt.Y1 - 200.0, ScGroundZ));
+    Old.Add(FVector(C.ClassroomDoorX, C.Teaching.Y0 - 150.0, ScGroundZ));
+    FVector OldBlocked = FVector::ZeroVector;
+    const bool bOldClear = ScTPolylineClear(Grid, Old, OldBlocked);
+    TestFalse(TEXT("the straight diagonal to the doorway runs into a verandah pillar"), bOldClear);
+    TestTrue(*FString::Printf(TEXT("it stops near the pillar at X 7250 (blocked at %.0f, %.0f)"), OldBlocked.X, OldBlocked.Y), FMath::Abs(OldBlocked.X - 7250.0) < 120.0);
+    // The end of the route is within reach of the seat's interaction point (the aisle at 90 cm up).
+    const FVector End = Route.Last();
+    const FVector Seat = B.Points.ClassroomAisle + FVector(0.0, 0.0, 90.0);
+    TestTrue(*FString::Printf(TEXT("the seat is %.0f cm from where the route ends, inside the 200 cm reach"), FVector::Dist2D(End, Seat)), FVector::Dist2D(End, Seat) <= 200.0);
+    TestTrue(TEXT("the route's end is free standing floor"), Grid.IsFree(End.X, End.Y));
+    return true;
+}
+
 #endif // WITH_DEV_AUTOMATION_TESTS

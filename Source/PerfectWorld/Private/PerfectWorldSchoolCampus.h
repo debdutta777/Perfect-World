@@ -175,6 +175,15 @@ struct FScSpawnResult
     int32 Lights = 0;
 };
 
+/**
+ * S06: the walking route from the gate-side forecourt to the classroom seat, as points a player can follow with a 34 cm capsule: up the office
+ * bay of the verandah (X 6500, between the pillars at 6250 and 6750), east along the verandah walk (Y 6350; the pillars' inflated edge is 6233 and
+ * the wall's 6466), north through the classroom doorway (X 7500) and up the centre aisle, ending SeatStandBackCm short of the seat so the player
+ * faces it. A straight line from the forecourt to the doorway is NOT a route: it runs into the verandah pillar at (7250, 6175).
+ */
+constexpr double ScSeatStandBackCm = 70.0;
+TArray<FVector> ScClassroomSeatRoute(const FScCampus& Campus, const FScPoints& Points);
+
 /** The tag the blocks actor carries, so tests and the acceptance driver can find the campus. */
 extern const FName ScBlocksActorTag;
 
