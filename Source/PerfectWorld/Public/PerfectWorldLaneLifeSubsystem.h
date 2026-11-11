@@ -202,6 +202,8 @@ public:
     // S05: the Phase 2 school commands (school.lesson.*, school.work.apply, school.week.*) go through the same one sim.
     const PerfectWorld::WorldSim& GetSim() const { return *Sim; }
     PerfectWorld::CommandResult SubmitSchoolCommand(const PerfectWorld::Command& Command) { return SubmitCommand(Command); }
+    // P38: tutorial and countdown commands share the live clock, settlement and event presentation.
+    PerfectWorld::CommandResult SubmitAwakeningCommand(const PerfectWorld::Command& Command) { return SubmitCommand(Command); }
 
 private:
     // ---- Clock (PerfectWorldLaneLifeClock.cpp) ----

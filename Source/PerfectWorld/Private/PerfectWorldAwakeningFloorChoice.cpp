@@ -1,6 +1,7 @@
 #include "PerfectWorldAwakeningActors.h"
 
 #include "PerfectWorldAwakeningCatalogue.h"
+#include "PerfectWorldLaneLifeSubsystem.h" // P38
 
 // What the floor does with a pad: forward the choice, show the answer, move the blocks that make it visible, and the gentle resets.
 // Nothing here judges a choice: acceptance, phase, assistance and completion all come from the bridge's answer.
@@ -35,7 +36,10 @@ FText APWAwakeningFloorActor::GetPadVerb(const FAwPadSpec& Pad) const
     switch (Pad.Kind)
     {
     case EAwPadKind::Enter:
-        return bOccupied ? FText::GetEmpty() : LOCTEXT("VerbEnter", "Enter the virtual floor");
+        if (const auto* P38Life = UPWLaneLifeSubsystem::Get(this); P38Life != nullptr && P38Life->GetWorldState().Awakening.Granted)
+            return bOccupied ? FText::GetEmpty() : LOCTEXT("P38Countdown", "Read the examination countdown and optional preparation");
+        return bOccupied ? FText::GetEmpty() : FText::FromString(FString::Printf(
+            TEXT("Enter the virtual floor (scheduled appointment; %lld minutes)"), static_cast<long long>(PerfectWorld::TutorialSessionMinutes)));
     case EAwPadKind::Leave:
         return bOccupied ? LOCTEXT("VerbLeave", "Return to the campus") : FText::GetEmpty();
     default:
@@ -162,9 +166,7 @@ FAwChoiceResult APWAwakeningFloorActor::SubmitChoice(APawn* By, const int32 Stat
     LastCode = Result.Code;
     if (Bridge.IsValid())
     {
-        Phases[Station] = Result.Phase;
-        bSessionComplete = bSessionComplete || Result.bSessionComplete;
-        RefreshStatusSign(Station);
+        ApplyStatus(Bridge->GetStatus()); // P38: withdrawal can close the entire session in one command.
     }
 
     FText Caption;
@@ -186,7 +188,7 @@ FAwChoiceResult APWAwakeningFloorActor::SubmitChoice(APawn* By, const int32 Stat
     }
     if (Result.bSessionComplete)
     {
-        Caption = FText::Format(LOCTEXT("AllDone", "{0}\nAll three situations are done. You can return to the campus from the return pad."), Caption);
+        Caption = FText::Format(LOCTEXT("P38SessionDone", "{0}\nThe supervised session is complete. You can return to the campus from the return pad."), Caption);
     }
 
     if (bWithdraw)
