@@ -31,6 +31,7 @@
 #include "PerfectWorldNeighbourhoodStreets.h"
 #include "PerfectWorldSchoolCampus.h"
 #include "PerfectWorldSchoolActors.h" // S03
+#include "PerfectWorldAwakeningFloor.h" // P38
 #include "PerfectWorldTrafficPresenter.h"
 #include "PerfectWorldCrowdPresenter.h"
 #include "PerfectWorldSubrataBindings.h"
@@ -316,6 +317,7 @@ void BuildKolkataLane(UWorld& World, UStaticMesh& Cube, UMaterialInterface* Base
     SpawnDoors(World, Scene.Doors);
     SpawnNeighbourhoodStreets(World, Scene, Cube, BaseMaterial); // R7-02: para and main roads, frontages, stops, club
     PWSchool::SpawnSchoolCampus(World, Scene);                     // R7-03: Nabapara Vidyalaya
+    PWAwakening::SpawnAwakeningFloor(World); // P38: reachable forecourt terminal; core owns appointment access.
     SpawnTrafficPresenter(World);                                  // R7-02: moving taxis, buses, autos, rickshaws and the tram
     PWCrowd::SpawnCrowdPresenter(World);                           // R7-05: students, commuters, vendors, children and elders
     FaSpawnFarida(World, Scene);

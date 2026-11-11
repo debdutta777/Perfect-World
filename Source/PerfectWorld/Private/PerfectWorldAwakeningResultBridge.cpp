@@ -151,6 +151,9 @@ namespace PWAwakening
 				{
 					return FPWAwakeningResultModel{};
 				}
+				const auto& P38Sim = Life->GetSim();
+				if (P38Sim.State().Awakening.Granted)
+					return BuildResultModelFromGrant(*P38Sim.State().Awakening.Granted, P38Sim.AwakeningContent().Recipes, !bP38Seen);
 				FPWAwakeningResultModel Model;
 				Model.bAvailable = true;
 				Model.bGranted = false;
@@ -162,11 +165,13 @@ namespace PWAwakening
 
 			virtual bool HasUnseenResult() const override
 			{
-				return false;
+				const auto* P38Life = UPWLaneLifeSubsystem::Get(WorldPtr.Get());
+				return P38Life != nullptr && P38Life->GetWorldState().Awakening.Granted.has_value() && !bP38Seen;
 			}
 
 			virtual void AcknowledgeResult() override
 			{
+				if (HasUnseenResult()) bP38Seen = true;
 			}
 
 			virtual FPWCountdownModel ReadCountdownModel() override
@@ -177,23 +182,57 @@ namespace PWAwakening
 				{
 					return FPWCountdownModel{};
 				}
-				// The running world holds no CountdownState yet (WorldState does not carry one), so
-				// the clock and deadline are shown and no practice offers are invented.
-				const PerfectWorld::CountdownContext Ctx{};
-				return BuildCountdownModelFromCore(
-					Life->GetNow(), Life->GetWorldState(), nullptr, Ctx, bOrdinaryDayKept, FString(), LastStatusBanner);
+				if (bOrdinaryDayKept && P38OrdinaryDay != PerfectWorld::GameClock::DayNumber(Life->GetNow()))
+				{
+					bOrdinaryDayKept = false;
+					LastStatusBanner = FText::GetEmpty();
+				}
+				return P38BuildLiveCountdownModel(Life->GetSim(), bOrdinaryDayKept, LastStatusBanner, P38Disclosures);
 			}
 
 			virtual bool ConfirmPracticeOffer(const FString& OfferId, FText& OutNotice) override
 			{
-				OutNotice = OfferId.IsEmpty()
-					? FText::FromString(TEXT("Select an optional practice offer first."))
-					: FText::FromString(TEXT("Practice sessions are not connected to the running world yet, so nothing was committed."));
+				auto* P38Life = UPWLaneLifeSubsystem::Get(WorldPtr.Get());
+				for (const auto& P38Row : P38Disclosures)
+				{
+					if (P38Row.Id != OfferId || P38Life == nullptr) continue;
+					if (bOrdinaryDayKept || !P38Row.Offer.Available())
+					{
+						OutNotice = FText::FromString(TEXT("That practice session is unavailable. Read the current disclosure first."));
+						return false;
+					}
+					// P38: send the EXACT preview displayed; never silently refresh a stale offer here.
+					const auto P38Done = P38Life->SubmitAwakeningCommand({PerfectWorld::CommandSource::Player,
+						PerfectWorld::CountdownPracticeConfirm{P38Row.Offer}});
+					if (!P38Done.Accepted)
+					{
+						OutNotice = PWLaneLife::ToText(P38Done.Why.Message);
+						LastStatusBanner = OutNotice;
+						return false;
+					}
+					const auto& P38Practice = P38Life->GetSim().LastCountdownPracticeResult();
+					LastStatusBanner = P38Practice ? FText::FromString(FString::Printf(
+						TEXT("Practice recorded: %d centipoints gained. Daily limit %s; weekly ceiling %s; grade ceiling %s."),
+						P38Practice->GainCentipoints, P38Practice->HitDailyLimit ? TEXT("reached") : TEXT("clear"),
+						P38Practice->HitWeeklyCeiling ? TEXT("reached") : TEXT("clear"), P38Practice->HitGradeCeiling ? TEXT("reached") : TEXT("clear")))
+						: FText::FromString(TEXT("Practice committed; no result summary was returned."));
+					OutNotice = LastStatusBanner;
+					P38Disclosures.Reset(); // a committed session cannot be confirmed twice from this disclosure.
+					return true;
+				}
+				OutNotice = FText::FromString(TEXT("Select a disclosed practice session first."));
 				return false;
 			}
 
 			virtual bool KeepOrdinaryDay(FText& OutNotice) override
 			{
+				const auto* P38Life = UPWLaneLifeSubsystem::Get(WorldPtr.Get());
+				if (P38Life == nullptr)
+				{
+					OutNotice = FText::FromString(TEXT("The running world is unavailable."));
+					return false;
+				}
+				P38OrdinaryDay = PerfectWorld::GameClock::DayNumber(P38Life->GetNow());
 				bOrdinaryDayKept = true;
 				LastStatusBanner = FText::FromString(
 					TEXT("You kept an ordinary day. Declining practice costs no time; your classes, household routines, and friendships remain untouched."));
@@ -204,6 +243,9 @@ namespace PWAwakening
 		private:
 			TWeakObjectPtr<UWorld> WorldPtr;
 			bool bOrdinaryDayKept = false;
+			bool bP38Seen = false;
+			TArray<FP38PracticeDisclosure> P38Disclosures;
+			int64 P38OrdinaryDay = -1;
 			FText LastStatusBanner;
 		};
 	}
@@ -237,7 +279,10 @@ namespace PWAwakening
 				return *Found;
 			}
 		}
-		return MakeLaneLifeAwakeningBridge(*World);
+		// P38: the session-local acknowledgement and preview cache must survive widget refreshes.
+		TSharedPtr<IApAwakeningWorld> P38Bridge = MakeLaneLifeAwakeningBridge(*World);
+		Install(World, P38Bridge);
+		return P38Bridge;
 	}
 
 	TSharedPtr<IApAwakeningWorld> MakeLaneLifeAwakeningBridge(UWorld& World)

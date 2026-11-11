@@ -5,6 +5,8 @@
 #include "GameFramework/Character.h"
 #include "PerfectWorldAwakeningCatalogue.h"
 #include "PerfectWorldNpcCharacter.h"
+#include "PerfectWorldLaneLifeSubsystem.h" // P38
+#include "PerfectWorldSchoolPresenter.h"
 
 // The floor's session: the people of the floor, stepping on (asking the bridge first) and stepping back onto the campus.
 
@@ -60,6 +62,12 @@ void APWAwakeningFloorActor::DespawnFigures()
 
 bool APWAwakeningFloorActor::TryEnter(APawn* By)
 {
+    // P38: the campus terminal remains useful after the immutable grant.
+    if (const auto* P38Life = UPWLaneLifeSubsystem::Get(this); P38Life != nullptr && P38Life->GetWorldState().Awakening.Granted && !bOccupied)
+    {
+        auto* P38Presenter = UPWSchoolPresenter::Get(this);
+        return P38Presenter != nullptr && P38Presenter->OpenAwakeningCountdown();
+    }
     if (bOccupied || IsTransitioning())
     {
         return false;
@@ -121,6 +129,11 @@ bool APWAwakeningFloorActor::TryLeave(APawn* By)
     if (Bridge.IsValid())
     {
         Bridge->Leave();
+        if (Bridge->GetStatus().bSessionOpen) // P38: a refused withdrawal must not abandon a supervised core session.
+        {
+            Announce(LOCTEXT("P38LeaveRefused", "The supervised session could not close. Try the safe-area withdrawal again."));
+            return false;
+        }
     }
     const TWeakObjectPtr<APawn> Weak(By);
     StartTransfer(LOCTEXT("Back", "You step back onto the campus."), [this, Weak]() { DoLeaveMove(Weak.Get()); });
