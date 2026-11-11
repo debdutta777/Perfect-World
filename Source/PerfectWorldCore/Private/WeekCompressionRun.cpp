@@ -138,6 +138,7 @@ bool WeekRunEngine::RunActivity(const WeekUnit& unit, std::int64_t& value)
     {
         if (event.Kind != DayLoopEventKind::Completed)
             continue;
+        Result_.ActivityEvents.push_back(event);
         for (const SkillCredit& credit : event.Credited)
         {
             Credits_[credit.SkillId] += credit.MilliXp;

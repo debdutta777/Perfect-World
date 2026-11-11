@@ -1,6 +1,7 @@
 // Copyright Perfect World. All Rights Reserved.
 
 #include "PerfectWorldAwakeningResultBridge.h"
+#include "WorldReducer.h" // P38
 
 namespace PWAwakening
 {
@@ -268,6 +269,48 @@ namespace PWAwakening
 			Model.Offers.Add(MoveTemp(Row));
 		}
 
+		return Model;
+	}
+
+	FPWCountdownModel P38BuildLiveCountdownModel(const PerfectWorld::WorldSim& Sim, const bool bOrdinaryDayKept,
+		const FText& StatusBanner, TArray<FP38PracticeDisclosure>& Disclosures)
+	{
+		const auto State = Sim.Countdown();
+		auto Model = BuildCountdownModelFromCore(Sim.State().Clock.Now(), Sim.State(), State ? &*State : nullptr,
+			Sim.AwakeningContent().Countdown, bOrdinaryDayKept, FString(), StatusBanner);
+		Disclosures.Reset();
+		// P38: authored TakeOpportunity rows have no WorldSim command yet. Only expose the routed practice command.
+		Model.Offers.Reset();
+		if (!State) return Model;
+		for (int32 Index = 0; Index < PerfectWorld::PowerDimensionCount; ++Index)
+		{
+			const auto Dimension = static_cast<PerfectWorld::PowerDimension>(Index);
+			const auto Offer = Sim.PreviewCountdownPractice(Dimension, 30);
+			FPWCountdownOfferRow Row;
+			Row.Id = FString::Printf(TEXT("p38.practice.%d"), Index);
+			Row.Title = FText::Format(NSLOCTEXT("P38Awakening", "PracticeTitle", "Optional {0} practice"), CapabilityDisplayName(Dimension));
+			Row.WindowText = FText::FromString(FString::Printf(TEXT("%s - %s (%d minutes)"),
+				*R97HourMinute(Offer.Start), *R97HourMinute(Offer.End), Offer.Minutes));
+			Row.ContactText = Offer.Supervisor.empty() ? FText::FromString(TEXT("No supervising teacher is available for this session"))
+				: FText::FromString(TEXT("Supervised by your school teacher"));
+			Row.bOpen = Offer.Available() && !bOrdinaryDayKept;
+			Row.AvailabilityText = Row.bOpen ? FText::FromString(TEXT("Optional; confirm only after reading the costs"))
+				: SanitizeDisplayEvidence(R97Utf8(Offer.Issue.Detail), FText::FromString(TEXT("This practice is unavailable right now")));
+			Row.SummaryText = FText::FromString(TEXT("Trains the live profile; your original Awakening result stays as recorded."));
+			for (const auto& Displaced : Offer.Displaced)
+				Row.DisplacedCommitments.Add(FText::FromString(FString::Printf(TEXT("Sets aside %d minutes of %s"),
+					Displaced.OverlapMinutes, *SanitizeDisplayEvidence(R97Utf8(Displaced.Id),
+						FText::FromString(TEXT("a known activity"))).ToString())));
+			for (const auto& Block : Offer.BlockingCommitments)
+				Row.DisplacedCommitments.Add(SanitizeDisplayEvidence(R97Utf8(Block), FText::FromString(TEXT("A prior commitment blocks this session"))));
+			if (Row.DisplacedCommitments.Num() == 0)
+				Row.DisplacedCommitments.Add(FText::FromString(TEXT("No displaced commitments reported by the core.")));
+			FP38PracticeDisclosure Disclosure;
+			Disclosure.Id = Row.Id;
+			Disclosure.Offer = Offer;
+			Disclosures.Add(MoveTemp(Disclosure));
+			Model.Offers.Add(MoveTemp(Row));
+		}
 		return Model;
 	}
 

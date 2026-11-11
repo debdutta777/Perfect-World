@@ -982,3 +982,9 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/KnownCom
 add_executable(PerfectWorldKnownCommitmentsTests Tests/KnownCommitmentsTests.cpp)
 target_link_libraries(PerfectWorldKnownCommitmentsTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldKnownCommitmentsTests COMMAND PerfectWorldKnownCommitmentsTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# P37: atomic countdown commands and compulsory tutorial time boundaries; no save/hash format changes.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldCountdownCommands.cpp)
+add_executable(PerfectWorldWorldCountdownCommandsTests Tests/WorldCountdownCommandsTests.cpp)
+target_link_libraries(PerfectWorldWorldCountdownCommandsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldCountdownCommandsTests COMMAND PerfectWorldWorldCountdownCommandsTests ${CMAKE_SOURCE_DIR}/Data/Content)

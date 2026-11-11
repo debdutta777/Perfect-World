@@ -57,6 +57,9 @@ struct R94World
         const auto seeded = SeedAwakeningInputs(F.Content, School.Creator.CaptureSave(), world.WorldSeed);
         P2CExpect(seeded.Ok() && seeded.State.Seeded, "creation confirmation seeds the Awakening inputs");
         world.Awakening = seeded.State;
+        // P37: a fixture placed after the appointment represents an absent student, never an unattended future slot.
+        if (at > world.Awakening.AppointmentAt)
+            P2CExpect(MarkTutorialAbsence(world.Tutorial, world.Awakening, at).Ok(), "past-appointment fixture requires make-up");
         return world;
     }
     [[nodiscard]] PerfectWorld::WorldSaveData Save(const PerfectWorld::WorldState& world) const { return School.Save(world); }

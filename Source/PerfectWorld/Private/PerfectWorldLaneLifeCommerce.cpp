@@ -8,6 +8,8 @@
 #include "PerfectWorldNpcPresenceSubsystem.h"
 #include "PerfectWorldSchoolGate.h"
 #include "PerfectWorldSchoolLive.h" // S05
+#include "PerfectWorldAwakeningBridge.h" // P38
+#include "PerfectWorldAwakeningResultBridge.h"
 
 // R88: keep commerce's borrowed content alive across resets and save adoption.
 void UPWLaneLifeSubsystem::R88InstallCommerce()
@@ -37,8 +39,27 @@ void UPWLaneLifeSubsystem::R88InstallCommerce()
     const PerfectWorld::WorldSchoolCatalogues S05Lessons = S05School != nullptr
         ? PerfectWorld::WorldSchoolCatalogues{S05School->Cats.Structures, &S05School->Lessons, &S05School->Papers}
         : PerfectWorld::WorldSchoolCatalogues{};
+    // P38: process-lifetime validated recipes, like the shared school catalogues.
+    static TUniquePtr<PerfectWorld::AbilityRecipeSet> P38Recipes;
+    if (!P38Recipes.IsValid())
+    {
+        const auto* P38Instance = GetWorld()->GetGameInstance();
+        const auto* P38Content = P38Instance != nullptr ? P38Instance->GetSubsystem<UPWContentSubsystem>() : nullptr;
+        if (P38Content != nullptr && P38Content->GetDb() != nullptr)
+        {
+            auto P38Loaded = PerfectWorld::LoadAbilityRecipes(*P38Content->GetDb());
+            if (P38Loaded.Ok()) P38Recipes = MakeUnique<PerfectWorld::AbilityRecipeSet>(MoveTemp(P38Loaded.Set));
+            else UE_LOG(LogPWLaneLife, Error, TEXT("P38 ability recipes unavailable: %hs"), P38Loaded.Error.c_str());
+        }
+    }
+    PerfectWorld::WorldAwakeningCatalogues P38Awakening;
+    P38Awakening.Recipes = P38Recipes.Get();
+    P38Awakening.Countdown.Player = "player";
+    // NO contacts: their standing obligations block time until P3-07 routes day resolution/negotiation.
     Sim = MakeUnique<PerfectWorld::WorldSim>(Sim->State(), PerfectWorld::MaxEventsPerAdvance,
-        R88School != nullptr ? R88School->Binding : PerfectWorld::DayLoopCatalogues{}, R88CommerceContent->Catalogues(), S05Lessons);
+        R88School != nullptr ? R88School->Binding : PerfectWorld::DayLoopCatalogues{}, R88CommerceContent->Catalogues(), S05Lessons, P38Awakening);
+    PWAwakening::AwBridge::Install(GetWorld(), PWAwakening::P38MakeLiveFloorBridge(*GetWorld()));
+    PWAwakening::ApBridge::Install(GetWorld(), PWAwakening::MakeLaneLifeAwakeningBridge(*GetWorld()));
     const TWeakObjectPtr<UPWLaneLifeSubsystem> Weak(this);
     PWCommerce::FCmLiveAccess Access;
     Access.Lifetime = R88CommerceContent;

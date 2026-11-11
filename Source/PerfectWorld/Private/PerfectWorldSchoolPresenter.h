@@ -21,7 +21,9 @@ enum class EPWSchoolPanel : uint8
     Day,
     Lesson,
     Desk,
-    Paper
+    Paper,
+    AwakeningResult, // P38: same paused host and input lifecycle as school panels.
+    AwakeningCountdown
 };
 
 /**
@@ -55,6 +57,8 @@ public:
     bool OpenLesson(const FString& BindingId);
     /** The home study desk. False when the bridge says the desk cannot be used or the screen is held. */
     bool OpenDesk();
+    bool OpenAwakeningResult();
+    bool OpenAwakeningCountdown();
     /** Closes whatever is open, restores play input, then broadcasts OnClosed. */
     void Close();
 

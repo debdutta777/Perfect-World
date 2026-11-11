@@ -127,6 +127,9 @@ void Remove(UWorld* World);
 TSharedPtr<IAwFloorBridge> Resolve(UWorld* World);
 } // namespace AwBridge
 
+/** P38: the real tutorial command adapter; scripted worlds remain explicit test overrides. */
+TSharedRef<IAwFloorBridge> P38MakeLiveFloorBridge(UWorld& World);
+
 /**
  * The recording fake. Same contract as the real bridge, keeps its own tiny state, validates ids against the floor's catalogue and
  * records every call, so tests can assert that every choice reached the bridge exactly once. NOT the tutorial rules (R9-02).

@@ -10,8 +10,10 @@
 #include "Countdown.h"
 #include "GameClock.h"
 #include "WorldState.h"
+#include "WorldCountdown.h" // P38: retain the actual disclosure shown before confirmation.
 
 class UWorld;
+namespace PerfectWorld { class WorldSim; }
 
 namespace PWAwakening
 {
@@ -111,6 +113,14 @@ namespace PWAwakening
 		TArray<FPWCountdownOfferRow> Offers;
 		TArray<FPWCountdownObligationRow> Obligations;
 	};
+
+	struct FP38PracticeDisclosure
+	{
+		FString Id;
+		PerfectWorld::WorldCountdownPracticeOffer Offer;
+	};
+	FPWCountdownModel P38BuildLiveCountdownModel(const PerfectWorld::WorldSim& Sim, bool bOrdinaryDayKept,
+		const FText& StatusBanner, TArray<FP38PracticeDisclosure>& Disclosures);
 
 	class IApAwakeningWorld
 	{
