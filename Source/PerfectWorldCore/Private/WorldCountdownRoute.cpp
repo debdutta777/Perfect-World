@@ -23,6 +23,43 @@ bool WorldSim::CountdownRouted() const noexcept
     return State_.Awakening.Seeded && !Awakening_.Countdown.Player.empty();
 }
 
+GameInstant WorldSim::TutorialTimeBoundary(GameInstant target) const
+{
+    if (!CountdownRouted() || State_.Awakening.Granted || State_.Tutorial.Phase != TutorialDungeonPhase::NotStarted)
+        return target;
+    const auto& awakening = State_.Awakening;
+    // The contract requires completion strictly BEFORE the exam: the last legal start is exam - hour - one minute.
+    const GameInstant boundary = awakening.MakeUp.Phase == AwakeningMakeUpPhase::Required
+        ? awakening.ExaminationAt - TutorialSessionMinutes - 1
+        : awakening.MakeUp.At.value_or(awakening.AppointmentAt);
+    return State_.Clock.Now() < boundary && target > boundary ? boundary : target;
+}
+
+bool WorldSim::StopForTutorialBoundary(GameInstant target, CommandResult& result)
+{
+    if (!CountdownRouted() || State_.Awakening.Granted || State_.Tutorial.Phase != TutorialDungeonPhase::NotStarted ||
+        target <= State_.Clock.Now())
+        return false;
+    const auto& awakening = State_.Awakening;
+    if (awakening.MakeUp.Phase == AwakeningMakeUpPhase::Required)
+    {
+        if (State_.Clock.Now() < awakening.ExaminationAt - TutorialSessionMinutes - 1)
+            return false;
+        // A bare long advance may publish its stop at the last playable slot. A subsequent attempt cannot pass it.
+        if (result.From >= State_.Clock.Now())
+            Boundary_ = Rejection{"tutorial.make_up_required", "Play the supervised make-up before the fixed examination deadline."};
+    }
+    else
+    {
+        if (State_.Clock.Now() < awakening.MakeUp.At.value_or(awakening.AppointmentAt))
+            return false;
+        // An owning-system effect inside this transaction, never a nested Submit or a player-issued absence command.
+        Boundary_ = ApplyAwakeningCommand({CommandSource::System, TutorialAbsent{}}, result);
+    }
+    result.Partial = true;
+    return true;
+}
+
 std::optional<Rejection> WorldSim::OpenCountdownBoundary(CommandResult& result)
 {
     // Only AT the boundary. A world already past 18:00 without a countdown (one driven by an unbound sim) is never
