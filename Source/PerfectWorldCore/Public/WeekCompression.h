@@ -302,6 +302,8 @@ struct WeekResult
     WeekLedger Ledger;
     std::vector<WeekDisclosure> Disclosures;
     std::vector<WeekEntryOutcome> Outcomes;
+    /** P37: actual per-instance completions after practice limits, for the single growth owner. Never aggregate twice. */
+    std::vector<DayLoopEvent> ActivityEvents;
     /** Day-loop commands applied and clock advances submitted. Excluded from equivalence ("command_count"). */
     std::uint64_t DayCommands = 0;
     std::uint64_t ClockAdvances = 0;

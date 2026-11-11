@@ -956,3 +956,9 @@ add_executable(PerfectWorldWorldSaveAwakeningTests Tests/WorldSaveAwakeningTests
 target_link_libraries(PerfectWorldWorldSaveAwakeningTests PRIVATE PerfectWorldCore)
 target_compile_definitions(PerfectWorldWorldSaveAwakeningTests PRIVATE PW_AWAKENING_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
 add_test(NAME PerfectWorldWorldSaveAwakeningTests COMMAND PerfectWorldWorldSaveAwakeningTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# P37: atomic countdown commands and compulsory tutorial time boundaries; no save/hash format changes.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldCountdownCommands.cpp)
+add_executable(PerfectWorldWorldCountdownCommandsTests Tests/WorldCountdownCommandsTests.cpp)
+target_link_libraries(PerfectWorldWorldCountdownCommandsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldCountdownCommandsTests COMMAND PerfectWorldWorldCountdownCommandsTests ${CMAKE_SOURCE_DIR}/Data/Content)

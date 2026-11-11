@@ -56,7 +56,8 @@ bool S04SuspendedBySchoolPlay(const CommandPayload& payload)
            std::holds_alternative<SchoolPlanDay>(payload) || std::holds_alternative<SchoolArrive>(payload) ||
            std::holds_alternative<CommerceServiceRequest>(payload) || std::holds_alternative<CommerceBuy>(payload) ||
            std::holds_alternative<InventoryConsume>(payload) || std::holds_alternative<WorldDayCommand>(payload) ||
-           std::holds_alternative<SchoolWeekOrder>(payload) || std::holds_alternative<SchoolWeekResolve>(payload);
+           std::holds_alternative<SchoolWeekOrder>(payload) || std::holds_alternative<SchoolWeekResolve>(payload) ||
+           IsCountdownCommand(payload);
 }
 
 /** R9-04: what may still run while the supervised session holds the paused clock: its own commands and system bookkeeping. */
@@ -125,6 +126,8 @@ std::optional<Rejection> WorldSim::Validate(const Command& command) const
     }
     if (IsSchoolPhase2Command(command.Payload))
         return ValidateSchoolPhase2(command);
+    if (IsCountdownCommand(command.Payload))
+        return ValidateCountdownCommand(command);
     if (const auto* advance = std::get_if<AdvanceTime>(&command.Payload))
     {
         if (advance->Minutes <= 0)
@@ -194,6 +197,8 @@ void WorldSim::RunTimeTo(GameInstant target, CommandResult& result)
     };
     for (;;)
     {
+        if (StopForTutorialBoundary(target, result))
+            return;
         // R9-04: the countdown opens at exactly 18:00 on Awakening Day, before anything else happens at that instant and
         // whatever the player was doing (R95OpenBoundary). A refusal stops the path; Submit refuses the whole command.
         if (std::optional<Rejection> refused = OpenCountdownBoundary(result))
@@ -234,6 +239,7 @@ void WorldSim::RunTimeTo(GameInstant target, CommandResult& result)
         // sleep, activities, paid choices and lessons all stop there and open it, then carry on.
         if (CountdownRouted() && State_.CountdownText.empty() && now < CountdownStartInstant())
             step = std::min(step, CountdownStartInstant());
+        step = TutorialTimeBoundary(step);
         const AdvanceResult advanced = State_.Clock.AdvanceToCapped(step, EventCap_ - fired);
         if (State_.Clock.Now() == now)
         {
@@ -310,6 +316,8 @@ std::optional<Rejection> WorldSim::Apply(const Command& command, CommandResult& 
         return ApplySchoolLessonCommand(command, result);
     else if (IsAwakeningCommand(command.Payload))
         return ApplyAwakeningCommand(command, result);
+    else if (IsCountdownCommand(command.Payload))
+        return ApplyCountdownCommand(command, result);
     else
         return ApplyCommerceCommand(command);
     return std::nullopt;
@@ -331,13 +339,14 @@ CommandResult WorldSim::Submit(const Command& command)
     // R9-04: in a seeded world any command may meet the countdown boundary, its synchronisation or a learning credit.
     if (NeedsRollbackSnapshot(command) || std::holds_alternative<AdvanceTime>(command.Payload) ||
         std::holds_alternative<WorldDayCommand>(command.Payload) || IsSchoolPhase2Command(command.Payload) ||
-        IsAwakeningCommand(command.Payload) || State_.Awakening.Seeded)
+        IsAwakeningCommand(command.Payload) || IsCountdownCommand(command.Payload) || State_.Awakening.Seeded)
         before = State_;
     // S04: a school command's result is published only once the whole transaction is accepted.
     StagedLesson_.reset();
     StagedWork_.reset();
     StagedWeek_.reset();
     StagedPractice_.reset();
+    StagedCountdown_.reset();
     Boundary_.reset();
     std::optional<Rejection> late = Apply(command, result);
     if (Boundary_)
@@ -376,10 +385,13 @@ CommandResult WorldSim::Submit(const Command& command)
         LastWeek_ = std::move(StagedWeek_);
     if (StagedPractice_)
         LastPractice_ = std::move(StagedPractice_);
+    if (StagedCountdown_)
+        LastCountdown_ = std::move(StagedCountdown_);
     StagedLesson_.reset();
     StagedWork_.reset();
     StagedWeek_.reset();
     StagedPractice_.reset();
+    StagedCountdown_.reset();
     result.Accepted = true;
     result.Seq = State_.Seq;
     result.To = State_.Clock.Now();

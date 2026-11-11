@@ -343,6 +343,28 @@ struct CountdownPracticeConfirm
     WorldCountdownPracticeOffer Accepted;
 };
 
+/** Commit an authored opportunity once, retaining the contract's disclosed odds and keyed seed. */
+struct CountdownTakeOpportunity
+{
+    static constexpr std::string_view TypeId = "countdown.opportunity.take";
+    std::string OpportunityId;
+};
+
+/** Honour needs no negotiation: resolve a plan around the standing block. Other proposals get one attempt. */
+struct CountdownNegotiateObligation
+{
+    static constexpr std::string_view TypeId = "countdown.obligation.negotiate";
+    std::string ObligationId;
+    CountdownProposal Proposal = CountdownProposal::Decline;
+};
+
+/** Routine calendar days, starting with today's remaining time. Reserved blocks are inserted by the contract. */
+struct CountdownResolveDays
+{
+    static constexpr std::string_view TypeId = "countdown.days.resolve";
+    std::vector<WeekDayPlan> Days;
+};
+
 // SchoolWorkCommand ("school.work.apply") is SchoolWork.h's delivered command type, routed as is.
 using CommandPayload = std::variant<AdvanceTime, ScheduleWorldEvent, SetWorldFlag, GateRegister, GateScheduleOnset, GateContain, GateSeal,
                                     SettleDueEvents, ConversationOpen, ConversationChoose, ConversationLeave, DoorSet, DoorSettle,
@@ -350,7 +372,8 @@ using CommandPayload = std::variant<AdvanceTime, ScheduleWorldEvent, SetWorldFla
                                     CommerceBuy, InventoryConsume, WorldDayCommand, SchoolLessonOpen, SchoolLessonChoose,
                                     SchoolLessonClose, SchoolWorkCommand, SchoolWeekOrder, SchoolWeekResolve, TutorialEnter,
                                     TutorialAct, TutorialAssist, TutorialRecover, TutorialWithdraw, TutorialAbsent,
-                                    TutorialMakeUp, TutorialFinish, CountdownPracticeConfirm>;
+                                    TutorialMakeUp, TutorialFinish, CountdownPracticeConfirm, CountdownTakeOpportunity,
+                                    CountdownNegotiateObligation, CountdownResolveDays>;
 
 struct Command
 {

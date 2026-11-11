@@ -162,6 +162,8 @@ public:
     [[nodiscard]] WorldCountdownPracticeOffer PreviewCountdownPractice(PowerDimension dimension, std::int32_t minutes) const;
     /** R9-04: the Practise result of the last ACCEPTED countdown.practice.confirm. Session output only, never saved. */
     [[nodiscard]] const std::optional<PracticeResult>& LastCountdownPracticeResult() const noexcept { return LastPractice_; }
+    /** P37: last accepted routine countdown resolution; session output only, never saved. */
+    [[nodiscard]] const std::optional<CountdownResolveResult>& LastCountdownResolveResult() const noexcept { return LastCountdown_; }
 
 private:
     std::optional<Rejection> Validate(const Command& command) const;
@@ -201,6 +203,12 @@ private:
     std::optional<Rejection> ValidateAwakeningCommand(const Command& command) const;
     std::optional<Rejection> ApplyAwakeningCommand(const Command& command, CommandResult& result);
     std::optional<Rejection> ApplyCountdownPractice(const CountdownPracticeConfirm& command, CommandResult& result);
+    // P37: the remaining Countdown.h commands, staged with an outer clock charge.
+    std::optional<Rejection> ValidateCountdownCommand(const Command& command) const;
+    std::optional<Rejection> ApplyCountdownCommand(const Command& command, CommandResult& result);
+    /** Derive compulsory supervision boundaries from existing saved appointment/make-up state. */
+    [[nodiscard]] GameInstant TutorialTimeBoundary(GameInstant target) const;
+    bool StopForTutorialBoundary(GameInstant target, CommandResult& result);
     /** Exit the ReadyToGrant session: charge the disclosed hour once, commit the grant and start the live profile. */
     std::optional<Rejection> FinishTutorial(CommandResult& result);
     /** True when this sim routes the countdown for its world (seeded Awakening and a bound countdown context). */
@@ -225,6 +233,7 @@ private:
     std::optional<SchoolWorkResult> StagedWork_, LastWork_;
     std::optional<SchoolWeekResult> StagedWeek_, LastWeek_;
     std::optional<PracticeResult> StagedPractice_, LastPractice_;
+    std::optional<CountdownResolveResult> StagedCountdown_, LastCountdown_;
     std::string ServiceShop_;
     std::map<std::string, std::vector<NpcInterruptionWindow>, std::less<>> ServiceHistory_;
 };
@@ -243,6 +252,9 @@ private:
 
 /** R9-04: true for tutorial.* and countdown.practice.confirm (WorldAwakening.cpp). */
 [[nodiscard]] PERFECTWORLDCORE_API bool IsAwakeningCommand(const CommandPayload& payload) noexcept;
+
+/** P37: countdown opportunity, negotiation and routine day commands. */
+[[nodiscard]] PERFECTWORLDCORE_API bool IsCountdownCommand(const CommandPayload& payload) noexcept;
 
 /**
  * R9-04: "tutorial.active" while the supervised session is Active or ReadyToGrant: the world clock is paused there, so time,
