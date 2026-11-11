@@ -102,6 +102,7 @@ SchoolWeekBuild BuildSchoolWeekPlan(const WorldState& world, const SchoolWeekSta
                 arrival.OrderId = order.Id;
                 entries.push_back(arrival);
             }
+            if (!CalendarHasOrdinaryPeriods(*c.Day.Calendar, absoluteDay)) continue;
             std::int32_t period = 0;
             for (const auto& block : c.Day.School->Blocks)
             {
@@ -182,6 +183,8 @@ SchoolWeekResult CompressSchoolWeek(const WorldState& world, const SchoolSession
             return fail(P2CWeekIssue("bad_lesson"));
         const auto issue = ValidateSchoolLessonBinding(lesson.Binding, c);
         if (!issue.Ok()) return fail(issue);
+        const auto day = CalendarDayOfInstant(world.Clock.Now()) + lesson.Day;
+        if (!CalendarHasOrdinaryPeriods(*c.Day.Calendar, day)) return fail(P2CWeekIssue("closed_day"));
     }
     const auto origin = GameClock::StartOfDay(world.Clock.Now());
     for (std::size_t d = 0; d < plan.Week.Days.size(); ++d)

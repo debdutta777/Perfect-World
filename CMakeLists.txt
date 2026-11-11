@@ -961,3 +961,8 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/Learning
 add_executable(PerfectWorldLearningCreditsTests Tests/LearningCreditsTests.cpp)
 target_link_libraries(PerfectWorldLearningCreditsTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldLearningCreditsTests COMMAND PerfectWorldLearningCreditsTests ${CMAKE_SOURCE_DIR}/Data/Content)
+# P3-03: attendance-required dates and shared ordinary-period eligibility.
+add_executable(PerfectWorldSchoolCalendarEligibilityTests Tests/SchoolCalendarEligibilityTests.cpp)
+target_link_libraries(PerfectWorldSchoolCalendarEligibilityTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSchoolCalendarEligibilityTests
+    COMMAND PerfectWorldSchoolCalendarEligibilityTests ${CMAKE_SOURCE_DIR}/Data/Content)

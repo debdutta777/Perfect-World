@@ -72,7 +72,7 @@ void S02BoundLessons(const P2CFixture& f)
                 std::int64_t calendarDay = 0;
                 for (std::uint64_t seed = 0; seed < 128; ++seed)
                 {
-                    while (!AttendanceIsSchoolDay(cats.Day.Calendar, calendarDay)) ++calendarDay;
+                    while (!CalendarHasOrdinaryPeriods(*cats.Day.Calendar, calendarDay)) ++calendarDay;
                     auto day = P2CDayAtBell(cats, calendarDay++, binding.Period);
                     auto repeated = state;
                     auto repeatedDay = day;
@@ -184,14 +184,14 @@ int main(int argc, char** argv)
         // Forty actual foreground exposures per family; no synthesized historical mastery.
         for (int exposure = 0; exposure < 40; ++exposure)
         {
-            while (!AttendanceIsSchoolDay(cats.Day.Calendar, calendarDay)) ++calendarDay;
+            while (!CalendarHasOrdinaryPeriods(*cats.Day.Calendar, calendarDay)) ++calendarDay;
             auto day = P2CDayAtBell(cats, calendarDay++);
             const auto opened = OpenSchoolLesson(state, day, cats, binding, SchoolLessonMode::Foreground, goal, 100000, 17);
             P2CExpect(opened.Ok(), "forty-exposure admission");
             P2CPlayLesson(state, cats, opened.Session);
             P2CExpect(CloseSchoolLesson(state, day, cats, opened.Session).Ok(), "forty-exposure close");
         }
-        while (!AttendanceIsSchoolDay(cats.Day.Calendar, calendarDay)) ++calendarDay;
+        while (!CalendarHasOrdinaryPeriods(*cats.Day.Calendar, calendarDay)) ++calendarDay;
         auto routineDay = P2CDayAtBell(cats, calendarDay);
         auto foregroundDay = routineDay;
         auto foregroundState = state;

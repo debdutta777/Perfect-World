@@ -132,6 +132,7 @@ struct SchoolLessonQuote
 };
 [[nodiscard]] PERFECTWORLDCORE_API SchoolIssue ValidateSchoolLessonBinding(const SchoolLessonBinding& binding,
     const SchoolSessionCatalogues& catalogues);
+/** Uses CalendarHasOrdinaryPeriods; attendance at a replacement programme never opens a lesson. */
 [[nodiscard]] PERFECTWORLDCORE_API SchoolPeriodView QuerySchoolPeriod(const SchoolSessionsState& state,
     const DayLoopState& day, const SchoolLessonBinding& binding, const SchoolSessionCatalogues& catalogues);
 [[nodiscard]] PERFECTWORLDCORE_API SchoolLessonView QuerySchoolLesson(const SchoolSessionsState& state);
