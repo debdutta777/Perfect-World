@@ -30,7 +30,7 @@ int main(int argc, char** argv)
     const auto text = P34ContentText(argv[2]);
     const auto loaded = LoadSchoolWorkBriefContent(f.Content, text);
     for (const auto& issue : loaded.Issues) std::cerr << issue.Id << ": " << issue.Message << '\n';
-    P2CExpect(loaded.Ok() && loaded.Catalogue.Briefs.size() == 9, "nine authored briefs load with complete translations");
+    P2CExpect(loaded.Ok() && loaded.Catalogue.Briefs.size() == 27, "the nine first-term briefs and the eighteen later ones (C3) load with complete translations");
     const auto types = KnownContentTypes();
     P2CExpect(std::find(types.begin(), types.end(), "school_work_brief") != types.end(), "content kind registered");
     std::string previous;
@@ -40,7 +40,8 @@ int main(int argc, char** argv)
         previous = def.Brief.Id;
         const auto cats = f.Cats(def.Stream);
         P2CExpect(ValidateSchoolWorkBriefDef(def, *cats.Day.Calendar, *cats.Day.School, f.Papers).Ok(), "authoritative period and deadline");
-        P2CExpect(def.TermId == "term_1" && def.Subject == "english" && def.Period == 3, "honest common-period starter set");
+        if (def.TermId != "term_1") continue; // C3 later-term briefs follow their own subject periods; the starter-set rules below are term 1's
+        P2CExpect(def.Subject == "english" && def.Period == 3, "honest common-period starter set");
         P2CExpect(def.Brief.PaperId == "assessment_paper.xi_half_yearly_mixed", "only existing paper reused");
         P2CExpect(loaded.Catalogue.Text.at(def.Brief.BriefTextKey).find("same five authored cases") != std::string::npos,
             "paper reuse disclosed");
@@ -49,7 +50,7 @@ int main(int argc, char** argv)
     }
     for (const auto stream : {"science", "commerce", "humanities"})
         P2CExpect(std::count_if(loaded.Catalogue.Briefs.begin(), loaded.Catalogue.Briefs.end(),
-            [&](const auto& d) { return d.Stream == stream; }) == 3, "three briefs per stream across one term");
+            [&](const auto& d) { return d.Stream == stream && d.TermId == "term_1"; }) == 3, "three first-term briefs per stream");
     const auto id = loaded.Catalogue.Briefs.front().Brief.Id;
     const auto malformed = [&](std::string_view field, std::string_view value) {
         auto db = f.Content;

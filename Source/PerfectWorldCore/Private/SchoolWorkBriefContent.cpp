@@ -14,7 +14,7 @@ const TypeSchema& SchoolWorkBriefSchema()
 {
     using namespace Build;
     static const TypeSchema s{"school_work_brief", "school.work.", Base({
-        Ref("calendar", true, "calendar"), Ref("bellSchedule", true, "bell_schedule"),
+        Str("calendar", true), Str("bellSchedule", true), // plain ids: a failed hard Ref skips semantic checks (the Attendance pitfall); the decoder checks they exist
         OneOf("stream", true, {"science", "commerce", "humanities"}), Str("subject", true), Str("term", true),
         Str("issueDate", true), Int("period", true, 0, 7), Str("dueDate", true), Int("dueMinute", true, 0, 1439),
         Ref("paper", true, "assessment_paper"), Str("titleKey", true), Str("briefKey", true),

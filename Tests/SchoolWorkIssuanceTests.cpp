@@ -69,7 +69,7 @@ int main(int argc, char** argv)
         const auto again = advance(first.State, at, at);
         P2CExpect(again.Ok() && again.State == first.State && again.IssuedIds.empty(), "due-now replay inert");
         const auto compressed = advance(empty, 0, end);
-        P2CExpect(compressed.Ok() && compressed.State.Records.size() == 3 && compressed.IssuedIds.size() == 3, "term compression crosses all triggers");
+        P2CExpect(compressed.Ok() && compressed.State.Records.size() == defs.size() && compressed.IssuedIds.size() == defs.size(), "year compression crosses every trigger of the stream");
         SchoolWorkState stepped;
         std::vector<std::string> issued;
         GameInstant from = 0;
