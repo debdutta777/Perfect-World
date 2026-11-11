@@ -941,3 +941,9 @@ add_executable(PerfectWorldWorldSaveSchoolTests Tests/WorldSaveSchoolTests.cpp)
 target_link_libraries(PerfectWorldWorldSaveSchoolTests PRIVATE PerfectWorldCore)
 target_compile_definitions(PerfectWorldWorldSaveSchoolTests PRIVATE PW_SCHOOL_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
 add_test(NAME PerfectWorldWorldSaveSchoolTests COMMAND PerfectWorldWorldSaveSchoolTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# P311: read-only known standing commitments and authored evening-rota timing.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/KnownCommitments.cpp)
+add_executable(PerfectWorldKnownCommitmentsTests Tests/KnownCommitmentsTests.cpp)
+target_link_libraries(PerfectWorldKnownCommitmentsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldKnownCommitmentsTests COMMAND PerfectWorldKnownCommitmentsTests ${CMAKE_SOURCE_DIR}/Data/Content)
