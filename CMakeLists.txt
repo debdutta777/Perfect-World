@@ -956,3 +956,8 @@ add_executable(PerfectWorldWorldSaveAwakeningTests Tests/WorldSaveAwakeningTests
 target_link_libraries(PerfectWorldWorldSaveAwakeningTests PRIVATE PerfectWorldCore)
 target_compile_definitions(PerfectWorldWorldSaveAwakeningTests PRIVATE PW_AWAKENING_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
 add_test(NAME PerfectWorldWorldSaveAwakeningTests COMMAND PerfectWorldWorldSaveAwakeningTests ${CMAKE_SOURCE_DIR}/Data/Content)
+# P32: school/routine learning adapters and bounded academic prior preparation.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/LearningCredits.cpp)
+add_executable(PerfectWorldLearningCreditsTests Tests/LearningCreditsTests.cpp)
+target_link_libraries(PerfectWorldLearningCreditsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLearningCreditsTests COMMAND PerfectWorldLearningCreditsTests ${CMAKE_SOURCE_DIR}/Data/Content)
