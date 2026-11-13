@@ -6,6 +6,7 @@
 #include "PerfectWorldInteractionComponent.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
 #include "PerfectWorldPlayerCharacter.h"
+#include "PerfectWorldAcceptanceSchoolR7Steps.h"
 #include "PerfectWorldSchoolPresenter.h"
 #include "UI/SPWAwakeningResultPanel.h"
 #include "UI/SPWCountdownPanel.h"
@@ -23,6 +24,53 @@ FStepDef P38Action(const TCHAR* Name, TFunction<FStepOutcome(UPWAcceptanceSubsys
     Step.Name = Name;
     Step.TimeoutSeconds = 30.0;
     Step.Run = MoveTemp(Run);
+    return Step;
+}
+
+bool P310PawnInFloor(UPWAcceptanceSubsystem& Sub, const APWAwakeningFloorActor& Floor)
+{
+    const auto* Pawn = Sub.GetPawn();
+    return Pawn != nullptr && Floor.GetLayout().Bounds.IsInside(Pawn->GetActorLocation());
+}
+
+// P310: use the unobstructed X=300 aisle in the room's local frame, away from every hazard and mover pose.
+FStepDef P310FloorWalk(const FString& Name, const int32 Station)
+{
+    FStepDef Step;
+    Step.Name = Name;
+    Step.TimeoutSeconds = 60.0;
+    Step.Run = [Station](UPWAcceptanceSubsystem& Sub, FStepRuntime& Rt)
+    {
+        const auto* Floor = AwFlFindFloor(Sub);
+        if (Floor == nullptr || !Floor->IsOccupied() || !P310PawnInFloor(Sub, *Floor))
+            return FStepOutcome::Fail(TEXT("the pawn is outside the occupied tutorial room"));
+        const auto& L = Floor->GetLayout();
+        TArray<FVector> Points;
+        if (Station < 0)
+        {
+            Points.Add(PWAwakening::AwWorld(L, PWAwakening::AwNumbers::StandX, 400.0, 0.0));
+            Points.Add(L.LeavePad.Centre - FVector(0.0, 70.0, 0.0));
+        }
+        else
+        {
+            if (!L.Stations.IsValidIndex(Station)) return FStepOutcome::Fail(TEXT("no such tutorial station"));
+            if (Station == 0)
+                Points.Add(PWAwakening::AwWorld(L, PWAwakening::AwNumbers::StandX, 260.0, 0.0));
+            Points.Add(L.Stations[Station].Stand);
+        }
+        const bool bLast = Rt.Phase == Points.Num() - 1;
+        const auto Outcome = Sub.TickWalk(Points[Rt.Phase], 20.0, Rt);
+        if (Outcome.State == PWAcceptance::EStepState::Passed && !bLast)
+        {
+            Rt.NextPhase();
+            Rt.LastProbe = 0.0;
+            Rt.StuckSince = 0.0;
+            return FStepOutcome::Wait();
+        }
+        if (Outcome.State == PWAcceptance::EStepState::Passed && Station < 0)
+            Sub.FaceWorldPoint(L.LeavePad.Point);
+        return Outcome;
+    };
     return Step;
 }
 
@@ -64,8 +112,14 @@ FStepDef P38PadStep(const FString& Name, const int32 Station, const int32 PadInd
             if (Floor == nullptr || Life == nullptr || Floor->IsTransitioning()) return false;
             if (Station < 0)
             {
-                Detail = TEXT("the real return pad transferred the player back to campus");
-                return !Floor->IsOccupied();
+                const auto* Pawn = Sub.GetPawn();
+                if (Pawn == nullptr) return false;
+                const FVector Here = Pawn->GetActorLocation();
+                const FVector Stand = Floor->GetLayout().Site.EntryStand;
+                Detail = FString::Printf(TEXT("return pad placed the pawn at (%.0f, %.0f, %.0f); campus stand (%.0f, %.0f, %.0f)"),
+                    Here.X, Here.Y, Here.Z, Stand.X, Stand.Y, Stand.Z);
+                return !Floor->IsOccupied() && FVector::Dist2D(Here, Stand) < 40.0 &&
+                    FMath::Abs(Here.Z - Stand.Z - PWPlayer::CapsuleHalfHeight) < 10.0;
             }
             const auto& Tutorial = Life->GetWorldState().Tutorial;
             Detail = TEXT("the completed contextual pad action advanced the authoritative tutorial");
@@ -89,8 +143,8 @@ namespace PWAcceptance
 void P38AppendAwakeningSteps(TArray<FStepDef>& Out)
 {
     using namespace AwakeningFloor;
-    Out.Add(MakeWorldReadyStep());
-    Out.Add(MakeEnterWorldStep());
+    // P310: the same home door and twelve plan waypoints used by school_lesson_round9, then the campus forecourt.
+    SchoolR7::ScAWalkToGate(Out);
     Out.Add(P38Action(TEXT("live_seed_and_bindings"), [](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
     {
         const auto* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
@@ -103,7 +157,17 @@ void P38AppendAwakeningSteps(TArray<FStepDef>& Out)
         if (!PWAwakening::AwBridge::Resolve(Sub.GetPlayWorld()).IsValid()) return FStepOutcome::Fail(TEXT("no live tutorial bridge"));
         return FStepOutcome::Pass(TEXT("creation seeded the real world; recipes/countdown bound; contacts deliberately empty"));
     }));
-    Out.Add(AwFlStartStep()); // sole declared teleport, as the R9-06 floor scenario; every later movement is walked/transferred.
+    const auto Campus = PWSchool::ScReadCampus();
+    const auto Site = PWAwakening::AwSiteFromCampus();
+    TArray<FVector> ToTerminal;
+    ToTerminal.Add(FVector(Campus.GateX, Campus.Site.Y0 + 150.0, PWSchool::ScGroundZ));
+    const double CrossY = Campus.Forecourt.Y0 + 550.0;
+    ToTerminal.Add(FVector(Campus.GateX, CrossY, PWSchool::ScGroundZ));
+    ToTerminal.Add(FVector(Site.EntryStand.X, CrossY, PWSchool::ScGroundZ));
+    ToTerminal.Add(Site.EntryStand);
+    const FVector TerminalPoint = Site.EntryKiosk + FVector(0.0, -2.0, 85.0);
+    // Cross south of the flag plinth (Y 5600..5800), then north at X 7300; never cut through a verandah pillar.
+    Out.Add(SchoolR7::ScAPointsWalk(TEXT("walk_school_gate_to_forecourt_terminal"), ToTerminal, 60.0, &TerminalPoint));
     Out.Add(P38Action(TEXT("clock_to_awakening_day_and_enter_floor"), [](UPWAcceptanceSubsystem& Sub, FStepRuntime& Rt)
     {
         auto* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
@@ -127,14 +191,23 @@ void P38AppendAwakeningSteps(TArray<FStepDef>& Out)
             Rt.NextPhase();
         }
         if (Floor->IsTransitioning()) return FStepOutcome::Wait();
-        return Floor->IsOccupied() ? FStepOutcome::Pass(TEXT("real time.advance reached the appointment; terminal submitted tutorial.enter; pawn transferred inside"))
-            : FStepOutcome::Fail(TEXT("entry did not place the pawn inside the floor"));
+        if (!Floor->IsOccupied() || !P310PawnInFloor(Sub, *Floor))
+            return FStepOutcome::Fail(TEXT("entry completed without the pawn inside the tutorial room"));
+        if (Rt.Phase == 1) { Rt.NextPhase(); return FStepOutcome::Wait(); }
+        // Occupied alone used to pass even when fall recovery had already returned the pawn home.
+        if (Rt.InPhase() < 0.5) return FStepOutcome::Wait();
+        const FVector Here = Sub.GetPawn()->GetActorLocation();
+        const FVector Arrival = Floor->GetLayout().Arrival;
+        if (FVector::Dist2D(Here, Arrival) > 20.0 || FMath::Abs(Here.Z - Arrival.Z - PWPlayer::CapsuleHalfHeight) > 10.0)
+            return FStepOutcome::Fail(TEXT("the pawn did not remain at the authored arrival after entry"));
+        return FStepOutcome::Pass(FString::Printf(TEXT("terminal submitted tutorial.enter; pawn remained at (%.0f, %.0f, %.0f), floor Z %.0f"),
+            Here.X, Here.Y, Here.Z, Arrival.Z));
     }));
     Out.Add(MakeShotStep(TEXT("shot_live_floor_arrival")));
     for (int32 Station = 0; Station < PWAwakening::SituationCount; ++Station)
     {
         const FString Slug = FString::Printf(TEXT("situation_%d"), Station + 1);
-        Out.Add(AwFlWalkToStationStep(TEXT("walk_to_") + Slug, Station));
+        Out.Add(P310FloorWalk(TEXT("walk_to_") + Slug, Station));
         // Help a classmate, shield the group, then arrange supervised handover. No combat input.
         Out.Add(P38PadStep(TEXT("non_combat_") + Slug, Station, Station == 2 ? 2 : 0));
     }
@@ -162,7 +235,7 @@ void P38AppendAwakeningSteps(TArray<FStepDef>& Out)
         return !Presenter->IsOpen() && !UPWInteractionComponent::IsWorldInputBlocked(Sub.GetPawn())
             ? FStepOutcome::Pass(TEXT("result closed and world input restored")) : FStepOutcome::Fail(TEXT("result still owns the screen or input"));
     }));
-    Out.Add(AwFlWalkToReturnStep(TEXT("walk_to_campus_return")));
+    Out.Add(P310FloorWalk(TEXT("walk_to_campus_return"), -1));
     Out.Add(P38PadStep(TEXT("return_to_ordinary_campus"), -1, 0));
     Out.Add(P38Action(TEXT("countdown_closed_1759_opens_1800"), [](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
     {

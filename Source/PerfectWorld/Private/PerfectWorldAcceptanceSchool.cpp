@@ -84,6 +84,26 @@ TSharedPtr<SPWClassLesson> S03LessonScreen(UWorld* World)
     }
     return StaticCastSharedPtr<SPWClassLesson>(Presenter->GetPanel());
 }
+
+// P310: these rows edit a local draft. They do not call school.lesson.choose.
+bool P310LessonSelection(const FString& Key)
+{
+    return Key.StartsWith(TEXT("link.")) || Key.StartsWith(TEXT("investigate.")) || Key.StartsWith(TEXT("claim.")) ||
+        Key.StartsWith(TEXT("evidence.")) || Key.StartsWith(TEXT("limit.")) || Key.StartsWith(TEXT("task.")) || Key == TEXT("explain");
+}
+
+FString P310LessonRows(const TSharedPtr<SPWClassLesson>& Lesson, UWorld* World)
+{
+    const UPWSchoolPresenter* Presenter = UPWSchoolPresenter::Get(World);
+    const TSharedPtr<SWidget> Panel = Presenter != nullptr ? Presenter->GetPanel() : nullptr;
+    const TArray<FString> Keys = Lesson.IsValid() ? Lesson->GetActionKeys() : TArray<FString>();
+    int32 Enabled = 0;
+    for (const FString& Key : Keys)
+    {
+        Enabled += Lesson->IsActionEnabled(Key) ? 1 : 0;
+    }
+    return FString::Printf(TEXT("screen %s, rows %d, enabled %d"), Panel.IsValid() ? *Panel->GetTypeAsString() : TEXT("none"), Keys.Num(), Enabled);
+}
 } // namespace
 
 namespace PWAcceptance
@@ -229,8 +249,8 @@ void AppendSchoolLessonRound9Steps(TArray<FStepDef>& Out)
     }));
     Out.Add(MakeShotStep(TEXT("shot_lesson_screen")));
 
-    // Real choices: press enabled rows of the lesson screen (each is one school.lesson.choose through the reducer) until the exercise is
-    // ready to record, or the budget is spent. At least one choice must be accepted by the core.
+    // Real choices: select a draft row once, then prefer an enabled command row. A local selection is not a core choice.
+    // All four structures use this registry; no hidden solution fields or standard-action policy enter the scenario.
     Out.Add(S03Action(TEXT("make_real_lesson_choices"), 30.0, [Run](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
     {
         UWorld* World = Sub.GetPlayWorld();
@@ -238,35 +258,54 @@ void AppendSchoolLessonRound9Steps(TArray<FStepDef>& Out)
         const UPWLaneLifeSubsystem* Life = UPWLaneLifeSubsystem::Get(World);
         if (!Lesson.IsValid() || Life == nullptr)
         {
-            return FStepOutcome::Fail(TEXT("no lesson screen"));
+            return FStepOutcome::Fail(TEXT("no live lesson context; ") + P310LessonRows(Lesson, World));
         }
+        TSet<FString> Selected;
         for (int32 Guard = 0; Guard < 40 && !Lesson->GetFrame().bReadyToClose; ++Guard)
         {
-            bool bPressed = false;
-            for (const FString& Key : Lesson->GetActionKeys())
+            const TArray<FString> Keys = Lesson->GetActionKeys();
+            FString Next;
+            // Commit rows follow selection rows on screen. Give them priority as soon as a draft can be sent.
+            for (const FString& Key : Keys)
             {
-                if (Key == TEXT("open") || Key == TEXT("record") || !Lesson->IsActionEnabled(Key))
+                if (Key != TEXT("open") && Key != TEXT("record") && !P310LessonSelection(Key) && Lesson->IsActionEnabled(Key))
                 {
-                    continue;
-                }
-                if (Lesson->PressAction(Key))
-                {
-                    bPressed = true;
-                    if (Lesson->GetLastResult().Ok() && Lesson->GetLastResult().Session == Run->SessionId)
-                    {
-                        ++Run->Choices;
-                    }
+                    Next = Key;
                     break;
                 }
             }
-            if (!bPressed)
+            if (Next.IsEmpty())
+            {
+                for (const FString& Key : Keys)
+                {
+                    if (P310LessonSelection(Key) && !Selected.Contains(Key) && Lesson->IsActionEnabled(Key))
+                    {
+                        Next = Key;
+                        break;
+                    }
+                }
+            }
+            if (Next.IsEmpty() || !Lesson->PressAction(Next))
             {
                 break;
             }
+            if (P310LessonSelection(Next))
+            {
+                Selected.Add(Next);
+                continue;
+            }
+            if (!Lesson->GetLastResult().Ok() || Lesson->GetLastResult().Session != Run->SessionId)
+            {
+                return FStepOutcome::Fail(TEXT("lesson command '") + Next + TEXT("' refused; ") + P310LessonRows(Lesson, World) +
+                    TEXT("; last code '") + Lesson->GetLastIssueCode() + TEXT("'"));
+            }
+            ++Run->Choices;
+            Selected.Reset();
         }
         if (Run->Choices < 1)
         {
-            return FStepOutcome::Fail(TEXT("the core accepted no lesson choice; last code '") + Lesson->GetLastIssueCode() + TEXT("'"));
+            return FStepOutcome::Fail(TEXT("the core accepted no lesson choice; ") + P310LessonRows(Lesson, World) +
+                TEXT("; last code '") + Lesson->GetLastIssueCode() + TEXT("'"));
         }
         Run->bReady = Lesson->GetFrame().bReadyToClose;
         return FStepOutcome::Pass(FString::Printf(TEXT("%d choices accepted by the core; ready to record: %d"), Run->Choices, Run->bReady));
