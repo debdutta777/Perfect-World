@@ -37,7 +37,7 @@ void UPWLaneLifeSubsystem::R88InstallCommerce()
     FString S05Why;
     const PWSchoolLive::FS03Content* S05School = PWSchoolLive::SharedContent(*GetWorld(), S05Why);
     const PerfectWorld::WorldSchoolCatalogues S05Lessons = S05School != nullptr
-        ? PerfectWorld::WorldSchoolCatalogues{S05School->Cats.Structures, &S05School->Lessons, &S05School->Papers}
+        ? PerfectWorld::WorldSchoolCatalogues{S05School->Cats.Structures, &S05School->Lessons, &S05School->Papers, &S05School->WorkBriefs}
         : PerfectWorld::WorldSchoolCatalogues{};
     // P38: process-lifetime validated recipes, like the shared school catalogues.
     static TUniquePtr<PerfectWorld::AbilityRecipeSet> P38Recipes;

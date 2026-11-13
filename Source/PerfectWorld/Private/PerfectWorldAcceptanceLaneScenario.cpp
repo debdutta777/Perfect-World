@@ -1,6 +1,7 @@
 #include "PerfectWorldAcceptanceSubsystem.h"
 #include "PerfectWorldAcceptanceCommerce.h" // R88
 #include "PerfectWorldAcceptanceSchool.h" // S03
+#include "PerfectWorldAcceptanceHomework.h" // P36U
 #include "PerfectWorldAcceptanceAwakening.h" // P38
 #include "PerfectWorldAcceptancePhase3.h" // P39
 #include "PerfectWorldAcceptanceFrontages.h"
@@ -478,6 +479,7 @@ bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps)
         {TEXT("school_round7"), AppendSchoolRound7Steps},
         {TEXT("school_round7_late"), AppendSchoolRound7LateSteps},
         {TEXT("school_lesson_round9"), AppendSchoolLessonRound9Steps}, // S03
+        {TEXT("homework_round9"), P36UAppendHomeworkSteps},
         {TEXT("awakening_round9"), P38AppendAwakeningSteps}, // P38
         {TEXT("continue_round9"), P39AppendContinueSteps},
         {TEXT("awakening_withdraw_round9"), P39AppendWithdrawalSteps},

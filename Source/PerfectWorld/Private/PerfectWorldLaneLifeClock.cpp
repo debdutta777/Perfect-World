@@ -60,6 +60,13 @@ void BrLogEvent(const PerfectWorld::DayStarted& Event)
     UE_LOG(LogPWLaneLife, Display, TEXT("A new day began (day %lld)."), static_cast<long long>(Event.Day));
 }
 
+void BrLogEvent(const PerfectWorld::DayLoopEvent& Event)
+{
+    // P36U: a homework Completed event carries Brief.Id. Present it without an activity-catalogue lookup.
+    if (Event.Kind == PerfectWorld::DayLoopEventKind::Completed)
+        UE_LOG(LogPWLaneLife, Verbose, TEXT("Completion: %hs (%lld minutes)."), Event.ActivityId.c_str(), static_cast<long long>(Event.Minutes));
+}
+
 void BrLogEvent(const PerfectWorld::ScheduledEventFired& Event)
 {
     UE_LOG(LogPWLaneLife, Display, TEXT("Scheduled event fired: %s."), *PWLaneLife::ToFString(Event.EventId));

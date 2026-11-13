@@ -40,7 +40,8 @@ void P35Abandon(UPWLaneLifeSubsystem& Life)
 }
 
 /** A routed practice: (plan an empty day if none yet, free, as the gate does), commit with the known commitments it passes over, start, complete. */
-PerfectWorld::SchoolIssue P35RunPractice(UPWLaneLifeSubsystem& Life, const PerfectWorld::ActivityCatalogue& Activities, std::string_view OfferId)
+PerfectWorld::SchoolIssue P35RunPractice(UPWLaneLifeSubsystem& Life, const PerfectWorld::ActivityCatalogue& Activities,
+    const PerfectWorld::KnownCommitmentContent& P36UKnownContent, std::string_view OfferId)
 {
     if (OfferId != P35StudyActivityId)
     {
@@ -65,7 +66,7 @@ PerfectWorld::SchoolIssue P35RunPractice(UPWLaneLifeSubsystem& Life, const Perfe
     Step.Kind = PerfectWorld::DayCommandKind::Commit;
     Step.ActivityId = std::string(P35StudyActivityId);
     Step.PlaceKind = std::string(P35StudyOfferPlace);
-    Step.Alternatives = P35PracticeAlternatives(Life.GetWorldState(), Activities, *Status.Def);
+    Step.Alternatives = P35PracticeAlternatives(Life.GetWorldState(), Activities, *Status.Def, &P36UKnownContent);
     PerfectWorld::CommandResult Done = Life.SubmitSchoolCommand(PerfectWorld::Command{PerfectWorld::CommandSource::Player, PerfectWorld::WorldDayCommand{Step}});
     if (!Done.Accepted)
     {
@@ -164,6 +165,11 @@ public:
         const FS03Content* Content = Live != nullptr ? SharedContent(*Live, Why) : nullptr;
         if (Content != nullptr)
         {
+            const auto P36UFound = Content->WorkBriefs.Text.find(Key);
+            if (P36UFound != Content->WorkBriefs.Text.end())
+            {
+                return PWLaneLife::ToText(P36UFound->second);
+            }
             if (const std::string* Found = PerfectWorld::FindSchoolLessonText(Content->Lessons, Key))
             {
                 return PWLaneLife::ToText(*Found);
@@ -204,7 +210,7 @@ public:
         {
             return {};
         }
-        return P35PracticeOffers(Life->GetWorldState(), Content->Cats.Day.Activities);
+        return P35PracticeOffers(Life->GetWorldState(), Content->Cats.Day.Activities, &Content->P36UKnownContent);
     }
 
     virtual PerfectWorld::SchoolIssue StartPractice(std::string_view OfferId) override
@@ -217,7 +223,7 @@ public:
         {
             return P35PracticeIssue("school.practice.unavailable", "no world to practise in");
         }
-        return P35RunPractice(*Life, *Content->Cats.Day.Activities, OfferId);
+        return P35RunPractice(*Life, *Content->Cats.Day.Activities, Content->P36UKnownContent, OfferId);
     }
 
 private:
@@ -257,12 +263,16 @@ public:
         const std::string Stream = TCHAR_TO_UTF8(*Content->Stream);
         OutPreview.Build = PerfectWorld::BuildSchoolWeekPlan(State, OutPreview.Standing, OutPreview.Sessions, Base,
             PerfectWorld::SchoolLessonBindings(Content->Lessons, Stream), Content->Cats);
-        // P35: Known is what the world really records with a window (open morning-plan items, the committed or running activity); see PerfectWorldSchoolOffers.h.
+        // P36U: the current day's plan/runner plus current timed agreements projected onto each of the next seven civil days.
         if (Content->Cats.Day.Activities != nullptr)
         {
-            FP35Known Known = P35KnownCommitments(State, *Content->Cats.Day.Activities);
-            OutPreview.Known = std::move(Known.Candidates);
-            OutPreview.KnownNames = std::move(Known.Lines);
+            for (int32 P36UOffset = 0; P36UOffset < 7; ++P36UOffset)
+            {
+                FP35Known Known = P35KnownCommitments(State, *Content->Cats.Day.Activities, Content->P36UKnownContent,
+                    PerfectWorld::GameClock::DayNumber(OutPreview.Now) + P36UOffset);
+                for (auto& P36UCandidate : Known.Candidates) OutPreview.Known.push_back(std::move(P36UCandidate));
+                OutPreview.KnownNames.Append(Known.Lines);
+            }
         }
         return true;
     }
