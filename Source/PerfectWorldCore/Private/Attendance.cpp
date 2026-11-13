@@ -160,7 +160,7 @@ bool AttendanceIsSchoolDay(std::int64_t day)
 
 bool AttendanceIsSchoolDay(const SchoolCalendar* calendar, std::int64_t day)
 {
-    return calendar != nullptr ? CalendarIsSchoolDay(*calendar, day) : AttendanceIsSchoolDay(day);
+    return calendar != nullptr ? CalendarRequiresAttendance(*calendar, day) : AttendanceIsSchoolDay(day);
 }
 
 AttendanceForecast ForecastAttendance(const BellSchedule& schedule, std::int32_t arrival, std::int32_t departure)

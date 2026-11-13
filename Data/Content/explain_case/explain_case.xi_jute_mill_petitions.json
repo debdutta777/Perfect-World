@@ -1,0 +1,31 @@
+{
+  "type": "explain_case",
+  "id": "explain_case.xi_jute_mill_petitions",
+  "family": "explain_family.xi_claim_evidence_limit",
+  "name": "Why the night shift stopped at the jute press",
+  "subject": "history",
+  "question": "cause",
+  "role": "author",
+  "scarce": "sources",
+  "method": "method.source_criticism",
+  "brief": "Your history folder holds three short extracts about a two-day walkout by the night shift at a jute baling press on the Hooghly in the 1930s: the manager's telegram, a thumb-marked petition from the workers and a municipal boiler inspector's note. Only one printed set was made for your table, and every further document means a trip to the library. You are the author, drafting the group's explanation of why the night shift stopped work.",
+  "claims": [
+    { "id": "c_dampness_deduction", "name": "The shift stopped because a new weigh-clerk docked every bale for damp without weighing it again", "defensible": true },
+    { "id": "c_festival_advance", "name": "The refusal of the customary advance before Puja turned a quarrel at the scales into a stoppage", "defensible": true },
+    { "id": "c_boiler_burst", "name": "The shift left the shed because the main boiler burst", "defensible": false }
+  ],
+  "evidence": [
+    { "id": "e_petition_clause", "name": "Clause 1 of the petition names the new weigh-clerk and protests a flat deduction of four seers a bale for damp", "supports": ["c_dampness_deduction"], "against": [] },
+    { "id": "e_chalked_scale", "name": "The inspector's margin note says the baling scales still carried the chalk mark for the four-seer deduction", "supports": ["c_dampness_deduction"], "against": [] },
+    { "id": "e_advance_refused", "name": "Clause 3 of the petition says the cashier closed his grating on Tuesday without paying the customary advance", "supports": ["c_festival_advance"], "against": [] },
+    { "id": "e_manager_wire", "name": "The manager's telegram asks head office for authority to pay half the festival advance 'to bring the night hands back'", "supports": ["c_festival_advance"], "against": [] },
+    { "id": "e_boiler_certificate", "name": "The inspector certifies that both boilers held normal working pressure throughout the week", "supports": [], "against": ["c_boiler_burst"] },
+    { "id": "e_bale_stencil", "name": "The export bales were stencilled in black ink for shipment from the docks", "supports": [], "against": [] }
+  ],
+  "limitations": [
+    { "id": "l_clerk_unheard", "name": "The weigh-clerk's own account to the labour officer is not in the packet", "bounds": ["c_dampness_deduction"] },
+    { "id": "l_petition_drafted", "name": "The petition was drafted in English by a petition-writer in the bazaar, not in the workers' own words", "bounds": ["c_dampness_deduction", "c_festival_advance"] },
+    { "id": "l_one_shed", "name": "The papers cover only one shed and do not show whether the day shift shared the grievance", "bounds": ["c_festival_advance"] }
+  ],
+  "note": "Set in the history classroom at Nabapara Vidyalaya (loc_nhss); the walkout and its papers are an invented teaching set, not a record of a real mill. A strike with two causes is ordinary history, so two claims are defensible. The boiler claim is contradicted by the inspector's certificate. The stencil colour is beside the point."
+}

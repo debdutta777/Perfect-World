@@ -1,0 +1,9 @@
+{
+  "type": "commerce_funding",
+  "id": "commerce_funding.rank_0",
+  "stratum": "stratum.institutional_care",
+  "householdResourcesRank": 0,
+  "startingWalletPaise": 12000,
+  "weeklyAllowancePaise": 12000,
+  "note": "Children's-home personal allowance, with equal dignity and purchasing rights. Baseline essentials remain accessible; creation points are never currency."
+}

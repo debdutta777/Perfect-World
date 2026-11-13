@@ -1,0 +1,26 @@
+{
+  "type": "investigate_case",
+  "id": "investigate_case.xi_timetable_csv_import",
+  "family": "investigate_family.xi_fault_finding",
+  "name": "The afternoon columns that slid sideways",
+  "subject": "computing",
+  "symptom": "wrong_output",
+  "role": "experimenter",
+  "scarce": "access",
+  "method": "method.half_split",
+  "brief": "In the Nabapara Vidyalaya computer room, the Python script that formats the Class XI room-and-period CSV for the corridor noticeboard prints Periods 1 to 4 cleanly, but shifts Periods 5 to 7 one column to the right on Wednesday and Friday. The office clerk locks the terminal room at four o'clock, so you can only sit at the machine briefly.",
+  "causes": [
+    { "id": "c_header_tabs", "name": "The template header row mixes tab characters with commas", "fault": false },
+    { "id": "c_unescaped_comma", "name": "The laboratory room label 'Lab 2, North Wing' contains an unquoted comma in the CSV", "fault": true },
+    { "id": "c_slice_index", "name": "The column-slicing loop starts at index 1 instead of index 0", "fault": false },
+    { "id": "c_printer_margin", "name": "The dot-matrix printer carriage wraps at column 72", "fault": false }
+  ],
+  "tests": [
+    { "id": "t_inspect_wed_fri", "name": "Compare the raw Wednesday and Friday lines against Monday in a text viewer", "kind": "observe", "units": 1, "implicates": ["c_header_tabs", "c_unescaped_comma"] },
+    { "id": "t_print_field_counts", "name": "Read the field count per row printed in the script's console log", "kind": "observe", "units": 2, "implicates": ["c_unescaped_comma", "c_slice_index"] },
+    { "id": "t_halve_row_split", "name": "Run the parser on a single row and print the list returned by split(',')", "kind": "measure", "units": 2, "implicates": ["c_header_tabs", "c_slice_index"] },
+    { "id": "t_count_commas_per_line", "name": "Count commas per line across the CSV with a one-line counter", "kind": "measure", "units": 3, "implicates": ["c_unescaped_comma"] },
+    { "id": "t_swap_clean_csv", "name": "Run the script on last term's known-good CSV file on the same printer", "kind": "swap", "units": 3, "implicates": ["c_printer_margin"] }
+  ],
+  "note": "Set in the computer room at Nabapara Vidyalaya (loc_nhss). Only the Wednesday and Friday afternoon rows hold the room label 'Lab 2, North Wing', and the script splits each line on every comma, so that one label becomes two fields and the periods after it shift right. Reading the field count per row and the raw lines isolates the unquoted comma; Monday's rows, which print cleanly, rule out a wrong start index and a wrong header."
+}

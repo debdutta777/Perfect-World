@@ -1,0 +1,130 @@
+{
+  "type": "npc_schedule",
+  "id": "npc_schedule.rekha_bose",
+  "note": "R4-03. Seven-day local walks through the north and south side-alley thresholds. Explicit off-lane home and destination; all-pairs travel is sorted strictly by (from,to). The vendor serves at three road-edge bays, with two rounds and an off-lane meal/rest interval. Passers pause briefly on the north footpath while crossing between off-lane commitments. No purchasing command is implied.",
+  "person": "person.rekha_bose",
+  "home": "location.ambient.rekha.home",
+  "workplace": "location.ambient.rekha.out",
+  "door": "door.nabapara.ambient_south_threshold",
+  "speedCmPerMinute": 140,
+  "routine": [
+    {
+      "days": 127,
+      "start": 0,
+      "end": 360,
+      "zone": "location.ambient.rekha.home",
+      "role": "sleeping"
+    },
+    {
+      "days": 127,
+      "start": 360,
+      "end": 420,
+      "zone": "location.ambient.rekha.home",
+      "role": "at_home"
+    },
+    {
+      "days": 127,
+      "start": 420,
+      "end": 480,
+      "zone": "location.ambient.rekha.home",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 480,
+      "end": 521,
+      "zone": "location.ambient.rekha.home",
+      "role": "at_home"
+    },
+    {
+      "days": 127,
+      "start": 540,
+      "end": 548,
+      "zone": "anchor.ambient.rekha.pause",
+      "role": "observing"
+    },
+    {
+      "days": 127,
+      "start": 549,
+      "end": 1049,
+      "zone": "location.ambient.rekha.out",
+      "role": "at_home"
+    },
+    {
+      "days": 127,
+      "start": 1050,
+      "end": 1058,
+      "zone": "anchor.ambient.rekha.pause",
+      "role": "observing"
+    },
+    {
+      "days": 127,
+      "start": 1077,
+      "end": 1200,
+      "zone": "location.ambient.rekha.home",
+      "role": "at_home"
+    },
+    {
+      "days": 127,
+      "start": 1200,
+      "end": 1260,
+      "zone": "location.ambient.rekha.home",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 1260,
+      "end": 1320,
+      "zone": "location.ambient.rekha.home",
+      "role": "resting"
+    },
+    {
+      "days": 127,
+      "start": 1320,
+      "end": 1440,
+      "zone": "location.ambient.rekha.home",
+      "role": "sleeping"
+    }
+  ],
+  "routes": [
+    {
+      "id": "route.rekha.home_pause",
+      "from": "location.ambient.rekha.home",
+      "to": "anchor.ambient.rekha.pause",
+      "lengthCm": 2660
+    },
+    {
+      "id": "route.rekha.pause_out",
+      "from": "anchor.ambient.rekha.pause",
+      "to": "location.ambient.rekha.out",
+      "lengthCm": 140
+    }
+  ],
+  "travel": [
+    {
+      "from": "anchor.ambient.rekha.pause",
+      "to": "location.ambient.rekha.home",
+      "minutes": 19,
+      "routes": [
+        "route.rekha.home_pause"
+      ]
+    },
+    {
+      "from": "anchor.ambient.rekha.pause",
+      "to": "location.ambient.rekha.out",
+      "minutes": 1,
+      "routes": [
+        "route.rekha.pause_out"
+      ]
+    },
+    {
+      "from": "location.ambient.rekha.home",
+      "to": "location.ambient.rekha.out",
+      "minutes": 20,
+      "routes": [
+        "route.rekha.home_pause",
+        "route.rekha.pause_out"
+      ]
+    }
+  ]
+}

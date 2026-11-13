@@ -1,0 +1,10 @@
+{
+  "type": "commerce_item",
+  "id": "item.plasters",
+  "name": "Plasters",
+  "unit": "pack of five",
+  "stackLimit": 10,
+  "effect": "unsupported_supply",
+  "hungerRelief": 0,
+  "note": "Carryable supply. Use is unavailable until relevant conditions and treatment rules exist; no generic healing."
+}

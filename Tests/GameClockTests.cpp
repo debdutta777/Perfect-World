@@ -1,5 +1,6 @@
 #include "GameClock.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <random>
@@ -243,6 +244,85 @@ int main()
                 Check(seen.insert(fired.Handle).second, "an event never fires twice");
             }
             (void)handle;
+        }
+    }
+
+    // Due-now draining (LANE_LIFE_IMPLEMENTATION section A item 1): an event scheduled for the current instant fires
+    // at that instant, without a minute passing.
+    {
+        GameClock due;
+        Check(due.Advance(100).Fired.empty(), "nothing to fire on the way to 100");
+        Check(!due.HasDueEvents(), "nothing is due on a clock with nothing pending");
+        const std::int64_t now = due.Schedule(100, "test/now/a");
+        const std::int64_t later = due.Schedule(101, "test/later/b");
+        Check(now > 0 && later > 0 && due.HasDueEvents(), "an event for the current instant is due");
+        const AdvanceResult drained = due.DrainDue(10);
+        Check(!drained.Rejected && !drained.Capped && drained.From == 100 && drained.To == 100 && due.Now() == 100,
+              "draining does not move time");
+        Check(drained.Fired.size() == 1 && drained.Fired[0].Handle == now && drained.Fired[0].When == 100, "only the due event fires");
+        Check(!due.HasDueEvents() && due.Pending().size() == 1, "the later event stays pending");
+        Check(due.DrainDue(10).Fired.empty(), "a second drain fires nothing");
+
+        (void)due.Schedule(101, "test/later/c");
+        const std::int64_t again = due.Schedule(due.Now(), "test/now/d");
+        const AdvanceResult zero = due.Advance(0);
+        Check(!zero.Rejected && zero.Fired.size() == 1 && zero.Fired[0].Handle == again && due.Now() == 100,
+              "Advance(0) fires what is due now and nothing later");
+        const AdvanceResult one = due.Advance(1);
+        Check(one.Fired.size() == 2 && one.Fired[0].Id == "test/later/b" && one.Fired[1].Id == "test/later/c" && due.Now() == 101,
+              "same-instant events fire in scheduling order");
+    }
+
+    // The capped advance keeps every unfired event and stops where the last one fired.
+    {
+        GameClock capped;
+        for (GameInstant t = 1; t <= 6; ++t)
+            (void)capped.Schedule(t * 10, "test/many/" + std::to_string(t));
+        (void)capped.Schedule(30, "test/many/tie");
+        const AdvanceResult first = capped.AdvanceToCapped(1'000, 3);
+        Check(first.Capped && first.Fired.size() == 3 && first.To == 30 && capped.Now() == 30,
+              "a capped advance stops at the instant of the last fired event");
+        Check(capped.Pending().size() == 4 && capped.HasDueEvents() && capped.Pending().front().Id == "test/many/tie",
+              "the unfired event at that same instant is still pending, now due");
+        const AdvanceResult none = capped.AdvanceToCapped(1'000, 0);
+        Check(none.Capped && none.Fired.empty() && capped.Now() == 30 && capped.Pending().size() == 4,
+              "a zero cap with something due moves nothing and loses nothing");
+        const AdvanceResult rest = capped.AdvanceToCapped(1'000, 100);
+        Check(!rest.Capped && rest.Fired.size() == 4 && rest.Fired[0].Id == "test/many/tie" && capped.Now() == 1'000 && capped.Pending().empty(),
+              "the continuation fires the due event first, then the rest, and reaches the target");
+        Check(rest.DaysCrossed == static_cast<std::int32_t>(GameClock::DayNumber(1'000) - GameClock::DayNumber(30)), "days are counted from where it stopped");
+        const AdvanceResult quiet = capped.AdvanceToCapped(1'200, 0);
+        Check(!quiet.Capped && capped.Now() == 1'200, "a zero cap still moves time when nothing is due on the way");
+        Check(capped.AdvanceToCapped(1'100, 5).Rejected && capped.Now() == 1'200, "a capped advance never runs backwards");
+    }
+
+    // Splitting an advance anywhere fires the same events at the same instants as one advance.
+    {
+        std::mt19937 rng(11);
+        for (int trial = 0; trial < 200; ++trial)
+        {
+            GameClock whole;
+            GameClock split;
+            for (int i = 0; i < 20; ++i)
+            {
+                const GameInstant when = static_cast<GameInstant>(rng() % 3000);
+                (void)whole.Schedule(when, "e" + std::to_string(i));
+                (void)split.Schedule(when, "e" + std::to_string(i));
+            }
+            const AdvanceResult once = whole.Advance(3000);
+            std::vector<ScheduledEvent> pieces;
+            while (split.Now() < 3000)
+            {
+                const AdvanceResult part = split.AdvanceToCapped(std::min<GameInstant>(3000, split.Now() + static_cast<GameInstant>(rng() % 400)),
+                                                                 rng() % 4);
+                pieces.insert(pieces.end(), part.Fired.begin(), part.Fired.end());
+            }
+            const AdvanceResult tail = split.DrainDue(100);
+            pieces.insert(pieces.end(), tail.Fired.begin(), tail.Fired.end());
+            bool same = once.Fired.size() == pieces.size();
+            for (std::size_t i = 0; same && i < pieces.size(); ++i)
+                same = once.Fired[i].Handle == pieces[i].Handle && once.Fired[i].When == pieces[i].When;
+            Check(same && whole.Now() == split.Now() && split.Pending().empty(), "a split, capped advance matches one advance");
         }
     }
 

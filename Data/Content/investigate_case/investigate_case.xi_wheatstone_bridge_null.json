@@ -1,0 +1,26 @@
+{
+  "type": "investigate_case",
+  "id": "investigate_case.xi_wheatstone_bridge_null",
+  "family": "investigate_family.xi_fault_finding",
+  "name": "The balance point that stuck at 68 centimetres",
+  "subject": "practical_science",
+  "symptom": "wrong_output",
+  "role": "repairer",
+  "scarce": "parts",
+  "method": "method.swap_known_good",
+  "brief": "Ishan Sheikh is using a one-metre Wheatstone bridge in the physics room to compare a 4 ohm standard coil with a 4 ohm plug in a resistance box. The galvanometer should balance near the 50 centimetre mark, but it balances stubbornly at 68 centimetres. The store lends one spare part at a time and writes each one down.",
+  "causes": [
+    { "id": "c_tarnished_plug", "name": "A loose, tarnished brass taper plug in the resistance box adds extra contact resistance", "fault": false },
+    { "id": "c_end_solder_joint", "name": "A dry, oxidised solder joint at the zero-centimetre copper strip adds hidden end resistance", "fault": true },
+    { "id": "c_bent_jockey_knife", "name": "The sliding jockey knife-edge is bent and reads two centimetres off the wooden scale", "fault": false },
+    { "id": "c_galvanometer_zero", "name": "The centre-zero pointer on the galvanometer is mechanically stuck", "fault": false }
+  ],
+  "tests": [
+    { "id": "t_seat_plugs", "name": "Inspect the brass plugs and the copper end strips for dull oxide and firm seating", "kind": "observe", "units": 1, "implicates": ["c_tarnished_plug", "c_end_solder_joint"] },
+    { "id": "t_sight_jockey", "name": "Sight down the jockey blade against the metre rule and the end terminal", "kind": "observe", "units": 2, "implicates": ["c_end_solder_joint", "c_bent_jockey_knife"] },
+    { "id": "t_ohmmeter_box", "name": "Measure the resistance box and its plugs with the bench ohmmeter", "kind": "measure", "units": 2, "implicates": ["c_tarnished_plug", "c_bent_jockey_knife"] },
+    { "id": "t_drop_end_strip", "name": "Measure the millivolt drop across the zero-end joint while current flows", "kind": "measure", "units": 3, "implicates": ["c_end_solder_joint"] },
+    { "id": "t_spare_jockey", "name": "Balance again with the demonstrator's spare jockey", "kind": "swap", "units": 3, "implicates": ["c_bent_jockey_knife"] }
+  ],
+  "note": "Uses Ishan Sheikh (npc_ishan_sheikh) at Nabapara Vidyalaya (loc_nhss). Two equal resistances balance at the midpoint; a null at 68 cm means the left arm carries extra resistance, here a dry, oxidised joint at the zero end of the wire. The tests were rewritten so that each positive result follows from its cause: the spare jockey changes the reading only if the jockey is bent, the end-strip voltage drop is large only for a bad joint."
+}

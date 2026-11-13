@@ -37,22 +37,12 @@ namespace PerfectWorld
  * A holiday that falls on a weekend changes nothing for school; ClassifyCalendarDay
  * reports the weekend first, CalendarHolidayOn still names the holiday.
  *
- * Attendance integration (not done in this step; Attendance* is unchanged). Attendance
- * today treats every Monday to Friday as a school day through AttendanceIsSchoolDay(day)
- * and the AttendanceSchoolWeekdays mask. To use the calendar:
- *   1. Hold a `const SchoolCalendar*` next to the BellSchedule (found with
- *      SchoolCalendarSet::Find(schedule.InstitutionId, schedule.StageId)).
- *   2. Add an overload AttendanceIsSchoolDay(const SchoolCalendar* calendar, std::int64_t
- *      day) that returns CalendarIsSchoolDay(*calendar, day) when the pointer is set and
- *      the existing weekday rule when it is null; the day argument is already the same
- *      numbering, so no conversion is needed.
- *   3. Call that overload from the three places that use the weekday rule today:
- *      AttendanceCloseDays (so a holiday is never closed as an absence),
- *      AttendanceCheckCall (so recording on a holiday is refused with "that day is not a
- *      school day") and the routine's weekday mask (BuildSchoolRoutine keeps its
- *      Monday to Friday entries; the day loop skips them when CalendarIsSchoolDay is false).
- *   4. Start a fresh AttendanceRecord at the first day of the current term
- *      (CalendarTermOn(calendar, day)->First), since a record is one term.
+ * Attendance and lessons have separate eligibility. CalendarRequiresAttendance keeps
+ * sports and assessment days open. CalendarHasOrdinaryPeriods excludes those replacement
+ * programmes, and is shared by manual lessons and school-week compression. Holidays,
+ * breaks (including examination preparation), weekends and non-term days close both.
+ * CalendarIsSchoolDay retains its attendance meaning for existing callers. The attendance
+ * record's bell masks remain attendance accounting, not evidence of ordinary lessons.
  */
 
 using CalendarDay = std::int64_t;
@@ -228,7 +218,12 @@ enum class SchoolDayKind : std::uint8_t
 /** The day's status, checked in the order the enumerators are listed. */
 [[nodiscard]] PERFECTWORLDCORE_API SchoolDayKind ClassifyCalendarDay(const SchoolCalendar& calendar, CalendarDay day);
 
-/** True for SchoolDayKind::SchoolDay. This is the attendance hook (see the integration notes above). */
+/** Attendance is required on an open term weekday, including sports and assessment days. */
+[[nodiscard]] PERFECTWORLDCORE_API bool CalendarRequiresAttendance(const SchoolCalendar& calendar, CalendarDay day);
+/** Ordinary lessons run only on attendance days without sports or an assessment programme. */
+[[nodiscard]] PERFECTWORLDCORE_API bool CalendarHasOrdinaryPeriods(const SchoolCalendar& calendar, CalendarDay day);
+
+/** Compatibility query for CalendarRequiresAttendance; true for SchoolDayKind::SchoolDay. */
 [[nodiscard]] PERFECTWORLDCORE_API bool CalendarIsSchoolDay(const SchoolCalendar& calendar, CalendarDay day);
 /** The same for the day containing the instant. */
 [[nodiscard]] PERFECTWORLDCORE_API bool CalendarIsSchoolDayAt(const SchoolCalendar& calendar, GameInstant instant);

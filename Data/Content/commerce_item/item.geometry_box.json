@@ -1,0 +1,9 @@
+{
+  "type": "commerce_item",
+  "id": "item.geometry_box",
+  "name": "Geometry box",
+  "unit": "box",
+  "stackLimit": 10,
+  "effect": "none",
+  "hungerRelief": 0
+}

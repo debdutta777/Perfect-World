@@ -1,0 +1,28 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.xi_salt_analysis_budget",
+  "family": "coordinate_family.xi_group_work",
+  "name": "The reagents for the salt analysis",
+  "subject": "practicals",
+  "constraint": "budget",
+  "role": "mediator",
+  "scarce": "time",
+  "method": "method.settle_by_ledger",
+  "seam": false,
+  "brief": "Your chemistry group of three has to carry out a simple salt analysis, record the observations and write up the inference for the practical file. You are the mediator, hearing everyone. The period is short and the lab assistant will close the stores soon. Nobody has said what the group can spend on the extra reagents the plan lists.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 2, "self": true },
+    { "id": "m_mira", "name": "Mira Sen", "capacity": 2, "self": false },
+    { "id": "m_ishan", "name": "Ishan Sheikh", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_tests", "name": "Carry out the wet tests on the salt", "load": 2, "fits": ["m_mira", "m_you"] },
+    { "id": "t_record", "name": "Record the observations in a table", "load": 1, "fits": ["m_ishan", "m_you"] },
+    { "id": "t_inference", "name": "Write the inference and the report", "load": 1, "fits": ["m_ishan", "m_mira"] }
+  ],
+  "facts": [
+    { "id": "f_reagent_fund", "holder": "m_mira", "text": "The lab fund gives each group 60 rupees for reagents, and the extra reagents on the plan would cost 85", "critical": true },
+    { "id": "f_ishan_template", "holder": "m_ishan", "text": "Ishan has last year's blank observation table", "critical": false }
+  ],
+  "note": "Set in the chemistry laboratory at Nabapara Vidyalaya (loc_nhss); Mira Sen (npc_mira_sen) is the commerce student who knows the group's funds, and Ishan Sheikh is npc_ishan_sheikh. The constraint is the budget: 85 rupees of reagents against a 60-rupee allowance, so the scope has to be trimmed by 25 rupees. Time is scarce, so the group cannot afford to talk to everyone."
+}

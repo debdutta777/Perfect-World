@@ -1,0 +1,31 @@
+{
+  "type": "explain_case",
+  "id": "explain_case.xi_indigo_ryot_deposition",
+  "family": "explain_family.xi_claim_evidence_limit",
+  "name": "What the cultivator meant about the advance rupee",
+  "subject": "history",
+  "question": "meaning",
+  "role": "critic",
+  "scarce": "counterpoint",
+  "method": "method.source_criticism",
+  "brief": "Ms Basu has given your history group one page from the printed minutes of the Indigo Commission of 1860. A cultivator of Nadia district tells the Commission, 'The advance rupee never leaves the factory book.' What did he mean? You are the critic, so it is your task to press the group on its limits, but everyone at the table wants to agree quickly and nobody will argue the other side for you.",
+  "claims": [
+    { "id": "c_debt_trap", "name": "He means the advance tied him to the planter through a debt that was written up again every year", "defensible": true },
+    { "id": "c_land_cost", "name": "He means indigo cost him more than the rupee, because it took his best land and his labour from the rice", "defensible": true },
+    { "id": "c_favour", "name": "He means the advance was a favour the village was glad to go on receiving", "defensible": false }
+  ],
+  "evidence": [
+    { "id": "e_carried_debt", "name": "Answer 9: 'Each year the factory servant writes my debt afresh and the account is never cleared', and he names a balance carried over from his father's time", "supports": ["c_debt_trap"], "against": ["c_favour"] },
+    { "id": "e_chain", "name": "Answer 12: the factory measures his bundles with its own long chain, so he is credited with less indigo than he grew", "supports": ["c_debt_trap"], "against": ["c_favour"] },
+    { "id": "e_best_land", "name": "Answer 15: the factory servant marks out the household's best high land for indigo and leaves the low land for rice", "supports": ["c_land_cost"], "against": [] },
+    { "id": "e_weeding_clash", "name": "Answer 17: the weeding indigo needs falls in the weeks when his rice seedlings must be planted out", "supports": ["c_land_cost"], "against": [] },
+    { "id": "e_no_refusal", "name": "Answer 21: asked whether he would take a new advance, he says the village takes it because it cannot say no", "supports": [], "against": ["c_favour"] },
+    { "id": "e_clerk_initials", "name": "The foot of the page carries the initials of the clerk who wrote down the answers in English", "supports": [], "against": [] }
+  ],
+  "limitations": [
+    { "id": "l_english_minute", "name": "The page is a clerk's English minute, not the cultivator's own Bengali words", "bounds": ["c_debt_trap"] },
+    { "id": "l_one_witness", "name": "He is one witness from one village, and the Commission heard many whose accounts differed", "bounds": ["c_debt_trap", "c_land_cost"] },
+    { "id": "l_no_figures", "name": "The minute gives no figures for what indigo and rice each earned him", "bounds": ["c_land_cost"] }
+  ],
+  "note": "The Indigo Commission of 1860 was a real inquiry in Bengal; the extract itself is an invented teaching page, written in the manner of the printed minutes. Ms Basu (npc_ms_basu) is the class teacher. Two readings are defensible and neither is 'the answer': a debt that never closes, and a cost that is more than money. The favour reading is contradicted by the long chain and by answer 21. The clerk's initials are beside the point."
+}

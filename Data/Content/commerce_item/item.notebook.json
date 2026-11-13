@@ -1,0 +1,9 @@
+{
+  "type": "commerce_item",
+  "id": "item.notebook",
+  "name": "Notebook",
+  "unit": "notebook",
+  "stackLimit": 10,
+  "effect": "none",
+  "hungerRelief": 0
+}

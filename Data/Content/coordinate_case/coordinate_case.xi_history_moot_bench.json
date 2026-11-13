@@ -1,0 +1,28 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.xi_history_moot_bench",
+  "family": "coordinate_family.xi_group_work",
+  "name": "Preparing the 1905 municipal charter moot",
+  "subject": "debate",
+  "constraint": "capacity",
+  "role": "mediator",
+  "scarce": "attention",
+  "method": "method.run_a_check_in",
+  "seam": true,
+  "brief": "Your history seminar team of three is arguing a source-based moot on the 1905 municipal waterworks debate: presenting the engineers' minute, answering the ratepayers' petition, and summing up the chronology. You are the mediator, and the ceiling fans and street trams outside the open shutter make cross-bench talk hard to hear.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 2, "self": true },
+    { "id": "m_mira", "name": "Mira Sen", "capacity": 2, "self": false },
+    { "id": "m_arup", "name": "Arup Ghosh", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_engineers_case", "name": "Present the chief engineer's filtration minute", "load": 2, "fits": ["m_mira", "m_you"] },
+    { "id": "t_ratepayers_reply", "name": "Answer the northern ward ratepayers' petition", "load": 1, "fits": ["m_you", "m_arup"] },
+    { "id": "t_timeline_card", "name": "Read out the two-minute chronology summary", "load": 1, "fits": ["m_arup", "m_mira"] }
+  ],
+  "facts": [
+    { "id": "f_arup_hoarse", "holder": "m_arup", "text": "Arup has a sore throat from yesterday's dust and can manage only the short two-minute reading", "critical": true },
+    { "id": "f_mira_extracts", "holder": "m_mira", "text": "Mira underlined the 1905 committee dates in red pencil last night", "critical": false }
+  ],
+  "note": "Uses Mira Sen (npc_mira_sen) at Nabapara Vidyalaya (loc_nhss). The capacity constraint is Arup's sore throat, which limits him to a single light speaking task; the seam is that one speaker dates the filter beds to 1903 and another to 1905."
+}

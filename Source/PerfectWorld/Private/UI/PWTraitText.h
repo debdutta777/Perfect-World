@@ -2,13 +2,7 @@
 
 #include "CoreMinimal.h"
 
-/**
- * Player-facing explanations for the twenty background traits, written from the
- * trait catalogue in Docs/CHARACTER_CREATION.md. The portable core owns each
- * trait's stable ID, display name, group and cost; it carries no description,
- * so this UI-side table holds the plain-language text (string tables come
- * later). Every number here is copied from that catalogue, never recomputed.
- */
+/** Unreal text adapters for the portable core's English creation presentation data. */
 namespace PWUI
 {
 struct FTraitText
@@ -21,6 +15,12 @@ struct FTraitText
 
 /** Text for a trait ID; empty text when the ID is not in the table. */
 const FTraitText& GetTraitText(FName TraitId);
+
+/** The authored meaning of one rank; empty for an unknown trait or rank. */
+FText GetTraitRankMeaning(FName TraitId, int32 Rank);
+
+/** Core-authored effect lines for one rank, formatted for display and joined by newlines. */
+FText FormatTraitRankEffects(FName TraitId, int32 Rank);
 
 /** A readable heading for a core group ID, falling back to the ID itself. */
 FText GetGroupTitle(FName GroupId);

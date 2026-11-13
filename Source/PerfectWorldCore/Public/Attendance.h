@@ -78,7 +78,7 @@ namespace PerfectWorld
  * The calendar (ROADMAP M3-09 integration; SchoolCalendar.h). RecordAttendanceArrival,
  * RecordAttendanceAbsence and CloseAttendanceBefore take a trailing optional
  * `const SchoolCalendar*`, null by default. Null is exactly the Monday to Friday
- * rule above. When it is set, a day is a school day only when CalendarIsSchoolDay
+ * rule above. When it is set, a day is a school day only when CalendarRequiresAttendance
  * says so, so a holiday, a break, a weekend, a gap between terms and any day outside
  * the calendar's year are never closed as absences, and recording an arrival or an
  * absence on one is refused with the code "attendance.not_school_day" (the
@@ -319,7 +319,8 @@ enum class AttendanceStanding : std::uint8_t
 [[nodiscard]] PERFECTWORLDCORE_API AttendanceStanding AttendanceStandingOf(const AttendanceRecord& record);
 /** Whether the day number is a Monday to Friday. */
 [[nodiscard]] PERFECTWORLDCORE_API bool AttendanceIsSchoolDay(std::int64_t day);
-/** The calendar's answer (CalendarIsSchoolDay) when `calendar` is set, else the Monday to Friday rule above. */
+/** CalendarRequiresAttendance when `calendar` is set, else the Monday to Friday rule above.
+ * Sports/assessment days require attendance; bell masks do not certify ordinary lessons. */
 [[nodiscard]] PERFECTWORLDCORE_API bool AttendanceIsSchoolDay(const SchoolCalendar* calendar, std::int64_t day);
 
 /** The stable code of a refusal because the day is not a school day. */

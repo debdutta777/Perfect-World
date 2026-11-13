@@ -1,0 +1,28 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.xi_slide_stain_bench",
+  "family": "coordinate_family.xi_group_work",
+  "name": "The onion-root slides and the microscopes",
+  "subject": "practicals",
+  "constraint": "clash",
+  "role": "mediator",
+  "scarce": "materials",
+  "method": "method.run_a_check_in",
+  "seam": false,
+  "brief": "Your biology group of three is preparing stained onion-root slides, sketching the stages of mitosis and labelling the sketches. You are the mediator, so everyone must be heard. The group has one bottle of stain and one box of slides to share, and the practical has been planned for the third period. You have not yet heard what the other groups are doing then.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 2, "self": true },
+    { "id": "m_tara", "name": "Tara Das", "capacity": 2, "self": false },
+    { "id": "m_arup", "name": "Arup Ghosh", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_stain", "name": "Prepare and stain the root-tip slides", "load": 2, "fits": ["m_tara", "m_you"] },
+    { "id": "t_sketch", "name": "Sketch the stages seen under the microscope", "load": 1, "fits": ["m_you", "m_arup"] },
+    { "id": "t_labels", "name": "Label and caption the sketches", "load": 1, "fits": ["m_arup", "m_tara"] }
+  ],
+  "facts": [
+    { "id": "f_microscope_booking", "holder": "m_arup", "text": "The lab sheet shows Class XI-B has both microscopes in the third period, so the group's slot overlaps theirs", "critical": true },
+    { "id": "f_tara_slides", "holder": "m_tara", "text": "Tara has a spare box of cover slips", "critical": false }
+  ],
+  "note": "Set in the biology room at Nabapara Vidyalaya (loc_nhss); Tara Das is npc_tara_das and Arup Ghosh is an invented classmate. The constraint is a clash: both microscopes are booked by another class in the same period, known only to Arup, so the practical has to be rescheduled. Any assignment within capacity is Sound."
+}

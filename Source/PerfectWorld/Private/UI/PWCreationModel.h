@@ -32,8 +32,16 @@ public:
 
     void ClearMessage();
 
+    /**
+     * Counts every edit the core refused (a failed Commit, or a refused proposal the player tried to apply), so a
+     * display that cannot see the refusal itself, such as the allocation radar, can react once per refusal.
+     */
+    void NoteRejection() { ++RejectionSerial; }
+
     TArray<FPWHouseholdView> Households;
     TArray<FPWTraitView> Traits;
+    /** The core's seven trait domains in display order, with each domain's allocated points. */
+    TArray<FPWTraitGroupView> TraitGroups;
     TArray<FPWPresetView> Presets;
     TArray<FPWStreamView> Streams;
     FPWIdentityView Identity;
@@ -43,6 +51,9 @@ public:
 
     /** The last refusal from the core, shown on the active page; empty when there is none. */
     FText Message;
+
+    /** Rises by one for each refused edit; never reset. */
+    int32 RejectionSerial = 0;
 
 private:
     TWeakObjectPtr<UPerfectWorldCharacterCreatorSubsystem> Subsystem;

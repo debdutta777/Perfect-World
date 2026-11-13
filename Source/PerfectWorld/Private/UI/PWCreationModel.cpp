@@ -15,6 +15,7 @@ void FPWCreationModel::Refresh()
     }
     Households = Creator->GetHouseholds();
     Traits = Creator->GetTraits();
+    TraitGroups = Creator->GetTraitGroups();
     Presets = Creator->GetPresets();
     Streams = Creator->GetSchoolStreams();
     Identity = Creator->GetIdentity();
@@ -29,9 +30,13 @@ bool FPWCreationModel::Commit(bool bSucceeded)
     {
         Message = FText::GetEmpty();
     }
-    else if (const UPerfectWorldCharacterCreatorSubsystem* Creator = Subsystem.Get())
+    else
     {
-        Message = Creator->GetLastErrorMessage();
+        NoteRejection();
+        if (const UPerfectWorldCharacterCreatorSubsystem* Creator = Subsystem.Get())
+        {
+            Message = Creator->GetLastErrorMessage();
+        }
     }
     Refresh();
     return bSucceeded;

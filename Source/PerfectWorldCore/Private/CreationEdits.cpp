@@ -4,6 +4,7 @@
 // history. Only the twenty trait ranks are ever recorded.
 
 #include "CharacterCreation.h"
+#include "CreationPresentation.h"
 
 #include <algorithm>
 #include <utility>
@@ -27,6 +28,17 @@ void EditPushBounded(std::vector<EditRanks>& stack, const EditRanks& ranks)
     {
         stack.erase(stack.begin());
     }
+}
+
+AllocationPreview FinishPreview(OperationResult result, const CharacterCreator& trial)
+{
+    AllocationPreview preview;
+    preview.Result = std::move(result);
+    preview.Review = trial.Review();
+    preview.Home = trial.ResolveOpeningHome();
+    preview.GroupTotals = GroupAllocationTotals(preview.Review.Allocations);
+    preview.StrongestTraits = StrongestTraits(preview.Review.Allocations, StrongestTraitCount);
+    return preview;
 }
 } // namespace
 
@@ -109,21 +121,15 @@ OperationResult CharacterCreator::Redo()
 AllocationPreview CharacterCreator::PreviewPreset(std::string_view presetId) const
 {
     CharacterCreator trial(*this);
-    AllocationPreview preview;
-    preview.Result = trial.ApplyPreset(presetId);
-    preview.Review = trial.Review();
-    preview.Home = trial.ResolveOpeningHome();
-    return preview;
+    OperationResult result = trial.ApplyPreset(presetId);
+    return FinishPreview(std::move(result), trial);
 }
 
 AllocationPreview CharacterCreator::PreviewClear() const
 {
     CharacterCreator trial(*this);
-    AllocationPreview preview;
-    preview.Result = trial.ClearAllocation();
-    preview.Review = trial.Review();
-    preview.Home = trial.ResolveOpeningHome();
-    return preview;
+    OperationResult result = trial.ClearAllocation();
+    return FinishPreview(std::move(result), trial);
 }
 
 AllocationPreview CharacterCreator::PreviewReset() const
