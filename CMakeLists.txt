@@ -988,3 +988,11 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldCou
 add_executable(PerfectWorldWorldCountdownCommandsTests Tests/WorldCountdownCommandsTests.cpp)
 target_link_libraries(PerfectWorldWorldCountdownCommandsTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldWorldCountdownCommandsTests COMMAND PerfectWorldWorldCountdownCommandsTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# P36: homework issuance, the creation seed and one learning-credit path routed through WorldSim; no save/hash format change.
+add_executable(PerfectWorldWorldHomeworkIssuanceTests Tests/WorldHomeworkIssuanceTests.cpp)
+target_link_libraries(PerfectWorldWorldHomeworkIssuanceTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldHomeworkIssuanceTests COMMAND PerfectWorldWorldHomeworkIssuanceTests ${CMAKE_SOURCE_DIR}/Data/Content)
+add_executable(PerfectWorldWorldLearningIntegrationTests Tests/WorldLearningIntegrationTests.cpp)
+target_link_libraries(PerfectWorldWorldLearningIntegrationTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldLearningIntegrationTests COMMAND PerfectWorldWorldLearningIntegrationTests ${CMAKE_SOURCE_DIR}/Data/Content)

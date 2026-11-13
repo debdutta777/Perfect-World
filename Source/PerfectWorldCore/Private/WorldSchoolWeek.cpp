@@ -1,14 +1,18 @@
 #include "WorldReducer.h"
 
+#include "LearningCredits.h"
 #include "SchoolLessonContent.h"
+#include "SchoolWorkIssuance.h"
 
+#include <algorithm>
 #include <utility>
 
 // S04: school.work.apply and school.week.* through WorldSim (guards in WorldSchool.cpp). A paper reserves its 90-minute
 // block at Begin (every time check a charge needs must pass then), keeps the world at StartedAt while it is played, and is
 // charged once at Submit or Cancel through ChargeTime. The week compresses on a copy, then commits its day loop and lesson
 // sessions while the world clock is moved by this sim's own ChargeTime, so events are published, allowance settles once at
-// Submit's commit gate and Seq counts this one command.
+// Submit's commit gate and Seq counts this one command. P3-06: a seeded life's hand-in also grows the one latent owner once
+// (ApplySchoolWorkLearning), and Submit issues the bound homework briefs the actual interval reached (IssueReachedSchoolWork).
 namespace PerfectWorld
 {
 namespace
@@ -23,14 +27,17 @@ Rejection S04WFromIssue(const SchoolIssue& issue)
     return Rejection{issue.Code, issue.Detail.empty() ? std::string("The school rules refused that action.") : issue.Detail};
 }
 
-/** S04 seam, filled by R9-04: the one growth owner's Awakening.Stats.Skills as (SkillId, LevelMilli); none while unseeded. */
+/** S04 seam, filled by R9-04, read through P3-02's adapter: the one growth owner's skills; none while unseeded. */
 AssessmentSkills S04WorkSkills(const WorldState& world)
 {
-    AssessmentSkills skills;
-    skills.reserve(world.Awakening.Stats.Skills.size());
-    for (const SkillLevel& skill : world.Awakening.Stats.Skills)
-        skills.push_back({skill.SkillId, skill.LevelMilli});
-    return skills;
+    return LearningWorkSkills(world.Awakening);
+}
+
+const SchoolWorkRecord* P36FindWork(const SchoolWorkState& work, std::string_view id)
+{
+    const auto found = std::find_if(work.Records.begin(), work.Records.end(),
+                                    [&](const SchoolWorkRecord& record) { return record.Brief.Id == id; });
+    return found != work.Records.end() ? &*found : nullptr;
 }
 
 bool S04SameClock(const GameClock& a, const GameClock& b)
@@ -88,8 +95,49 @@ std::optional<Rejection> WorldSim::ApplySchoolWorkCommand(const SchoolWorkComman
         if (result.Partial || State_.Clock.Now() != target)
             return S04WRefusal("school.work.charge_interrupted", "Settle the scheduled time before handing the paper in.");
     }
+    // P3-06: an accepted hand-in in a seeded life is one completion of the shared runner, credited once for its answer
+    // effort after the study practice limits (P3-02); marks never buy learning. Staged, committed with the charge above.
+    std::vector<DayLoopEvent> learned;
+    if (State_.Awakening.Seeded && command.Kind == SchoolWorkActionKind::Submit)
+    {
+        const SchoolWorkRecord* prior = P36FindWork(State_.SchoolWork, command.WorkId);
+        const SchoolWorkRecord* submitted = P36FindWork(work, command.WorkId);
+        const ActivityDef* study = School_.Activities != nullptr ? School_.Activities->Find("activity.study_at_home") : nullptr;
+        if (prior == nullptr || submitted == nullptr || study == nullptr)
+            return S04WRefusal("school.learning_refused", "learning.missing_paper_context");
+        AwakeningState learning = State_.Awakening;
+        ActivityRunnerState runner = State_.DayLoop.Runner;
+        PracticeState practice = State_.DayLoop.Practice;
+        SchoolWorkRecord current = *prior;
+        SchoolWorkLearningResult credited = ApplySchoolWorkLearning(learning, runner, practice, current, *submitted, *study);
+        if (!credited.Ok())
+            return S04WRefusal("school.learning_refused", credited.Error);
+        State_.Awakening = std::move(learning);
+        State_.DayLoop.Runner = std::move(runner);
+        State_.DayLoop.Practice = std::move(practice);
+        learned = std::move(credited.Events);
+    }
     State_.SchoolWork = std::move(work);
+    // Already credited above; published once so presentation sees the completion like any other.
+    for (const DayLoopEvent& event : learned)
+        result.Events.push_back({0, event.At, event});
     StagedWork_ = std::move(applied);
+    return std::nullopt;
+}
+
+std::optional<Rejection> WorldSim::IssueReachedSchoolWork(GameInstant from)
+{
+    if (Lessons_.WorkBriefs == nullptr)
+        return std::nullopt;
+    if (School_.Calendar == nullptr || School_.School == nullptr || Lessons_.Papers == nullptr)
+        return S04WRefusal("school.work.issue.missing_content", "Homework needs the school calendar, bell schedule and papers bound.");
+    // Inclusive [from, now]: a boundary shared with the previous command is already issued and stays inert.
+    SchoolWorkIssuanceResult issued = IssueScheduledSchoolWork(State_.SchoolWork, *Lessons_.WorkBriefs, *School_.Calendar,
+                                                               *School_.School, *Lessons_.Papers, from, State_.Clock.Now());
+    if (!issued.Ok())
+        return S04WFromIssue(issued.Issue);
+    if (!issued.IssuedIds.empty())
+        State_.SchoolWork = std::move(issued.State);
     return std::nullopt;
 }
 

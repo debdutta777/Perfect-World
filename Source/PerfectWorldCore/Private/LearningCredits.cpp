@@ -1,5 +1,7 @@
 #include "LearningCredits.h"
 
+#include "WorldState.h"
+
 #include <algorithm>
 #include <limits>
 #include <utility>
@@ -84,6 +86,25 @@ AwakeningInputsSeedResult SeedLearningInputs(const ContentDb& content, const Cha
     if (!preparation.Ok())
         return {preparation.Error, {}};
     return SeedAwakeningInputs(content, creation, worldSeed);
+}
+
+NewLifeLearningSeed SeedNewLifeLearning(WorldState& world, const ContentDb& content, const CharacterCreationSave& creation)
+{
+    if (world.Awakening.Seeded)
+        return {};
+    if (world.Seq != 0 || world.DayLoop.Runner.Instance != 0 || world.DayLoop.Runner.Active())
+        return {"learning.not_new_life", false, 0};
+    const std::size_t index = P32FoundationIndex();
+    if (index == TraitCount)
+        return {"learning.invalid_foundation", false, 0};
+    const auto preparation = AcademicPriorPreparation(content, creation.TraitRanks[index]);
+    if (!preparation.Ok())
+        return {preparation.Error, false, 0};
+    auto seeded = SeedLearningInputs(content, creation, world.WorldSeed);
+    if (!seeded.Ok())
+        return {seeded.Error, false, 0};
+    world.Awakening = std::move(seeded.State);
+    return {{}, true, preparation.MilliXp};
 }
 
 AwakeningCreditsResult ApplyLearningCredits(AwakeningState& state, const SchoolSessionResult& accepted)

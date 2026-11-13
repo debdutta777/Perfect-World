@@ -1,5 +1,6 @@
 #include "WorldReducer.h"
 
+#include "LearningCredits.h"
 #include "SchoolLessonContent.h"
 
 #include <utility>
@@ -28,39 +29,13 @@ bool S04HasStructures(const AssessmentStructures& structures)
            structures.Coordinate != nullptr;
 }
 
-/** R9-04: the skill the lesson's problem family trains (its catalogue's SkillId), empty when the family is unknown. */
-std::string_view R94FamilySkill(const AssessmentStructures& structures, const SchoolLessonBinding& binding)
-{
-    switch (binding.Structure)
-    {
-    case SchoolStructure::Model:
-        if (const auto* family = structures.Model != nullptr ? structures.Model->FindFamily(binding.FamilyId) : nullptr)
-            return family->SkillId;
-        break;
-    case SchoolStructure::Explain:
-        if (const auto* family = structures.Explain != nullptr ? structures.Explain->FindFamily(binding.FamilyId) : nullptr)
-            return family->SkillId;
-        break;
-    case SchoolStructure::Investigate:
-        if (const auto* family = structures.Investigate != nullptr ? structures.Investigate->FindFamily(binding.FamilyId) : nullptr)
-            return family->SkillId;
-        break;
-    case SchoolStructure::Coordinate:
-        if (const auto* family = structures.Coordinate != nullptr ? structures.Coordinate->FindFamily(binding.FamilyId) : nullptr)
-            return family->SkillId;
-        break;
-    }
-    return {};
-}
-
 /**
- * S04 seam, filled by R9-04: the authoritative skill for a lesson is the one growth owner's
- * Awakening.Stats.FindSkill(family skill).LevelMilli, zero when absent (an unseeded life has no skills and reads zero).
+ * S04 seam, filled by R9-04 and read through P3-02's adapter (P3-06): the authoritative skill for a lesson is the one growth
+ * owner's level of its family's catalogue SkillId, zero when absent or while the life is unseeded.
  */
 std::int32_t S04LessonSkillMilli(const WorldState& world, const AssessmentStructures& structures, const SchoolLessonBinding& binding)
 {
-    const SkillLevel* skill = world.Awakening.Stats.FindSkill(R94FamilySkill(structures, binding));
-    return skill != nullptr ? skill->LevelMilli : 0;
+    return LearningLessonSkillMilli(world.Awakening, binding, structures);
 }
 
 struct R94Observed
@@ -227,7 +202,8 @@ std::optional<Rejection> WorldSim::ApplySchoolLessonCommand(const Command& comma
     if (State_.Awakening.Seeded && std::holds_alternative<SchoolLessonClose>(command.Payload))
     {
         AwakeningState staged = State_.Awakening;
-        const AwakeningCreditsResult credited = ApplyActivityCredits(staged, applied.Events);
+        // P3-06: the one credit path, P3-02's adapter in front of R9's ApplyActivityCredits (accepted results only).
+        const AwakeningCreditsResult credited = ApplyLearningCredits(staged, applied);
         if (!credited.Ok())
             return S04Refusal("school.learning_refused", credited.Error);
         for (const DayLoopEvent& event : applied.Events)

@@ -28,6 +28,26 @@ struct AcademicPriorPreparationResult
 [[nodiscard]] PERFECTWORLDCORE_API AwakeningInputsSeedResult SeedLearningInputs(
     const ContentDb& content, const CharacterCreationSave& creation, std::uint64_t worldSeed);
 
+struct WorldState;
+
+struct NewLifeLearningSeed
+{
+    std::string Error;
+    /** True only when this call seeded the life. A seeded life is never reseeded: the call is inert, Applied false. */
+    bool Applied = false;
+    /** The academic foundation's share of the seed, in milli-XP above the common Academics baseline. Presentation labels
+     *  it "prior preparation", never observed aptitude, attended lessons or marks; it is already inside the seed. */
+    std::int32_t PriorPreparationMilli = 0;
+    [[nodiscard]] bool Ok() const noexcept { return Error.empty(); }
+};
+
+/** P3-06: THE creation seeding point. Seeds world.Awakening once with SeedLearningInputs at creation confirmation, before
+ * the life's first command. Inert on an already seeded life. Refuses "learning.not_new_life" for an unseeded world that has
+ * been played (Seq or runner nonzero), so a load or migration can never seed or reseed after the fact. A refusal changes
+ * nothing. Loading and binding a sim never call this. */
+[[nodiscard]] PERFECTWORLDCORE_API NewLifeLearningSeed SeedNewLifeLearning(
+    WorldState& world, const ContentDb& content, const CharacterCreationSave& creation);
+
 /** Trusted accepted outcomes only. Credited is already after PracticeWindow.
  * Preserve runner Instance IDs, including zero-learning completions. R9 owns
  * replay handling and atomic batch refusal. Refused outcomes change nothing. */

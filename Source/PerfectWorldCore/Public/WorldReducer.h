@@ -45,6 +45,7 @@ struct CommandResult
 constexpr std::size_t MaxEventsPerAdvance = 10'000;
 
 struct SchoolLessonContent;
+struct SchoolWorkBriefCatalogue;
 
 /**
  * S04: the school content the school.lesson.*, school.work.apply and school.week.* commands borrow. Immutable, owned by the
@@ -57,6 +58,14 @@ struct WorldSchoolCatalogues
     AssessmentStructures Structures;
     const SchoolLessonContent* Lessons = nullptr;
     const AssessmentCatalogue* Papers = nullptr;
+    /**
+     * P3-06: the authored homework briefs (LoadSchoolWorkBriefContent). When bound, every accepted command issues the briefs
+     * of this school's calendar and stream whose scheduled boundary lies in the interval the clock actually moved (inclusive
+     * at both ends), once each, into State().SchoolWork (IssueScheduledSchoolWork). It needs the day catalogues' calendar
+     * and bell schedule and Papers; a refusal refuses the whole command. Unbound (null) issues nothing, as before; Phase 3
+     * production must bind it, on load and replay too. Nothing ever issues on a read.
+     */
+    const SchoolWorkBriefCatalogue* WorkBriefs = nullptr;
 };
 
 /**
@@ -199,6 +208,8 @@ private:
     std::optional<Rejection> ApplySchoolLessonCommand(const Command& command, CommandResult& result);
     std::optional<Rejection> ApplySchoolWorkCommand(const SchoolWorkCommand& command, CommandResult& result);
     std::optional<Rejection> ApplySchoolWeekCommand(const Command& command, CommandResult& result);
+    /** P3-06: issue the bound briefs reached in [from, Now] (WorldSchoolWeek.cpp); nothing when no catalogue is bound. */
+    std::optional<Rejection> IssueReachedSchoolWork(GameInstant from);
     // R9-04 tutorial.* and countdown.practice.confirm (WorldAwakening.cpp) and the countdown boundary (WorldCountdownRoute.cpp).
     std::optional<Rejection> ValidateAwakeningCommand(const Command& command) const;
     std::optional<Rejection> ApplyAwakeningCommand(const Command& command, CommandResult& result);

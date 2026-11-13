@@ -1,5 +1,7 @@
 #include "WorldReducer.h"
 
+#include "LearningCredits.h"
+
 #include <utility>
 
 // R9-04: the R9-02 supervised tutorial session and optional countdown practice through WorldSim, and the one R9 growth path
@@ -185,7 +187,8 @@ std::optional<Rejection> WorldSim::CreditActivities(std::span<const DayLoopEvent
     if (!State_.Awakening.Seeded)
         return std::nullopt;
     AwakeningState staged = State_.Awakening;
-    const AwakeningCreditsResult credited = ApplyActivityCredits(staged, events);
+    // P3-06: the one credit path (P3-02's adapter in front of R9's ApplyActivityCredits) for day, week and countdown days.
+    const AwakeningCreditsResult credited = ApplyLearningCredits(staged, events);
     if (!credited.Ok())
         return R94Refusal("school.learning_refused", credited.Error);
     State_.Awakening = std::move(staged);
