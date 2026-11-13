@@ -438,6 +438,10 @@ FPWPlannerModel BuildModel(const FPWPlannerPreview& Preview, const FPWRecapModel
     Model.bAvailable = true;
     Model.Clock = Clock;
     Model.Recap = Recap;
+    TArray<FString> P36UIds;
+    Preview.KnownNames.GetKeys(P36UIds);
+    P36UIds.Sort();
+    for (const FString& P36UId : P36UIds) Model.P36UKnownLines.Add(Preview.KnownNames.FindRef(P36UId));
     for (const SchoolStandingOrder& Order : Preview.Standing.Orders)
     {
         FPWOrderRow& Row = Model.Orders.AddDefaulted_GetRef();
@@ -550,7 +554,11 @@ FPWRecapModel BuildRecap(const PerfectWorld::SchoolWeekPlan& Plan, const Perfect
     std::vector<const DayLoopEvent*> Completed;
     for (const DayLoopEvent& Event : Result.ActivityEvents)
     {
-        if (Event.Kind == DayLoopEventKind::Completed) Completed.push_back(&Event);
+        if (Event.Kind != DayLoopEventKind::Completed) continue;
+        // P36U: homework completions use a brief id, so they cannot consume an activity outcome's recap event.
+        const bool bP36UHomework = std::any_of(Result.World.SchoolWork.Records.begin(), Result.World.SchoolWork.Records.end(),
+            [&Event](const SchoolWorkRecord& Record) { return Record.Brief.Id == Event.ActivityId; });
+        if (!bP36UHomework) Completed.push_back(&Event);
     }
     std::size_t NextEvent = 0;
     int64 PassedMinutes = 0;
@@ -882,6 +890,8 @@ TSharedRef<SWidget> SPWSchoolPlanner::BuildBody()
     Column->AddSlot().AutoHeight()[BuildOrders()];
     Column->AddSlot().AutoHeight()[BuildEditor()];
     Column->AddSlot().AutoHeight()[BuildSceneDays()];
+    for (const FText& P36ULine : Model.P36UKnownLines)
+        Column->AddSlot().AutoHeight().Padding(0.0f, 4.0f)[PWUI::MakeText(P36ULine, 17, Style.TextSecondary, false, true)];
     Column->AddSlot().AutoHeight()[BuildWeek()];
     return SAssignNew(BodyScroll, SScrollBox)
         .ScrollBarStyle(&Style.ScrollBar)

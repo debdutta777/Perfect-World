@@ -6,18 +6,21 @@
 //
 // Known commitments are only what WorldState records with an authored window: the morning plan's items that are not yet done (read
 // through the core's own MakeQuestLog, which matches plan items to receipts), and the activity the player has committed to or is
-// running. Nothing else has both a start and a length in the world (see P3-05_notes.md for the gaps), so nothing else is invented.
+// running. P36U also projects authored timed promises through KnownCommitments; no appointment times are invented.
 
 #include "CoreMinimal.h"
 
 #include "Activities.h"
 #include "Assessment.h"
 #include "DayLoop.h"
+#include "KnownCommitments.h"
 #include "OpportunityReceipts.h"
 #include "SchoolSessions.h"
 #include "StructureModelCatalogue.h"
 #include "UI/SPWStudyDesk.h"
 #include "WorldState.h"
+
+#include <optional>
 
 namespace PWSchoolLive
 {
@@ -35,6 +38,9 @@ struct FP35Known
 
 /** The player's agreed, still-open commitments with a window. Empty when there are none; never a guess. */
 FP35Known P35KnownCommitments(const PerfectWorld::WorldState& State, const PerfectWorld::ActivityCatalogue& Activities);
+/** P36U: current arrangements projected onto an absolute civil day; omitted day means today. Lines survive unavailable forecasts. */
+FP35Known P35KnownCommitments(const PerfectWorld::WorldState& State, const PerfectWorld::ActivityCatalogue& Activities,
+    const PerfectWorld::KnownCommitmentContent& KnownContent, std::optional<int64> P36UDay = std::nullopt);
 
 /** Why practice cannot start now, in words; empty text when it can. */
 struct FP35PracticeStatus
@@ -50,11 +56,13 @@ struct FP35PracticeStatus
 FP35PracticeStatus P35ReadPractice(const PerfectWorld::WorldState& State, const PerfectWorld::ActivityCatalogue* Activities);
 
 /** Zero offers when the catalogue cannot supply the study activity; otherwise one offer with its costs, available or blocked with the reason. */
-TArray<PWA5::FPracticeOffer> P35PracticeOffers(const PerfectWorld::WorldState& State, const PerfectWorld::ActivityCatalogue* Activities);
+TArray<PWA5::FPracticeOffer> P35PracticeOffers(const PerfectWorld::WorldState& State, const PerfectWorld::ActivityCatalogue* Activities,
+    const PerfectWorld::KnownCommitmentContent* P36UKnownContent = nullptr);
 
 /** The known candidates that overlap a practice window starting now; what a commit passes as its alternatives (at most the day loop's cap). */
 std::vector<PerfectWorld::ReceiptCandidate> P35PracticeAlternatives(const PerfectWorld::WorldState& State,
-    const PerfectWorld::ActivityCatalogue& Activities, const PerfectWorld::ActivityDef& Def);
+    const PerfectWorld::ActivityCatalogue& Activities, const PerfectWorld::ActivityDef& Def,
+    const PerfectWorld::KnownCommitmentContent* P36UKnownContent = nullptr);
 
 /** The public context of one question group of a paper: its name, and the authored brief when the core's case has one. Never Trap or marking. Empty when unknown. */
 FText P35GroupContext(const PerfectWorld::AssessmentCatalogue& Papers, const PerfectWorld::ModelCatalogue& Models, std::string_view PaperId, std::size_t Group);

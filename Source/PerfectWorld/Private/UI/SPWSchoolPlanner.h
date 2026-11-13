@@ -94,6 +94,8 @@ struct FPWPlannerModel
     /** False when the world could not be read (no game world). */
     bool bAvailable = false;
     FText Clock;
+    /** P36U: known obligations, including those without an actionable forecast. */
+    TArray<FText> P36UKnownLines;
     TArray<FPWOrderRow> Orders;
     TArray<FPWSceneDayRow> SceneDays;
     /** False when the saved orders and commitments cannot be built into a week; PlanProblem says why. */
