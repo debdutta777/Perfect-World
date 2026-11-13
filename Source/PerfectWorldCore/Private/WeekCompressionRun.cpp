@@ -26,9 +26,9 @@ class WeekRunEngine
 {
 public:
     WeekRunEngine(const WorldState& world, const WeekPlan& plan, const DayLoopCatalogues& cats, std::int64_t chunk,
-                  bool compressing, std::int32_t limit)
+                  bool compressing, std::int32_t limit, const std::vector<DayPlanItem>* morningPlan = nullptr)
         : Input_(world), World_(world), Plan_(plan), Cats_(cats), Chunk_(std::clamp<std::int64_t>(chunk, 1, WeekCompressedChunkMinutes)),
-          Compressing_(compressing), Limit_(limit)
+          Compressing_(compressing), Limit_(limit), MorningPlan_(morningPlan)
     {
     }
 
@@ -52,6 +52,7 @@ private:
     std::int64_t Chunk_;
     bool Compressing_;
     std::int32_t Limit_;
+    const std::vector<DayPlanItem>* MorningPlan_;
     WeekResult Result_;
     std::map<std::string, std::int64_t> Credits_;
     std::map<Attribute, std::int64_t> Evidence_;
@@ -169,12 +170,17 @@ bool WeekRunEngine::RunUnit(const WeekUnit& unit)
     if (unit.OpensDay)
     {
         DayCommand plan = WeekRunSimple(DayCommandKind::PlanDay);
-        // The activities still to come that calendar day, from this entry on.
-        const std::vector<WeekEntry>& entries = Plan_.Days[static_cast<std::size_t>(unit.Day)].Entries;
-        for (std::size_t i = static_cast<std::size_t>(unit.Entry); i < entries.size(); ++i)
+        if (MorningPlan_ != nullptr)
+            plan.Plan = *MorningPlan_;
+        else
         {
-            if (entries[i].Kind == WeekEntryKind::Activity)
-                plan.Plan.push_back({entries[i].StartMinute, entries[i].ActivityId});
+            // The activities still to come that calendar day, from this entry on.
+            const std::vector<WeekEntry>& entries = Plan_.Days[static_cast<std::size_t>(unit.Day)].Entries;
+            for (std::size_t i = static_cast<std::size_t>(unit.Entry); i < entries.size(); ++i)
+            {
+                if (entries[i].Kind == WeekEntryKind::Activity)
+                    plan.Plan.push_back({entries[i].StartMinute, entries[i].ActivityId});
+            }
         }
         if (!Apply(unit, plan))
             return false;
@@ -283,6 +289,12 @@ WeekResult WeekRunEngine::Run()
 WeekResult CompressWeek(const WorldState& world, const WeekPlan& plan, const DayLoopCatalogues& catalogues)
 {
     return WeekRunEngine(world, plan, catalogues, WeekCompressedChunkMinutes, true, -1).Run();
+}
+
+WeekResult WeekCompressSegment(const WorldState& world, const WeekPlan& plan,
+    const DayLoopCatalogues& catalogues, const std::vector<DayPlanItem>& morningPlan)
+{
+    return WeekRunEngine(world, plan, catalogues, WeekCompressedChunkMinutes, true, -1, &morningPlan).Run();
 }
 
 WeekResult PlayWeekStepByStep(const WorldState& world, const WeekPlan& plan, const DayLoopCatalogues& catalogues,

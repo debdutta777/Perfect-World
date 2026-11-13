@@ -170,7 +170,7 @@ SchoolPeriodView QuerySchoolPeriod(const SchoolSessionsState& s, const DayLoopSt
     if (!IsDayLoopStateValid(day) || !IsStructureModelStateValid(s.Model) || !IsExplainStateValid(s.Explain) ||
         !IsInvestigateStateValid(s.Investigate) || !IsCoordinateStateValid(s.Coordinate)) return refuse("invalid_state");
     v.Day = GameClock::DayNumber(day.Now) - GameClock::DayNumber(0);
-    if (!AttendanceIsSchoolDay(c.Day.Calendar, v.Day)) return refuse("closed_day");
+    if (!CalendarHasOrdinaryPeriods(*c.Day.Calendar, v.Day)) return refuse("closed_day");
     v.Period = b.Period;
     std::int32_t period = 0;
     for (const auto& block : c.Day.School->Blocks)

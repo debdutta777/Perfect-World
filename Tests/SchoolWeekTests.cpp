@@ -70,7 +70,11 @@ int main(int argc, char** argv)
         const auto step = CompressSchoolWeek(manualWorld, manualSessions, one, cats);
         P2CExpect(step.Ok(), "one commitment at a time"); manualWorld = step.World; manualSessions = step.Sessions;
     }
-    P2CExpect(manualWorld.DayLoop == compressed.World.DayLoop && manualSessions == compressed.Sessions &&
+    // Separate one-entry plans require extra PlanDay commands; as with the
+    // fine-grained reference above, only the command count is excluded.
+    auto manualDay = manualWorld.DayLoop;
+    manualDay.Seq = compressed.World.DayLoop.Seq;
+    P2CExpect(manualDay == compressed.World.DayLoop && manualSessions == compressed.Sessions &&
         manualWorld.Clock.Now() == compressed.World.Clock.Now(), "manual/compressed school state parity");
     // A second week starts from the first week's exact persistent output.
     const auto secondPlan = BuildSchoolWeekPlan(compressed.World, standing, compressed.Sessions, base, f.Bindings(), cats);

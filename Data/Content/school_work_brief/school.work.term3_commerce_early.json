@@ -1,0 +1,19 @@
+{
+  "type": "school_work_brief",
+  "id": "school.work.term3_commerce_early",
+  "calendar": "calendar.nabapara_2042_43",
+  "bellSchedule": "bell_schedule.nabapara_xi_commerce",
+  "stream": "commerce",
+  "subject": "english",
+  "term": "term_3",
+  "issueDate": "2043-01-05",
+  "period": 3,
+  "dueDate": "2043-01-19",
+  "dueMinute": 1080,
+  "paper": "assessment_paper.xi_half_yearly_mixed",
+  "titleKey": "phase3.p304.term3.commerce.early.title",
+  "briefKey": "phase3.p304.term3.commerce.early.brief",
+  "criteriaKey": "phase3.p304.term3.commerce.early.criteria",
+  "recoveryKey": "phase3.p304.term3.commerce.early.recovery",
+  "note": "C3 Term 3 assignment. English hosts a commercial correspondence and bounded-claim rehearsal; the existing mixed paper is deliberately reused. Dates, timetable and deadlines are authored production assumptions, not a new syllabus or a cultural-review claim."
+}

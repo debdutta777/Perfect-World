@@ -6,7 +6,7 @@
 #include <vector>
 
 // Shared by WeekCompressionPlan.cpp (validation and the time-contract view), WeekCompressionRun.cpp
-// (the two resolvers) and WeekCompressionCompare.cpp (equivalence and the receipt).
+// (the two resolvers), SchoolWeek.cpp (segments) and WeekCompressionCompare.cpp (equivalence and the receipt).
 namespace PerfectWorld
 {
 /** The pieces a week is resolved in. Every piece is one declared interaction of the time contract. */
@@ -52,6 +52,10 @@ struct WeekUnits
 
 /** Validates the whole plan against the world and expands it into units. The time contract is checked by the caller. */
 [[nodiscard]] WeekUnits WeekBuildUnits(const WorldState& world, const WeekPlan& plan, const DayLoopCatalogues& catalogues);
+
+/** Resolve a segment using its owning day's morning plan, rather than deriving intentions from the segment alone. */
+[[nodiscard]] WeekResult WeekCompressSegment(const WorldState& world, const WeekPlan& plan,
+    const DayLoopCatalogues& catalogues, const std::vector<DayPlanItem>& morningPlan);
 
 /** The declaration a unit makes to the time contract. */
 [[nodiscard]] InteractionDeclaration WeekUnitDeclaration(const WeekUnit& unit);

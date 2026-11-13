@@ -1,5 +1,6 @@
 #include "SchoolWeek.h"
 
+#include "WeekCompressionInternal.h"
 #include "WorldReducer.h"
 
 #include <algorithm>
@@ -102,6 +103,7 @@ SchoolWeekBuild BuildSchoolWeekPlan(const WorldState& world, const SchoolWeekSta
                 arrival.OrderId = order.Id;
                 entries.push_back(arrival);
             }
+            if (!CalendarHasOrdinaryPeriods(*c.Day.Calendar, absoluteDay)) continue;
             std::int32_t period = 0;
             for (const auto& block : c.Day.School->Blocks)
             {
@@ -182,8 +184,12 @@ SchoolWeekResult CompressSchoolWeek(const WorldState& world, const SchoolSession
             return fail(P2CWeekIssue("bad_lesson"));
         const auto issue = ValidateSchoolLessonBinding(lesson.Binding, c);
         if (!issue.Ok()) return fail(issue);
+        const auto day = CalendarDayOfInstant(world.Clock.Now()) + lesson.Day;
+        if (!CalendarHasOrdinaryPeriods(*c.Day.Calendar, day)) return fail(P2CWeekIssue("closed_day"));
     }
     const auto origin = GameClock::StartOfDay(world.Clock.Now());
+    std::vector<DayPlanItem> morningPlan;
+    bool afterWake = false;
     for (std::size_t d = 0; d < plan.Week.Days.size(); ++d)
     for (std::size_t e = 0; e < plan.Week.Days[d].Entries.size(); ++e)
     {
@@ -206,31 +212,46 @@ SchoolWeekResult CompressSchoolWeek(const WorldState& world, const SchoolSession
             result.StopEntry = static_cast<std::int32_t>(e);
             return result;
         }
+        const bool opensDay = e == 0 || afterWake;
+        if (opensDay)
+        {
+            // Match WeekRunEngine's intentions at the day's first entry or after waking.
+            // One-entry arrival/wait/spend segments must not erase the day's lessons.
+            morningPlan.clear();
+            for (std::size_t i = e; i < plan.Week.Days[d].Entries.size(); ++i)
+            {
+                const auto& upcoming = plan.Week.Days[d].Entries[i];
+                if (upcoming.Kind == WeekEntryKind::Activity)
+                    morningPlan.push_back({upcoming.StartMinute, upcoming.ActivityId});
+            }
+        }
+        afterWake = entry.Kind == WeekEntryKind::Sleep;
         const auto target = origin + static_cast<GameInstant>(d) * MinutesPerDay + entry.StartMinute;
         if (lesson == plan.Lessons.end() && entry.Kind != WeekEntryKind::Activity)
         {
-            auto segment = CompressWeek(result.World, P2COneEntry(result.World, target, entry, result.InterruptsUsed), c.Day);
+            auto segment = WeekCompressSegment(result.World, P2COneEntry(result.World, target, entry, result.InterruptsUsed), c.Day, morningPlan);
             if (!segment.Ok()) return fail({std::string(WeekErrorCode(segment.Issue.Error)), segment.Issue.Detail});
             result.World = segment.World;
             result.Segments.push_back(std::move(segment));
             continue;
         }
+        const bool needsMorningPlan = opensDay && result.World.Clock.Now() == target;
         while (result.World.Clock.Now() < target)
         {
             WeekEntry wait;
             wait.Kind = WeekEntryKind::Spend;
             wait.StartMinute = static_cast<std::int32_t>(result.World.Clock.Now() - GameClock::StartOfDay(result.World.Clock.Now()));
             wait.Minutes = static_cast<std::int32_t>(std::min<GameInstant>(target - result.World.Clock.Now(), DayLoopMaxPassMinutes));
-            auto segment = CompressWeek(result.World, P2COneEntry(result.World, result.World.Clock.Now(), wait, result.InterruptsUsed), c.Day);
+            auto segment = WeekCompressSegment(result.World, P2COneEntry(result.World, result.World.Clock.Now(), wait, result.InterruptsUsed), c.Day, morningPlan);
             if (!segment.Ok()) return fail({std::string(WeekErrorCode(segment.Issue.Error)), segment.Issue.Detail});
             result.World = segment.World;
             result.Segments.push_back(std::move(segment));
         }
         const auto start = result.World.Clock.Now();
-        if (!result.World.DayLoop.Planned)
+        if (needsMorningPlan || !result.World.DayLoop.Planned)
         {
             DayCommand morning; morning.Kind = DayCommandKind::PlanDay;
-            morning.Plan.push_back({entry.StartMinute, entry.ActivityId});
+            morning.Plan = morningPlan;
             const auto planned = ApplyDayCommand(result.World.DayLoop, c.Day, morning);
             if (!planned.Ok()) return fail({std::string(DayLoopErrorCode(planned.Error)), planned.Detail});
         }

@@ -956,9 +956,43 @@ add_executable(PerfectWorldWorldSaveAwakeningTests Tests/WorldSaveAwakeningTests
 target_link_libraries(PerfectWorldWorldSaveAwakeningTests PRIVATE PerfectWorldCore)
 target_compile_definitions(PerfectWorldWorldSaveAwakeningTests PRIVATE PW_AWAKENING_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
 add_test(NAME PerfectWorldWorldSaveAwakeningTests COMMAND PerfectWorldWorldSaveAwakeningTests ${CMAKE_SOURCE_DIR}/Data/Content)
+# P32: school/routine learning adapters and bounded academic prior preparation.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/LearningCredits.cpp)
+add_executable(PerfectWorldLearningCreditsTests Tests/LearningCreditsTests.cpp)
+target_link_libraries(PerfectWorldLearningCreditsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldLearningCreditsTests COMMAND PerfectWorldLearningCreditsTests ${CMAKE_SOURCE_DIR}/Data/Content)
+# P3-03: attendance-required dates and shared ordinary-period eligibility.
+add_executable(PerfectWorldSchoolCalendarEligibilityTests Tests/SchoolCalendarEligibilityTests.cpp)
+target_link_libraries(PerfectWorldSchoolCalendarEligibilityTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSchoolCalendarEligibilityTests
+    COMMAND PerfectWorldSchoolCalendarEligibilityTests ${CMAKE_SOURCE_DIR}/Data/Content)
+# P34: authored homework briefs and pure calendar-boundary issuance (P3-04).
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/SchoolWorkBriefContent.cpp
+    Source/PerfectWorldCore/Private/SchoolWorkIssuance.cpp)
+add_executable(PerfectWorldSchoolWorkBriefContentTests Tests/SchoolWorkBriefContentTests.cpp)
+target_link_libraries(PerfectWorldSchoolWorkBriefContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSchoolWorkBriefContentTests COMMAND PerfectWorldSchoolWorkBriefContentTests
+    ${CMAKE_SOURCE_DIR}/Data/Content ${CMAKE_SOURCE_DIR}/Data/Text/en/phase3_p304.json)
+add_executable(PerfectWorldSchoolWorkIssuanceTests Tests/SchoolWorkIssuanceTests.cpp)
+target_link_libraries(PerfectWorldSchoolWorkIssuanceTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldSchoolWorkIssuanceTests COMMAND PerfectWorldSchoolWorkIssuanceTests ${CMAKE_SOURCE_DIR}/Data/Content)
+# P311: read-only known standing commitments and authored evening-rota timing.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/KnownCommitments.cpp)
+add_executable(PerfectWorldKnownCommitmentsTests Tests/KnownCommitmentsTests.cpp)
+target_link_libraries(PerfectWorldKnownCommitmentsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldKnownCommitmentsTests COMMAND PerfectWorldKnownCommitmentsTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
 # P37: atomic countdown commands and compulsory tutorial time boundaries; no save/hash format changes.
 target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldCountdownCommands.cpp)
 add_executable(PerfectWorldWorldCountdownCommandsTests Tests/WorldCountdownCommandsTests.cpp)
 target_link_libraries(PerfectWorldWorldCountdownCommandsTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldWorldCountdownCommandsTests COMMAND PerfectWorldWorldCountdownCommandsTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# P36: homework issuance, the creation seed and one learning-credit path routed through WorldSim; no save/hash format change.
+add_executable(PerfectWorldWorldHomeworkIssuanceTests Tests/WorldHomeworkIssuanceTests.cpp)
+target_link_libraries(PerfectWorldWorldHomeworkIssuanceTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldHomeworkIssuanceTests COMMAND PerfectWorldWorldHomeworkIssuanceTests ${CMAKE_SOURCE_DIR}/Data/Content)
+add_executable(PerfectWorldWorldLearningIntegrationTests Tests/WorldLearningIntegrationTests.cpp)
+target_link_libraries(PerfectWorldWorldLearningIntegrationTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldLearningIntegrationTests COMMAND PerfectWorldWorldLearningIntegrationTests ${CMAKE_SOURCE_DIR}/Data/Content)

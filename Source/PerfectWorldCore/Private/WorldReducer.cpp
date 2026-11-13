@@ -339,7 +339,8 @@ CommandResult WorldSim::Submit(const Command& command)
     // R9-04: in a seeded world any command may meet the countdown boundary, its synchronisation or a learning credit.
     if (NeedsRollbackSnapshot(command) || std::holds_alternative<AdvanceTime>(command.Payload) ||
         std::holds_alternative<WorldDayCommand>(command.Payload) || IsSchoolPhase2Command(command.Payload) ||
-        IsAwakeningCommand(command.Payload) || IsCountdownCommand(command.Payload) || State_.Awakening.Seeded)
+        IsAwakeningCommand(command.Payload) || IsCountdownCommand(command.Payload) || State_.Awakening.Seeded ||
+        Lessons_.WorkBriefs != nullptr) // P3-06: any command may reach a homework boundary, and issuance can refuse.
         before = State_;
     // S04: a school command's result is published only once the whole transaction is accepted.
     StagedLesson_.reset();
@@ -352,6 +353,10 @@ CommandResult WorldSim::Submit(const Command& command)
     if (Boundary_)
         late = std::move(Boundary_); // The countdown boundary's own reason, not the caller's "charge interrupted".
     Boundary_.reset();
+    // P3-06: homework whose scheduled boundary the ACTUAL interval reached (every time path, partial advances included),
+    // after the command's own commits (a paper's or a week's work copy) so nothing overwrites what it issues.
+    if (!late)
+        late = IssueReachedSchoolWork(result.From);
     if (!late && State_.Clock.Now() != result.From)
     {
         // One settlement for the ACTUAL interval, including event-capped advances. Paid choices,

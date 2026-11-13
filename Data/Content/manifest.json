@@ -1,7 +1,7 @@
 {
   "schema": "pw.content_manifest/1",
-  "fileCount": 275,
-  "recordCount": 334,
+  "fileCount": 302,
+  "recordCount": 361,
   "files": [
     {
       "path": "/ability_recipe/ability_recipe.agni_assay_flame.json",
@@ -1447,6 +1447,168 @@
       "path": "/school_type/school_type.residential_academy.json",
       "records": [
         { "id": "school_type.residential_academy", "kind": "school_type" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term1_commerce_closing.json",
+      "records": [
+        { "id": "school.work.term1_commerce_closing", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term1_commerce_early.json",
+      "records": [
+        { "id": "school.work.term1_commerce_early", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term1_commerce_middle.json",
+      "records": [
+        { "id": "school.work.term1_commerce_middle", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term1_humanities_closing.json",
+      "records": [
+        { "id": "school.work.term1_humanities_closing", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term1_humanities_early.json",
+      "records": [
+        { "id": "school.work.term1_humanities_early", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term1_humanities_middle.json",
+      "records": [
+        { "id": "school.work.term1_humanities_middle", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term1_science_closing.json",
+      "records": [
+        { "id": "school.work.term1_science_closing", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term1_science_early.json",
+      "records": [
+        { "id": "school.work.term1_science_early", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term1_science_middle.json",
+      "records": [
+        { "id": "school.work.term1_science_middle", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term2_commerce_closing.json",
+      "records": [
+        { "id": "school.work.term2_commerce_closing", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term2_commerce_early.json",
+      "records": [
+        { "id": "school.work.term2_commerce_early", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term2_commerce_middle.json",
+      "records": [
+        { "id": "school.work.term2_commerce_middle", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term2_humanities_closing.json",
+      "records": [
+        { "id": "school.work.term2_humanities_closing", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term2_humanities_early.json",
+      "records": [
+        { "id": "school.work.term2_humanities_early", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term2_humanities_middle.json",
+      "records": [
+        { "id": "school.work.term2_humanities_middle", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term2_science_closing.json",
+      "records": [
+        { "id": "school.work.term2_science_closing", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term2_science_early.json",
+      "records": [
+        { "id": "school.work.term2_science_early", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term2_science_middle.json",
+      "records": [
+        { "id": "school.work.term2_science_middle", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term3_commerce_closing.json",
+      "records": [
+        { "id": "school.work.term3_commerce_closing", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term3_commerce_early.json",
+      "records": [
+        { "id": "school.work.term3_commerce_early", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term3_commerce_middle.json",
+      "records": [
+        { "id": "school.work.term3_commerce_middle", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term3_humanities_closing.json",
+      "records": [
+        { "id": "school.work.term3_humanities_closing", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term3_humanities_early.json",
+      "records": [
+        { "id": "school.work.term3_humanities_early", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term3_humanities_middle.json",
+      "records": [
+        { "id": "school.work.term3_humanities_middle", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term3_science_closing.json",
+      "records": [
+        { "id": "school.work.term3_science_closing", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term3_science_early.json",
+      "records": [
+        { "id": "school.work.term3_science_early", "kind": "school_work_brief" }
+      ]
+    },
+    {
+      "path": "/school_work_brief/school.work.term3_science_middle.json",
+      "records": [
+        { "id": "school.work.term3_science_middle", "kind": "school_work_brief" }
       ]
     },
     {

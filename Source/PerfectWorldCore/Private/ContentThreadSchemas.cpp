@@ -13,6 +13,13 @@ using namespace ThreadInternal;
 
 namespace
 {
+const TypeSchema& P311EveningCommitmentSchema()
+{
+    static const TypeSchema s{"evening_commitment", "", {
+        Int("startMinute", true, 0, 1439), Int("durationMinutes", true, 1, 1440), Ref("activity", true, "activity")}};
+    return s;
+}
+
 const TypeSchema& ThreadSchemaExpression()
 {
     static const TypeSchema s{"thread_expression", "", {
@@ -70,7 +77,8 @@ const TypeSchema& ThreadTemplateSchema()
         Str("name", true), OneOf("situation", true, NameList(SituationNames)), OneOf("kind", true, NameList(KindNames)),
         Str("opensWhen", true), Ref("calendar", false, "calendar"), Obj("roles", true, &ThreadSchemaRole(), true),
         Obj("stages", true, &ThreadSchemaStage(), true), Obj("resolutions", true, &ThreadSchemaResolution(), true),
-        Str("defaultResolution", true), Obj("triggers", true, &ThreadSchemaTrigger(), true)})};
+        Str("defaultResolution", true), Obj("triggers", true, &ThreadSchemaTrigger(), true),
+        Obj("eveningCommitment", false, &P311EveningCommitmentSchema(), false)})};
     return s;
 }
 
