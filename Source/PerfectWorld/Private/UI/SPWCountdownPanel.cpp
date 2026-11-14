@@ -104,10 +104,12 @@ void SPWCountdownPanel::Construct(const FArguments& InArgs)
 		true, 20, 0.0f);
 
 	ConfirmButton = PWUI::MakeButton(
-		FText::FromString(TEXT("Confirm selected practice")),
+		TAttribute<FText>::CreateLambda([this]() { return FText::FromString(
+			Model.Offers.IsValidIndex(SelectedOfferIndex) && Model.Offers[SelectedOfferIndex].bP312Practice
+				? TEXT("Confirm selected practice") : TEXT("Take selected opportunity")); }),
 		PWUI::EButtonKind::Secondary,
 		FOnClicked::CreateSP(this, &SPWCountdownPanel::HandleConfirmClicked),
-		true, 20, 0.0f);
+		TAttribute<bool>::CreateLambda([this]() { return Model.Offers.IsValidIndex(SelectedOfferIndex) && Model.Offers[SelectedOfferIndex].bOpen; }), 20, 0.0f);
 
 	CloseButton = PWUI::MakeButton(
 		FText::FromString(TEXT("Back")),
@@ -158,7 +160,7 @@ void SPWCountdownPanel::Construct(const FArguments& InArgs)
 							.AutoHeight()
 							[
 								PWUI::MakeText(
-									FText::FromString(TEXT("EXAMINATION COUNTDOWN · OPTIONAL PRACTICE")),
+									FText::FromString(TEXT("EXAMINATION COUNTDOWN")),
 									22,
 									Style.Accent, true)
 							]
@@ -371,12 +373,13 @@ void SPWCountdownPanel::RebuildBody()
 	}
 
 	// Today's optional practice offers
+	P312AddPlanControls();
 	BodyContainer->AddSlot()
 	.AutoHeight()
 	.Padding(0.0f, 4.0f, 0.0f, 4.0f)
 	[
 		PWUI::MakeText(
-			FText::FromString(TEXT("TODAY'S OPTIONAL PRACTICE OFFERS")),
+			FText::FromString(TEXT("OPTIONAL OPPORTUNITIES & PRACTICE")),
 			PWUI::ETextRole::Meta,
 			Style.Accent)
 	];
@@ -572,6 +575,7 @@ void SPWCountdownPanel::RebuildBody()
 					]
 				]
 			];
+			P312AddObligationControls(Obl);
 		}
 	}
 }
@@ -623,9 +627,10 @@ bool SPWCountdownPanel::TriggerConfirmSelectedOffer()
 	}
 	const FString OfferId = Model.Offers[SelectedOfferIndex].Id;
 	FText Notice;
-	const bool bConfirmed = Bridge->ConfirmPracticeOffer(OfferId, Notice);
-	LastFeedbackText = Notice;
-	RefreshFromBridge();
+	const bool bConfirmed = Model.Offers[SelectedOfferIndex].bP312Practice
+		? Bridge->ConfirmPracticeOffer(OfferId, Notice)
+		: Bridge->P312TakeOpportunity(OfferId, Model.P312WorldSeq, Notice);
+	P312RefreshAfterAction(Notice);
 	return bConfirmed;
 }
 
@@ -639,8 +644,7 @@ bool SPWCountdownPanel::TriggerKeepOrdinaryDay()
 	}
 	FText Notice;
 	const bool bKept = Bridge->KeepOrdinaryDay(Notice);
-	LastFeedbackText = Notice;
-	RefreshFromBridge();
+	P312RefreshAfterAction(Notice);
 	return bKept;
 }
 
@@ -679,6 +683,10 @@ float SPWCountdownPanel::GetDetailScrollOffset() const
 FReply SPWCountdownPanel::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent)
 {
 	const FKey Key = InKeyEvent.GetKey();
+	// Live panels have day/proposal controls as well as offers: let Slate navigate every real button.
+	if (Model.bP312Live && (Key == EKeys::Down || Key == EKeys::Up || Key == EKeys::Gamepad_DPad_Down ||
+		Key == EKeys::Gamepad_DPad_Up || Key == EKeys::Gamepad_LeftStick_Down || Key == EKeys::Gamepad_LeftStick_Up))
+		return SCompoundWidget::OnKeyDown(MyGeometry, InKeyEvent);
 	if (Key == EKeys::Escape || Key == EKeys::Gamepad_FaceButton_Right || Key == EKeys::Gamepad_Special_Right)
 	{
 		if (InKeyEvent.IsRepeat())

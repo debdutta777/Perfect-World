@@ -4,6 +4,7 @@
 #include "PerfectWorldAcceptanceHomework.h" // P36U
 #include "PerfectWorldAcceptanceAwakening.h" // P38
 #include "PerfectWorldAcceptancePhase3.h" // P39
+#include "PerfectWorldAcceptanceCountdown.h"
 #include "PerfectWorldAcceptanceFrontages.h"
 #include "PerfectWorldAcceptanceScaleR4.h"
 #include "PerfectWorldAcceptanceMahua.h"
@@ -485,6 +486,7 @@ bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps)
         {TEXT("awakening_withdraw_round9"), P39AppendWithdrawalSteps},
         {TEXT("countdown_ordinary_round9"), P39AppendOrdinarySteps},
         {TEXT("lesson_interrupted_round9"), P39AppendInterruptedSteps},
+        {TEXT("countdown_ten_days_round9"), P312AppendCountdownSteps},
         {TEXT("traffic_round7"), AppendTrafficRound7Steps},
         {TEXT("crowd_round7"), AppendCrowdRound7Steps},
         {TEXT("stationery_shift"), AppendStationeryShiftSteps}};

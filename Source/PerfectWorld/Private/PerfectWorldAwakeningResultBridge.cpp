@@ -5,6 +5,7 @@
 #include "Engine/World.h"
 #include "PerfectWorldContentSubsystem.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
+#include <utility>
 
 namespace PWAwakening
 {
@@ -185,7 +186,6 @@ namespace PWAwakening
 				if (bOrdinaryDayKept && P38OrdinaryDay != PerfectWorld::GameClock::DayNumber(Life->GetNow()))
 				{
 					bOrdinaryDayKept = false;
-					LastStatusBanner = FText::GetEmpty();
 				}
 				return P38BuildLiveCountdownModel(Life->GetSim(), bOrdinaryDayKept, LastStatusBanner, P38Disclosures);
 			}
@@ -224,6 +224,22 @@ namespace PWAwakening
 				return false;
 			}
 
+			virtual bool P312TakeOpportunity(const FString& Id, uint64 ShownSeq, FText& Notice) override
+			{
+				return P312Submit(PerfectWorld::CountdownTakeOpportunity{std::string(TCHAR_TO_UTF8(*Id))}, ShownSeq, Notice);
+			}
+
+			virtual bool P312NegotiateObligation(const FString& Id, PerfectWorld::CountdownProposal Proposal,
+				uint64 ShownSeq, FText& Notice) override
+			{
+				return P312Submit(PerfectWorld::CountdownNegotiateObligation{std::string(TCHAR_TO_UTF8(*Id)), Proposal}, ShownSeq, Notice);
+			}
+
+			virtual bool P312ResolveDays(const std::vector<PerfectWorld::WeekDayPlan>& Days, uint64 ShownSeq, FText& Notice) override
+			{
+				return P312Submit(PerfectWorld::CountdownResolveDays{Days}, ShownSeq, Notice);
+			}
+
 			virtual bool KeepOrdinaryDay(FText& OutNotice) override
 			{
 				const auto* P38Life = UPWLaneLifeSubsystem::Get(WorldPtr.Get());
@@ -241,6 +257,40 @@ namespace PWAwakening
 			}
 
 		private:
+			bool P312Submit(PerfectWorld::CommandPayload Payload, uint64 ShownSeq, FText& Notice)
+			{
+				auto* Life = UPWLaneLifeSubsystem::Get(WorldPtr.Get());
+				if (Life == nullptr)
+				{
+					Notice = FText::FromString(TEXT("Your current life is unavailable."));
+					return false;
+				}
+				if (Life->GetWorldState().Seq != ShownSeq)
+				{
+					Notice = FText::FromString(TEXT("Your day has changed. Read the refreshed offers and plan before confirming."));
+					LastStatusBanner = Notice;
+					return false;
+				}
+				const bool bResolve = std::holds_alternative<PerfectWorld::CountdownResolveDays>(Payload);
+				const auto Result = Life->SubmitAwakeningCommand({PerfectWorld::CommandSource::Player, std::move(Payload)});
+				if (!Result.Accepted)
+				{
+					// Preserve the reducer's actual wording, including contract refusals.
+					Notice = PWLaneLife::ToText(Result.Why.Message.empty() ? Result.Why.Code : Result.Why.Message);
+					LastStatusBanner = Notice;
+					return false;
+				}
+				const auto& Recap = Life->GetSim().LastCountdownResolveResult();
+				Notice = bResolve && Recap ? FText::FromString(FString::Printf(
+					TEXT("%d day resolved. %s"), Recap->DaysResolved,
+					Recap->Closed ? TEXT("The countdown closed at examination morning. Return to play.") :
+					Recap->StoppedForNews ? TEXT("News has arrived. Read it and the new response offers before continuing.") :
+					TEXT("Your promises and opportunities were carried out; read the next day's choices.")))
+					: FText::FromString(TEXT("Your countdown choice has been recorded."));
+				LastStatusBanner = Notice;
+				return true;
+			}
+
 			TWeakObjectPtr<UWorld> WorldPtr;
 			bool bOrdinaryDayKept = false;
 			bool bP38Seen = false;
