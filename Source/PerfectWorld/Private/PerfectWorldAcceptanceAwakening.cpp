@@ -98,10 +98,10 @@ void P38AppendAwakeningSteps(TArray<FStepDef>& Out)
         if (Life == nullptr || Floor == nullptr) return FStepOutcome::Fail(TEXT("no live sim or spawned floor"));
         const auto& Sim = Life->GetSim();
         if (!Sim.State().Awakening.Seeded || Sim.State().Awakening.Granted || Sim.AwakeningContent().Recipes == nullptr ||
-            Sim.AwakeningContent().Countdown.Player.empty() || !Sim.AwakeningContent().Countdown.Contacts.empty())
-            return FStepOutcome::Fail(TEXT("requires a newly seeded life, recipes and a player context with no countdown contacts"));
+            Sim.AwakeningContent().Countdown.Player.empty() || Sim.AwakeningContent().Countdown.Contacts.empty())
+            return FStepOutcome::Fail(TEXT("requires a newly seeded life, recipes and the live countdown contacts"));
         if (!PWAwakening::AwBridge::Resolve(Sub.GetPlayWorld()).IsValid()) return FStepOutcome::Fail(TEXT("no live tutorial bridge"));
-        return FStepOutcome::Pass(TEXT("creation seeded the real world; recipes/countdown bound; contacts deliberately empty"));
+        return FStepOutcome::Pass(TEXT("creation seeded the real world; recipes and authored countdown contacts bound"));
     }));
     Out.Add(AwFlStartStep()); // sole declared teleport, as the R9-06 floor scenario; every later movement is walked/transferred.
     Out.Add(P38Action(TEXT("clock_to_awakening_day_and_enter_floor"), [](UPWAcceptanceSubsystem& Sub, FStepRuntime& Rt)
@@ -188,9 +188,11 @@ void P38AppendAwakeningSteps(TArray<FStepDef>& Out)
         if (Presenter == nullptr || Life == nullptr || !Presenter->OpenAwakeningCountdown()) return FStepOutcome::Fail(TEXT("countdown panel could not open"));
         const auto Panel = StaticCastSharedPtr<SPWCountdownPanel>(Presenter->GetPanel());
         const auto Before = Life->GetNow();
-        if (!Panel->GetModel().bAvailable || Panel->GetModel().Obligations.Num() != 0 || !Panel->TriggerKeepOrdinaryDay() || Life->GetNow() != Before)
-            return FStepOutcome::Fail(TEXT("the live ordinary-day action failed, invented obligations or charged time"));
-        return FStepOutcome::Pass(TEXT("live countdown displayed; keeping an ordinary day cost no time; no contact obligations fabricated"));
+        const auto Countdown = Life->GetSim().Countdown();
+        if (!Panel->GetModel().bAvailable || !Countdown || Panel->GetModel().Obligations.Num() != static_cast<int32>(Countdown->Obligations.size()) ||
+            !Panel->TriggerKeepOrdinaryDay() || Life->GetNow() != Before)
+            return FStepOutcome::Fail(TEXT("the live ordinary-day action, displayed obligations or free time contract disagree"));
+        return FStepOutcome::Pass(TEXT("live countdown displayed core obligations; keeping an ordinary day cost no time"));
     }));
     Out.Add(MakeShotStep(TEXT("shot_live_countdown_ordinary_day")));
     Out.Add(P38Action(TEXT("close_countdown"), [](UPWAcceptanceSubsystem& Sub, FStepRuntime&)

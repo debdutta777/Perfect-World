@@ -240,6 +240,9 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
     S03PlannerButton = CpPauseButton(LOCTEXT("S03Planner", "Week planner"), PWUI::EButtonKind::Secondary,
         FOnClicked::CreateSPLambda(this, [this]() { OpenPlanner(); return FReply::Handled(); }));
     S03PlannerButton->SetTag(TEXT("S03PauseWeekPlanner"));
+    P312CountdownButton = CpPauseButton(LOCTEXT("P312Countdown", "Countdown"), PWUI::EButtonKind::Secondary,
+        FOnClicked::CreateSPLambda(this, [this]() { P312OpenCountdown(); return FReply::Handled(); }));
+    P312CountdownButton->SetTag(TEXT("P312PauseCountdown"));
 
     SettingsButton = CpPauseButton(
         LOCTEXT("Settings", "Settings"), PWUI::EButtonKind::Secondary,
@@ -394,6 +397,12 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[QuestsButton.ToSharedRef()]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[R88InventoryButton.ToSharedRef()] // R88
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[S03PlannerButton.ToSharedRef()] // S03
+            + SVerticalBox::Slot().AutoHeight()
+            [SNew(SBox).Padding(0.0f, 0.0f, 0.0f, 6.0f).Visibility_Lambda([WeakHud]()
+                {
+                    const auto* Life = UPWLaneLifeSubsystem::Get(WeakHud.Get());
+                    return Life != nullptr && Life->GetSim().Countdown().has_value() ? EVisibility::Visible : EVisibility::Collapsed;
+                })[P312CountdownButton.ToSharedRef()]]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[SettingsButton.ToSharedRef()]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[SaveButton]
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[SaveFeedback]
@@ -448,6 +457,11 @@ FReply SPWPauseMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InK
         return FReply::Handled();
     }
     const FKey Key = InKeyEvent.GetKey();
+    if (P312CountdownPanel.IsValid() && (Key == EKeys::Escape || Key == EKeys::Gamepad_FaceButton_Right || Key == EKeys::Gamepad_Special_Right))
+    {
+        P312CloseCountdown();
+        return FReply::Handled();
+    }
     if (PendingExit != EPendingExit::None
         && (Key == EKeys::Escape || Key == EKeys::Gamepad_FaceButton_Right || Key == EKeys::Gamepad_Special_Right))
     {

@@ -16,7 +16,7 @@ namespace PWAwakening
 		FString R97HourMinute(PerfectWorld::GameInstant Instant)
 		{
 			const PerfectWorld::CalendarTime Cal = PerfectWorld::GameClock::ToCalendar(Instant);
-			return FString::Printf(TEXT("%02d:%02d"), Cal.Hour, Cal.Minute);
+			return FString::Printf(TEXT("%02d/%02d %02d:%02d"), Cal.Day, Cal.Month, Cal.Hour, Cal.Minute);
 		}
 
 		FText R97FullClock(PerfectWorld::GameInstant Instant)
@@ -207,12 +207,11 @@ namespace PWAwakening
 				R97Utf8(Offer.Def->Name),
 				FText::FromString(TEXT("Optional practice window")));
 
-			const int32 Hours = FMath::Max(1, static_cast<int32>(Offer.Minutes / 60));
 			Row.WindowText = FText::FromString(FString::Printf(
-				TEXT("%s–%s (%dh)"),
+				TEXT("%s–%s (%d minutes)"),
 				*R97HourMinute(Offer.Start),
 				*R97HourMinute(Offer.End),
-				Hours));
+				Offer.Minutes));
 
 			const FString Role = R97Utf8(Offer.Def->Role);
 			if (Offer.Contact.empty() || Role.IsEmpty() || LooksLikeRawIdentifier(Role))
@@ -229,9 +228,7 @@ namespace PWAwakening
 			const bool bTaken = (PerfectWorld::CountdownFindCommitment(*State, Offer.Def->Id) != nullptr)
 				|| (Offer.Availability == PerfectWorld::CountdownAvailability::Taken);
 			Row.bCommitted = bTaken || (!CommittedOfferId.IsEmpty() && Row.Id == CommittedOfferId);
-			Row.bOpen = (Offer.Availability == PerfectWorld::CountdownAvailability::Open)
-				&& !bOrdinaryDayKept
-				&& (CommittedOfferId.IsEmpty() || Row.Id == CommittedOfferId);
+			Row.bOpen = (Offer.Availability == PerfectWorld::CountdownAvailability::Open) && !bOrdinaryDayKept;
 			Row.AvailabilityText = R97AvailabilityLabel(Offer.Availability, Row.bCommitted);
 
 			for (const PerfectWorld::CountdownObligationRecord& Record : State->Obligations)
@@ -279,14 +276,14 @@ namespace PWAwakening
 		auto Model = BuildCountdownModelFromCore(Sim.State().Clock.Now(), Sim.State(), State ? &*State : nullptr,
 			Sim.AwakeningContent().Countdown, bOrdinaryDayKept, FString(), StatusBanner);
 		Disclosures.Reset();
-		// P38: authored TakeOpportunity rows have no WorldSim command yet. Only expose the routed practice command.
-		Model.Offers.Reset();
+		P312PopulateCountdownModel(Sim, Model);
 		if (!State) return Model;
 		for (int32 Index = 0; Index < PerfectWorld::PowerDimensionCount; ++Index)
 		{
 			const auto Dimension = static_cast<PerfectWorld::PowerDimension>(Index);
 			const auto Offer = Sim.PreviewCountdownPractice(Dimension, 30);
 			FPWCountdownOfferRow Row;
+			Row.bP312Practice = true;
 			Row.Id = FString::Printf(TEXT("p38.practice.%d"), Index);
 			Row.Title = FText::Format(NSLOCTEXT("P38Awakening", "PracticeTitle", "Optional {0} practice"), CapabilityDisplayName(Dimension));
 			Row.WindowText = FText::FromString(FString::Printf(TEXT("%s - %s (%d minutes)"),
