@@ -10,6 +10,9 @@
 #include "PerfectWorldSchoolLive.h" // S05
 #include "PerfectWorldAwakeningBridge.h" // P38
 #include "PerfectWorldAwakeningResultBridge.h"
+#include "FaridaSchedule.h"
+#include "SchoolLifeContent.h"
+#include "LaneOrigin.h"
 
 // R88: keep commerce's borrowed content alive across resets and save adoption.
 void UPWLaneLifeSubsystem::R88InstallCommerce()
@@ -37,7 +40,7 @@ void UPWLaneLifeSubsystem::R88InstallCommerce()
     FString S05Why;
     const PWSchoolLive::FS03Content* S05School = PWSchoolLive::SharedContent(*GetWorld(), S05Why);
     const PerfectWorld::WorldSchoolCatalogues S05Lessons = S05School != nullptr
-        ? PerfectWorld::WorldSchoolCatalogues{S05School->Cats.Structures, &S05School->Lessons, &S05School->Papers}
+        ? PerfectWorld::WorldSchoolCatalogues{S05School->Cats.Structures, &S05School->Lessons, &S05School->Papers, &S05School->WorkBriefs}
         : PerfectWorld::WorldSchoolCatalogues{};
     // P38: process-lifetime validated recipes, like the shared school catalogues.
     static TUniquePtr<PerfectWorld::AbilityRecipeSet> P38Recipes;
@@ -55,7 +58,33 @@ void UPWLaneLifeSubsystem::R88InstallCommerce()
     PerfectWorld::WorldAwakeningCatalogues P38Awakening;
     P38Awakening.Recipes = P38Recipes.Get();
     P38Awakening.Countdown.Player = "player";
-    // NO contacts: their standing obligations block time until P3-07 routes day resolution/negotiation.
+    // P312: use authored people, never a generated sibling or an adult relabelled as one.
+    for (const auto& P312Person : PerfectWorld::KnownSchoolLifeCast())
+        if (P312Person.Role == "teacher" && !P312Person.bProposedNewCast)
+        {
+            P38Awakening.Countdown.Contacts.push_back({"teacher", std::string(P312Person.PersonId)});
+            break;
+        }
+    const auto* P312Instance = GetWorld()->GetGameInstance();
+    const auto* P312Creator = P312Instance != nullptr ? P312Instance->GetSubsystem<UPerfectWorldCharacterCreatorSubsystem>() : nullptr;
+    if (P312Creator != nullptr)
+    {
+        const auto P312Origin = P312Creator->GetLaneOrigin();
+        const auto P312Id = PWLaneLife::ToStd(P312Origin.CounterpartPersonId);
+        if (P312Origin.bResolved)
+            for (const auto& P312Binding : PerfectWorld::AuthoredLaneOrigins())
+                if (P312Binding.CounterpartPersonId == P312Id && P312Binding.GrewUpInCare == P312Origin.bGrewUpInCare)
+                {
+                    const std::string P312Role = P312Origin.bGrewUpInCare ? "care_adult" :
+                        P312Binding.HouseholdTemplateId == "adult_sibling_household" ? "sibling" : "family_adult";
+                    P38Awakening.Countdown.Contacts.push_back({P312Role, P312Id});
+                    break;
+                }
+    }
+    const auto* P312Presence = GetWorld()->GetSubsystem<UPWNpcPresenceSubsystem>();
+    if (P312Presence != nullptr && P312Presence->IsRegistered(PWLaneLife::ToName(PerfectWorld::FaridaPersonId)))
+        P38Awakening.Countdown.Contacts.push_back({"neighbour", std::string(PerfectWorld::FaridaPersonId)});
+    // WorldState has no integrated relationship book yet. Leave it absent; never fabricate scores.
     Sim = MakeUnique<PerfectWorld::WorldSim>(Sim->State(), PerfectWorld::MaxEventsPerAdvance,
         R88School != nullptr ? R88School->Binding : PerfectWorld::DayLoopCatalogues{}, R88CommerceContent->Catalogues(), S05Lessons, P38Awakening);
     PWAwakening::AwBridge::Install(GetWorld(), PWAwakening::P38MakeLiveFloorBridge(*GetWorld()));

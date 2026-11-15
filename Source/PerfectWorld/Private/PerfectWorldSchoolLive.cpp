@@ -92,6 +92,28 @@ const FS03Content* SharedContent(UWorld& World, FString& OutWhy)
         return nullptr;
     }
     Built->Lessons = MoveTemp(Lessons.Catalogue);
+    FString P36UText;
+    const FString P36UPath = FPaths::Combine(FPaths::ProjectDir(), TEXT("Data/Text/en/phase3_p304.json"));
+    if (!FFileHelper::LoadFileToString(P36UText, *P36UPath))
+    {
+        OutWhy = TEXT("Data/Text/en/phase3_p304.json cannot be read");
+        return nullptr;
+    }
+    auto P36UBriefs = PerfectWorld::LoadSchoolWorkBriefContent(*Db, PerfectWorld::ContentFile{
+        std::string(TCHAR_TO_UTF8(*P36UPath)), std::string(TCHAR_TO_UTF8(*P36UText))});
+    if (!P36UBriefs.Ok())
+    {
+        OutWhy = TEXT("the homework briefs did not load");
+        return nullptr;
+    }
+    Built->WorkBriefs = MoveTemp(P36UBriefs.Catalogue);
+    auto P36UKnown = PerfectWorld::LoadKnownCommitmentContent(*Db);
+    if (!P36UKnown.Ok())
+    {
+        OutWhy = TEXT("the known commitment content did not load: ") + PWLaneLife::ToFString(P36UKnown.Error);
+        return nullptr;
+    }
+    Built->P36UKnownContent = MoveTemp(P36UKnown.Content);
     return S03Cache.Add(Stream, MoveTemp(Built)).Get();
 }
 

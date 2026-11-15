@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "PerfectWorldAwakeningCatalogue.h"
 #include "PerfectWorldNpcCharacter.h"
+#include "PerfectWorldPlayerCharacter.h"
 #include "PerfectWorldShopDisplayActor.h"
 
 // The floor director: set-up, state, transfers (fade, or an announced cut under reduced motion), the hazard poll, the people.
@@ -223,7 +224,14 @@ void APWAwakeningFloorActor::Place(APawn* Pawn, const FVector& Feet, const doubl
     {
         HalfHeight = Character->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
     }
-    Pawn->TeleportTo(Feet + FVector(0.0, 0.0, HalfHeight + 3.0), FRotator(0.0, Yaw, 0.0));
+    if (Pawn->TeleportTo(Feet + FVector(0.0, 0.0, HalfHeight + 3.0), FRotator(0.0, Yaw, 0.0)))
+    {
+        // P310: the virtual room is 40 m down. Recovery must use this floor, including after safe-area/reset/return transfers.
+        if (APerfectWorldPlayerCharacter* Player = Cast<APerfectWorldPlayerCharacter>(Pawn))
+        {
+            Player->P310RememberRecoveryAnchor();
+        }
+    }
     if (AController* Controller = Pawn->GetController())
     {
         Controller->SetControlRotation(FRotator(0.0, Yaw, 0.0));

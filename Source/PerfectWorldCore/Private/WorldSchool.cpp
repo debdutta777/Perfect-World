@@ -108,6 +108,12 @@ std::optional<AptitudeEvidence> R94LessonEvidence(const SchoolPeriodRecord& reco
 }
 } // namespace
 
+std::optional<AptitudeEvidence> SchoolLessonObservedEvidence(const SchoolPeriodRecord& record, const SchoolLessonBinding& binding,
+                                                             GameInstant at)
+{
+    return R94LessonEvidence(record, binding, at);
+}
+
 bool IsSchoolPhase2Command(const CommandPayload& payload) noexcept
 {
     return std::holds_alternative<SchoolLessonOpen>(payload) || std::holds_alternative<SchoolLessonChoose>(payload) ||

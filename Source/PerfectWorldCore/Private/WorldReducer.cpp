@@ -1,6 +1,7 @@
 #include "WorldReducer.h"
 
 #include "GateSites.h"
+#include "LegacyRecovery.h"
 
 #include <algorithm>
 
@@ -119,6 +120,8 @@ std::optional<Rejection> WorldSim::Validate(const Command& command) const
     }
     if (IsAwakeningCommand(command.Payload))
         return ValidateAwakeningCommand(command);
+    if (IsLegacyRecoveryCommand(command.Payload))
+        return ValidateRecoveryCommand(command);
     if (S04SuspendedBySchoolPlay(command.Payload))
     {
         if (std::optional<Rejection> open = SchoolPlayOpenRefusal(State_))
@@ -159,6 +162,9 @@ std::optional<Rejection> WorldSim::Validate(const Command& command) const
     {
         if (!R83IsFlagId(flag->FlagId))
             return R83Reject("flag.bad_id", "Flag IDs are lowercase letters, digits, '_', '-' and '.'.");
+        // P3-14: compatibility markers are written only by awakening.recover and authenticated by the save rules.
+        if (IsAwakeningCompatFlag(flag->FlagId))
+            return R83Reject("flag.reserved", "That flag belongs to Awakening compatibility recovery.");
         return std::nullopt;
     }
     if (IsGateCommand(command.Payload))
@@ -318,6 +324,8 @@ std::optional<Rejection> WorldSim::Apply(const Command& command, CommandResult& 
         return ApplyAwakeningCommand(command, result);
     else if (IsCountdownCommand(command.Payload))
         return ApplyCountdownCommand(command, result);
+    else if (IsLegacyRecoveryCommand(command.Payload))
+        return ApplyRecoveryCommand(command, result);
     else
         return ApplyCommerceCommand(command);
     return std::nullopt;
@@ -340,6 +348,7 @@ CommandResult WorldSim::Submit(const Command& command)
     if (NeedsRollbackSnapshot(command) || std::holds_alternative<AdvanceTime>(command.Payload) ||
         std::holds_alternative<WorldDayCommand>(command.Payload) || IsSchoolPhase2Command(command.Payload) ||
         IsAwakeningCommand(command.Payload) || IsCountdownCommand(command.Payload) || State_.Awakening.Seeded ||
+        IsLegacyRecoveryCommand(command.Payload) ||
         Lessons_.WorkBriefs != nullptr) // P3-06: any command may reach a homework boundary, and issuance can refuse.
         before = State_;
     // S04: a school command's result is published only once the whole transaction is accepted.

@@ -105,11 +105,28 @@ void SPWStudyDesk::Refresh()
     }
 }
 
+bool SPWStudyDesk::P36UOpenWork(const std::string& WorkId)
+{
+    const TSharedRef<SWidget> P36UKeepAlive = AsShared();
+    if (!OnOpenPaper.IsBound()) return false;
+    for (const auto& P36UWork : P36URecord.Work)
+    {
+        if (P36UWork.Brief.Id == WorkId && (P36UWork.Marking.has_value() || P36UWork.CanBegin || P36UWork.CanSubmit))
+        {
+            FocusKey = TEXT("work.") + FString(UTF8_TO_TCHAR(WorkId.c_str()));
+            OnOpenPaper.ExecuteIfBound(WorkId);
+            return true;
+        }
+    }
+    return false;
+}
+
 TSharedRef<SWidget> SPWStudyDesk::BuildBody()
 {
     const auto& Style = PWUI::FStyle::Get();
     const auto Rows = SNew(SVerticalBox);
-    PerfectWorld::SchoolAcademicRecordView Record;
+    P36URecord = {};
+    PerfectWorld::SchoolAcademicRecordView& Record = P36URecord;
     FText Why;
     if (!World.IsValid() || !World->ReadRecord(Record, Why))
     {
@@ -127,17 +144,23 @@ TSharedRef<SWidget> SPWStudyDesk::BuildBody()
             Detail->AddSlot().AutoHeight()[PWUI::MakeText(World->Text(Work.Brief.TitleTextKey, LOCTEXT("WorkTitle", "School work")), 22, Style.TextPrimary, true, true)];
             Detail->AddSlot().AutoHeight()[PWUI::MakeText(World->Text(Work.Brief.BriefTextKey, LOCTEXT("BriefFallback", "Read the paper and choose how to use its eighteen units.")), 20, Style.TextPrimary, false, true)];
             Detail->AddSlot().AutoHeight()[PWUI::MakeText(FText::Format(LOCTEXT("Due", "Due: {0}  |  Available: {1}"), PWA5::Deadline(Work.Brief.DueAt), PWA5::Deadline(Work.Brief.AvailableAt)), 18, Style.TextSecondary, false, true)];
+            const FText P36UYes = LOCTEXT("P36UYes", "yes");
+            const FText P36UNo = LOCTEXT("P36UNo", "no");
+            Detail->AddSlot().AutoHeight()[PWUI::MakeText(FText::Format(
+                LOCTEXT("P36UWorkState", "Available now: {0} | Overdue: {1} | Submitted late: {2} | Can begin: {3}"),
+                Work.Available ? P36UYes : P36UNo, Work.Overdue ? P36UYes : P36UNo,
+                Work.LateSubmission ? P36UYes : P36UNo, Work.CanBegin ? P36UYes : P36UNo), 18, Style.TextSecondary, false, true)];
             Detail->AddSlot().AutoHeight()[PWUI::MakeText(World->Text(Work.Brief.CriteriaTextKey, LOCTEXT("CriteriaFallback", "Five groups carry twenty academic marks each. Feedback explains the method and evidence.")), 18, Style.TextSecondary, false, true)];
             if (Work.Overdue || Work.LateSubmission)
             {
                 Detail->AddSlot().AutoHeight()[PWUI::MakeText(Work.LateSubmission ? LOCTEXT("Late", "Submitted late. Diagnostic marks are unchanged by lateness.") : LOCTEXT("Missed", "Deadline missed. You can still complete this work."), 20, Style.Warn, false, true)];
-                Detail->AddSlot().AutoHeight()[PWUI::MakeText(World->Text(Work.Brief.RecoveryTextKey, LOCTEXT("RecoveryFallback", "Resume the work when you are ready, or practise a method first.")), 18, Style.TextSecondary, false, true)];
             }
+            Detail->AddSlot().AutoHeight()[PWUI::MakeText(World->Text(Work.Brief.RecoveryTextKey, LOCTEXT("RecoveryFallback", "Resume the work when you are ready, or practise a method first.")), 18, Style.TextSecondary, false, true)];
             const FText Label = Work.Marking ? LOCTEXT("ReadFeedback", "Read academic feedback") : Work.CanBegin ? LOCTEXT("OpenBrief", "Open brief") : Work.CanSubmit ? LOCTEXT("ResumePaper", "Resume paper") : LOCTEXT("NotAvailable", "Currently unavailable");
             const bool bCanOpen = OnOpenPaper.IsBound() && (Work.Marking.has_value() || Work.CanBegin || Work.CanSubmit);
             const FString Key = TEXT("work.") + FString(UTF8_TO_TCHAR(Id.c_str()));
             const auto OpenButton = PWUI::MakeButton(Label, PWUI::EButtonKind::Secondary,
-                FOnClicked::CreateSPLambda(this, [this, Id, Key]() { FocusKey = Key; OnOpenPaper.ExecuteIfBound(Id); return FReply::Handled(); }), bCanOpen);
+                FOnClicked::CreateSPLambda(this, [this, Id]() { P36UOpenWork(Id); return FReply::Handled(); }), bCanOpen);
             if (bCanOpen) Controls.Add(Key, OpenButton);
             Detail->AddSlot().AutoHeight()[OpenButton];
             Rows->AddSlot().AutoHeight().Padding(0, 10)[PWUI::MakePanel(Detail, FMargin(12))];
