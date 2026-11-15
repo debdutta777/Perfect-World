@@ -1,4 +1,5 @@
 #include "PerfectWorldLaneLifeSubsystem.h"
+#include "PerfectWorldGuardNotice.h"
 
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
@@ -54,8 +55,8 @@ PerfectWorld::DoorResult BrDoorResultFromCode(const FString& Code)
 /** Player-facing wording for a command the core refused. Empty means the refusal needs no words (a stale click). */
 FText BrRefusalText(const FString& Code)
 {
-    if (Code == TEXT("tutorial.active")) // P38
-        return LOCTEXT("P38TutorialActive", "Your supervised tutorial is in progress. Complete it or withdraw to the safe area first.");
+    const FText P313Notice = P313GuardNotice(Code);
+    if (!P313Notice.IsEmpty()) return P313Notice;
     if (Code == TEXT("school.learning_refused"))
         return LOCTEXT("P38LearningRefused", "The lesson's learning could not be recorded. Nothing was committed; try again.");
     if (Code == TEXT("time.asleep") || Code == TEXT("conversation.player_asleep"))
@@ -69,10 +70,6 @@ FText BrRefusalText(const FString& Code)
     if (Code == TEXT("world.unsettled") || Code == TEXT("conversation.charge_interrupted"))
     {
         return LOCTEXT("RefuseUnsettled", "Too much is happening at once. Try again in a moment.");
-    }
-    if (Code == TEXT("school.lesson_open") || Code == TEXT("school.paper_open")) // S05
-    {
-        return LOCTEXT("RefuseSchoolOpen", "Finish your lesson or paper first. Time and everything else wait until you do.");
     }
     if (Code == TEXT("conversation.already_open"))
     {
@@ -321,6 +318,12 @@ void UPWLaneLifeSubsystem::RequestDoorToggle(APWDoorActor& Door, APawn* By)
     if (!Result.Accepted)
     {
         UE_LOG(LogPWLaneLife, Display, TEXT("Door %s refused by the core: %hs"), *Door.GetDoorId().ToString(), Result.Why.Code.c_str());
+        const FText P313Notice = P313GuardNotice(PWLaneLife::ToFString(Result.Why.Code));
+        if (!P313Notice.IsEmpty())
+        {
+            ShowPlayerNotice(P313Notice, By);
+            return;
+        }
         const PerfectWorld::DoorResult Why = BrDoorResultFromCode(PWLaneLife::ToFString(Result.Why.Code));
         if (Why == PerfectWorld::DoorResult::Private && Set.Open && Set.Context.Direction == PerfectWorld::DoorDirection::Entry)
         {

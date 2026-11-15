@@ -9,6 +9,7 @@
 #include "GameFramework/Character.h"
 #include "PerfectWorldPlayerCharacter.h"
 #include "PerfectWorldShopDisplayActor.h"
+#include "TutorialDungeon.h"
 
 using namespace PWAwakeningTest;
 
@@ -18,6 +19,55 @@ APWAwakeningPadActor* AwTPad(const FAwTestFloor& T, const int32 Station, const i
 {
     return T.Floor()->FindPad(T.Floor()->GetLayout().Stations[Station].Pads[Index].Id);
 }
+
+/** P313: a loaded session whose first exit is refused, then accepted by its supervisor. */
+class FP313ExitBridge final : public IAwFloorBridge
+{
+public:
+    FAwFloorStatus Status;
+    bool bRefuseExit = true;
+    int32 Leaves = 0;
+    int32 Withdrawals = 0;
+
+    FP313ExitBridge()
+    {
+        Status.bSessionOpen = true;
+        for (auto& Phase : Status.Phase) Phase = EAwPhase::Complete;
+    }
+    virtual bool CanEnter(FString&) override { return true; }
+    virtual FAwEnterResult Enter() override
+    {
+        FAwEnterResult Result;
+        Result.bAccepted = true;
+        Result.bResumed = true;
+        return Result;
+    }
+    virtual FAwFloorStatus GetStatus() override { return Status; }
+    virtual FAwChoiceResult SubmitChoice(FName, FName Choice) override
+    {
+        FAwChoiceResult Result;
+        if (Choice != AwWithdrawDef().Id) return Result;
+        ++Withdrawals;
+        if (!bRefuseExit)
+        {
+            Status.bSessionOpen = false;
+            Status.bSessionComplete = true;
+            Result.bAccepted = true;
+            Result.bSessionComplete = true;
+        }
+        return Result;
+    }
+    virtual void NoteAssistance(FName, FName) override {}
+    virtual void Leave() override
+    {
+        ++Leaves;
+        if (!bRefuseExit)
+        {
+            Status.bSessionOpen = false;
+            Status.bSessionComplete = true;
+        }
+    }
+};
 } // namespace
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAwSpawnTest, "PerfectWorld.AwakeningFloor.Spawn",
@@ -71,7 +121,9 @@ bool FAwSpawnTest::RunTest(const FString& Parameters)
     const APWAwakeningPadActor* Enter = T.Floor()->FindPad(FName(TEXT("pad.entry")));
     if (TestNotNull(TEXT("the campus terminal"), Enter))
     {
-        TestEqual(TEXT("its verb before entering"), Enter->GetInteractionVerb(nullptr).ToString(), FString(TEXT("Enter the virtual floor")));
+        TestTrue(TEXT("entry discloses its appointment and session duration"),
+            Enter->GetInteractionVerb(nullptr).ToString().StartsWith(TEXT("Enter the virtual floor (scheduled appointment; ")) &&
+            Enter->GetInteractionVerb(nullptr).ToString().Contains(FString::Printf(TEXT("%lld minutes"), static_cast<long long>(PerfectWorld::TutorialSessionMinutes))));
         TestTrue(TEXT("it stands at the forecourt terminal"), Enter->GetInteractionPoint().Equals(L.EntryPad.Point, 0.1));
     }
     TestTrue(TEXT("choice pads are silent until someone is on the floor"), AwTPad(T, 0, 0)->GetInteractionVerb(nullptr).IsEmpty());
@@ -386,6 +438,79 @@ bool FP310FloorTransferRecoveryTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("a position below campus is available"), Player->TeleportTo(Campus - FVector(0.0, 0.0, 3100.0), FRotator::ZeroRotator));
     Player->Tick(0.1f);
     TestTrue(TEXT("return transfer restored campus fall recovery"), Player->GetActorLocation().Equals(Campus, 0.1));
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FP313FloorResumeTest, "PerfectWorld.P313.LoadedFloorRestoresWithdrawalAndReturn",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FP313FloorResumeTest::RunTest(const FString& Parameters)
+{
+    FAwTestFloor T;
+    if (!T.Init(*this, AwTConfig())) return false;
+    // The session predates this director's occupancy, as it does after Continue.
+    T.Bridge->Enter();
+    T.Bridge->SetPhase(0, EAwPhase::Complete);
+    T.Bridge->SetPhase(1, EAwPhase::Recovering);
+    T.Bridge->SetPhase(2, EAwPhase::Locked);
+    const auto& Layout = T.Floor()->GetLayout();
+    auto* Pawn = T.Holder.World->SpawnActor<ACharacter>();
+    if (!TestNotNull(TEXT("saved pawn"), Pawn)) return false;
+    Pawn->SetActorLocation(Layout.Stations[1].Stand + FVector(0, 0, 90));
+    TestTrue(TEXT("inside saved floor resumes presentation"), T.Floor()->P313ResumeAt(Pawn));
+    TestEqual(TEXT("no second enter command"), T.Bridge->CountCalls(TEXT("enter")), 1);
+    TestEqual(TEXT("completed conduct preserved"), static_cast<int32>(T.Floor()->GetPhase(0)), static_cast<int32>(EAwPhase::Complete));
+    TestEqual(TEXT("pending recovery preserved"), static_cast<int32>(T.Floor()->GetPhase(1)), static_cast<int32>(EAwPhase::Recovering));
+    TestFalse(TEXT("restoration happens once"), T.Floor()->P313ResumeAt(Pawn));
+    for (int32 Station = 0; Station < SituationCount; ++Station)
+    {
+        const auto* Withdraw = AwTPad(T, Station, 3);
+        TestFalse(TEXT("withdrawal offered in complete, recovering and locked phases"), Withdraw->GetInteractionVerb(Pawn).IsEmpty());
+    }
+    AwTPad(T, 2, 3)->Interact(Pawn);
+    TestEqual(TEXT("locked station still forwards withdrawal"),
+        T.Bridge->CountSubmits(Layout.Stations[2].Situation, AwWithdrawDef().Id), 1);
+    const auto* Return = T.Floor()->FindPad(Layout.LeavePad.Id);
+    TestTrue(TEXT("return explicitly offers withdrawal"), Return->GetInteractionVerb(Pawn).ToString().Contains(TEXT("Withdraw")));
+    TestTrue(TEXT("return closes the bridge session"), T.Floor()->TryLeave(Pawn));
+    TestFalse(TEXT("no open session remains"), T.Bridge->GetState().bSessionOpen);
+    // A session loaded at campus can also be re-entered through the normal terminal.
+    T.Bridge->Enter();
+    TestTrue(TEXT("terminal advertises resume"), T.Floor()->GetPadVerb(Layout.EntryPad).ToString().Contains(TEXT("Resume")));
+    TestTrue(TEXT("normal terminal entry resumes"), T.Floor()->TryEnter(Pawn));
+    TestEqual(TEXT("existing completed phase survives re-entry"), static_cast<int32>(T.Floor()->GetPhase(0)), static_cast<int32>(EAwPhase::Complete));
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FP313FloorExitRetryTest, "PerfectWorld.P313.LoadedFloorKeepsItsExitAfterRefusal",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FP313FloorExitRetryTest::RunTest(const FString& Parameters)
+{
+    FAwTestFloor T;
+    if (!T.Init(*this, AwTConfig())) return false;
+    const auto Bridge = MakeShared<FP313ExitBridge>();
+    AwBridge::Install(T.Holder.World, Bridge);
+    auto* Pawn = T.Holder.World->SpawnActor<ACharacter>();
+    if (!TestNotNull(TEXT("saved pawn"), Pawn)) return false;
+    const auto& Layout = T.Floor()->GetLayout();
+    Pawn->SetActorLocation(Layout.Site.EntryStand + FVector(0, 0, 90));
+    TestFalse(TEXT("campus pawn is not restored inside the floor"), T.Floor()->P313ResumeAt(Pawn));
+    TestFalse(TEXT("restoration needs a pawn"), T.Floor()->P313ResumeAt(nullptr));
+    Pawn->SetActorLocation(Layout.Arrival + FVector(0, 0, 90));
+    TestTrue(TEXT("loaded exit-ready presentation resumes"), T.Floor()->P313ResumeAt(Pawn));
+    TestFalse(TEXT("refused return does not abandon an open session"), T.Floor()->TryLeave(Pawn));
+    TestTrue(TEXT("floor retains occupancy for another exit attempt"), T.Floor()->IsOccupied());
+    TestEqual(TEXT("one attempted return"), Bridge->Leaves, 1);
+    for (int32 Station = 0; Station < SituationCount; ++Station)
+        TestFalse(TEXT("completed stations still offer withdrawal after refusal"), AwTPad(T, Station, 3)->GetInteractionVerb(Pawn).IsEmpty());
+    AwTPad(T, 0, 3)->Interact(Pawn);
+    TestTrue(TEXT("refused withdrawal retains session"), Bridge->Status.bSessionOpen);
+    TestTrue(TEXT("refused withdrawal still moves to safety"), FVector::Dist2D(Pawn->GetActorLocation(), Layout.SafeStand) < 5.0);
+    Bridge->bRefuseExit = false;
+    AwTPad(T, 0, 3)->Interact(Pawn);
+    TestEqual(TEXT("withdrawal can be retried"), Bridge->Withdrawals, 2);
+    TestFalse(TEXT("supervisor releases the session"), Bridge->Status.bSessionOpen);
+    TestTrue(TEXT("completed session can return to campus"), T.Floor()->TryLeave(Pawn));
+    TestFalse(TEXT("campus return clears occupancy"), T.Floor()->IsOccupied());
     return true;
 }
 

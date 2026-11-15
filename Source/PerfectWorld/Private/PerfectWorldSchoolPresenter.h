@@ -51,11 +51,11 @@ public:
     TSharedPtr<SWidget> GetPanel() const { return Panel; }
     TSharedPtr<SPWSchoolDay> GetDayPanel() const { return DayPanel.Pin(); }
 
-    /** "Take your seat": the school-day panel. False (nothing changes) when another panel, a conversation, a reading, a menu or no screen holds the input. */
+    /** "Take your seat": resumes the open lesson, otherwise opens the school-day panel. False when the screen is held. */
     bool OpenDay();
     /** The lesson screen for the period the day panel has chosen (or the binding id given). False when there is no such binding. */
     bool OpenLesson(const FString& BindingId);
-    /** The home study desk. False when the bridge says the desk cannot be used or the screen is held. */
+    /** The home study desk; resumes a begun paper directly, including after Continue. False when unavailable or the screen is held. */
     bool OpenDesk();
     bool OpenAwakeningResult();
     bool OpenAwakeningCountdown();
