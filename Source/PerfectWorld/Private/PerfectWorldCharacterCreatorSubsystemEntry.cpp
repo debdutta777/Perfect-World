@@ -12,7 +12,7 @@
 #include "PerfectWorldReadingPresenter.h"
 #include "PerfectWorldContentSubsystem.h" // P38
 #include "Engine/GameInstance.h"
-#include "AwakeningInputs.h"
+#include "LearningCredits.h"
 
 namespace
 {
@@ -74,10 +74,9 @@ bool UPerfectWorldCharacterCreatorSubsystem::StartLifeAndSaveToSlot(int32 SlotIn
     const auto* P38Instance = GetWorld() != nullptr ? GetWorld()->GetGameInstance() : nullptr;
     const auto* P38Content = P38Instance != nullptr ? P38Instance->GetSubsystem<UPWContentSubsystem>() : nullptr;
     if (P38Content == nullptr || P38Content->GetDb() == nullptr)
-        return RecordFileError(FText::FromString(TEXT("Awakening content is unavailable. Your creation has not started.")));
-    const auto P38Seed = PerfectWorld::SeedAwakeningInputs(*P38Content->GetDb(), Started.CaptureSave(), Fresh.World.WorldSeed);
-    if (!P38Seed.Ok()) return RecordFileError(FText::FromString(ToFString(P38Seed.Error)));
-    Fresh.World.Awakening = P38Seed.State;
+        return RecordFileError(FText::FromString(TEXT("Learning content is unavailable. Your creation has not started.")));
+    const auto P36USeed = PerfectWorld::SeedNewLifeLearning(Fresh.World, *P38Content->GetDb(), Started.CaptureSave());
+    if (!P36USeed.Ok()) return RecordFileError(FText::FromString(ToFString(P36USeed.Error)));
     auto Prepared = MakeUnique<PerfectWorld::WorldSim>(Fresh.World);
     if (!Prepared->Submit({PerfectWorld::CommandSource::System,
         PerfectWorld::AdvanceTime{PWLaneLife::CampaignStartMinuteOfDay - 360}}).Accepted)

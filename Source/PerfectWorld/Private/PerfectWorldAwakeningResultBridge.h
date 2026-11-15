@@ -11,6 +11,7 @@
 #include "GameClock.h"
 #include "WorldState.h"
 #include "WorldCountdown.h" // P38: retain the actual disclosure shown before confirmation.
+#include "Commands.h"
 
 class UWorld;
 namespace PerfectWorld { class WorldSim; }
@@ -85,8 +86,16 @@ namespace PWAwakening
 		FText SummaryText;
 		bool bOpen = true;
 		bool bCommitted = false;
+		bool bP312Practice = false;
 		FText AvailabilityText;
 		TArray<FText> DisplacedCommitments;
+	};
+
+	struct FP312CountdownProposalRow
+	{
+		PerfectWorld::CountdownProposal Proposal = PerfectWorld::CountdownProposal::Honour;
+		bool bAvailable = false;
+		FText Disclosure;
 	};
 
 	struct FPWCountdownObligationRow
@@ -96,11 +105,19 @@ namespace PWAwakening
 		FText PersonText;
 		FText WindowText;
 		FText StatusText;
+		TArray<FP312CountdownProposalRow> Proposals;
 	};
 
 	struct FPWCountdownModel
 	{
 		bool bAvailable = false;
+		bool bP312CanResolve = false;
+		bool bP312Live = false;
+		uint64 P312WorldSeq = 0;
+		FText P312PlanText;
+		FText P312NewsText;
+		TArray<FText> P312Contacts;
+		std::vector<PerfectWorld::WeekDayPlan> P312Days;
 		FText CurrentClockText;
 		FText ExamDeadlineText;
 		int32 DaysRemaining = 0;
@@ -121,6 +138,7 @@ namespace PWAwakening
 	};
 	FPWCountdownModel P38BuildLiveCountdownModel(const PerfectWorld::WorldSim& Sim, bool bOrdinaryDayKept,
 		const FText& StatusBanner, TArray<FP38PracticeDisclosure>& Disclosures);
+	void P312PopulateCountdownModel(const PerfectWorld::WorldSim& Sim, FPWCountdownModel& Model);
 
 	class IApAwakeningWorld
 	{
@@ -134,6 +152,9 @@ namespace PWAwakening
 		virtual FPWCountdownModel ReadCountdownModel() = 0;
 		virtual bool ConfirmPracticeOffer(const FString& OfferId, FText& OutNotice) = 0;
 		virtual bool KeepOrdinaryDay(FText& OutNotice) = 0;
+		virtual bool P312TakeOpportunity(const FString& Id, uint64, FText& OutNotice) { return ConfirmPracticeOffer(Id, OutNotice); }
+		virtual bool P312NegotiateObligation(const FString&, PerfectWorld::CountdownProposal, uint64, FText& OutNotice) { return false; }
+		virtual bool P312ResolveDays(const std::vector<PerfectWorld::WeekDayPlan>&, uint64, FText& OutNotice) { return false; }
 	};
 
 	struct ApBridge

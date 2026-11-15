@@ -155,6 +155,13 @@ public:
     virtual void NotifyControllerChanged() override;
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
+    /** P310: a successful authored transfer establishes the floor and position used by fall recovery. */
+    void P310RememberRecoveryAnchor()
+    {
+        HomeLocation = GetActorLocation();
+        HomeRotation = GetActorRotation();
+    }
+
     EPWCameraMode GetCameraMode() const { return CameraMode; }
     bool IsFirstPerson() const { return CameraMode == EPWCameraMode::FirstPerson; }
 

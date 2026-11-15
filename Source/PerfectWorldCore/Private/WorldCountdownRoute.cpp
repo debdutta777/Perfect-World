@@ -41,6 +41,10 @@ bool WorldSim::StopForTutorialBoundary(GameInstant target, CommandResult& result
         target <= State_.Clock.Now())
         return false;
     const auto& awakening = State_.Awakening;
+    // P3-14: past the last legal session start no supervised hour can end before the examination; stopping here could
+    // only trap the life (legacy compatibility mode, LegacyRecovery.h). A routed life never arrives here without a session.
+    if (State_.Clock.Now() > awakening.ExaminationAt - TutorialSessionMinutes - 1)
+        return false;
     if (awakening.MakeUp.Phase == AwakeningMakeUpPhase::Required)
     {
         if (State_.Clock.Now() < awakening.ExaminationAt - TutorialSessionMinutes - 1)

@@ -7,6 +7,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "GameFramework/Character.h"
+#include "PerfectWorldPlayerCharacter.h"
 #include "PerfectWorldShopDisplayActor.h"
 
 using namespace PWAwakeningTest;
@@ -353,6 +354,38 @@ bool FAwEntryRefusalTest::RunTest(const FString& Parameters)
 
     Floor->GetHud().SetCue(FText::FromString(TEXT("[!!!] GAP")));
     TestTrue(TEXT("a hazard cue is shape and words"), Floor->GetHud().GetCue().ToString().StartsWith(TEXT("[!!!]")));
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FP310FloorTransferRecoveryTest, "PerfectWorld.AwakeningFloor.P310TransferRecovery",
+                                 EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FP310FloorTransferRecoveryTest::RunTest(const FString& Parameters)
+{
+    FAwTestFloor T;
+    if (!T.Init(*this, AwTConfig())) return false;
+    const auto& L = T.Floor()->GetLayout();
+    auto* Player = T.Holder.World->SpawnActor<APerfectWorldPlayerCharacter>(
+        L.Site.EntryStand + FVector(0.0, 0.0, PWPlayer::CapsuleHalfHeight + 3.0), FRotator(0.0, L.Site.EntryYaw, 0.0));
+    if (!TestNotNull(TEXT("the real player character"), Player)) return false;
+    // This world does not begin play; establish the campus recovery point that BeginPlay normally records.
+    Player->P310RememberRecoveryAnchor();
+    TestTrue(TEXT("terminal accepts entry"), T.Floor()->TryEnter(Player));
+    for (int32 I = 0; I < 10; ++I) Player->Tick(0.1f);
+    TestTrue(TEXT("the real player remains in the underground room after ticks"), L.Bounds.IsInside(Player->GetActorLocation()));
+
+    // A genuine fall still recovers, now onto the current floor rather than back home.
+    const FVector Arrival = Player->GetActorLocation();
+    TestTrue(TEXT("a position below the room is available"), Player->TeleportTo(Arrival - FVector(0.0, 0.0, 3100.0), FRotator::ZeroRotator));
+    Player->Tick(0.1f);
+    TestTrue(TEXT("fall recovery returns to the room arrival"), Player->GetActorLocation().Equals(Arrival, 0.1));
+
+    TestTrue(TEXT("campus return accepts leaving"), T.Floor()->TryLeave(Player));
+    const FVector Campus = Player->GetActorLocation();
+    TestTrue(TEXT("campus return reaches the terminal"), FVector::Dist2D(Campus, L.Site.EntryStand) < 5.0);
+    TestTrue(TEXT("a position below campus is available"), Player->TeleportTo(Campus - FVector(0.0, 0.0, 3100.0), FRotator::ZeroRotator));
+    Player->Tick(0.1f);
+    TestTrue(TEXT("return transfer restored campus fall recovery"), Player->GetActorLocation().Equals(Campus, 0.1));
     return true;
 }
 
