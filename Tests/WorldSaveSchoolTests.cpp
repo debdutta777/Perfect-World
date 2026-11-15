@@ -58,7 +58,7 @@ std::string S04Hex(std::uint64_t value)
 WorldState S04RoundTrip(const S04World& w, const WorldState& world, const char* what)
 {
     const std::string text = SerializeWorldSave(w.Save(world));
-    P2CExpect(!text.empty() && text.find("\"schemaVersion\": 12,") != std::string::npos && text.find("\"hashVersion\": 9,") != std::string::npos &&
+    P2CExpect(!text.empty() && text.find("\"schemaVersion\": 13,") != std::string::npos && text.find("\"hashVersion\": 10,") != std::string::npos &&
                   text.find("\"school\": \"pw.school/1\\n") != std::string::npos,
               what);
     WorldSaveData back;
@@ -240,13 +240,19 @@ void S04Legacy(const S04World& w)
     const std::string migrated = SerializeWorldSave(loaded);
     if (const char* path = std::getenv("PW_WRITE_MIGRATED"); path != nullptr && path[0] != '\0')
         S04WriteFile(path, migrated);
-    const std::string frozen = S04ReadFile(dir + "/world_v10_doors_29_migrated_v12.json");
-    P2CExpect(migrated == frozen, "the migration produces exactly the frozen expected v12 save");
+    const std::string frozen = S04ReadFile(dir + "/world_v10_doors_29_migrated_v13.json");
+    P2CExpect(migrated == frozen, "the migration produces exactly the frozen expected v13 save");
     WorldSaveData frozenLoaded;
     const WorldSaveResult frozenResult = DeserializeWorldSave(frozen, frozenLoaded);
-    P2CExpect(frozenResult.Succeeded() && frozenResult.HashVerified && frozenResult.SourceVersion == 12 &&
+    P2CExpect(frozenResult.Succeeded() && frozenResult.HashVerified && frozenResult.SourceVersion == 13 &&
                   HashWorldState(frozenLoaded.World) == HashWorldState(loaded.World),
-              "the expected migrated save is a certified v12 world");
+              "the expected migrated save is a certified v13 world");
+    // P4-02: R9-04's v12 output is now a historical save: authenticated in hash 9, unverified, the same world.
+    WorldSaveData r94Loaded;
+    const WorldSaveResult r94Result = DeserializeWorldSave(S04ReadFile(dir + "/world_v10_doors_29_migrated_v12.json"), r94Loaded);
+    P2CExpect(r94Result.Succeeded() && !r94Result.HashVerified && r94Result.SourceVersion == 12 &&
+                  HashWorldState(r94Loaded.World) == HashWorldState(loaded.World),
+              "R9-04's v12 output authenticates its hash-9 checksum and loads unverified");
     // R9-04: S04's own v11 output is now a historical save: authenticated in hash 8, unverified, the same world.
     WorldSaveData s04Loaded;
     const WorldSaveResult s04Result = DeserializeWorldSave(S04ReadFile(dir + "/world_v10_doors_29_migrated_v11.json"), s04Loaded);
@@ -283,8 +289,8 @@ void S04Legacy(const S04World& w)
     std::string v10 = SerializeWorldSave(lived);
     const std::size_t key = v10.find(",\n    \"school\": ");
     v10 = v10.substr(0, key) + v10.substr(v10.find("\n  }", key));
-    v10 = S04Replace(v10, "\"schemaVersion\": 12,", "\"schemaVersion\": 10,");
-    v10 = S04Replace(v10, "\"hashVersion\": 9,", "\"hashVersion\": 7,");
+    v10 = S04Replace(v10, "\"schemaVersion\": 13,", "\"schemaVersion\": 10,");
+    v10 = S04Replace(v10, "\"hashVersion\": 10,", "\"hashVersion\": 7,");
     const std::uint64_t old = HashWorldStateWithDoorsText(lived.World, SerialiseDoorState(lived.World.Doors), 7);
     v10 = S04Replace(v10, "\"stateHash\": \"" + S04Hex(HashWorldState(lived.World)) + "\"", "\"stateHash\": \"" + S04Hex(old) + "\"");
     WorldSaveData migratedLife;
@@ -354,8 +360,9 @@ void S04HashSection(const S04World& w)
               "the empty pw.school/1 envelope is exactly its documented form");
     const auto a = HashWorldSections(empty);
     const auto b = HashWorldSections(ordered);
-    P2CExpect(a.size() == 12 && a[10].Name == "school" && a.back().Name == "awakening" && WorldHashVersion == 9,
-              "the school section is the eleventh (awakening, R9-04, the twelfth), hash v9");
+    P2CExpect(a.size() == 13 && a[10].Name == "school" && a[11].Name == "awakening" && a.back().Name == "examination" &&
+                  WorldHashVersion == 10,
+              "the school section is the eleventh (awakening the twelfth, examination the thirteenth), hash v10");
     for (std::size_t i = 0; i < a.size(); ++i)
         P2CExpect((a[i].Hash != b[i].Hash) == (a[i].Name == "school"), "a school change moves only the school section");
     P2CExpect(HashWorldState(empty) != HashWorldState(ordered) &&
