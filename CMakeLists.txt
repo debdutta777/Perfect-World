@@ -997,6 +997,11 @@ add_executable(PerfectWorldWorldLearningIntegrationTests Tests/WorldLearningInte
 target_link_libraries(PerfectWorldWorldLearningIntegrationTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldWorldLearningIntegrationTests COMMAND PerfectWorldWorldLearningIntegrationTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
+# P401: pure examination contract, complete route matrix and real-content exit coverage.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ExamContract.cpp)
+add_executable(PerfectWorldExamContractTests Tests/ExamContractTests.cpp)
+target_link_libraries(PerfectWorldExamContractTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldExamContractTests COMMAND PerfectWorldExamContractTests ${CMAKE_SOURCE_DIR}/Data/Content)
 # P314: compatibility recovery (awakening.recover) and homework reconciliation (school.work.reconcile); markers in the
 # existing world flags, no save/hash format change.
 target_sources(PerfectWorldCore PRIVATE
