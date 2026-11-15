@@ -1,6 +1,7 @@
 #include "SchoolWorkIssuance.h"
 
 #include <algorithm>
+#include <optional>
 #include <set>
 #include <utility>
 
@@ -58,9 +59,28 @@ SchoolIssue ValidateSchoolWorkBriefDef(const SchoolWorkBriefDef& def, const Scho
     return {};
 }
 
-SchoolWorkIssuanceResult IssueScheduledSchoolWork(const SchoolWorkState& state,
+SchoolWorkBrief RecoveredSchoolWorkBrief(const SchoolWorkBrief& authored, GameInstant at) noexcept
+{
+    SchoolWorkBrief brief = authored;
+    brief.AvailableAt = at;
+    const GameInstant window = at <= DayLoopMaxInstant - SchoolWorkRecoveryWindowMinutes ? at + SchoolWorkRecoveryWindowMinutes
+                                                                                          : DayLoopMaxInstant;
+    brief.DueAt = std::max(authored.DueAt, window);
+    return brief;
+}
+
+bool IsRecoveredSchoolWork(const SchoolWorkRecord& record, const SchoolWorkBrief& authored) noexcept
+{
+    return record.IssuedAt == record.Brief.AvailableAt && record.IssuedAt > authored.AvailableAt &&
+           record.Brief == RecoveredSchoolWorkBrief(authored, record.IssuedAt);
+}
+
+namespace
+{
+/** Scheduled issuance over [from, to], or (recoverAt set) P3-14 reconciliation of boundaries strictly before recoverAt. */
+SchoolWorkIssuanceResult P314Issue(const SchoolWorkState& state,
     const SchoolWorkBriefCatalogue& catalogue, const SchoolCalendar& calendar, const BellSchedule& bells,
-    const AssessmentCatalogue& papers, GameInstant from, GameInstant to)
+    const AssessmentCatalogue& papers, GameInstant from, GameInstant to, std::optional<GameInstant> recoverAt)
 {
     SchoolWorkIssuanceResult out{{}, state, {}};
     const auto refuse = [&](SchoolIssue issue) {
@@ -89,21 +109,38 @@ SchoolWorkIssuanceResult IssueScheduledSchoolWork(const SchoolWorkState& state,
             [](const auto& r, std::string_view id) { return r.Brief.Id < id; });
         if (pos != state.Records.end() && pos->Brief.Id == def.Brief.Id)
         {
-            if (pos->Brief != def.Brief || pos->IssuedAt != def.Brief.AvailableAt)
+            const bool scheduled = pos->Brief == def.Brief && pos->IssuedAt == def.Brief.AvailableAt;
+            if (!scheduled && !IsRecoveredSchoolWork(*pos, def.Brief))
                 return refuse(P34Issue("identity_conflict", def.Brief.Id));
         }
-        else if (def.Brief.AvailableAt >= from && def.Brief.AvailableAt <= to) pending.push_back(&def);
+        else if (recoverAt ? def.Brief.AvailableAt < *recoverAt : def.Brief.AvailableAt >= from && def.Brief.AvailableAt <= to)
+            pending.push_back(&def);
     }
     std::sort(pending.begin(), pending.end(), [](const auto* a, const auto* b) {
         return a->Brief.AvailableAt != b->Brief.AvailableAt ? a->Brief.AvailableAt < b->Brief.AvailableAt : a->Brief.Id < b->Brief.Id;
     });
     for (const auto* def : pending)
     {
-        const auto& brief = def->Brief;
-        const auto issued = IssueSchoolWork(out.State, brief, papers, brief.AvailableAt);
+        const SchoolWorkBrief brief = recoverAt ? RecoveredSchoolWorkBrief(def->Brief, *recoverAt) : def->Brief;
+        const auto issued = IssueSchoolWork(out.State, brief, papers, recoverAt.value_or(brief.AvailableAt));
         if (!issued.Ok()) return refuse(issued);
         out.IssuedIds.push_back(brief.Id);
     }
     return out;
+}
+} // namespace
+
+SchoolWorkIssuanceResult IssueScheduledSchoolWork(const SchoolWorkState& state,
+    const SchoolWorkBriefCatalogue& catalogue, const SchoolCalendar& calendar, const BellSchedule& bells,
+    const AssessmentCatalogue& papers, GameInstant from, GameInstant to)
+{
+    return P314Issue(state, catalogue, calendar, bells, papers, from, to, std::nullopt);
+}
+
+SchoolWorkIssuanceResult ReconcileMissedSchoolWork(const SchoolWorkState& state,
+    const SchoolWorkBriefCatalogue& catalogue, const SchoolCalendar& calendar, const BellSchedule& bells,
+    const AssessmentCatalogue& papers, GameInstant now)
+{
+    return P314Issue(state, catalogue, calendar, bells, papers, now, now, now);
 }
 } // namespace PerfectWorld

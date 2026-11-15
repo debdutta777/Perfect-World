@@ -53,4 +53,31 @@ struct SchoolWorkIssuanceResult
     const SchoolWorkState& state, const SchoolWorkBriefCatalogue& catalogue,
     const SchoolCalendar& calendar, const BellSchedule& bells, const AssessmentCatalogue& papers,
     GameInstant from, GameInstant to);
+
+/**
+ * P3-14 recovery window: recovered work is due no earlier than seven days after it reached the life. Disclosed to the
+ * player with the recovered record (IssuedAt is the recovery instant, Brief.DueAt the end of the window).
+ */
+inline constexpr GameInstant SchoolWorkRecoveryWindowMinutes = 7 * MinutesPerDay;
+
+/** The authored brief as recovered at `at`: available from `at`, due at max(authored due, at + recovery window). */
+[[nodiscard]] PERFECTWORLDCORE_API SchoolWorkBrief RecoveredSchoolWorkBrief(const SchoolWorkBrief& authored, GameInstant at) noexcept;
+
+/**
+ * True when `record` is `authored` issued by reconciliation: IssuedAt == Brief.AvailableAt, later than the authored
+ * boundary, and exactly RecoveredSchoolWorkBrief(authored, IssuedAt). A normally issued record has IssuedAt equal to the
+ * authored boundary. Scheduled issuance accepts both forms under the same id and refuses anything else.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API bool IsRecoveredSchoolWork(const SchoolWorkRecord& record, const SchoolWorkBrief& authored) noexcept;
+
+/**
+ * PURE P3-14 reconciliation: every brief of this calendar and stream whose authored boundary lies strictly before `now`
+ * and that has no record yet (its boundary passed while no catalogue was bound) is issued at `now` as
+ * RecoveredSchoolWorkBrief, in (authored AvailableAt, Id) order. Existing records, submissions and deadlines are never
+ * changed; an existing record that is neither form refuses identity_conflict. Boundaries at `now` stay with scheduled
+ * issuance. Retrieval stays the read-only QuerySchoolAcademicRecord.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API SchoolWorkIssuanceResult ReconcileMissedSchoolWork(
+    const SchoolWorkState& state, const SchoolWorkBriefCatalogue& catalogue,
+    const SchoolCalendar& calendar, const BellSchedule& bells, const AssessmentCatalogue& papers, GameInstant now);
 } // namespace PerfectWorld

@@ -1,5 +1,6 @@
 #include "WorldSaveInternal.h"
 
+#include "LegacyRecovery.h"
 #include "WorldCountdown.h"
 
 #include <algorithm>
@@ -85,6 +86,9 @@ bool R94RTutorial(const TutorialDungeonState& t, const AwakeningState& a, const 
 bool WorldSaveAwakeningValid(const WorldState& world)
 {
     const AwakeningState& a = world.Awakening;
+    // P3-14: the reserved compatibility markers (world flags) must each hold in this world.
+    if (!AreAwakeningCompatFlagsValid(world))
+        return false;
     if (!a.Seeded)
         return R94RDefaultAwakening(a) && world.Tutorial == TutorialDungeonState{} && world.CountdownText.empty() &&
                !world.LiveAwakenedProfile;
