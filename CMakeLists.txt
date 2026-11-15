@@ -996,3 +996,9 @@ add_test(NAME PerfectWorldWorldHomeworkIssuanceTests COMMAND PerfectWorldWorldHo
 add_executable(PerfectWorldWorldLearningIntegrationTests Tests/WorldLearningIntegrationTests.cpp)
 target_link_libraries(PerfectWorldWorldLearningIntegrationTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldWorldLearningIntegrationTests COMMAND PerfectWorldWorldLearningIntegrationTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# P401: pure examination contract, complete route matrix and real-content exit coverage.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ExamContract.cpp)
+add_executable(PerfectWorldExamContractTests Tests/ExamContractTests.cpp)
+target_link_libraries(PerfectWorldExamContractTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldExamContractTests COMMAND PerfectWorldExamContractTests ${CMAKE_SOURCE_DIR}/Data/Content)
