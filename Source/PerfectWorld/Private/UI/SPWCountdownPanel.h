@@ -27,6 +27,8 @@ namespace PWApCountdown
 	inline const FName ConfirmButtonTag(TEXT("PWApCountdown.ConfirmButton"));
 	inline const FName OrdinaryDayButtonTag(TEXT("PWApCountdown.OrdinaryDayButton"));
 	inline const FName CloseButtonTag(TEXT("PWApCountdown.CloseButton"));
+	inline const FName P312ResolveTag(TEXT("P312Countdown.ResolveDay"));
+	inline const FName P312ProposalTag(TEXT("P312Countdown.Proposal"));
 }
 
 class SPWCountdownPanel : public SCompoundWidget
@@ -55,6 +57,8 @@ public:
 
 	bool TriggerConfirmSelectedOffer();
 	bool TriggerKeepOrdinaryDay();
+	bool P312TriggerResolveDays();
+	bool P312TriggerProposal(const FString& Id, PerfectWorld::CountdownProposal Proposal);
 	FText GetLastFeedbackText() const { return LastFeedbackText; }
 
 	void ScrollDetailBy(float DeltaOffset);
@@ -70,6 +74,9 @@ public:
 private:
 	TSharedPtr<PWAwakening::IApAwakeningWorld> ResolveBridge() const;
 	void RebuildBody();
+	void P312AddPlanControls();
+	void P312AddObligationControls(const PWAwakening::FPWCountdownObligationRow& Obligation);
+	void P312RefreshAfterAction(const FText& Notice);
 	FReply HandleConfirmClicked();
 	FReply HandleKeepOrdinaryDayClicked();
 	FReply HandleCloseClicked();

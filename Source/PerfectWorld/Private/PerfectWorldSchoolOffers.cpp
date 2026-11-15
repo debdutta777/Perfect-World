@@ -173,6 +173,42 @@ FP35Known P35KnownCommitments(const PerfectWorld::WorldState& State, const Perfe
     return Out;
 }
 
+FP35Known P35KnownCommitments(const PerfectWorld::WorldState& State, const PerfectWorld::ActivityCatalogue& Activities,
+    const PerfectWorld::KnownCommitmentContent& KnownContent, const std::optional<int64> P36UDay)
+{
+    using namespace PerfectWorld;
+    const GameInstant Now = State.Clock.Now();
+    const int64 P36UToday = GameClock::DayNumber(Now);
+    const int64 P36URequestedDay = P36UDay.value_or(P36UToday);
+    FP35Known Out = P36URequestedDay == P36UToday ? P35KnownCommitments(State, Activities) : FP35Known{};
+    const DayLoopState& Day = State.DayLoop;
+    const LaneJournalView Journal = LaneJournalToday(State, P36URequestedDay);
+    const QuestLogView Log = MakeQuestLog(State, Now);
+    for (const KnownPromiseWindow& Promise : KnownTimedPromises(Journal, KnownContent))
+    {
+        const KnownCommitment& Window = Promise.Commitment;
+        const ActivityDef* Def = Activities.Find(Window.ActivityId);
+        if (Def == nullptr || Def->DurationMinutes != Window.Minutes || Window.Start + Window.Minutes <= Now) continue;
+        bool bP36URepresented = false;
+        for (const QuestItem& Item : Log.Today)
+            bP36URepresented = bP36URepresented || (Item.ActivityId == Window.ActivityId && Item.DueAt == Window.Start);
+        if (Day.HasCommitment && Day.Commitment.ActivityId == Window.ActivityId)
+        {
+            const GameInstant P36UStart = Day.Runner.Active() && Day.Runner.ActivityId == Window.ActivityId ? Day.Runner.StartedAt : Day.Now;
+            bP36URepresented = bP36URepresented || P36UStart == Window.Start;
+        }
+        if (bP36URepresented) continue;
+        const std::string P36UId = "journal." + Promise.AgreementId + "." + std::to_string(Journal.Day);
+        const FText P36UWhat = FText::Format(LOCTEXT("P36UStandingPromise", "standing promise with {0} at {1}; {2} minutes"),
+            P35Utf8(std::string(LaneJournalDisplayName(Promise.PersonId))), PWA5::Deadline(Window.Start), FText::AsNumber(Window.Minutes));
+        const auto P36UCount = Out.Candidates.size();
+        P35AddCandidate(Out, *Def, Day, Activities, P36UId, Window.Start, Now, Now, P36UWhat);
+        if (Out.Candidates.size() > P36UCount) Out.Candidates.back().Source = "source.journal";
+        else Out.Lines.Add(P35Key(P36UId), P35Line(P35Utf8(Def->Name), P36UWhat, FText::GetEmpty()));
+    }
+    return Out;
+}
+
 FP35PracticeStatus P35ReadPractice(const PerfectWorld::WorldState& State, const PerfectWorld::ActivityCatalogue* Activities)
 {
     FP35PracticeStatus Status;
@@ -219,7 +255,8 @@ FP35PracticeStatus P35ReadPractice(const PerfectWorld::WorldState& State, const 
     return Status;
 }
 
-TArray<PWA5::FPracticeOffer> P35PracticeOffers(const PerfectWorld::WorldState& State, const PerfectWorld::ActivityCatalogue* Activities)
+TArray<PWA5::FPracticeOffer> P35PracticeOffers(const PerfectWorld::WorldState& State, const PerfectWorld::ActivityCatalogue* Activities,
+    const PerfectWorld::KnownCommitmentContent* P36UKnownContent)
 {
     TArray<PWA5::FPracticeOffer> Offers;
     const FP35PracticeStatus Status = P35ReadPractice(State, Activities);
@@ -245,7 +282,8 @@ TArray<PWA5::FPracticeOffer> P35PracticeOffers(const PerfectWorld::WorldState& S
         Costs = FText::Join(FText::FromString(TEXT("; ")), Parts);
         std::vector<PerfectWorld::ReceiptCandidate> Passed;
         TArray<FText> PassedLines;
-        P35Displaced(State, *Status.Def, P35KnownCommitments(State, *Activities), Status.Forecast.Receipt, Passed, PassedLines);
+        const FP35Known P36UKnown = P36UKnownContent != nullptr ? P35KnownCommitments(State, *Activities, *P36UKnownContent) : P35KnownCommitments(State, *Activities);
+        P35Displaced(State, *Status.Def, P36UKnown, Status.Forecast.Receipt, Passed, PassedLines);
         if (PassedLines.IsEmpty())
         {
             Costs = FText::Format(LOCTEXT("P35CostsOnly", "{0}."), Costs);
@@ -265,12 +303,14 @@ TArray<PWA5::FPracticeOffer> P35PracticeOffers(const PerfectWorld::WorldState& S
 }
 
 std::vector<PerfectWorld::ReceiptCandidate> P35PracticeAlternatives(const PerfectWorld::WorldState& State,
-    const PerfectWorld::ActivityCatalogue& Activities, const PerfectWorld::ActivityDef& Def)
+    const PerfectWorld::ActivityCatalogue& Activities, const PerfectWorld::ActivityDef& Def,
+    const PerfectWorld::KnownCommitmentContent* P36UKnownContent)
 {
     std::vector<PerfectWorld::ReceiptCandidate> Passed;
     TArray<FText> Unused;
     const PerfectWorld::DayActivityForecast Forecast = PerfectWorld::ForecastDayActivity(State.DayLoop, Activities, Def.Id, State.DayLoop.Now);
-    P35Displaced(State, Def, P35KnownCommitments(State, Activities), Forecast.Receipt, Passed, Unused);
+    const FP35Known P36UKnown = P36UKnownContent != nullptr ? P35KnownCommitments(State, Activities, *P36UKnownContent) : P35KnownCommitments(State, Activities);
+    P35Displaced(State, Def, P36UKnown, Forecast.Receipt, Passed, Unused);
     return Passed;
 }
 

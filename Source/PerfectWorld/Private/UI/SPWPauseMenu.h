@@ -23,6 +23,9 @@ public:
     static FVector2D PauseSpaceOf(const TWeakPtr<SWidget>& Self);
     void OpenInventory(bool bFromWorld = false); // R88
     TSharedPtr<class SPWInventoryPanel> R88GetInventory() const { return R88InventoryPanel; }
+    bool P312OpenCountdown();
+    void P312CloseCountdown();
+    TSharedPtr<class SPWCountdownPanel> P312GetCountdown() const { return P312CountdownPanel; }
 
 private:
     enum class EPendingExit : uint8
@@ -59,6 +62,8 @@ private:
     TSharedPtr<SWidget> R88InventoryButton;
     TSharedPtr<class SPWInventoryPanel> R88InventoryPanel;
     TSharedPtr<SWidget> S03PlannerButton;
+    TSharedPtr<SWidget> P312CountdownButton;
+    TSharedPtr<class SPWCountdownPanel> P312CountdownPanel;
     TSharedPtr<SWidget> SettingsButton;
     TSharedPtr<SWidget> ReturnToTitleButton;
     TSharedPtr<SWidget> QuitButton;

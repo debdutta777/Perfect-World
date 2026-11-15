@@ -64,6 +64,9 @@ public:
     SLATE_END_ARGS()
     void Construct(const FArguments& InArgs);
     void Refresh();
+    /** P36U: the displayed core record and the same action used by an issued row's button. */
+    const PerfectWorld::SchoolAcademicRecordView& P36UGetRecord() const { return P36URecord; }
+    bool P36UOpenWork(const std::string& WorkId);
     virtual FReply OnKeyDown(const FGeometry& Geometry, const FKeyEvent& Event) override;
 private:
     TSharedRef<SWidget> BuildBody();
@@ -76,4 +79,5 @@ private:
     TMap<FString, TSharedPtr<SWidget>> Controls;
     FString FocusKey;
     FText Notice;
+    PerfectWorld::SchoolAcademicRecordView P36URecord;
 };

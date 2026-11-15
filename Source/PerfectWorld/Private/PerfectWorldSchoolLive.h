@@ -9,10 +9,12 @@
 #include "CoreMinimal.h"
 
 #include "Assessment.h"
+#include "KnownCommitments.h"
 #include "SchoolLessonContent.h"
 #include "SchoolSessions.h"
 #include "SchoolWeek.h"
 #include "SchoolWork.h"
+#include "SchoolWorkBriefContent.h"
 #include "StructureCoordinate.h"
 #include "StructureExplain.h"
 #include "StructureInvestigate.h"
@@ -35,6 +37,8 @@ struct FS03Content
     PerfectWorld::CoordinateCatalogue Coordinate;
     PerfectWorld::AssessmentCatalogue Papers;
     PerfectWorld::SchoolLessonContent Lessons;
+    PerfectWorld::SchoolWorkBriefCatalogue WorkBriefs;
+    PerfectWorld::KnownCommitmentContent P36UKnownContent;
     PerfectWorld::SchoolSessionCatalogues Cats;
     FString Stream;
 
