@@ -57,6 +57,24 @@ FText BrRefusalText(const FString& Code)
 {
     const FText P313Notice = P313GuardNotice(Code);
     if (!P313Notice.IsEmpty()) return P313Notice;
+    if (Code == TEXT("awakening.recovery_not_needed"))
+        return LOCTEXT("P314URecoveryNotNeeded", "This life's Awakening is already prepared.");
+    if (Code == TEXT("awakening.recovery_missing_content"))
+        return LOCTEXT("P314URecoveryContent", "Awakening recovery needs the school and creation content. Try loading again when it is available.");
+    if (Code == TEXT("awakening.recovery_bad_creation"))
+        return LOCTEXT("P314URecoveryCreation", "The saved creation record could not be read for Awakening recovery.");
+    if (Code == TEXT("awakening.recovery_wrong_creation"))
+        return LOCTEXT("P314URecoveryWrongCreation", "The creation record does not belong to this life. Awakening recovery could not proceed.");
+    if (Code == TEXT("awakening.recovery_unbound"))
+        return LOCTEXT("P314URecoveryUnbound", "The examination countdown is not available to prepare this life yet.");
+    if (Code == TEXT("recovery.source"))
+        return LOCTEXT("P314URecoverySource", "Compatibility recovery runs only while loading a life.");
+    if (Code == TEXT("flag.reserved"))
+        return LOCTEXT("P314UReservedFlag", "This life record can only be changed by compatibility recovery.");
+    if (Code == TEXT("school.work.reconcile.nothing_missing"))
+        return LOCTEXT("P314UNoMissingWork", "All homework has already reached this life.");
+    if (Code == TEXT("tutorial.active")) // P38
+        return LOCTEXT("P38TutorialActive", "Your supervised tutorial is in progress. Complete it or withdraw to the safe area first.");
     if (Code == TEXT("school.learning_refused"))
         return LOCTEXT("P38LearningRefused", "The lesson's learning could not be recorded. Nothing was committed; try again.");
     if (Code == TEXT("time.asleep") || Code == TEXT("conversation.player_asleep"))

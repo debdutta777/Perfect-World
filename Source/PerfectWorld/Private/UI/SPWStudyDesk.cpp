@@ -153,6 +153,9 @@ TSharedRef<SWidget> SPWStudyDesk::BuildBody()
                 LOCTEXT("P36UWorkState", "Available now: {0} | Overdue: {1} | Submitted late: {2} | Can begin: {3}"),
                 Work.Available ? P36UYes : P36UNo, Work.Overdue ? P36UYes : P36UNo,
                 Work.LateSubmission ? P36UYes : P36UNo, Work.CanBegin ? P36UYes : P36UNo), 18, Style.TextSecondary, false, true)];
+            const FText P314URecovery = World->RecoveryNotice(Id);
+            if (!P314URecovery.IsEmpty())
+                Detail->AddSlot().AutoHeight()[PWUI::MakeText(P314URecovery, 18, Style.Accent, false, true)];
             Detail->AddSlot().AutoHeight()[PWUI::MakeText(World->Text(Work.Brief.CriteriaTextKey, LOCTEXT("CriteriaFallback", "Five groups carry twenty academic marks each. Feedback explains the method and evidence.")), 18, Style.TextSecondary, false, true)];
             if (Work.Overdue || Work.LateSubmission)
             {

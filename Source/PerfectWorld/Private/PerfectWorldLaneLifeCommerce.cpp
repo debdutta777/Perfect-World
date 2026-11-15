@@ -85,6 +85,9 @@ void UPWLaneLifeSubsystem::R88InstallCommerce()
     if (P312Presence != nullptr && P312Presence->IsRegistered(PWLaneLife::ToName(PerfectWorld::FaridaPersonId)))
         P38Awakening.Countdown.Contacts.push_back({"neighbour", std::string(PerfectWorld::FaridaPersonId)});
     // WorldState has no integrated relationship book yet. Leave it absent; never fabricate scores.
+    const auto* P314UInstance = GetWorld()->GetGameInstance();
+    const auto* ContentSubsystem = P314UInstance != nullptr ? P314UInstance->GetSubsystem<UPWContentSubsystem>() : nullptr;
+    P38Awakening.Content = ContentSubsystem != nullptr ? ContentSubsystem->GetDb() : nullptr;
     Sim = MakeUnique<PerfectWorld::WorldSim>(Sim->State(), PerfectWorld::MaxEventsPerAdvance,
         R88School != nullptr ? R88School->Binding : PerfectWorld::DayLoopCatalogues{}, R88CommerceContent->Catalogues(), S05Lessons, P38Awakening);
     PWAwakening::AwBridge::Install(GetWorld(), PWAwakening::P38MakeLiveFloorBridge(*GetWorld()));
