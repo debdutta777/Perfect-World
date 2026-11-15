@@ -1014,3 +1014,9 @@ add_test(NAME PerfectWorldLegacyRecoveryTests COMMAND PerfectWorldLegacyRecovery
 add_executable(PerfectWorldHomeworkReconcileTests Tests/HomeworkReconcileTests.cpp)
 target_link_libraries(PerfectWorldHomeworkReconcileTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldHomeworkReconcileTests COMMAND PerfectWorldHomeworkReconcileTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# P403: pure examination result reports, stable evidence reasons and authored next steps.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ExamResult.cpp)
+add_executable(PerfectWorldExamResultTests Tests/ExamResultTests.cpp)
+target_link_libraries(PerfectWorldExamResultTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldExamResultTests COMMAND PerfectWorldExamResultTests ${CMAKE_SOURCE_DIR}/Data/Content)
