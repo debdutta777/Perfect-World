@@ -7,7 +7,7 @@ namespace PWAwakening
 {
 	namespace
 	{
-		FString R97Utf8(std::string_view Text)
+		FString CdBridgeUtf8(std::string_view Text)
 		{
 			const std::string Owned(Text);
 			return FString(UTF8_TO_TCHAR(Owned.c_str()));
@@ -97,13 +97,13 @@ namespace PWAwakening
 		{
 			const PerfectWorld::CountdownObligationDef* Def = PerfectWorld::CountdownFindObligation(Record.Id);
 			return SanitizeDisplayEvidence(
-				Def ? R97Utf8(Def->Name) : FString(),
+				Def ? CdBridgeUtf8(Def->Name) : FString(),
 				FText::FromString(TEXT("Household or school commitment")));
 		}
 
 		FText R97RoleText(const PerfectWorld::CountdownObligationDef* Def)
 		{
-			const FString Role = Def ? R97Utf8(Def->Role) : FString();
+			const FString Role = Def ? CdBridgeUtf8(Def->Role) : FString();
 			if (Role.IsEmpty() || LooksLikeRawIdentifier(Role))
 			{
 				return FText::FromString(TEXT("Someone you know"));
@@ -113,7 +113,7 @@ namespace PWAwakening
 
 		FString R97OfferName(const PerfectWorld::CountdownOpportunityDef* Def)
 		{
-			const FString Candidate = Def ? R97Utf8(Def->Name) : FString();
+			const FString Candidate = Def ? CdBridgeUtf8(Def->Name) : FString();
 			if (!Candidate.IsEmpty() && !LooksLikeRawIdentifier(Candidate))
 			{
 				return Candidate;
@@ -182,7 +182,7 @@ namespace PWAwakening
 		{
 			const PerfectWorld::CountdownObligationDef* Def = PerfectWorld::CountdownFindObligation(Record.Id);
 			FPWCountdownObligationRow Row;
-			Row.Id = R97Utf8(Record.Id);
+			Row.Id = CdBridgeUtf8(Record.Id);
 			Row.Title = R97ObligationTitle(Record);
 			Row.PersonText = R97RoleText(Def);
 			Row.WindowText = FText::FromString(FString::Printf(
@@ -202,9 +202,9 @@ namespace PWAwakening
 				continue;
 			}
 			FPWCountdownOfferRow Row;
-			Row.Id = R97Utf8(Offer.Def->Id);
+			Row.Id = CdBridgeUtf8(Offer.Def->Id);
 			Row.Title = SanitizeDisplayEvidence(
-				R97Utf8(Offer.Def->Name),
+				CdBridgeUtf8(Offer.Def->Name),
 				FText::FromString(TEXT("Optional practice window")));
 
 			Row.WindowText = FText::FromString(FString::Printf(
@@ -213,7 +213,7 @@ namespace PWAwakening
 				*R97HourMinute(Offer.End),
 				Offer.Minutes));
 
-			const FString Role = R97Utf8(Offer.Def->Role);
+			const FString Role = CdBridgeUtf8(Offer.Def->Role);
 			if (Offer.Contact.empty() || Role.IsEmpty() || LooksLikeRawIdentifier(Role))
 			{
 				Row.ContactText = FText::FromString(TEXT("Self-directed practice window"));
@@ -292,14 +292,14 @@ namespace PWAwakening
 				: FText::FromString(TEXT("Supervised by your school teacher"));
 			Row.bOpen = Offer.Available() && !bOrdinaryDayKept;
 			Row.AvailabilityText = Row.bOpen ? FText::FromString(TEXT("Optional; confirm only after reading the costs"))
-				: SanitizeDisplayEvidence(R97Utf8(Offer.Issue.Detail), FText::FromString(TEXT("This practice is unavailable right now")));
+				: SanitizeDisplayEvidence(CdBridgeUtf8(Offer.Issue.Detail), FText::FromString(TEXT("This practice is unavailable right now")));
 			Row.SummaryText = FText::FromString(TEXT("Trains the live profile; your original Awakening result stays as recorded."));
 			for (const auto& Displaced : Offer.Displaced)
 				Row.DisplacedCommitments.Add(FText::FromString(FString::Printf(TEXT("Sets aside %d minutes of %s"),
-					Displaced.OverlapMinutes, *SanitizeDisplayEvidence(R97Utf8(Displaced.Id),
+					Displaced.OverlapMinutes, *SanitizeDisplayEvidence(CdBridgeUtf8(Displaced.Id),
 						FText::FromString(TEXT("a known activity"))).ToString())));
 			for (const auto& Block : Offer.BlockingCommitments)
-				Row.DisplacedCommitments.Add(SanitizeDisplayEvidence(R97Utf8(Block), FText::FromString(TEXT("A prior commitment blocks this session"))));
+				Row.DisplacedCommitments.Add(SanitizeDisplayEvidence(CdBridgeUtf8(Block), FText::FromString(TEXT("A prior commitment blocks this session"))));
 			if (Row.DisplacedCommitments.Num() == 0)
 				Row.DisplacedCommitments.Add(FText::FromString(TEXT("No displaced commitments reported by the core.")));
 			FP38PracticeDisclosure Disclosure;
