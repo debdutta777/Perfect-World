@@ -46,6 +46,7 @@ constexpr std::size_t MaxEventsPerAdvance = 10'000;
 
 struct SchoolLessonContent;
 struct SchoolWorkBriefCatalogue;
+struct SchoolWorkIssuanceResult;
 
 /**
  * S04: the school content the school.lesson.*, school.work.apply and school.week.* commands borrow. Immutable, owned by the
@@ -81,6 +82,8 @@ struct WorldAwakeningCatalogues
 {
     const AbilityRecipeSet* Recipes = nullptr;
     CountdownContext Countdown;
+    /** P3-14: the validated content awakening.recover seeds an unseeded legacy life with (SeedLearningInputs). */
+    const ContentDb* Content = nullptr;
 };
 
 /** Presentation-free school gate projection. All minute fields are local minutes of today's day. */
@@ -173,6 +176,11 @@ public:
     [[nodiscard]] const std::optional<PracticeResult>& LastCountdownPracticeResult() const noexcept { return LastPractice_; }
     /** P37: last accepted routine countdown resolution; session output only, never saved. */
     [[nodiscard]] const std::optional<CountdownResolveResult>& LastCountdownResolveResult() const noexcept { return LastCountdown_; }
+    /**
+     * P3-14: the brief ids school.work.reconcile would issue now (missed boundaries before the catalogue was bound), empty
+     * when none, when no catalogue is bound or when the brief records disagree with the catalogue. Pure.
+     */
+    [[nodiscard]] std::vector<std::string> PendingSchoolWorkReconciliation() const;
 
 private:
     std::optional<Rejection> Validate(const Command& command) const;
@@ -230,6 +238,10 @@ private:
     std::optional<Rejection> SyncCountdown(CommandResult& result);
     /** R9 growth: credit the completions once to a staged copy of the one owner and commit it (seeded worlds only). */
     std::optional<Rejection> CreditActivities(std::span<const DayLoopEvent> events);
+    // P3-14 awakening.recover and school.work.reconcile (WorldLegacyRecovery.cpp).
+    std::optional<Rejection> ValidateRecoveryCommand(const Command& command) const;
+    std::optional<Rejection> ApplyRecoveryCommand(const Command& command, CommandResult& result);
+    std::optional<Rejection> ReconcileSchoolWork(SchoolWorkIssuanceResult& out) const;
 
     WorldState State_;
     std::vector<Command> Log_;
@@ -263,6 +275,16 @@ private:
 
 /** R9-04: true for tutorial.* and countdown.practice.confirm (WorldAwakening.cpp). */
 [[nodiscard]] PERFECTWORLDCORE_API bool IsAwakeningCommand(const CommandPayload& payload) noexcept;
+
+/** P3-14: true for awakening.recover and school.work.reconcile (WorldLegacyRecovery.cpp). */
+[[nodiscard]] PERFECTWORLDCORE_API bool IsLegacyRecoveryCommand(const CommandPayload& payload) noexcept;
+
+/**
+ * R9-04's lesson-close evidence rule, shared with P3-14 recovery: a completed foreground or routine lesson with a resolved
+ * outcome observed its structure's facet, id "school.lesson.<activity instance>"; anything else observed nothing.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API std::optional<AptitudeEvidence> SchoolLessonObservedEvidence(
+    const SchoolPeriodRecord& record, const SchoolLessonBinding& binding, GameInstant at);
 
 /** P37: countdown opportunity, negotiation and routine day commands. */
 [[nodiscard]] PERFECTWORLDCORE_API bool IsCountdownCommand(const CommandPayload& payload) noexcept;

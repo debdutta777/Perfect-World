@@ -365,6 +365,27 @@ struct CountdownResolveDays
     std::vector<WeekDayPlan> Days;
 };
 
+/**
+ * P3-14, System only: compatibility recovery of a legacy or unrouted life (LegacyRecovery.h), submitted once after load
+ * when PlanAwakeningRecovery(State()).Needed(). `Creation` is the slot's own creation record (WorldSaveData::Creation);
+ * it is validated and must match the world's commerce funding rank. Refused "awakening.recovery_not_needed" otherwise.
+ */
+struct AwakeningRecover
+{
+    static constexpr std::string_view TypeId = "awakening.recover";
+    CharacterCreationSave Creation;
+};
+
+/**
+ * P3-14, System only: issue every bound homework brief whose boundary passed before the brief catalogue was bound, once
+ * each by stable id, with a disclosed recovery window (ReconcileMissedSchoolWork). Existing records never change. Refused
+ * "school.work.reconcile.nothing_missing" when nothing is missing.
+ */
+struct SchoolWorkReconcile
+{
+    static constexpr std::string_view TypeId = "school.work.reconcile";
+};
+
 // SchoolWorkCommand ("school.work.apply") is SchoolWork.h's delivered command type, routed as is.
 using CommandPayload = std::variant<AdvanceTime, ScheduleWorldEvent, SetWorldFlag, GateRegister, GateScheduleOnset, GateContain, GateSeal,
                                     SettleDueEvents, ConversationOpen, ConversationChoose, ConversationLeave, DoorSet, DoorSettle,
@@ -373,7 +394,7 @@ using CommandPayload = std::variant<AdvanceTime, ScheduleWorldEvent, SetWorldFla
                                     SchoolLessonClose, SchoolWorkCommand, SchoolWeekOrder, SchoolWeekResolve, TutorialEnter,
                                     TutorialAct, TutorialAssist, TutorialRecover, TutorialWithdraw, TutorialAbsent,
                                     TutorialMakeUp, TutorialFinish, CountdownPracticeConfirm, CountdownTakeOpportunity,
-                                    CountdownNegotiateObligation, CountdownResolveDays>;
+                                    CountdownNegotiateObligation, CountdownResolveDays, AwakeningRecover, SchoolWorkReconcile>;
 
 struct Command
 {

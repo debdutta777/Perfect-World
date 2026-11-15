@@ -996,3 +996,16 @@ add_test(NAME PerfectWorldWorldHomeworkIssuanceTests COMMAND PerfectWorldWorldHo
 add_executable(PerfectWorldWorldLearningIntegrationTests Tests/WorldLearningIntegrationTests.cpp)
 target_link_libraries(PerfectWorldWorldLearningIntegrationTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldWorldLearningIntegrationTests COMMAND PerfectWorldWorldLearningIntegrationTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# P314: compatibility recovery (awakening.recover) and homework reconciliation (school.work.reconcile); markers in the
+# existing world flags, no save/hash format change.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/LegacyRecovery.cpp
+    Source/PerfectWorldCore/Private/WorldLegacyRecovery.cpp)
+add_executable(PerfectWorldLegacyRecoveryTests Tests/LegacyRecoveryTests.cpp)
+target_link_libraries(PerfectWorldLegacyRecoveryTests PRIVATE PerfectWorldCore)
+target_compile_definitions(PerfectWorldLegacyRecoveryTests PRIVATE PW_AWAKENING_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
+add_test(NAME PerfectWorldLegacyRecoveryTests COMMAND PerfectWorldLegacyRecoveryTests ${CMAKE_SOURCE_DIR}/Data/Content)
+add_executable(PerfectWorldHomeworkReconcileTests Tests/HomeworkReconcileTests.cpp)
+target_link_libraries(PerfectWorldHomeworkReconcileTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldHomeworkReconcileTests COMMAND PerfectWorldHomeworkReconcileTests ${CMAKE_SOURCE_DIR}/Data/Content)
