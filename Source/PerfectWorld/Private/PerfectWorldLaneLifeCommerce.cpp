@@ -37,7 +37,7 @@ void UPWLaneLifeSubsystem::R88InstallCommerce()
     FString S05Why;
     const PWSchoolLive::FS03Content* S05School = PWSchoolLive::SharedContent(*GetWorld(), S05Why);
     const PerfectWorld::WorldSchoolCatalogues S05Lessons = S05School != nullptr
-        ? PerfectWorld::WorldSchoolCatalogues{S05School->Cats.Structures, &S05School->Lessons, &S05School->Papers}
+        ? PerfectWorld::WorldSchoolCatalogues{S05School->Cats.Structures, &S05School->Lessons, &S05School->Papers, &S05School->WorkBriefs}
         : PerfectWorld::WorldSchoolCatalogues{};
     // P38: process-lifetime validated recipes, like the shared school catalogues.
     static TUniquePtr<PerfectWorld::AbilityRecipeSet> P38Recipes;
@@ -52,12 +52,15 @@ void UPWLaneLifeSubsystem::R88InstallCommerce()
             else UE_LOG(LogPWLaneLife, Error, TEXT("P38 ability recipes unavailable: %hs"), P38Loaded.Error.c_str());
         }
     }
-    PerfectWorld::WorldAwakeningCatalogues P38Awakening;
-    P38Awakening.Recipes = P38Recipes.Get();
-    P38Awakening.Countdown.Player = "player";
+    PerfectWorld::WorldAwakeningCatalogues R97Awakening;
+    R97Awakening.Recipes = P38Recipes.Get();
+    R97Awakening.Countdown.Player = "player";
+    const auto* P314UInstance = GetWorld()->GetGameInstance();
+    const auto* ContentSubsystem = P314UInstance != nullptr ? P314UInstance->GetSubsystem<UPWContentSubsystem>() : nullptr;
+    R97Awakening.Content = ContentSubsystem != nullptr ? ContentSubsystem->GetDb() : nullptr;
     // NO contacts: their standing obligations block time until P3-07 routes day resolution/negotiation.
     Sim = MakeUnique<PerfectWorld::WorldSim>(Sim->State(), PerfectWorld::MaxEventsPerAdvance,
-        R88School != nullptr ? R88School->Binding : PerfectWorld::DayLoopCatalogues{}, R88CommerceContent->Catalogues(), S05Lessons, P38Awakening);
+        R88School != nullptr ? R88School->Binding : PerfectWorld::DayLoopCatalogues{}, R88CommerceContent->Catalogues(), S05Lessons, R97Awakening);
     PWAwakening::AwBridge::Install(GetWorld(), PWAwakening::P38MakeLiveFloorBridge(*GetWorld()));
     PWAwakening::ApBridge::Install(GetWorld(), PWAwakening::MakeLaneLifeAwakeningBridge(*GetWorld()));
     const TWeakObjectPtr<UPWLaneLifeSubsystem> Weak(this);

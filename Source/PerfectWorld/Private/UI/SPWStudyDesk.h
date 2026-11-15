@@ -36,6 +36,8 @@ public:
     virtual FText Text(std::string_view Key, const FText& Fallback) const = 0;
     /** Case's public name/prompt only; never return Trap or derived marking secrets. */
     virtual FText GroupPrompt(std::string_view WorkId, std::size_t Group) const = 0;
+    /** P314U: supplied from the saved record and its authored brief; an ordinary record has no notice. */
+    virtual FText RecoveryNotice(std::string_view WorkId) const { return FText::GetEmpty(); }
     virtual TArray<FPracticeOffer> PracticeOffers() const = 0;
     virtual PerfectWorld::SchoolIssue StartPractice(std::string_view OfferId) = 0;
 };

@@ -92,6 +92,21 @@ const FS03Content* SharedContent(UWorld& World, FString& OutWhy)
         return nullptr;
     }
     Built->Lessons = MoveTemp(Lessons.Catalogue);
+    const FString P314UTextPath = FPaths::Combine(FPaths::ProjectDir(), TEXT("Data/Text/en/phase3_p304.json"));
+    FString P314UText;
+    if (!FFileHelper::LoadFileToString(P314UText, *P314UTextPath))
+    {
+        OutWhy = TEXT("Data/Text/en/phase3_p304.json cannot be read");
+        return nullptr;
+    }
+    auto P314UWork = PerfectWorld::LoadSchoolWorkBriefContent(*Db,
+        PerfectWorld::ContentFile{std::string(TCHAR_TO_UTF8(*P314UTextPath)), std::string(TCHAR_TO_UTF8(*P314UText))});
+    if (!P314UWork.Ok())
+    {
+        OutWhy = TEXT("the homework brief catalogue was refused");
+        return nullptr;
+    }
+    Built->WorkBriefs = MoveTemp(P314UWork.Catalogue);
     return S03Cache.Add(Stream, MoveTemp(Built)).Get();
 }
 

@@ -127,6 +127,9 @@ TSharedRef<SWidget> SPWStudyDesk::BuildBody()
             Detail->AddSlot().AutoHeight()[PWUI::MakeText(World->Text(Work.Brief.TitleTextKey, LOCTEXT("WorkTitle", "School work")), 22, Style.TextPrimary, true, true)];
             Detail->AddSlot().AutoHeight()[PWUI::MakeText(World->Text(Work.Brief.BriefTextKey, LOCTEXT("BriefFallback", "Read the paper and choose how to use its eighteen units.")), 20, Style.TextPrimary, false, true)];
             Detail->AddSlot().AutoHeight()[PWUI::MakeText(FText::Format(LOCTEXT("Due", "Due: {0}  |  Available: {1}"), PWA5::Deadline(Work.Brief.DueAt), PWA5::Deadline(Work.Brief.AvailableAt)), 18, Style.TextSecondary, false, true)];
+            const FText P314URecovery = World->RecoveryNotice(Id);
+            if (!P314URecovery.IsEmpty())
+                Detail->AddSlot().AutoHeight()[PWUI::MakeText(P314URecovery, 18, Style.Accent, false, true)];
             Detail->AddSlot().AutoHeight()[PWUI::MakeText(World->Text(Work.Brief.CriteriaTextKey, LOCTEXT("CriteriaFallback", "Five groups carry twenty academic marks each. Feedback explains the method and evidence.")), 18, Style.TextSecondary, false, true)];
             if (Work.Overdue || Work.LateSubmission)
             {

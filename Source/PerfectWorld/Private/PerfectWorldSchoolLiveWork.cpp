@@ -3,6 +3,7 @@
 #include "Engine/World.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
 #include "PerfectWorldSchoolOffers.h" // P35
+#include "PerfectWorldLegacyRecovery.h"
 
 #define LOCTEXT_NAMESPACE "PerfectWorldSchoolLiveWork"
 
@@ -164,6 +165,8 @@ public:
         const FS03Content* Content = Live != nullptr ? SharedContent(*Live, Why) : nullptr;
         if (Content != nullptr)
         {
+            const auto P314UText = Content->WorkBriefs.Text.find(Key);
+            if (P314UText != Content->WorkBriefs.Text.end()) return PWLaneLife::ToText(P314UText->second);
             if (const std::string* Found = PerfectWorld::FindSchoolLessonText(Content->Lessons, Key))
             {
                 return PWLaneLife::ToText(*Found);
@@ -191,6 +194,17 @@ public:
             }
         }
         return FText::GetEmpty();
+    }
+
+    virtual FText RecoveryNotice(std::string_view WorkId) const override
+    {
+        UWorld* Live = World.Get();
+        const UPWLaneLifeSubsystem* Life = S03WorkLife(World);
+        FString Why;
+        const FS03Content* Content = Live != nullptr ? SharedContent(*Live, Why) : nullptr;
+        return Life != nullptr && Content != nullptr
+            ? PWLegacyRecovery::P314URecoveredWorkNotice(WorkOf(Life->GetWorldState()), Content->WorkBriefs, WorkId)
+            : FText::GetEmpty();
     }
 
     /** P35: one offer (study at home) with its real cost and what it passes over, blocked with the reason when it cannot start; none when the catalogue lacks it. */
