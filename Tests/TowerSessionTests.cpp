@@ -1,8 +1,11 @@
 #include "TowerSession.h"
 
 #include "Countdown.h"
+#include "TowerScenarioSelection.h"
 
 #include "P2CTestSupport.h"
+
+#include <set>
 
 using namespace PerfectWorld;
 namespace
@@ -36,9 +39,55 @@ TowerSessionResult P2CChoose(TowerSessionState& s, const TowerRunnerCatalogue& c
     P2CExpect(!ApplyTowerSession(s, c, command, prep, CountdownEndInstant()).Ok() && s == after, "duplicate beat cannot score twice");
     return result;
 }
+void P404BRunnerSelection()
+{
+    auto catalogue = P2CTowerContent();
+    auto variant = catalogue.Scenarios.front();
+    variant.Id += ".p404b";
+    for (auto& beat : variant.Beats) beat.PromptTextKey = "phase2.test.variant";
+    catalogue.Scenarios.push_back(variant);
+    P2CExpect(ValidateTowerRunnerCatalogue(catalogue).Ok(), "runner permits multiple unique scenarios on one route");
+    auto duplicate = catalogue;
+    duplicate.Scenarios.push_back(variant);
+    P2CExpect(!ValidateTowerRunnerCatalogue(duplicate).Ok(), "runner still refuses duplicate scenario IDs");
+    auto missing = catalogue;
+    missing.Scenarios.erase(missing.Scenarios.begin() + 1);
+    P2CExpect(!ValidateTowerRunnerCatalogue(missing).Ok(), "runner refuses an uncovered route even at nine scenarios");
+    CountdownProfile preparation; preparation.Final = true;
+    std::set<std::string> drawn;
+    for (std::uint32_t attempt = 0; attempt < 32; ++attempt)
+    {
+        TowerSessionState state;
+        TowerSessionCommand command;
+        P2CExpect(ApplyTowerSession(state, catalogue, command, preparation, CountdownEndInstant(), 404, attempt).Ok(), "multi-scenario runner enters");
+        command.Kind = TowerSessionAction::OpenRoute;
+        command.RouteId = variant.RouteId;
+        command.Method = TowerRoutes().front().Method;
+        P2CExpect(ApplyTowerSession(state, catalogue, command, preparation, CountdownEndInstant(), 404, attempt).Ok(), "multi-scenario route opens");
+        const auto* selected = P404BSelectRouteScenario(catalogue.Scenarios, variant.RouteId, 404, attempt);
+        P2CExpect(state.Active && state.Active->ScenarioId == selected->Id, "OpenRoute uses the shared keyed selection");
+        drawn.insert(state.Active->ScenarioId);
+        auto resumed = state;
+        auto reordered = catalogue;
+        std::reverse(reordered.Scenarios.begin(), reordered.Scenarios.end());
+        P2CExpect(QueryTowerSession(resumed, reordered).PromptTextKey == selected->Beats.front().PromptTextKey,
+            "view resolves stored scenario ID after catalogue reordering");
+        for (std::size_t beat = 0; beat < selected->Beats.size(); ++beat)
+        {
+            command.Kind = TowerSessionAction::Choose; command.Runner = state.Runner;
+            command.Beat = beat; command.ChoiceId = "choice.careful";
+            P2CExpect(ApplyTowerSession(state, catalogue, command, preparation, CountdownEndInstant(), 404, attempt).Ok(), "selected runner scores");
+            P2CExpect(ApplyTowerSession(resumed, reordered, command, preparation, CountdownEndInstant(), 999, 999).Ok() && resumed == state,
+                "resumed choices use stored ID without redrawing from changed selection inputs");
+        }
+        P2CExpect(state.Attempts.back().ScenarioId == selected->Id, "completed attempt retains selected provenance");
+    }
+    P2CExpect(drawn.size() == 2, "both runner variants can be drawn");
+}
 } // namespace
 int main()
 {
+    P404BRunnerSelection();
     auto c = P2CTowerContent();
     P2CExpect(ValidateTowerRunnerCatalogue(c).Ok(), "all nine routes within envelope");
     auto bad = c; bad.Scenarios.front().Beats.front().Choices.front().DisciplineMilli = 1001;
