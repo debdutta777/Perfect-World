@@ -219,7 +219,7 @@ bool FA5PaperTest::RunTest(const FString& Parameters)
         const auto Result = Panel->Send(Command);
         TestTrue(TEXT("authoritative quote equals charge"), Quote.Ok() && Result.Ok() && Quote.Units == Result.ChargedUnits);
     }
-    TestTrue(TEXT("submit through button"), A5Click(Panel, TEXT("Submit paper (90 world minutes)")));
+    TestTrue(TEXT("submit through button"), A5Click(Panel, TEXT("Hand in paper (90 world minutes)")));
     TestTrue(TEXT("academic marks labelled separately"), A5Has(Panel, TEXT("Academic marks: 100 / 100. Separate from tower rank.")));
     TestTrue(TEXT("diagnostic advice visible"), A5Has(Panel, TEXT("Sound method")));
     TestEqual(TEXT("paid once"), Fake->Now, GameInstant(290));
@@ -258,10 +258,10 @@ bool FA5CancelTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("held controller back does not repeat close"), Closed, 1);
     Panel->OnKeyDown(FGeometry(), FKeyEvent(EKeys::Gamepad_FaceButton_Right, FModifierKeysState(), 0, false, 0, 0));
     TestEqual(TEXT("controller back requests close"), Closed, 2);
-    TestTrue(TEXT("cancel discloses actual spent time"), A5Click(Panel, TEXT("Discard draft (5 world minutes)")));
+    TestTrue(TEXT("cancel discloses actual spent time"), A5Click(Panel, TEXT("Cancel paper (5 world minutes)")));
     TestEqual(TEXT("cancel pays survey only"), Fake->Now, GameInstant(205));
     TestTrue(TEXT("recovery can restart"), A5Click(Panel, TEXT("Begin paper (90-minute block)")));
-    TestTrue(TEXT("unfinished submission allowed"), A5Click(Panel, TEXT("Submit paper (90 world minutes)")));
+    TestTrue(TEXT("unfinished submission allowed"), A5Click(Panel, TEXT("Hand in paper (90 world minutes)")));
     TestTrue(TEXT("unfinished feedback points to planning"), A5Has(Panel, TEXT("Unfinished work")));
     TestTrue(TEXT("zero academic marks are not tower rank"), A5Has(Panel, TEXT("Academic marks: 0 / 100")));
     Fake->State.Records.clear();
@@ -294,6 +294,38 @@ bool FA5LayoutTest::RunTest(const FString& Parameters)
     Mark.Failures = AssessmentFailWrongModel | AssessmentFailUnsupported | AssessmentFailWastedTime | AssessmentFailUnclear;
     const FString Advice = PWA5::Diagnostics(Mark).ToString();
     TestTrue(TEXT("all diagnostic kinds yield next actions"), Advice.Contains(TEXT("concept")) && Advice.Contains(TEXT("evidence")) && Advice.Contains(TEXT("time")) && Advice.Contains(TEXT("limits")));
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FP313PaperResumeTest, "PerfectWorld.P313.BegunPaperRetainsBothExitsAfterRecreation",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FP313PaperResumeTest::RunTest(const FString& Parameters)
+{
+    for (const bool bCancel : {false, true})
+    {
+        const auto Original = MakeShared<FA5FakeWorld>();
+        if (!Original->Init(*this)) return false;
+        const auto Panel = SNew(SPWAcademicAssessment).World(Original).WorkId("school.work.a5");
+        TestTrue(TEXT("begin paper"), A5Click(Panel, TEXT("Begin paper (90-minute block)")));
+        TestTrue(TEXT("spend a survey unit"), A5Click(Panel, TEXT("Survey paper (1 unit)")));
+        const auto Restored = MakeShared<FA5FakeWorld>();
+        if (!Restored->Init(*this)) return false;
+        Restored->State = Original->State;
+        Restored->Now = Original->Now;
+        std::string Selected;
+        const auto Desk = SNew(SPWStudyDesk).World(Restored)
+            .OnOpenPaper(FA5OpenPaper::CreateLambda([&Selected](const std::string& Id) { Selected = Id; }));
+        TestTrue(TEXT("fresh desk routes the begun paper"), A5Click(Desk, TEXT("Resume paper")));
+        TestTrue(TEXT("stable saved work ID"), Selected == "school.work.a5");
+        TestEqual(TEXT("opening the desk is read-only"), Restored->Applied, 0);
+        const auto Resumed = SNew(SPWAcademicAssessment).World(Restored).WorkId(Selected).Space(FVector2D(853, 480));
+        TestTrue(TEXT("both exits are present"), A5Has(Resumed, TEXT("Hand in paper")) && A5Has(Resumed, TEXT("Cancel paper")));
+        TestTrue(TEXT("saved survey units remain"), A5Has(Resumed, TEXT("Units left: 17 / 18")));
+        TestTrue(TEXT("chosen exit is reachable"), A5Click(Resumed, bCancel ? TEXT("Cancel paper (5 world minutes)") : TEXT("Hand in paper (90 world minutes)")));
+        TestEqual(TEXT("one exit command"), Restored->Applied, 1);
+        TestEqual(TEXT("only the authoritative exit time is charged"), Restored->Now, GameInstant(bCancel ? 205 : 290));
+        TestTrue(TEXT("practice becomes available again"), Restored->PracticeOffers()[0].bAvailable);
+    }
     return true;
 }
 

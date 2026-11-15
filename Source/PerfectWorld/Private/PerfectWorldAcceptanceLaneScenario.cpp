@@ -477,6 +477,7 @@ bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps)
         {TEXT("school_round7"), AppendSchoolRound7Steps},
         {TEXT("school_round7_late"), AppendSchoolRound7LateSteps},
         {TEXT("school_lesson_round9"), AppendSchoolLessonRound9Steps}, // S03
+        {TEXT("guards_resume_round9"), P313AppendGuardsResumeSteps},
         {TEXT("awakening_round9"), P38AppendAwakeningSteps}, // P38
         {TEXT("traffic_round7"), AppendTrafficRound7Steps},
         {TEXT("crowd_round7"), AppendCrowdRound7Steps},

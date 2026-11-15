@@ -1,4 +1,5 @@
 #include "UI/SPWSchoolPlanner.h"
+#include "PerfectWorldGuardNotice.h"
 
 #include <algorithm>
 
@@ -359,6 +360,8 @@ FText OrderTitle(const uint8 Weekdays, const bool bAttendSchool, const PerfectWo
 
 FText RefusalText(const FString& Code)
 {
+    const FText P313Notice = P313GuardNotice(Code);
+    if (!P313Notice.IsEmpty()) return P313Notice;
     const FText Found = FindText(FString(TEXT("phase2.a6.refusal.")) + Code);
     return Found.IsEmpty() ? Text(TEXT("phase2.a6.refusal.unknown")) : Found;
 }

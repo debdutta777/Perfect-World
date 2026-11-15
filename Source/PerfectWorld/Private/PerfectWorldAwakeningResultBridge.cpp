@@ -1,6 +1,7 @@
 // Copyright Perfect World. All Rights Reserved.
 
 #include "PerfectWorldAwakeningResultBridge.h"
+#include "PerfectWorldGuardNotice.h"
 
 #include "Engine/World.h"
 #include "PerfectWorldContentSubsystem.h"
@@ -206,7 +207,8 @@ namespace PWAwakening
 						PerfectWorld::CountdownPracticeConfirm{P38Row.Offer}});
 					if (!P38Done.Accepted)
 					{
-						OutNotice = PWLaneLife::ToText(P38Done.Why.Message);
+						const FText P313Notice = P313GuardNotice(PWLaneLife::ToFString(P38Done.Why.Code));
+						OutNotice = P313Notice.IsEmpty() ? PWLaneLife::ToText(P38Done.Why.Message) : P313Notice;
 						LastStatusBanner = OutNotice;
 						return false;
 					}

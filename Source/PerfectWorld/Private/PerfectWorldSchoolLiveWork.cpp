@@ -50,9 +50,10 @@ PerfectWorld::SchoolIssue P35RunPractice(UPWLaneLifeSubsystem& Life, const Perfe
     const FP35PracticeStatus Status = P35ReadPractice(State, &Activities);
     if (!Status.CanStart())
     {
+        if (!Status.BlockedCode.empty()) return {Status.BlockedCode, "finish the open session first"};
         return P35PracticeIssue("school.practice.unavailable", "practice cannot start now");
     }
-    const auto Fail = [](const PerfectWorld::CommandResult& Done) { return P35PracticeIssue("school.practice.refused", Done.Why.Code); };
+    const auto Fail = [](const PerfectWorld::CommandResult& Done) { return P35PracticeIssue(Done.Why.Code.c_str(), Done.Why.Message); };
     if (!State.DayLoop.Planned)
     {
         const PerfectWorld::CommandResult Planned = Life.SubmitSchoolCommand(PerfectWorld::Command{PerfectWorld::CommandSource::Player, PerfectWorld::SchoolPlanDay{}});

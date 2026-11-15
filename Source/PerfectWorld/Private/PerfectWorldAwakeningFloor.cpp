@@ -342,6 +342,7 @@ void APWAwakeningFloorActor::TickTransfer(const float DeltaSeconds)
 void APWAwakeningFloorActor::Tick(const float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
+    P313ResumeAt(FindPlayerPawn());
     const UWorld* World = GetWorld();
     if (World != nullptr)
     {

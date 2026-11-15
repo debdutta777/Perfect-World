@@ -305,4 +305,33 @@ bool FSdStatesTest::RunTest(const FString& Parameters)
     return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FP313DayResumeTest, "PerfectWorld.P313.DayResumesActiveBindingWithoutOpeningAgain",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FP313DayResumeTest::RunTest(const FString& Parameters)
+{
+    SchoolDayView View = SdSchoolView();
+    View.LessonOpen = true;
+    View.Rows[0].Status = SchoolDayRowStatus::Open;
+    View.Rows[1].Status = SchoolDayRowStatus::Active;
+    View.Rows[1].ForegroundAvailable = false;
+    View.Rows[1].AttendAvailable = false;
+    const auto World = SdWorld(View);
+    int32 Resumed = 0;
+    const auto Panel = SdPanel(World, FVector2D(853, 480), nullptr, &Resumed);
+    const FString ActiveId = World->Model.Rows[1].BindingId;
+    TestEqual(TEXT("active run wins over an earlier open bell row"), Panel->GetSelectedId(), ActiveId);
+    TestTrue(TEXT("resume button works without an available start mode"),
+        QwClick(Panel, TEXT("Resume lesson (finish or Leave early)")));
+    TestEqual(TEXT("host receives the resume"), Resumed, 1);
+    TestEqual(TEXT("no duplicate open command"), World->Opens, 0);
+    Panel->SelectRow(World->Model.Rows[0].BindingId);
+    TestTrue(TEXT("a stale selection resumes the active binding"), Panel->RequestOpen(SchoolLessonMode::Attend));
+    TestEqual(TEXT("active ID is handed back to the host"), Panel->GetSelectedId(), ActiveId);
+    TestEqual(TEXT("still no open command"), World->Opens, 0);
+    const auto Again = SdPanel(World, FVector2D(853, 480), nullptr, &Resumed);
+    TestTrue(TEXT("fresh presentation retains a reachable resume"),
+        QwClick(Again, TEXT("Resume lesson (finish or Leave early)")));
+    return true;
+}
+
 #endif // WITH_DEV_AUTOMATION_TESTS && !UE_BUILD_SHIPPING

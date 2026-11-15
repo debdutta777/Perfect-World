@@ -1,4 +1,5 @@
 #include "PerfectWorldCommerceText.h"
+#include "PerfectWorldGuardNotice.h"
 
 #include "GameClock.h"
 
@@ -71,6 +72,8 @@ FText CmPauseWalletValue(const UWorld* World)
 
 FText CmRefusalText(const PerfectWorld::CommerceError Error, const FText& ShopName, const FString& CoreCode)
 {
+    const FText P313Notice = P313GuardNotice(CoreCode);
+    if (!P313Notice.IsEmpty()) return P313Notice;
     // R88: lifecycle codes are returned verbatim by WorldSim, outside CommerceError.
     if (CoreCode == TEXT("commerce.service_active"))
         return LOCTEXT("ServiceActive", "Finish at the other counter first.");

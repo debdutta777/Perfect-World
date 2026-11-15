@@ -88,7 +88,7 @@ TSharedPtr<SPWClassLesson> S03LessonScreen(UWorld* World)
 
 namespace PWAcceptance
 {
-void AppendSchoolLessonRound9Steps(TArray<FStepDef>& Out)
+static void S03AppendLessonSteps(TArray<FStepDef>& Out, bool bP313EntryOnly)
 {
     using namespace SchoolR7;
     const TSharedRef<FS03LessonRun> Run = MakeShared<FS03LessonRun>();
@@ -228,6 +228,7 @@ void AppendSchoolLessonRound9Steps(TArray<FStepDef>& Out)
         return FStepOutcome::Pass(FString::Printf(TEXT("the core opened lesson %s (session %llu); the lesson screen took over"), *Run->BindingId, Run->SessionId));
     }));
     Out.Add(MakeShotStep(TEXT("shot_lesson_screen")));
+    if (bP313EntryOnly) return;
 
     // Real choices: press enabled rows of the lesson screen (each is one school.lesson.choose through the reducer) until the exercise is
     // ready to record, or the budget is spent. At least one choice must be accepted by the core.
@@ -361,5 +362,14 @@ void AppendSchoolLessonRound9Steps(TArray<FStepDef>& Out)
         }
         return FStepOutcome::Fail(TEXT("the core's SchoolSessions holds no period record for the lesson"));
     }));
+}
+void AppendSchoolLessonRound9Steps(TArray<FStepDef>& Out)
+{
+    S03AppendLessonSteps(Out, false);
+}
+
+void P313AppendLessonEntrySteps(TArray<FStepDef>& Out)
+{
+    S03AppendLessonSteps(Out, true);
 }
 } // namespace PWAcceptance

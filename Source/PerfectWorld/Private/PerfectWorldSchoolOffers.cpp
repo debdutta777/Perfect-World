@@ -1,4 +1,5 @@
 #include "PerfectWorldSchoolOffers.h"
+#include "PerfectWorldGuardNotice.h"
 
 #include "Attendance.h"
 #include "GameClock.h"
@@ -191,21 +192,29 @@ FP35PracticeStatus P35ReadPractice(const PerfectWorld::WorldState& State, const 
     {
         bPaperOpen = bPaperOpen || (Record.StartedAt && !Record.SubmittedAt);
     }
-    if (Day.Asleep)
+    if (State.SchoolSessions.Active)
+    {
+        Status.BlockedCode = "school.lesson_open";
+        Status.BlockedReason = P313GuardNotice(TEXT("school.lesson_open"));
+    }
+    else if (bPaperOpen)
+    {
+        Status.BlockedCode = "school.paper_open";
+        Status.BlockedReason = P313GuardNotice(TEXT("school.paper_open"));
+    }
+    else if (State.Tutorial.Phase == PerfectWorld::TutorialDungeonPhase::Active ||
+             State.Tutorial.Phase == PerfectWorld::TutorialDungeonPhase::ReadyToGrant)
+    {
+        Status.BlockedCode = "tutorial.active";
+        Status.BlockedReason = P313GuardNotice(TEXT("tutorial.active"));
+    }
+    else if (Day.Asleep)
     {
         Status.BlockedReason = LOCTEXT("P35Asleep", "You are asleep. Practice is for when you are up.");
     }
     else if (Day.HasCommitment || Day.Runner.Active())
     {
         Status.BlockedReason = LOCTEXT("P35Busy", "You are already in the middle of something. Finish it first.");
-    }
-    else if (State.SchoolSessions.Active)
-    {
-        Status.BlockedReason = LOCTEXT("P35LessonOpen", "A lesson is open. Finish it first.");
-    }
-    else if (bPaperOpen)
-    {
-        Status.BlockedReason = LOCTEXT("P35PaperOpen", "A paper is open. Hand it in or set it aside first.");
     }
     else if (!PerfectWorld::OpenConversationPersonId(State).empty())
     {

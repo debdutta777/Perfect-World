@@ -1,4 +1,5 @@
 #include "UI/SPWStudyDesk.h"
+#include "PerfectWorldGuardNotice.h"
 
 #include "GameClock.h"
 #include "Input/Events.h"
@@ -38,6 +39,8 @@ FText Deadline(const PerfectWorld::GameInstant At)
 
 FText IssueText(const PerfectWorld::SchoolIssue& Issue)
 {
+    const FText P313Notice = P313GuardNotice(FString(UTF8_TO_TCHAR(Issue.Code.c_str())));
+    if (!P313Notice.IsEmpty()) return P313Notice;
     if (Issue.Code == "school.work.already_submitted") return LOCTEXT("AlreadySubmitted", "This work has already been submitted. Your academic record is unchanged.");
     if (Issue.Code == "school.work.busy") return LOCTEXT("Busy", "Submit or discard your open paper before beginning another one.");
     if (Issue.Code == "school.work.unavailable") return LOCTEXT("Unavailable", "This work is unavailable here or has not opened yet. Return to the desk when it is available.");

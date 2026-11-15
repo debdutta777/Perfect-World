@@ -38,9 +38,13 @@ FText APWAwakeningFloorActor::GetPadVerb(const FAwPadSpec& Pad) const
     case EAwPadKind::Enter:
         if (const auto* P38Life = UPWLaneLifeSubsystem::Get(this); P38Life != nullptr && P38Life->GetWorldState().Awakening.Granted)
             return bOccupied ? FText::GetEmpty() : LOCTEXT("P38Countdown", "Read the examination countdown and optional preparation");
+        if (const auto P313Bridge = AwBridge::Resolve(GetWorld()); !bOccupied && P313Bridge.IsValid() && P313Bridge->GetStatus().bSessionOpen)
+            return LOCTEXT("P313Resume", "Resume the supervised floor (complete or Withdraw)");
         return bOccupied ? FText::GetEmpty() : FText::FromString(FString::Printf(
             TEXT("Enter the virtual floor (scheduled appointment; %lld minutes)"), static_cast<long long>(PerfectWorld::TutorialSessionMinutes)));
     case EAwPadKind::Leave:
+        if (const auto P313Bridge = AwBridge::Resolve(GetWorld()); bOccupied && P313Bridge.IsValid() && P313Bridge->GetStatus().bSessionOpen)
+            return LOCTEXT("P313WithdrawLeave", "Withdraw and return to the campus");
         return bOccupied ? LOCTEXT("VerbLeave", "Return to the campus") : FText::GetEmpty();
     default:
         break;
