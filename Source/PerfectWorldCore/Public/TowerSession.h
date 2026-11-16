@@ -9,7 +9,7 @@ struct CountdownProfile;
 inline constexpr std::uint32_t TowerSessionContractVersion = 1;
 inline constexpr std::size_t TowerRunnerBeatLimit = 16;
 inline constexpr std::size_t TowerRunnerChoiceLimit = 8;
-/** A7 authors exactly one scenario for each existing Tower route, with 1..16 beats.
+/** Each existing Tower route has one or more scenarios, with 1..16 beats.
  * All methods allowed by that route share its scoring envelope. These provisional
  * tuning bounds are core authority, never widget-provided metrics. */
 struct TowerRunnerChoice
@@ -135,10 +135,14 @@ struct TowerSessionResult
 [[nodiscard]] PERFECTWORLDCORE_API TowerRunnerConditions TowerConditionsFromPreparation(const CountdownProfile& preparation,
     TowerMethod method);
 /** preparation and now come from authority; Enter requires final preparation and
- * now >= CountdownEndInstant(). Defer/Decline need no awakening/profile. */
+ * now >= CountdownEndInstant(). Defer/Decline need no awakening/profile.
+ * OpenRoute draws with the authoritative seed and zero-based examination attempt;
+ * reuse both after reload. Defaults retain the legacy standalone call surface.
+ * Active choices and views resolve the stored ScenarioId without drawing again. */
 PERFECTWORLDCORE_API TowerSessionResult ApplyTowerSession(TowerSessionState& state,
     const TowerRunnerCatalogue& catalogue, const TowerSessionCommand& command,
-    const CountdownProfile& preparation, GameInstant now);
+    const CountdownProfile& preparation, GameInstant now,
+    std::uint64_t worldSeed = 0, std::uint32_t attemptNumber = 0);
 [[nodiscard]] PERFECTWORLDCORE_API TowerSessionView QueryTowerSession(const TowerSessionState& state,
     const TowerRunnerCatalogue& catalogue);
 } // namespace PerfectWorld
