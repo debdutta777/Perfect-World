@@ -1025,3 +1025,9 @@ add_executable(PerfectWorldWorldSaveExamTests Tests/WorldSaveExamTests.cpp)
 target_link_libraries(PerfectWorldWorldSaveExamTests PRIVATE PerfectWorldCore)
 target_compile_definitions(PerfectWorldWorldSaveExamTests PRIVATE PW_EXAM_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
 add_test(NAME PerfectWorldWorldSaveExamTests COMMAND PerfectWorldWorldSaveExamTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# P403: pure examination result reports, stable evidence reasons and authored next steps.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ExamResult.cpp)
+add_executable(PerfectWorldExamResultTests Tests/ExamResultTests.cpp)
+target_link_libraries(PerfectWorldExamResultTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldExamResultTests COMMAND PerfectWorldExamResultTests ${CMAKE_SOURCE_DIR}/Data/Content)
