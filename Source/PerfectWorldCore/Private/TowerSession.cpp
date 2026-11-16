@@ -73,9 +73,11 @@ SchoolIssue ValidateTowerRunnerCatalogue(const TowerRunnerCatalogue& catalogue)
                 if (!IsReceiptIdWellFormed(c.Id) || !choices.insert(c.Id).second || !IsReceiptIdWellFormed(c.TextKey) ||
                     c.MissionMinutes < 1 || c.MissionMinutes > 60 || c.Strain < 0 || c.Strain > 4 ||
                     c.Recovery < 0 || c.Recovery > 4 || c.DisciplineMilli < 0 || c.DisciplineMilli > TowerScoreMaxMilli ||
-                    c.CommonJudgmentMilli < 0 || c.CommonJudgmentMilli > TowerScoreMaxMilli)
+                    c.CommonJudgmentMilli < 0 || c.CommonJudgmentMilli > TowerScoreMaxMilli ||
+                    (c.P405CombatOnly && !FindTowerRoute(s.RouteId)->AllowsCombat))
                     return P2CTowerIssue("performance_bounds");
-                safePerfect = safePerfect || (c.DisciplineMilli == TowerScoreMaxMilli && c.CommonJudgmentMilli == TowerScoreMaxMilli && c.Recovery >= c.Strain);
+                safePerfect = safePerfect || (!c.P405CombatOnly && c.DisciplineMilli == TowerScoreMaxMilli &&
+                    c.CommonJudgmentMilli == TowerScoreMaxMilli && c.Recovery >= c.Strain);
             }
             // Every route retains the original Tower ceiling even with zero preparation.
             if (!safePerfect) return P2CTowerIssue("ceiling_unreachable");
@@ -148,6 +150,8 @@ TowerSessionResult ApplyTowerSession(TowerSessionState& state, const TowerRunner
         const auto& beat = scenario->Beats[run.Beat];
         const auto choice = std::find_if(beat.Choices.begin(), beat.Choices.end(), [&](const auto& item) { return item.Id == command.ChoiceId; });
         if (choice == beat.Choices.end()) { result.Issue = P2CTowerIssue("unknown_choice"); break; }
+        if (choice->P405CombatOnly && run.Method != TowerMethod::Combat)
+            { result.Issue = P2CTowerIssue("method_not_allowed"); break; }
         run.MissionMinutes += std::max(1, choice->MissionMinutes - run.Conditions.MinuteDiscount);
         const bool defeated = choice->Strain > run.Conditions.Reserve;
         run.Conditions.Reserve = std::clamp(run.Conditions.Reserve - choice->Strain + choice->Recovery, 0, 10);
@@ -208,6 +212,7 @@ TowerSessionView QueryTowerSession(const TowerSessionState& state, const TowerRu
     view.ClueTextKeys = beat.ClueTextKeys;
     if (!P2CTowerTerminal(state.Participation))
         for (const auto& choice : beat.Choices)
+            if (!choice.P405CombatOnly || run.Method == TowerMethod::Combat)
             view.Choices.push_back({choice.Id, choice.TextKey, std::max(1, choice.MissionMinutes - run.Conditions.MinuteDiscount), choice.Strain});
     return view;
 }

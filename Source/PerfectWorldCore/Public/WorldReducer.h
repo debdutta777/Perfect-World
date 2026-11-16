@@ -190,7 +190,7 @@ public:
     /** P4-02: entry choices, withdrawal and the pending/charged outside minutes, with the session view. Pure. */
     [[nodiscard]] P402ExamWorldView ExaminationWorldView() const;
     /** P4-02: the P4-03 seam's derived result of the stored session (refused "exam.not_terminal" while open). Never stored. */
-    [[nodiscard]] P402ExamFinish ExaminationResult() const { return P402ExamFinishSeam(State_.Examination); }
+    [[nodiscard]] P402ExamFinish ExaminationResult() const { return P402ExamFinishSeam(State_.Examination, Examination_.Followups); }
 
 private:
     std::optional<Rejection> Validate(const Command& command) const;
