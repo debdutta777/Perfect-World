@@ -126,7 +126,7 @@ TArray<FVector> Approach(const PerfectWorld::CrowdRouteSlot& Route, const double
     }
     else
     {
-        Along = double(Route.Route.LengthCm);
+        Along = double(Route.TravelLengthCm > 0 ? Route.TravelLengthCm : Route.Route.LengthCm);
         if (!Route.Segments.empty()) Result.Add(Point(Route.Segments.back().To));
         for (auto It = Route.Segments.rbegin(); It != Route.Segments.rend(); ++It)
         {

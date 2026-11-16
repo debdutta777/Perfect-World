@@ -15,6 +15,18 @@
 // about what the player does with the rest, and then settles what the elapsed time resolved.
 namespace PerfectWorld
 {
+CountdownIssue ValidateCountdownContext(const CountdownContext& context)
+{
+    if (!IsValidIdentityId(context.Player))
+        return CountdownMakeIssue(CountdownError::BadContext, "the player's identity id is not valid");
+    for (const CountdownContact& contact : context.Contacts)
+    {
+        if (!IsConductTokenFair(contact.Role) || !IsValidIdentityId(contact.Person) || contact.Person == context.Player)
+            return CountdownMakeIssue(CountdownError::BadContext, "a contact has a bad role or identity id: " + contact.Role);
+    }
+    return {};
+}
+
 namespace
 {
 std::int64_t CountdownEntryMinutes(const WeekEntry& entry, const ActivityCatalogue& activities)
@@ -31,18 +43,6 @@ std::int64_t CountdownEntryMinutes(const WeekEntry& entry, const ActivityCatalog
     case WeekEntryKind::Spend: return entry.Minutes;
     }
     return 0;
-}
-
-CountdownIssue CountdownCheckContext(const CountdownContext& context)
-{
-    if (!IsValidIdentityId(context.Player))
-        return CountdownMakeIssue(CountdownError::BadContext, "the player's identity id is not valid");
-    for (const CountdownContact& contact : context.Contacts)
-    {
-        if (!IsConductTokenFair(contact.Role) || !IsValidIdentityId(contact.Person) || contact.Person == context.Player)
-            return CountdownMakeIssue(CountdownError::BadContext, "a contact has a bad role or identity id: " + contact.Role);
-    }
-    return {};
 }
 
 /** Puts the blocks that start inside the plan's days into the plan and refuses a player entry that lands on one. */
@@ -199,7 +199,7 @@ CountdownOpenResult R95OpenCountdown(const WorldState& world, const CountdownCon
         return refuse(CountdownMakeIssue(CountdownError::NotAtStart, "the countdown opens at 18:00 on Awakening Day"));
     if (now >= CountdownEndInstant())
         return refuse(CountdownMakeIssue(CountdownError::BeyondExam, "cannot create a new countdown after the fixed deadline"));
-    if (const CountdownIssue bad = CountdownCheckContext(context); !bad.Ok())
+    if (const CountdownIssue bad = ValidateCountdownContext(context); !bad.Ok())
         return refuse(bad);
     if (catalogues.Calendar->AwakeningDay != CalendarDayOfInstant(CountdownStartInstant()) ||
         catalogues.Calendar->ExaminationDay != CalendarDayOfInstant(CountdownEndInstant()))
