@@ -1,4 +1,5 @@
 #include "UI/SPWClassLesson.h"
+#include "PerfectWorldGuardNotice.h"
 
 // The shared lesson words, the interim core bridge and the frame. The English table is in SPWClassLessonTable.cpp (generated from
 // Data/Text/en/phase2_a2.json and phase2_a3.json; a test keeps the two in step). Nothing here decides anything.
@@ -58,6 +59,8 @@ FText FromUtf8(const std::string& Value) { return FText::FromString(ToFString(Va
 
 FText IssueText(const std::string& Code)
 {
+    const FText P313Notice = P313GuardNotice(ToFString(Code));
+    if (!P313Notice.IsEmpty()) return P313Notice;
 	if (Code.empty())
 	{
 		return Text(TEXT("school.session.ok"));

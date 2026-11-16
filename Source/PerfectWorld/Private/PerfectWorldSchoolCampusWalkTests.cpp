@@ -9,7 +9,14 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "Algo/Reverse.h"
+#include "AmbientCrowd.h"
+#include "Components/InstancedStaticMeshComponent.h"
+#include "Components/PrimitiveComponent.h"
+#include "Engine/StaticMesh.h"
+#include "EngineUtils.h"
+#include "PerfectWorldAwakeningFloor.h"
 #include "PerfectWorldSchoolCampusParts.h"
+#include "PerfectWorldSchoolTestSupport.h"
 
 namespace
 {
@@ -48,8 +55,51 @@ struct FScTGrid
             {
                 continue;
             }
-            Mark(Part.Box.Min.X - ScTCapsuleRadius, Part.Box.Min.Y - ScTCapsuleRadius, Part.Box.Max.X + ScTCapsuleRadius, Part.Box.Max.Y + ScTCapsuleRadius);
+            AddSolid(Part.Box);
         }
+    }
+
+    void AddSolid(const FBox& Box)
+    {
+        if (!Box.IsValid || Box.Max.Z <= ScGroundZ + ScTStep || Box.Min.Z >= ScGroundZ + ScTBody) return;
+        Mark(Box.Min.X - ScTCapsuleRadius, Box.Min.Y - ScTCapsuleRadius,
+             Box.Max.X + ScTCapsuleRadius, Box.Max.Y + ScTCapsuleRadius);
+    }
+
+    // Read actual spawned components, including the Awakening terminal, movers,
+    // pads and any later campus prop. An ISM's aggregate bounds are not a solid.
+    int32 AddSpawned(UWorld& World)
+    {
+        int32 Count = 0;
+        for (TActorIterator<AActor> It(&World); It; ++It)
+        {
+            TArray<UPrimitiveComponent*> Components;
+            It->GetComponents(Components);
+            for (const auto* Component : Components)
+            {
+                if (!Component->IsQueryCollisionEnabled() || Component->GetCollisionResponseToChannel(ECC_Pawn) != ECR_Block) continue;
+                if (const auto* Instances = Cast<UInstancedStaticMeshComponent>(Component))
+                {
+                    const UStaticMesh* Mesh = Instances->GetStaticMesh();
+                    if (Mesh == nullptr) continue;
+                    for (int32 I = 0; I < Instances->GetInstanceCount(); ++I)
+                    {
+                        FTransform Transform;
+                        if (Instances->GetInstanceTransform(I, Transform, true))
+                        {
+                            AddSolid(Mesh->GetBoundingBox().TransformBy(Transform));
+                            ++Count;
+                        }
+                    }
+                }
+                else
+                {
+                    AddSolid(Component->CalcBounds(Component->GetComponentTransform()).GetBox());
+                    ++Count;
+                }
+            }
+        }
+        return Count;
     }
 
     int32 CellX(double X) const { return FMath::FloorToInt((X - X0) / Cell); }
@@ -274,7 +324,54 @@ bool FScSchoolSeatRouteTest::RunTest(const FString& Parameters)
         return false;
     }
     FScTGrid Grid(B);
-    const TArray<FVector> Route = ScClassroomSeatRoute(C, B.Points);
+    PWSchoolTest::FScTestWorld Holder;
+    if (!TestNotNull(TEXT("a world for the production campus spawns"), Holder.World)) return false;
+    PWLane::FLaneScene Scene;
+    TestTrue(TEXT("the production campus spawned"), SpawnSchoolCampus(*Holder.World, Scene).bBuilt);
+    PWAwakening::FAwFloorConfig Config;
+    Config.bUseHud = false;
+    TestTrue(TEXT("the production Awakening floor and terminal spawned"), PWAwakening::SpawnAwakeningFloor(*Holder.World, Config).bBuilt);
+    TestTrue(TEXT("spawned pawn blockers are included individually"), Grid.AddSpawned(*Holder.World) > 0);
+    // P315: the old test started at waypoint 1 and read only campus block parts.
+    // Include the actual approach from the register and every crowd capsule at 09:40.
+    TArray<FVector> Route{B.Points.SignInStand};
+    Route.Append(ScClassroomSeatRoute(C, B.Points));
+    PerfectWorld::ContentDb Db;
+    if (!PWSchoolTest::ScLoadSchoolRecords(*this, Db)) return false;
+    const auto* Record = Db.Find("calendar.nabapara_2042_43");
+    if (!TestNotNull(TEXT("the authored school calendar"), Record)) return false;
+    std::vector<std::string> Problems;
+    const auto Calendar = PerfectWorld::ParseSchoolCalendarRecord(*Record, Problems);
+    if (!TestTrue(TEXT("the calendar parses"), Problems.empty())) return false;
+    PerfectWorld::AmbientCrowd Crowd(0x50575F4C414E45ull, std::string(PerfectWorld::NeighbourhoodId),
+        PerfectWorld::BuildNeighbourhoodPlan(0), Calendar);
+    if (!TestTrue(TEXT("the crowd's public approaches are valid"), Crowd.Problems().empty())) return false;
+    // All students' bay approaches must also admit a 34 cm capsule through the
+    // real spawned scenery, including the terminal and the verandah pillars.
+    for (const auto& Slot : Crowd.RouteSlots())
+    {
+        if (Slot.Cohort != PerfectWorld::CrowdCohort::Student) continue;
+        TArray<FVector> Points;
+        for (const auto& Segment : Slot.Segments)
+        {
+            if (Points.IsEmpty()) Points.Add(FVector(Segment.From.X, Segment.From.Y, Segment.From.Z));
+            Points.Add(FVector(Segment.To.X, Segment.To.Y, Segment.To.Z));
+        }
+        FVector At = FVector::ZeroVector;
+        const bool bApproachClear = ScTPolylineClear(Grid, Points, At);
+        TestTrue(*FString::Printf(TEXT("pupil slot %u has a clear campus approach (%.0f, %.0f)"), Slot.Slot, At.X, At.Y),
+            bApproachClear);
+    }
+    const auto People = Crowd.CrowdAt(PerfectWorld::CalendarDayStartInstant(0) + 580, {6500, 5850, -185}, 10000);
+    int32 Pupils = 0;
+    for (const auto& Person : People.People)
+    {
+        if (Person.Cohort != PerfectWorld::CrowdCohort::Student) continue;
+        ++Pupils;
+        const FVector Feet(Person.Position.X, Person.Position.Y, Person.Position.Z);
+        Grid.AddSolid(FBox(Feet - FVector(34, 34, 0), Feet + FVector(34, 34, 165)));
+    }
+    TestEqual(TEXT("every pupil in the 09:40 campus sample contributes a blocker"), Pupils, 27);
     FVector BlockedAt = FVector::ZeroVector;
     const bool bRouteClear = ScTPolylineClear(Grid, Route, BlockedAt);
     TestTrue(*FString::Printf(TEXT("the seat route is clear for the 34 cm capsule (blocked at %.0f, %.0f)"), BlockedAt.X, BlockedAt.Y), bRouteClear);
@@ -291,6 +388,10 @@ bool FScSchoolSeatRouteTest::RunTest(const FString& Parameters)
     const FVector Seat = B.Points.ClassroomAisle + FVector(0.0, 0.0, 90.0);
     TestTrue(*FString::Printf(TEXT("the seat is %.0f cm from where the route ends, inside the 200 cm reach"), FVector::Dist2D(End, Seat)), FVector::Dist2D(End, Seat) <= 200.0);
     TestTrue(TEXT("the route's end is free standing floor"), Grid.IsFree(End.X, End.Y));
+    FScTGrid Former(B);
+    for (const double Y : {5773.0, 5863.0})
+        Former.AddSolid(FBox(FVector(6466, Y - 34, ScGroundZ), FVector(6534, Y + 34, ScGroundZ + 165)));
+    TestFalse(TEXT("the packaged waiting-pupil pair obstructs the unchanged route"), ScTPolylineClear(Former, Route, BlockedAt));
     return true;
 }
 

@@ -11,6 +11,7 @@
 #include "PerfectWorldNpcPresenceSubsystem.h"
 #include "PerfectWorldReadingPresenter.h"
 #include "PerfectWorldLaneLifePersistence.h"
+#include "PerfectWorldLegacyRecovery.h"
 #include "PerfectWorldPlayerCharacter.h"
 #include "PerfectWorldBuyPresenter.h" // R88
 #include "PerfectWorldSchoolPresenter.h" // S03
@@ -203,6 +204,30 @@ bool UPWLaneLifeSubsystem::LoadWorldSlot(const std::string& Path, PerfectWorld::
     {
         Placement = Read.Data->Player;
         AdoptSavedWorld(MoveTemp(Prepared));
+        PWLegacyRecovery::FP314ULoadActions P314UActions;
+        P314UActions.Read = [this]() -> const PerfectWorld::WorldState& { return Sim->State(); };
+        P314UActions.PendingWork = [this]() { return Sim->PendingSchoolWorkReconciliation(); };
+        P314UActions.Submit = [this](const PerfectWorld::Command& Command) { return SubmitCommand(Command); };
+        P314UActions.Autosave = [this, &Creation, &Path, &Read]() -> FText
+        {
+            // The player has not been placed yet. Preserve the slot's placement, never the title-screen pawn's position.
+            const auto P314UCapture = PWLaneLifePersistence::CaptureWorldSave(Creation.CaptureSave(), Sim->State(), Read.Data->Player);
+            if (P314UCapture.Succeeded())
+            {
+                const auto P314UWritten = PWLaneLifePersistence::WriteWorldSlot(Path, P314UCapture.Text);
+                if (P314UWritten.Ok) return FText::GetEmpty();
+                UE_LOG(LogPWLaneLife, Warning, TEXT("P314U recovery autosave failed: %hs"), P314UWritten.Message.c_str());
+            }
+            else
+                UE_LOG(LogPWLaneLife, Warning, TEXT("P314U recovery snapshot refused: %hs"), P314UCapture.Validation.Message.c_str());
+            return NSLOCTEXT("PerfectWorldP314U", "AutosaveFailed", "This life loaded, but its recovery could not be saved. Save it again before leaving; the earlier slot is kept.");
+        };
+        const FText P314UNotice = PWLegacyRecovery::P314URecoverLoadedLife(Creation.CaptureSave(), P314UActions);
+        if (!P314UNotice.IsEmpty())
+        {
+            if (!Message.empty()) Message += "\n\n";
+            Message += TCHAR_TO_UTF8(*P314UNotice.ToString());
+        }
     }
     return true;
 }

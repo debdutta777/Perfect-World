@@ -1,4 +1,5 @@
 #include "PerfectWorldAwakeningBridge.h"
+#include "PerfectWorldGuardNotice.h"
 
 #include "Engine/World.h"
 #include "PerfectWorldAwakeningCatalogue.h"
@@ -27,7 +28,8 @@ public:
             return false;
         }
         const auto& State = Life->GetWorldState();
-        if (State.Tutorial.Phase == PerfectWorld::TutorialDungeonPhase::Active) return true;
+        if (State.Tutorial.Phase == PerfectWorld::TutorialDungeonPhase::Active ||
+            State.Tutorial.Phase == PerfectWorld::TutorialDungeonPhase::ReadyToGrant) return true;
         auto Preview = State.Tutorial;
         const auto Eligibility = PerfectWorld::BeginTutorialDungeon(Preview, State.Awakening, Life->GetNow());
         if (Eligibility.Ok()) return true;
@@ -45,7 +47,8 @@ public:
         if (Life == nullptr) return Result;
         const auto& State = Life->GetWorldState();
         Result.bMakeUp = State.Awakening.MakeUp.Phase == PerfectWorld::AwakeningMakeUpPhase::Scheduled;
-        if (State.Tutorial.Phase == PerfectWorld::TutorialDungeonPhase::Active)
+        if (State.Tutorial.Phase == PerfectWorld::TutorialDungeonPhase::Active ||
+            State.Tutorial.Phase == PerfectWorld::TutorialDungeonPhase::ReadyToGrant)
         {
             Result.bAccepted = true;
             Result.bResumed = true; // a loaded supervised session keeps its original start and conduct.
@@ -55,6 +58,8 @@ public:
         Result.bAccepted = Done.Accepted;
         Result.Code = PWLaneLife::ToFString(Done.Why.Code);
         Result.Message = PWLaneLife::ToFString(Done.Why.Message);
+        const FText P313Notice = P313GuardNotice(Result.Code);
+        if (!P313Notice.IsEmpty()) Result.Message = P313Notice.ToString();
         return Result;
     }
 
@@ -64,7 +69,8 @@ public:
         const auto* Life = P38Life();
         if (Life == nullptr) return Result;
         const auto& Tutorial = Life->GetWorldState().Tutorial;
-        Result.bSessionOpen = Tutorial.Phase == PerfectWorld::TutorialDungeonPhase::Active;
+        Result.bSessionOpen = Tutorial.Phase == PerfectWorld::TutorialDungeonPhase::Active ||
+            Tutorial.Phase == PerfectWorld::TutorialDungeonPhase::ReadyToGrant;
         Result.bSessionComplete = Tutorial.Phase == PerfectWorld::TutorialDungeonPhase::Completed;
         for (int32 Index = 0; Index < SituationCount; ++Index)
             Result.Phase[Index] = Index < Tutorial.NextSituation ? EAwPhase::Complete
@@ -96,10 +102,12 @@ public:
             Command.Payload = PerfectWorld::TutorialAct{std::string(Core.StationId), std::string(Core.Choices[ChoiceIndex].Id)};
             Result.Consequence = PWLaneLife::ToName(Core.Choices[ChoiceIndex].ConsequenceId);
         }
-        const auto Done = Life->SubmitAwakeningCommand(Command);
+        const auto Done = Choice == AwWithdrawDef().Id ? P313ExitSession(*Life) : Life->SubmitAwakeningCommand(Command);
         Result.bAccepted = Done.Accepted;
         Result.Code = PWLaneLife::ToFString(Done.Why.Code);
         Result.Message = PWLaneLife::ToFString(Done.Why.Message);
+        const FText P313Notice = P313GuardNotice(Result.Code);
+        if (!P313Notice.IsEmpty()) Result.Message = P313Notice.ToString();
         const auto Status = GetStatus();
         Result.Phase = Status.Phase[Index];
         Result.bSessionComplete = Status.bSessionComplete;
@@ -129,12 +137,20 @@ public:
     {
         auto* Life = P38Life();
         if (Life == nullptr || Life->GetWorldState().Awakening.Granted) return;
-        const auto Done = Life->SubmitAwakeningCommand({PerfectWorld::CommandSource::Player, PerfectWorld::TutorialWithdraw{}});
+        const auto Done = P313ExitSession(*Life);
         if (Done.Accepted) P38ShowResult();
         else Life->ShowPlayerNotice(PWLaneLife::ToText(Done.Why.Message));
     }
 
 private:
+    PerfectWorld::CommandResult P313ExitSession(UPWLaneLifeSubsystem& Life)
+    {
+        // The supervisor completes a loaded exit already recorded by the core. No new conduct or player Finish payload.
+        if (Life.GetWorldState().Tutorial.Phase == PerfectWorld::TutorialDungeonPhase::ReadyToGrant)
+            return Life.SubmitAwakeningCommand({PerfectWorld::CommandSource::System, PerfectWorld::TutorialFinish{}});
+        return Life.SubmitAwakeningCommand({PerfectWorld::CommandSource::Player, PerfectWorld::TutorialWithdraw{}});
+    }
+
     void P38ShowResult()
     {
         if (auto* Presenter = UPWSchoolPresenter::Get(World.Get())) Presenter->OpenAwakeningResult();

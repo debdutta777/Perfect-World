@@ -14,6 +14,8 @@ bool ScAView(UPWAcceptanceSubsystem& Sub, PerfectWorld::SchoolArrivalView& OutVi
 FStepDef ScACamera(const FString& Name, bool bThird);
 /** Walks a list of points; FaceAfter (optional) is looked at on arrival. */
 FStepDef ScAPointsWalk(const FString& Name, const TArray<FVector>& Points, double Timeout, const FVector* FaceAfter = nullptr);
+/** Walks the authored neighbourhood route, omitting SkipPoints from its start. */
+FStepDef ScARouteWalk(const FString& Name, const char* From, const char* To, int32 SkipPoints, double Timeout);
 FStepDef ScAReadBoardStep();
 FStepDef ScABaselineStep(const FString& Name, const TSharedRef<int32>& ExpectedCalls);
 FStepDef ScASignInStep(const FString& Name, const TSharedRef<int32>& ExpectedCalls, const FString& WantCode, TFunction<bool(UPWAcceptanceSubsystem&)> SkipIf);

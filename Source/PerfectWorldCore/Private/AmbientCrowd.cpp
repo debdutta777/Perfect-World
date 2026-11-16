@@ -64,7 +64,46 @@ bool R75Expand(CrowdRouteSlot& slot, const NeighbourhoodPlan& plan)
         if (expanded != link->LengthCm) return false;
         total += expanded;
     }
+    slot.TravelLengthCm = total;
     return !slot.Segments.empty() && total == slot.Route.LengthCm;
+}
+
+// P315: pupils wait in spaced bays east of the gate-to-office walk, rather than
+// turning its centreline into a row of immovable 68 cm capsule pairs. Keep a
+// continuous public approach to each bay, used by both actors and distant figures.
+bool P315StudentBay(CrowdRouteSlot& slot, const NeighbourhoodPlan& plan, int index)
+{
+    const auto* gate = FindNeighbourhoodNode(plan, NeighbourhoodSchoolGateNodeId);
+    const auto* classroom = FindNeighbourhoodNode(plan, "walk.nabapara.school_classroom");
+    const auto* area = FindNeighbourhoodFeature(plan, "school.nabapara.forecourt");
+    if (!gate || !classroom || !area || slot.Segments.empty()) return false;
+    const NeighbourhoodPoint bay{area->Bounds.X0 + 2100 + (index % 3) * 120,
+        area->Bounds.Y0 + 500 + (index / 3) * 80, gate->Position.Z};
+    if (bay.X <= classroom->Position.X + 68 || bay.X + 34 >= area->Bounds.X1 ||
+        bay.Y <= area->Bounds.Y0 + 400 || bay.Y + 34 >= area->Bounds.Y1)
+        return false;
+    std::vector<NeighbourhoodPoint> points{gate->Position,
+        {gate->Position.X, area->Bounds.Y0 + 400, gate->Position.Z},
+        {bay.X, area->Bounds.Y0 + 400, bay.Z}, bay,
+        {area->Bounds.X0 + 2600, bay.Y, bay.Z},
+        {area->Bounds.X0 + 2600, classroom->Position.Y - 150, bay.Z},
+        {classroom->Position.X, classroom->Position.Y - 150, bay.Z}, classroom->Position};
+    const auto incomingLink = slot.Segments.front().LinkId;
+    const auto outgoingLink = slot.Segments.back().LinkId;
+    if (!slot.Arrival) std::reverse(points.begin(), points.end());
+    std::vector<CrowdRouteSegment> segments;
+    std::int64_t total = 0;
+    for (std::size_t p = 1; p < points.size(); ++p)
+    {
+        const auto length = R75Length(points[p-1], points[p]);
+        if (length > 0) segments.push_back({p < 4 ? incomingLink : outgoingLink, points[p-1], points[p], length});
+        total += length;
+        if (points[p] == bay) slot.WaitingDistanceCm = total;
+    }
+    if (slot.WaitingDistanceCm < 0) return false;
+    slot.Segments = std::move(segments);
+    slot.TravelLengthCm = total;
+    return true;
 }
 CrowdOutfit R75Outfit(CrowdCohort cohort, std::uint64_t seed)
 {
@@ -110,7 +149,7 @@ void R75Evaluate(CrowdPerson& person, const CrowdRouteSlot& slot, std::uint64_t 
     // 90..130 cm per exploration second (one game minute). Route durations are whole game minutes;
     // speed returned below is the actual rounded-duration speed, not the requested speed.
     const int speed = 90 + static_cast<int>(seed % 41);
-    const auto length = slot.Route.LengthCm;
+    const auto length = slot.TravelLengthCm;
     const int duration = (slot.EndMinute-slot.BeginMinute)*1000;
     std::int64_t distance = 0;
     int direction = 1;
@@ -132,15 +171,8 @@ void R75Evaluate(CrowdPerson& person, const CrowdRouteSlot& slot, std::uint64_t 
     }
     else
     {
-        // Seeded waiting spots remain on the authored graph. Students spread over
-        // the forecourt/classroom path instead of stacking at one gate point.
-        std::int64_t hold = length;
-        if (slot.Cohort == CrowdCohort::Student)
-        {
-            const auto spread = std::min<std::int64_t>(length-1, 150 + static_cast<int>(seed % 2251));
-            hold = slot.Arrival ? length-spread : spread;
-        }
-        else hold -= std::min<std::int64_t>(length-1, static_cast<int>(seed % (slot.Cohort == CrowdCohort::Elder ? 601 : 201)));
+        std::int64_t hold = slot.WaitingDistanceCm >= 0 ? slot.WaitingDistanceCm :
+            length - std::min<std::int64_t>(length-1, static_cast<int>(seed % (slot.Cohort == CrowdCohort::Elder ? 601 : 201)));
         const int incoming = R75TravelMinutes(hold, speed)*1000;
         const auto remaining = slot.EnterEntranceId == slot.ExitEntranceId ? hold : length-hold;
         const int outgoing = R75TravelMinutes(remaining, speed)*1000;
@@ -240,8 +272,14 @@ AmbientCrowd::AmbientCrowd(std::uint64_t worldSeed, std::string district, const 
         }
         for (int i = 0; i < count; ++i)
         {
-            slot.Slot = static_cast<std::uint32_t>(Slots_.size());
-            Slots_.push_back(slot);
+            auto placed = slot;
+            if (cohort == CrowdCohort::Student && !P315StudentBay(placed, Plan_, i))
+            {
+                Problems_.push_back("P315: school forecourt waiting bay has no public approach");
+                return;
+            }
+            placed.Slot = static_cast<std::uint32_t>(Slots_.size());
+            Slots_.push_back(std::move(placed));
         }
     };
     using C = CrowdCohort;

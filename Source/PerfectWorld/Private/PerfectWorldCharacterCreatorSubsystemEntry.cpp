@@ -70,7 +70,7 @@ bool UPerfectWorldCharacterCreatorSubsystem::StartLifeAndSaveToSlot(int32 SlotIn
     PerfectWorld::WorldSaveData Fresh;
     const auto Begun = PerfectWorld::BeginWorldFromCreation(Started.CaptureSave(), 0x50575F4C414E45ull, Fresh);
     if (!Begun.Succeeded()) return RecordFileError(FText::FromString(ToFString(Begun.Message)));
-    // P38: confirmation only. LoadFromSlot never seeds or reconstructs history.
+    // P38: fresh-life confirmation seeding. P314U legacy recovery belongs only to LoadWorldSlot after adoption.
     const auto* P38Instance = GetWorld() != nullptr ? GetWorld()->GetGameInstance() : nullptr;
     const auto* P38Content = P38Instance != nullptr ? P38Instance->GetSubsystem<UPWContentSubsystem>() : nullptr;
     if (P38Content == nullptr || P38Content->GetDb() == nullptr)

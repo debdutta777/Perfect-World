@@ -119,6 +119,20 @@ void APWAwakeningFloorActor::DoEnterMove(APawn* By)
     Place(By, Layout.Arrival, Layout.ArrivalYaw);
 }
 
+bool APWAwakeningFloorActor::P313ResumeAt(APawn* By)
+{
+    if (By == nullptr || bOccupied || IsTransitioning() || !Layout.Bounds.IsValid || !Layout.Bounds.IsInside(By->GetActorLocation()))
+        return false;
+    const TSharedPtr<IAwFloorBridge> P313Bridge = AwBridge::Resolve(GetWorld());
+    if (!P313Bridge.IsValid()) return false;
+    const FAwFloorStatus P313Status = P313Bridge->GetStatus();
+    if (!P313Status.bSessionOpen && !P313Status.bSessionComplete) return false;
+    // Movers and occupancy are transient. Rebuild them at the safe arrival point from the stored session.
+    DoEnterMove(By);
+    Announce(LOCTEXT("P313Resumed", "Your supervised session has resumed. Withdraw to the safe area at any station, or use the return pad to leave."));
+    return true;
+}
+
 bool APWAwakeningFloorActor::TryLeave(APawn* By)
 {
     if (!bOccupied || IsTransitioning())

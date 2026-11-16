@@ -1,4 +1,5 @@
 #include "PerfectWorldSchoolLive.h"
+#include "PerfectWorldGuardNotice.h"
 
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
@@ -149,6 +150,9 @@ const PerfectWorld::SchoolLessonBinding* BindingForNow(UWorld& World)
         return nullptr;
     }
     const PerfectWorld::WorldState& State = Life->GetWorldState();
+    const PerfectWorld::SchoolLessonView P313Lesson = PerfectWorld::QuerySchoolLesson(SessionsOf(State));
+    if (P313Lesson.Run)
+        return PerfectWorld::FindSchoolLessonBinding(Content->Lessons, P313Lesson.Run->Binding.Id);
     const PerfectWorld::SchoolDayView View = PerfectWorld::BuildSchoolDayView(Content->Lessons, SessionsOf(State), State.DayLoop, Content->Cats);
     if (!View.Ok() || View.Rows.empty())
     {
@@ -188,6 +192,8 @@ const UPWLaneLifeSubsystem* S03Life(const TWeakObjectPtr<UWorld>& World)
 /** The core's refusal in words: A1's explanation for a school.session.<reason> code, else a neutral sentence. Never a code. */
 FText RefusalWords(const FS03Content& Content, const std::string& Code)
 {
+    const FText P313Notice = P313GuardNotice(PWLaneLife::ToFString(Code));
+    if (!P313Notice.IsEmpty()) return P313Notice;
     constexpr std::string_view Prefix = "school.session.";
     if (Code.rfind(Prefix.data(), 0) == 0)
     {
@@ -198,10 +204,6 @@ FText RefusalWords(const FS03Content& Content, const std::string& Code)
                 return PWLaneLife::ToText(*Found);
             }
         }
-    }
-    if (Code == "school.lesson_open" || Code == "school.paper_open")
-    {
-        return LOCTEXT("S05Held", "Finish your lesson or paper first.");
     }
     return LOCTEXT("S05Neutral", "The lesson cannot be opened right now.");
 }
