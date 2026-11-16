@@ -279,6 +279,9 @@ struct CountdownIssue
     [[nodiscard]] bool Ok() const noexcept { return Error == CountdownError::None; }
 };
 
+/** Opening validation: fair stable role tokens and valid distinct identity ids. Registration belongs to the caller. */
+[[nodiscard]] PERFECTWORLDCORE_API CountdownIssue ValidateCountdownContext(const CountdownContext& context);
+
 /** The record of an obligation by id, or nullptr. */
 [[nodiscard]] PERFECTWORLDCORE_API const CountdownObligationRecord* CountdownFindRecord(const CountdownState& state, std::string_view id);
 /** The commitment to an opportunity by id, or nullptr. */
