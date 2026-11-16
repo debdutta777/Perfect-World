@@ -204,6 +204,8 @@ public:
     PerfectWorld::CommandResult SubmitSchoolCommand(const PerfectWorld::Command& Command) { return SubmitCommand(Command); }
     // P38: tutorial and countdown commands share the live clock, settlement and event presentation.
     PerfectWorld::CommandResult SubmitAwakeningCommand(const PerfectWorld::Command& Command) { return SubmitCommand(Command); }
+    // P406: examination commands use the same live owner and event/clock path.
+    PerfectWorld::CommandResult P406SubmitExaminationCommand(const PerfectWorld::Command& Command) { return SubmitCommand(Command); }
 
 private:
     // ---- Clock (PerfectWorldLaneLifeClock.cpp) ----

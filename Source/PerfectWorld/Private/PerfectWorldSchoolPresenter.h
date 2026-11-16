@@ -23,7 +23,8 @@ enum class EPWSchoolPanel : uint8
     Desk,
     Paper,
     AwakeningResult, // P38: same paused host and input lifecycle as school panels.
-    AwakeningCountdown
+    AwakeningCountdown,
+    P406Examination
 };
 
 /**
@@ -59,6 +60,7 @@ public:
     bool OpenDesk();
     bool OpenAwakeningResult();
     bool OpenAwakeningCountdown();
+    bool P406OpenExamination();
     /** Closes whatever is open, restores play input, then broadcasts OnClosed. */
     void Close();
 

@@ -18,6 +18,7 @@
 #include "PerfectWorldCommerceBridge.h" // R88
 #include "PerfectWorldAwakeningBridge.h" // P38
 #include "PerfectWorldAwakeningResultBridge.h"
+#include "PerfectWorldExaminationBridge.h"
 
 DEFINE_LOG_CATEGORY(LogPWLaneLife);
 
@@ -54,6 +55,8 @@ PerfectWorld::DoorResult BrDoorResultFromCode(const FString& Code)
 /** Player-facing wording for a command the core refused. Empty means the refusal needs no words (a stale click). */
 FText BrRefusalText(const FString& Code)
 {
+    if (Code.StartsWith(TEXT("exam.")) || Code.StartsWith(TEXT("tower.session.")))
+        return P406Exam::P406RefusalText(Code);
     if (Code == TEXT("tutorial.active")) // P38
         return LOCTEXT("P38TutorialActive", "Your supervised tutorial is in progress. Complete it or withdraw to the safe area first.");
     if (Code == TEXT("school.learning_refused"))
