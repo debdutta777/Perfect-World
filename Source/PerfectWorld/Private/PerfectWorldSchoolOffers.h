@@ -48,6 +48,8 @@ struct FP35PracticeStatus
     /** Null when the catalogue has no study activity: then there is no offer at all. */
     const PerfectWorld::ActivityDef* Def = nullptr;
     FText BlockedReason;
+    /** P313: retain a session guard for a stale practice action's directing refusal. */
+    std::string BlockedCode;
     /** The core's own forecast at this instant (learning, condition cost, label). Meaningful only when Ok. */
     PerfectWorld::DayActivityForecast Forecast;
     bool CanStart() const { return Def != nullptr && BlockedReason.IsEmpty(); }

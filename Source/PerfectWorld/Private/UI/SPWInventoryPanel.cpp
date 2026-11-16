@@ -1,4 +1,5 @@
 #include "UI/SPWInventoryPanel.h"
+#include "PerfectWorldGuardNotice.h"
 
 #include "Input/Events.h"
 #include "InputCoreTypes.h"
@@ -330,7 +331,8 @@ bool SPWInventoryPanel::UseItem(const FName ItemId)
     }
     else
     {
-        Message = PWCommerce::CmUseRefusalText(Result.Error, RetryMinutes);
+        const FText P313Notice = P313GuardNotice(Result.Code);
+        Message = P313Notice.IsEmpty() ? PWCommerce::CmUseRefusalText(Result.Error, RetryMinutes) : P313Notice;
     }
     Reload();
     return Result.bAccepted;

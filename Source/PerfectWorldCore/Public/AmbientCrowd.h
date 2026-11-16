@@ -74,8 +74,14 @@ struct CrowdRouteSlot
     bool SchoolOnly = false, Loop = false, Arrival = false;
     CrowdActivity RestActivity = CrowdActivity::Walking;
     std::string EnterEntranceId, ExitEntranceId;
+    /** Public graph topology between the entrances. */
     NeighbourhoodRoute Route;
+    /** Actual walking polyline, including the school forecourt waiting bays. */
     std::vector<CrowdRouteSegment> Segments;
+    /** Length of Segments; Route retains the plan's node/link topology. */
+    std::int64_t TravelLengthCm = 0;
+    /** Student waiting bay along Segments, or -1 for the usual seeded stop on the route. */
+    std::int64_t WaitingDistanceCm = -1;
 };
 struct CrowdPerson
 {

@@ -108,7 +108,7 @@ FString P310LessonRows(const TSharedPtr<SPWClassLesson>& Lesson, UWorld* World)
 
 namespace PWAcceptance
 {
-void AppendSchoolLessonRound9Steps(TArray<FStepDef>& Out)
+static void S03AppendLessonSteps(TArray<FStepDef>& Out, bool bP313EntryOnly)
 {
     using namespace SchoolR7;
     const TSharedRef<FS03LessonRun> Run = MakeShared<FS03LessonRun>();
@@ -248,6 +248,7 @@ void AppendSchoolLessonRound9Steps(TArray<FStepDef>& Out)
         return FStepOutcome::Pass(FString::Printf(TEXT("the core opened lesson %s (session %llu); the lesson screen took over"), *Run->BindingId, Run->SessionId));
     }));
     Out.Add(MakeShotStep(TEXT("shot_lesson_screen")));
+    if (bP313EntryOnly) return;
 
     // Real choices: select a draft row once, then prefer an enabled command row. A local selection is not a core choice.
     // All four structures use this registry; no hidden solution fields or standard-action policy enter the scenario.
@@ -400,5 +401,14 @@ void AppendSchoolLessonRound9Steps(TArray<FStepDef>& Out)
         }
         return FStepOutcome::Fail(TEXT("the core's SchoolSessions holds no period record for the lesson"));
     }));
+}
+void AppendSchoolLessonRound9Steps(TArray<FStepDef>& Out)
+{
+    S03AppendLessonSteps(Out, false);
+}
+
+void P313AppendLessonEntrySteps(TArray<FStepDef>& Out)
+{
+    S03AppendLessonSteps(Out, true);
 }
 } // namespace PWAcceptance

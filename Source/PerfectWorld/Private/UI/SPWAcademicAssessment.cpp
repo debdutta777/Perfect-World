@@ -166,9 +166,9 @@ TSharedRef<SWidget> SPWAcademicAssessment::BuildPaper(const PerfectWorld::School
     Rows->AddSlot().AutoHeight().Padding(0, 8)[PWUI::MakeText(LOCTEXT("ExitCost", "Submit charges 90 world minutes once, including unanswered groups. Cancel charges spent units only and discards this draft. Back keeps the paper open; other activities remain unavailable until you submit or cancel."), 18, Style.TextSecondary, false, true)];
     Command = {};
     Command.Kind = SchoolWorkActionKind::Submit;
-    Rows->AddSlot().AutoHeight()[Action(LOCTEXT("Submit", "Submit paper (90 world minutes)"), Command, Work.CanSubmit)];
+    Rows->AddSlot().AutoHeight()[Action(LOCTEXT("Submit", "Hand in paper (90 world minutes)"), Command, Work.CanSubmit)];
     Command.Kind = SchoolWorkActionKind::Cancel;
-    Rows->AddSlot().AutoHeight()[Action(FText::Format(LOCTEXT("Cancel", "Discard draft ({0} world minutes)"),
+    Rows->AddSlot().AutoHeight()[Action(FText::Format(LOCTEXT("Cancel", "Cancel paper ({0} world minutes)"),
         FText::AsNumber((AssessmentPaperUnits - Work.Paper.UnitsLeft) * AssessmentUnitMinutes)), Command, Work.CanSubmit)];
     return Rows;
 }

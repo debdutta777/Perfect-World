@@ -174,6 +174,8 @@ public:
 
     /** Asks the bridge, then steps onto the floor (fade, or announced cut under reduced motion). False when refused or busy. */
     bool TryEnter(APawn* By);
+    /** P313: restore presentation when Continue places the pawn inside a saved active/completed floor. No command or conduct change. */
+    bool P313ResumeAt(APawn* By);
     /** Steps back onto the campus. False when not on the floor or busy. */
     bool TryLeave(APawn* By);
     /** Forwards (situation of Station, Choice) to the bridge and shows the answer. The withdrawal also moves the player to the safe area. */

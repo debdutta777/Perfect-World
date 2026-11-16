@@ -14,4 +14,8 @@ namespace PWAcceptance
  *     {TEXT("school_lesson_round9"), AppendSchoolLessonRound9Steps}
  */
 void AppendSchoolLessonRound9Steps(TArray<FStepDef>& Out);
+/** P313: the same real school entry through opening the lesson screen. */
+void P313AppendLessonEntrySteps(TArray<FStepDef>& Out);
+/** guards_resume_round9: walk to shop while lesson open, read directing refusal, return, leave early, buy. */
+void P313AppendGuardsResumeSteps(TArray<FStepDef>& Out);
 } // namespace PWAcceptance

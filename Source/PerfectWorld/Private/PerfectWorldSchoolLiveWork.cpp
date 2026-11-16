@@ -3,6 +3,7 @@
 #include "Engine/World.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
 #include "PerfectWorldSchoolOffers.h" // P35
+#include "PerfectWorldLegacyRecovery.h"
 
 #define LOCTEXT_NAMESPACE "PerfectWorldSchoolLiveWork"
 
@@ -51,9 +52,10 @@ PerfectWorld::SchoolIssue P35RunPractice(UPWLaneLifeSubsystem& Life, const Perfe
     const FP35PracticeStatus Status = P35ReadPractice(State, &Activities);
     if (!Status.CanStart())
     {
+        if (!Status.BlockedCode.empty()) return {Status.BlockedCode, "finish the open session first"};
         return P35PracticeIssue("school.practice.unavailable", "practice cannot start now");
     }
-    const auto Fail = [](const PerfectWorld::CommandResult& Done) { return P35PracticeIssue("school.practice.refused", Done.Why.Code); };
+    const auto Fail = [](const PerfectWorld::CommandResult& Done) { return P35PracticeIssue(Done.Why.Code.c_str(), Done.Why.Message); };
     if (!State.DayLoop.Planned)
     {
         const PerfectWorld::CommandResult Planned = Life.SubmitSchoolCommand(PerfectWorld::Command{PerfectWorld::CommandSource::Player, PerfectWorld::SchoolPlanDay{}});
@@ -197,6 +199,17 @@ public:
             }
         }
         return FText::GetEmpty();
+    }
+
+    virtual FText RecoveryNotice(std::string_view WorkId) const override
+    {
+        UWorld* Live = World.Get();
+        const UPWLaneLifeSubsystem* Life = S03WorkLife(World);
+        FString Why;
+        const FS03Content* Content = Live != nullptr ? SharedContent(*Live, Why) : nullptr;
+        return Life != nullptr && Content != nullptr
+            ? PWLegacyRecovery::P314URecoveredWorkNotice(WorkOf(Life->GetWorldState()), Content->WorkBriefs, WorkId)
+            : FText::GetEmpty();
     }
 
     /** P35: one offer (study at home) with its real cost and what it passes over, blocked with the reason when it cannot start; none when the catalogue lacks it. */

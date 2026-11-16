@@ -11,6 +11,7 @@
 #include "PerfectWorldFrontEndHUD.h"
 #include "PerfectWorldReadingPresenter.h"
 #include "PerfectWorldSchoolLive.h"
+#include "PerfectWorldLaneLifeSubsystem.h"
 #include "UI/SPWAcademicAssessment.h"
 #include "UI/SPWClassCoordinate.h"
 #include "UI/SPWClassExplain.h"
@@ -118,6 +119,13 @@ void UPWSchoolPresenter::ShowPanel(const TSharedRef<SWidget>& Content, const EPW
 bool UPWSchoolPresenter::OpenDay()
 {
     UWorld* World = GetWorld();
+    // P313: resume from saved core state, never from a widget-local selection or the current bell.
+    const UPWLaneLifeSubsystem* P313Life = UPWLaneLifeSubsystem::Get(World);
+    if (!IsOpen() && P313Life != nullptr)
+    {
+        const auto P313Lesson = PerfectWorld::QuerySchoolLesson(PWSchoolLive::SessionsOf(P313Life->GetWorldState()));
+        if (P313Lesson.Run) return OpenLesson(PWLaneLife::ToFString(P313Lesson.Run->Binding.Id));
+    }
     if (World == nullptr || !BeginHosting())
     {
         return false;
@@ -147,10 +155,16 @@ void UPWSchoolPresenter::HandOverToLesson()
 bool UPWSchoolPresenter::OpenLesson(const FString& BindingId)
 {
     UWorld* World = GetWorld();
+    FString P313BindingId = BindingId;
+    if (const auto* P313Life = UPWLaneLifeSubsystem::Get(World))
+    {
+        const auto P313Lesson = PerfectWorld::QuerySchoolLesson(PWSchoolLive::SessionsOf(P313Life->GetWorldState()));
+        if (P313Lesson.Run) P313BindingId = PWLaneLife::ToFString(P313Lesson.Run->Binding.Id);
+    }
     FString Why;
     const PWSchoolLive::FS03Content* Content = World != nullptr ? PWSchoolLive::SharedContent(*World, Why) : nullptr;
     const PerfectWorld::SchoolLessonBinding* Binding =
-        Content != nullptr ? PerfectWorld::FindSchoolLessonBinding(Content->Lessons, std::string(TCHAR_TO_UTF8(*BindingId))) : nullptr;
+        Content != nullptr ? PerfectWorld::FindSchoolLessonBinding(Content->Lessons, std::string(TCHAR_TO_UTF8(*P313BindingId))) : nullptr;
     if (Binding == nullptr)
     {
         return false;
@@ -159,7 +173,7 @@ bool UPWSchoolPresenter::OpenLesson(const FString& BindingId)
     {
         return false;
     }
-    LessonBindingId = BindingId;
+    LessonBindingId = P313BindingId;
     const TSharedPtr<PWClassLesson::IBridge> Bridge = PWSchoolLive::MakeLessonBridge(*World, *Binding);
     TWeakObjectPtr<UPWSchoolPresenter> Weak(this);
     const TAttribute<FVector2D> Space = TAttribute<FVector2D>::CreateLambda([Weak]() { return Weak.IsValid() ? Weak->LogicalSpace() : FVector2D(1920.0, 1080.0); });
@@ -196,7 +210,9 @@ void UPWSchoolPresenter::BackToDay()
         return;
     }
     Close();
-    OpenDay(); // a lesson that is still open (core state) is reopened from the seat; leaving the screen never ends it
+    const auto* P313Life = UPWLaneLifeSubsystem::Get(GetWorld());
+    if (P313Life == nullptr || !PWSchoolLive::SessionsOf(P313Life->GetWorldState()).Active)
+        OpenDay(); // P313: Back from an active run returns to play; the seat resumes it.
 }
 
 bool UPWSchoolPresenter::OpenDesk()
@@ -212,6 +228,18 @@ bool UPWSchoolPresenter::OpenDesk()
     {
         return false;
     }
+    PerfectWorld::SchoolAcademicRecordView P313Record;
+    if (Bridge->ReadRecord(P313Record, Reason))
+    {
+        for (const auto& P313Work : P313Record.Work)
+        {
+            if (P313Work.CanSubmit)
+            {
+                OpenPaper(P313Work.Brief.Id);
+                return true;
+            }
+        }
+    }
     TWeakObjectPtr<UPWSchoolPresenter> Weak(this);
     const TSharedRef<SPWStudyDesk> Desk = SNew(SPWStudyDesk)
         .World(Bridge)
@@ -225,7 +253,7 @@ bool UPWSchoolPresenter::OpenDesk()
 void UPWSchoolPresenter::OpenPaper(const std::string& WorkId)
 {
     UWorld* World = GetWorld();
-    if (World == nullptr || !IsOpen())
+    if (World == nullptr || !Slot.IsValid())
     {
         return;
     }
@@ -245,6 +273,10 @@ void UPWSchoolPresenter::BackToDesk()
         return;
     }
     Close();
+    const auto* P313Life = UPWLaneLifeSubsystem::Get(GetWorld());
+    if (P313Life != nullptr)
+        for (const auto& P313Work : PWSchoolLive::WorkOf(P313Life->GetWorldState()).Records)
+            if (P313Work.StartedAt && !P313Work.SubmittedAt) return;
     OpenDesk();
 }
 

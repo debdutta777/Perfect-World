@@ -8,6 +8,7 @@
 
 #include "GameClock.h"
 #include "PerfectWorldSchoolOffers.h"
+#include "PerfectWorldGuardNotice.h"
 #include "UI/SPWSchoolPlanner.h"
 
 namespace P35Tests
@@ -210,7 +211,28 @@ bool FP35PracticeTest::RunTest(const FString& Parameters)
     const TArray<PWA5::FPracticeOffer> Open = P35PracticeOffers(Paper, &Catalogue);
     if (!TestEqual(TEXT("an open paper: the offer is shown"), Open.Num(), 1)) return false;
     TestFalse(TEXT("but not actionable"), Open[0].bAvailable);
-    TestTrue(TEXT("and says why"), Open[0].Detail.ToString().Contains(TEXT("paper")));
+    TestTrue(TEXT("and directs to both desk exits"), Open[0].Detail.ToString().Contains(P313GuardNotice(TEXT("school.paper_open")).ToString()));
+    TestTrue(TEXT("a stale paper practice action retains its guard"), P35ReadPractice(Paper, &Catalogue).BlockedCode == "school.paper_open");
+
+    WorldState Lesson = MakeWorldState(7);
+    Lesson.SchoolSessions.Active = SchoolLessonRun{};
+    Lesson.DayLoop.HasCommitment = true; // The generic busy message must not hide the lesson exit.
+    const auto Held = P35PracticeOffers(Lesson, &Catalogue);
+    if (!TestEqual(TEXT("open lesson offer still appears"), Held.Num(), 1)) return false;
+    TestFalse(TEXT("lesson blocks practice"), Held[0].bAvailable);
+    TestTrue(TEXT("lesson names its seat and exit"), Held[0].Detail.ToString().Contains(P313GuardNotice(TEXT("school.lesson_open")).ToString()));
+    TestTrue(TEXT("a stale lesson practice action retains its guard"), P35ReadPractice(Lesson, &Catalogue).BlockedCode == "school.lesson_open");
+
+    for (const auto Phase : {TutorialDungeonPhase::Active, TutorialDungeonPhase::ReadyToGrant})
+    {
+        WorldState Tutorial = MakeWorldState(7);
+        Tutorial.Tutorial.Phase = Phase;
+        const auto Supervised = P35PracticeOffers(Tutorial, &Catalogue);
+        if (!TestEqual(TEXT("supervised offer still appears"), Supervised.Num(), 1)) return false;
+        TestFalse(TEXT("tutorial blocks practice"), Supervised[0].bAvailable);
+        TestTrue(TEXT("tutorial names terminal and withdrawal"), Supervised[0].Detail.ToString().Contains(P313GuardNotice(TEXT("tutorial.active")).ToString()));
+        TestTrue(TEXT("a stale tutorial practice action retains its guard"), P35ReadPractice(Tutorial, &Catalogue).BlockedCode == "tutorial.active");
+    }
 
     WorldState Busy = MakeWorldState(7);
     Busy.DayLoop.Planned = true;

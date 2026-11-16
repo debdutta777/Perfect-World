@@ -21,6 +21,9 @@ import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
 NAME = re.compile(r'[a-z0-9_]{1,64}\Z')
+# Driver step IDs include authored order prefixes such as P36U_. Scenario and
+# command-line names keep NAME's lowercase contract; both exclude path syntax.
+STEP_NAME = re.compile(r'[A-Za-z0-9_]{1,64}\Z')
 # Scenarios that are a fresh-process pair (explicit new, then continue, one shared slot). Each must read its own original save.
 RESTART_PAIR_SCENARIOS = ('save_restart', 'frontages_round4', 'journal_state', 'journal_today', 'homes_round5', 'frontages_round5', 'proprietors_workday', 'tailor_workday', 'homes_round6', 'frontages_round6', 'continue_round9')
 FLAGS = ['-RenderOffScreen', '-unattended', '-nosplash', '-nosound',
@@ -163,7 +166,7 @@ def verify_result(out, scenario, commit):
                 raise ValueError(f'{field} must be boolean')
         planned, steps = result.get('planned_steps'), result.get('steps')
         if (not isinstance(planned, list) or not planned
-                or any(not isinstance(n, str) or not NAME.fullmatch(n) for n in planned)
+                or any(not isinstance(n, str) or not STEP_NAME.fullmatch(n) for n in planned)
                 or len(set(planned)) != len(planned) or not isinstance(steps, list)):
             raise ValueError('Invalid planned_steps or steps')
         report['planned_steps'] = planned
@@ -185,13 +188,20 @@ def verify_result(out, scenario, commit):
                 raise ValueError('Successful screenshot step has no screenshot')
         report['observed_steps'] = names
         if names != planned:
-            report['errors'].append('Planned steps missing, extra, or out of order')
+            if len(names) < len(planned) and names == planned[:len(names)]:
+                report['errors'].append(f'Driver stopped after {len(names)} of {len(planned)} steps; '
+                                        f'next step: {planned[len(names)]}')
+            else:
+                report['errors'].append('Planned steps missing, extra, or out of order')
         if not result['completed']:
             report['errors'].append('Driver did not complete')
         else:
             report['status'] = 'FAIL'
         if not result['passed'] or any(not step['ok'] for step in steps):
             report['errors'].append('Driver assertions did not all pass')
+            for step in steps:
+                if not step['ok']:
+                    report['errors'].append(f'Driver step {step["name"]} failed: {step["detail"]}')
         if not report['screenshots']:
             report['errors'].append('No rendered screenshot evidence')
         if not report['errors']:
@@ -531,6 +541,29 @@ def self_test():
             return verify_result(out, 'boot', 'abc1234')['status']
 
         check(verify(valid) == 'PASS', 'valid result')
+        prefixed = copy.deepcopy(valid)
+        prefixed['planned_steps'][1] = 'P36U_shot_homework_marks'
+        prefixed['steps'][1]['name'] = 'P36U_shot_homework_marks'
+        prefixed['steps'][1]['screenshot'] = 'boot__P36U_shot_homework_marks.png'
+        fixture_png(out / prefixed['steps'][1]['screenshot'])
+        assert verify(prefixed) == 'PASS', 'authored uppercase order prefix is a valid step ID'
+        for invalid_name in ('../escape', 'bad/name', 'bad\\name', 'bad name', 'x' * 65):
+            malformed = copy.deepcopy(prefixed)
+            malformed['planned_steps'][1] = invalid_name
+            assert verify(malformed) != 'PASS', 'step ID grammar still refuses paths and malformed IDs'
+        failed = copy.deepcopy(valid)
+        failed['passed'] = False
+        failed['steps'][0].update(ok=False, detail='countdown.bad_context: invalid contact')
+        write_json(out / 'boot.json', failed)
+        failure = verify_result(out, 'boot', 'abc1234')
+        assert failure['status'] == 'FAIL'
+        assert any('world_ready failed: countdown.bad_context' in error for error in failure['errors'])
+        failed['steps'] = failed['steps'][:1]
+        write_json(out / 'boot.json', failed)
+        failure = verify_result(out, 'boot', 'abc1234')
+        assert failure['status'] == 'FAIL'
+        assert any('stopped after 1 of 2 steps; next step: shot_view' in error for error in failure['errors'])
+        assert any('world_ready failed: countdown.bad_context' in error for error in failure['errors'])
         variants = []
         for field, value in [('schema', 2), ('schema', True), ('commit', 'wrong'),
                              ('scenario', 'wrong'), ('completed', False), ('passed', False),
