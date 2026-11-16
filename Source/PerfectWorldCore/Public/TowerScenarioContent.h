@@ -103,7 +103,12 @@ struct TowerScenarioCatalogue
     std::vector<TowerScenario> Scenarios;
 
     [[nodiscard]] const TowerScenario* FindById(std::string_view id) const;
-    [[nodiscard]] const TowerScenario* FindByRoute(std::string_view routeId) const;
+    /** Pure keyed draw over matching scenarios sorted by stable ID (StructureSelectCase approach).
+     * The zero-based examination attempt number and seed must be reused on reload.
+     * Returns nullptr for an empty route pool; content must be unchanged across reload.
+     */
+    [[nodiscard]] const TowerScenario* P404BSelectForRoute(
+        std::string_view routeId, std::uint64_t worldSeed, std::uint32_t attemptNumber) const;
 };
 
 struct TowerScenarioResult

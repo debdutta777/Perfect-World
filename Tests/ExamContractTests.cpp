@@ -121,7 +121,7 @@ void P401RealContent(const ContentDb& db)
         std::vector<TowerFloorAttempt> attempts;
         for (const auto id : routes)
         {
-            const auto& scenario = *catalogue.Catalogue.FindByRoute(id);
+            const auto& scenario = *catalogue.Catalogue.P404BSelectForRoute(id, 0, 0);
             if (strong) attempts.push_back(BuildOptimalNonCombatAttempt(scenario).Attempt);
             else
             {

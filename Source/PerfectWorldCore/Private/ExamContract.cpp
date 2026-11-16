@@ -165,7 +165,7 @@ std::vector<P401ExamRouteRow> P401ExamRouteMatrix(const TowerScenarioCatalogue& 
         row.DisciplineMask = route.DisciplineMask;
         row.Methods[static_cast<std::size_t>(route.Method)] = true;
         row.Methods[static_cast<std::size_t>(TowerMethod::Combat)] = route.AllowsCombat;
-        if (const auto* scenario = scenarios.FindByRoute(route.Id))
+        if (const auto* scenario = scenarios.P404BSelectForRoute(route.Id, 0, 0))
         {
             row.ScenarioId = scenario->Id;
             const auto nonCombat = BuildOptimalNonCombatAttempt(*scenario);
@@ -211,7 +211,7 @@ P401ExamValidation P401ValidateExamContract(const ContentDb& db)
         const auto route = std::find_if(TowerRoutes().begin(), TowerRoutes().end(),
             [&](const auto& item) { return item.Floor == floor; });
         if (route == TowerRoutes().end()) { P401Issue(report, "matrix", "floor has no route"); return report; }
-        baseline.push_back(BuildOptimalNonCombatAttempt(*scenarios.Catalogue.FindByRoute(route->Id)).Attempt);
+        baseline.push_back(BuildOptimalNonCombatAttempt(*scenarios.Catalogue.P404BSelectForRoute(route->Id, 0, 0)).Attempt);
     }
     report.NonCombatClimb = ResolveTower(baseline).Completed;
     CountdownProfile zero;
@@ -238,7 +238,7 @@ P401ExamValidation P401ValidateExamContract(const ContentDb& db)
         ++report.RouteSequences;
         std::vector<TowerFloorAttempt> receipt;
         for (const auto* route : {&first, &second, &third})
-            receipt.push_back(BuildOptimalNonCombatAttempt(*scenarios.Catalogue.FindByRoute(route->Id)).Attempt);
+            receipt.push_back(BuildOptimalNonCombatAttempt(*scenarios.Catalogue.P404BSelectForRoute(route->Id, 0, 0)).Attempt);
         P401Receipt(report, followups.Catalogue, receipt, P401P::Completed);
     }
     for (std::size_t depth = 0; depth < baseline.size(); ++depth)
