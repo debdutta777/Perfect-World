@@ -1,0 +1,14 @@
+{
+  "type": "school_followup",
+  "id": "school_followup.p2.p4_withdrawn_home_rest",
+  "outcome": "withdrawn",
+  "offerId": "",
+  "appointmentId": "appointment.p2.p4_withdrawn_home_rest",
+  "kind": "rest",
+  "titleTextKey": "phase2.a8.p4_withdrawn_home_rest.title",
+  "briefTextKey": "phase2.a8.p4_withdrawn_home_rest.brief",
+  "destination": "place.home",
+  "dayOffset": 1,
+  "minute": 1050,
+  "durationMinutes": 60
+}
