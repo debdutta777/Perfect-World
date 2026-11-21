@@ -148,7 +148,7 @@ public:
                 return P407URefused;
             }
             if (P406ActionRow.P407UCommand.Kind == PerfectWorld::P407UFollowupAction::Attend &&
-                !P407UAtSchool(P406Life->GetWorld()))
+                !P406Exam::P407UAtSchool(P406Life->GetWorld()))
             {
                 PerfectWorld::CommandResult P407URefused;
                 P407URefused.Why = {"p407u.place", "Visit the school campus for this session."};
