@@ -227,4 +227,42 @@ bool FP406TextTableTest::RunTest(const FString& Parameters)
     return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FP407UMentorSessionTest, "PerfectWorld.Examination.P407U.MentorSession",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FP407UMentorSessionTest::RunTest(const FString& Parameters)
+{
+    const auto P407UFake = MakeShared<P406Exam::FFakeWorld>();
+    P407UFake->Model = P406TestResult();
+    PerfectWorld::P407UFollowupView P407URow;
+    P407URow.Action.Id = "school_followup.p2.p4_withdrawn_school_mentor";
+    P407URow.Action.TitleTextKey = "phase2.a8.p4_withdrawn_school_mentor.title";
+    P407URow.Action.BriefTextKey = "phase2.a8.p4_withdrawn_school_mentor.brief";
+    P407URow.Action.DurationMinutes = 30;
+    P407URow.At = 12345;
+    P407URow.Booked = P407URow.CanAttend = true;
+    P407UFake->Model.P407UFollowups.push_back(P407URow);
+    P406Exam::FAction P407UAction;
+    P407UAction.Label = FText::FromString(TEXT("Attend school mentor session"));
+    P407UAction.bP407UFollowup = true;
+    P407UAction.P407UCommand = {PerfectWorld::P407UFollowupAction::Attend, P407URow.Action.Id, P407URow.At};
+    P407UFake->Model.Actions.Add(P407UAction);
+    P407UFake->AfterAccepted = P406TestResult();
+    const auto P407UPanel = SNew(SPWExaminationPanel).BridgeOverride(P407UFake).ViewportSize(FVector2D(569.0, 320.0));
+    TestTrue(TEXT("session opens"), P407UPanel->P406TriggerAction(0));
+    TestTrue(TEXT("a separate session is presented"), P407UPanel->P406GetModel().Screen == P406Exam::EScreen::P407USession);
+    TestEqual(TEXT("reading sends no attendance"), P407UFake->P407USubmitted.Num(), 0);
+    TestTrue(TEXT("mentor has readable words"), P406TestAllText(P407UPanel).Contains(TEXT("Amrita Basu")));
+    TestTrue(TEXT("duration is disclosed"), P406TestAllText(P407UPanel).Contains(TEXT("30 minutes")));
+    TestTrue(TEXT("session finishes through the bridge"), P407UPanel->P407UFinishSession());
+    TestEqual(TEXT("exactly one attendance command"), P407UFake->P407USubmitted.Num(), 1);
+    TestEqual(TEXT("no examination command is sent"), P407UFake->Submitted.Num(), 0);
+    if (P407UFake->P407USubmitted.Num() != 1) return false;
+    TestTrue(TEXT("stable identity and instant survive"), P407UFake->P407USubmitted[0].ActionId == P407URow.Action.Id &&
+        P407UFake->P407USubmitted[0].ExpectedAt == P407URow.At &&
+        P407UFake->P407USubmitted[0].Kind == PerfectWorld::P407UFollowupAction::Attend);
+    TestFalse(TEXT("finishing twice is unavailable"), P407UPanel->P407UFinishSession());
+    return true;
+}
+
 #endif

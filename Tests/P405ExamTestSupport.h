@@ -15,7 +15,7 @@ struct P405World
     {
         auto runners = PerfectWorld::LoadTowerRunners(db);
         auto followups = PerfectWorld::LoadSchoolFollowupContent(db);
-        P2CExpect(runners.Ok() && followups.Ok() && followups.Catalogue.Actions.size() == 19,
+        P2CExpect(runners.Ok() && followups.Ok() && followups.Catalogue.Actions.size() == 31,
             "real runners and all authored follow-ups load");
         Runners = std::move(runners.Catalogue);
         Followups = std::move(followups.Catalogue);

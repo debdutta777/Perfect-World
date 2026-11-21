@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "PerfectWorldExaminationBridge.h"
+#include "Misc/Optional.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Widgets/SCompoundWidget.h"
 
@@ -23,6 +24,7 @@ public:
     void P406Refresh();
     bool P406TriggerAction(int32 Index);
     bool P406TriggerWithdraw();
+    bool P407UFinishSession();
     const P406Exam::FModel& P406GetModel() const { return P406Model; }
     const FText& P406GetNotice() const { return P406Notice; }
     int32 P406GetFocusCount() const { return P406Controls.Num(); }
@@ -50,4 +52,5 @@ private:
     TArray<TSharedPtr<SWidget>> P406Controls;
     TArray<TFunction<bool()>> P406Activations;
     int32 P406Selected = 0;
+    TOptional<P406Exam::FAction> P407USession;
 };

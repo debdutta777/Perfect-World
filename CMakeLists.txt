@@ -1032,6 +1032,11 @@ add_executable(PerfectWorldExamResultTests Tests/ExamResultTests.cpp)
 target_link_libraries(PerfectWorldExamResultTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldExamResultTests COMMAND PerfectWorldExamResultTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
+# P407U: saved optional bookings and paid follow-up attendance; existing save format.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldExamFollowup.cpp)
+add_executable(PerfectWorldExamFollowupTests Tests/ExamFollowupTests.cpp)
+target_link_libraries(PerfectWorldExamFollowupTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldExamFollowupTests COMMAND PerfectWorldExamFollowupTests ${CMAKE_SOURCE_DIR}/Data/Content)
 # P405: production tower runners and real-content examination integration.
 target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/TowerRunnerContent.cpp)
 add_executable(PerfectWorldTowerRunnerContentTests Tests/TowerRunnerContentTests.cpp)

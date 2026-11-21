@@ -87,8 +87,15 @@ void UPWLaneLifeSubsystem::R88InstallCommerce()
         P38Awakening.Countdown.Contacts.push_back({"neighbour", std::string(PerfectWorld::FaridaPersonId)});
     // WorldState has no integrated relationship book yet. Leave it absent; never fabricate scores.
     PerfectWorld::P402WorldExamCatalogues P406Examination;
-    const auto& P406Runners = P406Exam::P406RunnerCatalogueSeam();
+    const auto* P407UInstance = GetWorld()->GetGameInstance();
+    const auto* P407UContent = P407UInstance != nullptr ? P407UInstance->GetSubsystem<UPWContentSubsystem>() : nullptr;
+    if (P407UContent == nullptr || P407UContent->GetDb() == nullptr) return;
+    const auto& P406Runners = P406Exam::P406RunnerCatalogueSeam(*P407UContent->GetDb());
     P406Examination.Runners = P406Runners.Scenarios.empty() ? nullptr : &P406Runners;
+    static const auto P407UFollowups = PerfectWorld::LoadSchoolFollowupContent(*P407UContent->GetDb());
+    P406Examination.Followups = P407UFollowups.Ok() ? &P407UFollowups.Catalogue : nullptr;
+    P38Awakening.Content = P407UContent->GetDb();
+    if (!P407UFollowups.Ok()) UE_LOG(LogPWLaneLife, Error, TEXT("P407U follow-up content unavailable"));
     Sim = MakeUnique<PerfectWorld::WorldSim>(Sim->State(), PerfectWorld::MaxEventsPerAdvance,
         R88School != nullptr ? R88School->Binding : PerfectWorld::DayLoopCatalogues{}, R88CommerceContent->Catalogues(), S05Lessons, P38Awakening, P406Examination);
     PWAwakening::AwBridge::Install(GetWorld(), PWAwakening::P38MakeLiveFloorBridge(*GetWorld()));

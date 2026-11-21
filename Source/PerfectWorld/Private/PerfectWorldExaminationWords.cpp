@@ -6,6 +6,17 @@ FText P406RefusalText(const FString& Code)
 {
     struct FP406Words { const TCHAR* Code; const TCHAR* Words; };
     static const FP406Words P406Words[] = {
+        {TEXT("p407u.invalid_state"), TEXT("The appointment cannot be read from this life. No booking changed.")},
+        {TEXT("p407u.busy"), TEXT("Finish the current activity, sleep or counter service before changing this appointment.")},
+        {TEXT("p407u.unavailable"), TEXT("This next step is unavailable for your recorded result.")},
+        {TEXT("p407u.attended"), TEXT("This session is already attended and recorded. It will not charge time again.")},
+        {TEXT("p407u.stale"), TEXT("The appointment time changed. Read the refreshed next step and choose again.")},
+        {TEXT("p407u.booked"), TEXT("This session is already booked, or no slot is available. Read the current appointment.")},
+        {TEXT("p407u.not_booked"), TEXT("Book an appointment before attending it.")},
+        {TEXT("p407u.not_due"), TEXT("Attend at the booked time. If you missed it, book a new slot.")},
+        {TEXT("p407u.charge_interrupted"), TEXT("The session could not finish. Its time and attendance were not committed; try again.")},
+        {TEXT("p407u.bad_action"), TEXT("That follow-up action is unavailable. No appointment changed.")},
+        {TEXT("p407u.place"), TEXT("Visit Nabapara Vidyalaya, then reopen Examination from pause to attend the session.")},
         {TEXT("world.unsettled"), TEXT("Events at this instant are still being processed. Read the refreshed decision before sitting.")},
         {TEXT("time.conversation_open"), TEXT("Finish your conversation before sitting the examination.")},
         {TEXT("commerce.service_active"), TEXT("Close the shop counter before sitting the examination.")},
