@@ -81,15 +81,43 @@ const CrowdPerson* R75Person(const CrowdSnapshot& snapshot, const std::string& i
     for (const auto& person : snapshot.People) if (person.Id == id) return &person;
     return nullptr;
 }
+void P316StudentRoute(const CrowdRouteSlot& slot, int index)
+{
+    // P315 deliberately replaces the 2,650 cm graph walk with a 3,850 cm bay walk.
+    // Pin every bend in both directions, including the bay's exact stopping distance.
+    const int column = index % 3, row = index / 3;
+    const NeighbourhoodPoint bay{7600 + column * 120, 5350 + row * 80, NeighbourhoodFootpathZCm};
+    std::vector<NeighbourhoodPoint> points{{6500, 4850, NeighbourhoodFootpathZCm},
+        {6500, 5250, NeighbourhoodFootpathZCm}, {bay.X, 5250, bay.Z}, bay,
+        {8100, bay.Y, bay.Z}, {8100, 6350, bay.Z}, {7500, 6350, bay.Z}, {7500, 6500, bay.Z}};
+    if (!slot.Arrival) std::reverse(points.begin(), points.end());
+    R75Expect(slot.Route.LengthCm == 2650 && slot.Route.LinkIds.size() == 3,
+              "P316: student graph route retains its original length and three links");
+    R75Expect(slot.TravelLengthCm == 3850 && slot.Segments.size() == 7,
+              "P316: student bay walk has exactly seven segments and 3850 cm");
+    R75Expect(slot.WaitingDistanceCm == (slot.Arrival ? 1600 + column * 120 + row * 80 :
+                                                       2250 - column * 120 - row * 80),
+              "P316: waiting distance reaches the assigned bay in each direction");
+    for (std::size_t i = 0; i < slot.Segments.size(); ++i)
+    {
+        const auto& segment = slot.Segments[i];
+        R75Expect(segment.From == points[i] && segment.To == points[i+1],
+                  "P316: student bay walk retains every expected bend");
+        R75Expect(segment.LinkId == (i < 3 ? slot.Route.LinkIds.front() : slot.Route.LinkIds.back()),
+                  "P316: student bay segments retain their approach link IDs");
+    }
+}
 void R75Routes(const AmbientCrowd& crowd, const NeighbourhoodPlan& plan)
 {
     std::set<CrowdCohort> cohorts;
+    int studentCounts[2]{};
     for (const auto& slot : crowd.RouteSlots())
     {
         cohorts.insert(slot.Cohort);
         const auto& route = slot.Route;
         R75Expect(route.Found && route.NodeIds.size() == route.LinkIds.size()+1, "route topology");
         std::int64_t length = 0;
+        std::vector<CrowdRouteSegment> authored;
         for (std::size_t i = 0; i < route.LinkIds.size(); ++i)
         {
             const auto link = std::find_if(plan.Links.begin(), plan.Links.end(), [&](const auto& edge) {
@@ -100,6 +128,11 @@ void R75Routes(const AmbientCrowd& crowd, const NeighbourhoodPlan& plan)
             R75Expect(link->Kind != NeighbourhoodLinkKind::Interior && link->Kind != NeighbourhoodLinkKind::Stair,
                       "no anonymous access through private interiors");
             length += link->LengthCm;
+            auto points = link->Points;
+            if (link->From != route.NodeIds[i]) std::reverse(points.begin(), points.end());
+            for (std::size_t p = 1; p < points.size(); ++p)
+                if (const auto distance = R75Distance(points[p-1], points[p]); distance > 0)
+                    authored.push_back({link->Id, points[p-1], points[p], distance});
         }
         R75Expect(length == route.LengthCm, "route length");
         std::int64_t expanded = 0;
@@ -107,17 +140,31 @@ void R75Routes(const AmbientCrowd& crowd, const NeighbourhoodPlan& plan)
         {
             const auto& segment = slot.Segments[i];
             expanded += segment.LengthCm;
-            R75Expect(segment.LengthCm == R75Distance(segment.From, segment.To), "polyline metric");
+            R75Expect(segment.LengthCm > 0 && segment.LengthCm == R75Distance(segment.From, segment.To), "polyline metric");
             if (i > 0) R75Expect(slot.Segments[i-1].To == segment.From, "polyline continuity");
         }
-        R75Expect(expanded == length, "expanded route retains all bends");
+        R75Expect(expanded == slot.TravelLengthCm, "P316: travel length equals the entire walking polyline");
         if (slot.Cohort == CrowdCohort::Student)
+        {
+            P316StudentRoute(slot, studentCounts[slot.Arrival ? 0 : 1]++);
             R75Expect(slot.SchoolOnly && ((slot.BeginMinute == R75ArriveBegin && slot.EndMinute == R75ArriveEnd) ||
                 (slot.BeginMinute == R75DepartBegin && slot.EndMinute == R75DepartEnd)), "bell-schedule commute windows");
+        }
+        else
+        {
+            R75Expect(expanded == length && slot.WaitingDistanceCm == -1 && slot.Segments.size() == authored.size(),
+                      "P316: non-student routes retain their authored length, bends and seeded stops");
+            for (std::size_t i = 0; i < authored.size(); ++i)
+                R75Expect(slot.Segments[i].LinkId == authored[i].LinkId &&
+                    slot.Segments[i].From == authored[i].From && slot.Segments[i].To == authored[i].To &&
+                    slot.Segments[i].LengthCm == authored[i].LengthCm,
+                    "P316: non-student segments exactly match the oriented authored polyline");
+        }
         if (slot.Cohort == CrowdCohort::OfficeCommuter)
             R75Expect(slot.EnterEntranceId == "stop.nabapara.bus_west" &&
                 route.NodeIds.back() == "walk.nabapara.main_cross_west", "commuters use main-road bus stop");
     }
+    R75Expect(studentCounts[0] == 27 && studentCounts[1] == 27, "P316: all 27 bays covered in both directions");
     R75Expect(cohorts.size() == 6, "all six cohorts authored");
 }
 void R75Day(const AmbientCrowd& crowd, const NeighbourhoodPlan& plan, CalendarDay day, bool school)
