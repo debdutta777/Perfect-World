@@ -17,6 +17,7 @@
 
 #include <cstdint>
 #include <map>
+#include <vector>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -141,6 +142,13 @@ struct WorldState
      * "pw.examination/1" text and hashed as the "examination" section. Results are derived from it, never stored beside it.
      */
     TowerSessionState Examination;
+    /**
+     * P4-09: the earlier annual sittings (WorldExamSittings.h), one per sitting in order: sitting k is 2 February (2043 + k)
+     * 06:00, and Examination belongs to sitting ExaminationEarlier.size(). Each entry is closed (Completed, Ejected,
+     * Withdrawn, Deferred, Declined) or Unset (absent from that sitting). Empty for a first sitting and for every older
+     * save; written inside the examination section (pw.examination/2 only when non-empty), so no schema or hash change.
+     */
+    std::vector<TowerSessionState> ExaminationEarlier;
 };
 
 /** A fresh world: the clock at the campaign epoch (2 Jun 2042 06:00), no flags or Gates, RNG streams seeded from the world seed, a fresh day. */
@@ -284,10 +292,40 @@ struct DoorChanged
     bool Settlement = false;
 };
 
+/** P4-09: what an accepted tower.session.apply did to the examination (WorldExamSittings.h). */
+enum class ExamTransitionKind : std::uint8_t
+{
+    Sat,      // Enter accepted (possibly late, inside the entry window)
+    Withdrew, // Withdraw accepted, or time called on a late candidate (TimeCalled)
+    Deferred,
+    Declined,
+    Finished // the Choose that cleared the last floor (Completed) or exhausted the reserve (Ejected)
+};
+
+/**
+ * P4-09: published once, in the accepted command that makes the transition, at the instant the examination stood at (before
+ * any outside time the exit charges, whose TimeAdvanced follows). Refused, duplicate and replayed-from-save commands publish
+ * nothing; it is presentation output, never saved or hashed. An Enter whose first step already ends the session publishes
+ * Sat and then its exit.
+ */
+struct ExamTransition
+{
+    ExamTransitionKind Kind = ExamTransitionKind::Sat;
+    /** 0 for 2 February 2043, k for 2 February (2043 + k). */
+    std::uint32_t Sitting = 0;
+    TowerParticipation Participation = TowerParticipation::Unset;
+    /** Minutes after the sitting opened that the candidate entered (Sat and the exits of a sat session); 0 otherwise. */
+    std::int64_t LateMinutes = 0;
+    /** The outside-world minutes this exit charged (0 for Sat, Deferred and Declined). */
+    std::int64_t OutsideMinutes = 0;
+    /** True when the late candidate's reduced allowance ran out and the world withdrew the session. */
+    bool TimeCalled = false;
+};
+
 /** Free school commands forward the existing Planned/ArrivedAtSchool DayLoopEvent, stamped with world sequence. */
 using EventPayload = std::variant<TimeAdvanced, DayStarted, ScheduledEventFired, WorldFlagChanged, GateRegistered, GateOnset,
                                   GateOnsetHeld, GateContained, GateSealed, ConversationOpened, ConversationChoiceAccepted,
-                                  ConversationEnded, DoorChanged, DayLoopEvent>;
+                                  ConversationEnded, DoorChanged, DayLoopEvent, ExamTransition>;
 
 struct DomainEvent
 {

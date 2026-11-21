@@ -1037,3 +1037,9 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/TowerRun
 add_executable(PerfectWorldTowerRunnerContentTests Tests/TowerRunnerContentTests.cpp)
 target_link_libraries(PerfectWorldTowerRunnerContentTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldTowerRunnerContentTests COMMAND PerfectWorldTowerRunnerContentTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# P409: the examination's remaining rules: annual sittings to age twenty, the late-entry window, transition events.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldExamSittings.cpp)
+add_executable(PerfectWorldExamSittingsTests Tests/WorldExamSittingsTests.cpp)
+target_link_libraries(PerfectWorldExamSittingsTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldExamSittingsTests COMMAND PerfectWorldExamSittingsTests ${CMAKE_SOURCE_DIR}/Data/Content)

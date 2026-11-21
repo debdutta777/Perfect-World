@@ -88,9 +88,9 @@ void P402EnterRules(const P402World& w)
         P402Floor(zero, route, "careful");
     P2CExpect(zero.State().Examination.Participation == TowerParticipation::Completed, "zero preparation still completes");
 
-    // Late: an unrouted sim let the instant pass undecided.
+    // Late: an unrouted sim let the instant pass undecided, beyond P4-09's one-hour entry window.
     WorldSim passer = w.W.Unbound(w.Morning);
-    S04Accept(passer, AdvanceTime{30}, "an unrouted sim passes the instant");
+    S04Accept(passer, AdvanceTime{61}, "an unrouted sim passes the instant and the entry window");
     WorldSim late = w.Sim(passer.State());
     S04Refused(late, P402Cmd(A::Enter), "exam.missed", "the sitting has passed");
     P2CExpect(late.ExaminationWorldView().SitRefusal == "exam.missed" && late.ExaminationWorldView().CanDefer, "late view");
