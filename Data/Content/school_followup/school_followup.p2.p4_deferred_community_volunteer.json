@@ -1,0 +1,14 @@
+{
+  "type": "school_followup",
+  "id": "school_followup.p2.p4_deferred_community_volunteer",
+  "outcome": "deferred",
+  "offerId": "",
+  "appointmentId": "appointment.p2.p4_deferred_community_volunteer",
+  "kind": "appointment",
+  "titleTextKey": "phase2.a8.p4_deferred_community_volunteer.title",
+  "briefTextKey": "phase2.a8.p4_deferred_community_volunteer.brief",
+  "destination": "place.school",
+  "dayOffset": 4,
+  "minute": 990,
+  "durationMinutes": 30
+}
