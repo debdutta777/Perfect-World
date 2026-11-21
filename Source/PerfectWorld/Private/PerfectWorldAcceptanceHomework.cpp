@@ -2,7 +2,11 @@
 
 #include "Engine/World.h"
 #include "EngineUtils.h"
+#include "GameFramework/PlayerController.h"
+#include "Input/Events.h"
+#include "InputCoreTypes.h"
 #include "Layout/Children.h"
+#include "Misc/App.h"
 #include "PerfectWorldDoorActor.h"
 #include "PerfectWorldInteractionComponent.h"
 #include "PerfectWorldLaneHomeFurniture.h"
@@ -274,9 +278,35 @@ void P36UAppendHomeworkSteps(TArray<FStepDef>& Out)
         auto* Presenter = UPWSchoolPresenter::Get(Sub.GetPlayWorld());
         const auto* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
         if (Presenter == nullptr || Life == nullptr) return FStepOutcome::Fail(TEXT("no school presenter"));
-        if (Rt.Phase == 0) { Presenter->Close(); Rt.NextPhase(); return FStepOutcome::Wait(); }
-        return !Presenter->IsOpen() && !UPWInteractionComponent::IsWorldInputBlocked(Sub.GetPawn()) && Life->GetClockHold() == EPWClockHold::None
-            ? FStepOutcome::Pass(TEXT("panel closed; play input and the clock restored")) : FStepOutcome::Wait();
+        if (Rt.Phase == 0)
+        {
+            const auto Paper = P36UPanel<SPWAcademicAssessment>(Sub.GetPlayWorld(), EPWSchoolPanel::Paper);
+            if (!Paper.IsValid()) return FStepOutcome::Fail(TEXT("no marked paper to leave"));
+            Paper->OnKeyDown(FGeometry(), FKeyEvent(EKeys::Escape, FModifierKeysState(), 0, false, 0, 0));
+            Rt.NextPhase();
+            return FStepOutcome::Wait();
+        }
+        if (Rt.Phase == 1)
+        {
+            const auto Desk = P36UPanel<SPWStudyDesk>(Sub.GetPlayWorld(), EPWSchoolPanel::Desk);
+            if (!Desk.IsValid()) return FStepOutcome::Fail(TEXT("Back from the marked paper did not return to the desk"));
+            Desk->OnKeyDown(FGeometry(), FKeyEvent(EKeys::Gamepad_FaceButton_Right, FModifierKeysState(), 0, false, 0, 0));
+            Rt.NextPhase();
+            return FStepOutcome::Wait();
+        }
+        const auto* Controller = Sub.GetController();
+        if (Presenter->IsOpen() || UPWInteractionComponent::IsWorldInputBlocked(Sub.GetPawn()) ||
+            Controller == nullptr || Controller->bShowMouseCursor)
+            return FStepOutcome::Fail(TEXT("panel or cursor still owns play input"));
+        // P317: off-screen runs have no OS focus. Closing releases School; the independent focus pause remains valid.
+        const bool bFocused = FApp::HasFocus();
+        const auto ExpectedHold = bFocused ? EPWClockHold::None : EPWClockHold::Unfocused;
+        Rt.Note = FString::Printf(TEXT("panel closed; focus %d; clock hold %d (expected %d)"),
+            bFocused, static_cast<int32>(Life->GetClockHold()), static_cast<int32>(ExpectedHold));
+        return Life->GetClockHold() == ExpectedHold
+            ? FStepOutcome::Pass(bFocused ? TEXT("paper and desk Back restored play input and the free-roam clock")
+                : TEXT("paper and desk Back restored play input; clock paused only because the application is unfocused"))
+            : FStepOutcome::Wait();
     }));
 }
 } // namespace PWAcceptance
