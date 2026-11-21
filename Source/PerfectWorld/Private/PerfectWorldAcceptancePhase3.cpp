@@ -404,20 +404,52 @@ void P39AppendOrdinarySteps(TArray<FStepDef>& Out)
 {
     // Existing live, non-combat floor play, real return, 17:59 -> 18:00, visible countdown and ordinary-day button.
     P38AppendAwakeningSteps(Out);
+    Out.Add(P39Action(TEXT("p317_decline_neighbour_shift_with_disclosed_cost"), [](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
+    {
+        auto* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
+        const auto Countdown = Life ? Life->GetSim().Countdown() : std::nullopt;
+        if (!Countdown) return FStepOutcome::Fail(TEXT("no live countdown"));
+        const auto* Neighbour = PerfectWorld::CountdownFindRecord(*Countdown, "oblig.neighbour_shop_shift");
+        const auto* Teacher = PerfectWorld::CountdownFindRecord(*Countdown, "oblig.teacher_hall_setup");
+        if (!Neighbour || !Teacher || Neighbour->Person.empty() || Teacher->Person.empty())
+            return FStepOutcome::Fail(TEXT("the ordinary route requires real neighbour and teacher contacts"));
+        for (const auto& Proposal : PerfectWorld::CountdownProposals(Life->GetWorldState(), *Countdown,
+            Life->GetSim().AwakeningContent().Countdown, Neighbour->Id))
+        {
+            if (Proposal.Proposal != PerfectWorld::CountdownProposal::Decline || !Proposal.Available) continue;
+            const auto Done = Life->SubmitAwakeningCommand({PerfectWorld::CommandSource::Player,
+                PerfectWorld::CountdownNegotiateObligation{Neighbour->Id, Proposal.Proposal}});
+            if (!Done.Accepted) return FStepOutcome::Fail(PWLaneLife::ToFString(Done.Why.Code));
+            const auto After = Life->GetSim().Countdown();
+            const auto* Record = After ? PerfectWorld::CountdownFindRecord(*After, Neighbour->Id) : nullptr;
+            if (!Record || Record->Disposition != PerfectWorld::CountdownDisposition::Declined ||
+                After->Goodwill != Countdown->Goodwill + Proposal.GoodwillIfAccepted || Done.To != Done.From)
+                return FStepOutcome::Fail(TEXT("declining did not record the disclosed consequence at no time cost"));
+            return FStepOutcome::Pass(FString::Printf(TEXT("real obligation command declined the shop shift; disclosed goodwill %+d; other promises remain standing"),
+                Proposal.GoodwillIfAccepted));
+        }
+        return FStepOutcome::Fail(TEXT("the disclosed decline proposal is unavailable"));
+    }));
     Out.Add(P39Action(TEXT("p39_ordinary_days_reach_fixed_exam_deadline_without_practice"), [](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
     {
         auto* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
         if (Life == nullptr || !Life->GetWorldState().Awakening.Granted) return FStepOutcome::Fail(TEXT("live grant missing"));
         const auto GrantAt = Life->GetWorldState().Awakening.Granted->At;
         const auto Deadline = PerfectWorld::GameClock::FromCalendar(2043, 2, 2, 6, 0);
-        const auto Opening = PerfectWorld::CountdownStartInstant();
         for (const auto& Command : Life->GetSim().Log())
             if (std::holds_alternative<PerfectWorld::CountdownPracticeConfirm>(Command.Payload)) return FStepOutcome::Fail(TEXT("ordinary route already practised"));
-        FString Why;
-        // An ordinary full day, then the remaining calendar, with every command result honoured.
-        for (auto Target = Opening + PerfectWorld::MinutesPerDay + 1; ; Target = FMath::Min(Target + PerfectWorld::MinutesPerDay, Deadline))
+        // P317: bare time cannot perform promises. Resolve ordinary days through the same command as the live planner.
+        for (int32 DayIndex = 0; DayIndex < PerfectWorld::CountdownDays; ++DayIndex)
         {
-            if (!P39AdvanceTo(*Life, Target, Why)) return FStepOutcome::Fail(Why);
+            PerfectWorld::WeekEntry Rest;
+            Rest.Kind = PerfectWorld::WeekEntryKind::Spend;
+            Rest.StartMinute = 1439;
+            Rest.Minutes = 1;
+            Rest.Pass = PerfectWorld::DayPassKind::Rest;
+            const auto Done = Life->SubmitAwakeningCommand({PerfectWorld::CommandSource::Player,
+                PerfectWorld::CountdownResolveDays{{PerfectWorld::WeekDayPlan{{Rest}}}}});
+            if (!Done.Accepted) return FStepOutcome::Fail(PWLaneLife::ToFString(Done.Why.Code) + TEXT(": ") + PWLaneLife::ToFString(Done.Why.Message));
+            if (Done.To <= Done.From) return FStepOutcome::Fail(TEXT("ordinary day made no progress"));
             const auto Countdown = Life->GetSim().Countdown();
             const auto View = Life->GetSim().CountdownView();
             const auto& State = Life->GetWorldState();
@@ -428,11 +460,17 @@ void P39AppendOrdinarySteps(TArray<FStepDef>& Out)
             for (const auto& Window : State.LiveAwakenedProfile->Window)
                 for (const auto& Day : Window)
                     if (Day.Minutes != 0 || Day.GainCentipoints != 0) return FStepOutcome::Fail(TEXT("ordinary route contains supernatural practice"));
-            if (Target == Deadline)
+            if (Countdown->Closed)
+            {
+                for (const auto& Obligation : Countdown->Obligations)
+                    if (!Obligation.Done && Obligation.Disposition != PerfectWorld::CountdownDisposition::Declined)
+                        return FStepOutcome::Fail(TEXT("an ordinary promise was bypassed without honouring or declining it"));
                 return Countdown->Closed && View.ExaminationDue && Life->GetNow() == Deadline && PerfectWorld::IsWorldQuiescent(State)
-                    ? FStepOutcome::Pass(TEXT("ordinary day and remaining countdown passed through real commands; zero practice; original 2 Feb 2043 06:00 reached without a dead end"))
+                    ? FStepOutcome::Pass(TEXT("ordinary days honoured standing promises through real commands; zero practice; original 2 Feb 2043 06:00 reached without a dead end"))
                     : FStepOutcome::Fail(TEXT("fixed examination-morning boundary not reached cleanly"));
+            }
         }
+        return FStepOutcome::Fail(TEXT("ordinary resolution exceeded the ten-day budget"));
     }));
     Out.Add(MakeShotStep(TEXT("p39_shot_ordinary_exam_morning")));
 }
