@@ -2349,3 +2349,53 @@ Earlier today a gpt-6.1-sol run was refused for the account's usage limit and wa
 - A power-off can leave the D: clone at the right HEAD with an old tree, and packaging then "succeeds" on stale content. Seen on 2026-10-29; check `git status` and the packaged `Data` folder before publishing.
 - The owner's apps can exhaust commit memory, which stalls `cl.exe`.
 - `D:\PWWork\job_package_staged.ps1` resumes per stage. A plain BuildCookRun no longer fits between power-offs.
+
+## Checkpoint — v0.8.0 to v0.9.1 published; Phase 4 (the tower examination) under way, 2026-11-21
+
+**Published since v0.7.0:**
+
+| Release | Commit | What it added | In-game tests on that exact build |
+|---|---|---|---|
+| v0.7.1-alpha | `99555c9` | kitchen/bedroom doors, Buy prompt first, two residents, lane-end halls | boot PASS, commerce PASS (run after publishing) |
+| v0.8.0-alpha | `ac848ab` | school reachable: classroom seat, study desk, week planner (read-only) | not run |
+| v0.8.1-alpha | `e995956` | lessons through WorldSim (S04, save schema 11) | boot PASS, commerce PASS, school FAIL (route) |
+| v0.9.0-alpha | `3e0131b` | Awakening tutorial and grant, homework issuance, learning credits, schema 12 | 4 PASS, 6 FAIL or incomplete |
+| v0.9.1-alpha | `2cc5ab1` | v0.9.0 fixes, guard exits, legacy recovery | **9 of 11 PASS** (lesson, Awakening, ten-day countdown, guards, Continue) |
+
+v0.9.1's two failures:
+- `countdown_ordinary_round9`: a neighbour's shop-shift obligation blocks a zero-practice player (`countdown.plan_conflict`).
+- `homework_round9`: the panel close-out times out.
+Both are with GPT-6.1 sol as P3-17.
+
+**Merged since v0.7.0 (core):**
+- S04: school commands in WorldSim, schema 11.
+- R9-04: Awakening, tutorial and countdown, schema 12.
+- P3-02 to P3-07 and P3-11.
+- P3-06: homework issuance, the academic-foundation seed, single-path credits.
+- P3-14: legacy recovery and homework reconcile.
+- P3-16: crowd route invariant.
+- P4-01: exam contract.
+- P4-03: exam scoring.
+
+The portable core was 235/235 at v0.9.1. P4-02 (the examination as world state, schema 13, hash 10, 238/238 on its branch) and P4-04b (several scenarios per tower route plus Argon's six encounters) merge through the unattended Phase 4 pipeline.
+
+**On branches, not yet merged:**
+- P4-05c: scenario-to-runner adapter and result seam. Uncompiled; Gemini Neon is reviewing it.
+- P4-06: exam screens in play.
+- P4-07c: Gemini Neon's 12 follow-up offers, pwcontent validate PASS.
+- P4-07u: follow-up booking, in progress.
+- P3-17: in progress.
+v0.9.2 is queued to merge these, run Rung 1, compile, package and run 13 scenarios unattended.
+
+**Design decisions taken (owner or project head):**
+- Save order: school schema 11, then Awakening 12, then examination 13.
+- Several school scenes per arc category.
+- Several tower scenarios per route, with deterministic selection.
+- Legacy lives: recovered from real records only; post-deadline lives get an explicit compatibility mode, never stranded.
+- An owner "test now" allows offscreen scenarios with their apps open.
+
+**Environment lessons:**
+- C: filled to 0 MB on 2026-11-21, and scenarios then "finished" in about a second without running. With owner approval, the NVIDIA shader cache, old Codex runtime caches and installer leftovers were cleared; C: now has 13 GB free. Codex's real runtime is an installed package, so it was unaffected.
+- A run killed mid-scenario leaves `.pw-lane-acceptance.lock` in Python's virtualised AppData (`AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_*\LocalCache\Local\PerfectWorld\`), not in the plain AppData path. `auto_release.ps1` clears it when no game is running.
+- Gemini Argon and Hydrogen sometimes attempt shell commands in headless mode and are denied. Gemini Neon worked cleanly edit-only. `--dangerously-skip-permissions` is never used.
+- Release work now runs as resumable PowerShell pipelines (`auto_release.ps1`, `auto_p4core.ps1`) instead of Claude agents, because power-offs and usage limits kept killing the agents.
