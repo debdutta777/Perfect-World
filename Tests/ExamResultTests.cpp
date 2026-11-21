@@ -49,7 +49,7 @@ SchoolFollowupContent P403Read(const std::filesystem::path& root)
         P403Require(!error, "directory iteration succeeds");
     }
     const auto loaded = LoadSchoolFollowupContent(db);
-    P403Require(loaded.Ok() && loaded.Catalogue.Actions.size() == 19, "real complete follow-up pack loads");
+    P403Require(loaded.Ok() && loaded.Catalogue.Actions.size() == 31, "real complete follow-up pack loads");
     return loaded.Catalogue;
 }
 TowerSessionState P403Receipt(std::int32_t quality)

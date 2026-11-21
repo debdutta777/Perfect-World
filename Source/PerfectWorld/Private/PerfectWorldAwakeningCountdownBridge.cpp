@@ -2,6 +2,7 @@
 
 #include "PerfectWorldAwakeningResultBridge.h"
 #include "WorldReducer.h" // P38
+#include "PerfectWorldLegacyRecovery.h"
 
 namespace PWAwakening
 {
@@ -171,7 +172,10 @@ namespace PWAwakening
 			TEXT("Every practice offer is optional. Choosing 'Keep an ordinary day' leaves your classes, household commitments, and friendships intact."));
 		Model.bOrdinaryDayKept = bOrdinaryDayKept;
 		Model.CommittedOfferId = CommittedOfferId;
-		Model.StatusBannerText = StatusBanner;
+		const FText P314UCompatibility = PWLegacyRecovery::P314UCompatibilityNotice(
+			PerfectWorld::QueryAwakeningCompatibility(World), false);
+		Model.StatusBannerText = P314UCompatibility.IsEmpty() ? StatusBanner : StatusBanner.IsEmpty() ? P314UCompatibility
+			: FText::Format(NSLOCTEXT("PerfectWorldP314U", "CountdownStatus", "{0}\n\n{1}"), P314UCompatibility, StatusBanner);
 
 		if (!State)
 		{

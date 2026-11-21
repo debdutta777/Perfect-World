@@ -144,7 +144,9 @@ void APerfectWorldFrontEndHUD::ToggleInWorldMenu()
     }
     if (UPWSchoolPresenter::IsOpenIn(this)) // S03: Back leaves the school panel before any pause menu
     {
-        UPWSchoolPresenter::Get(this)->Close();
+        auto* P406BPresenter = UPWSchoolPresenter::Get(this);
+        if (P406BPresenter->GetKind() == EPWSchoolPanel::P406Examination) P406BPresenter->P406BCloseExamination();
+        else P406BPresenter->Close();
         return;
     }
     if (!Root.IsValid())
@@ -217,7 +219,7 @@ FText APerfectWorldFrontEndHUD::LoadSlot(int32 SlotIndex)
     }
     ActiveSlot = SlotIndex;
 
-    // A successful load leaves a message only when the primary file was lost and the backup was used.
+    // Backup recovery and P314U compatibility notices travel through the same post-entry toast.
     const FText Notice = Creator->GetLastErrorMessage();
     if (Creator->HasLifeStarted())
     {
@@ -349,12 +351,14 @@ FText APerfectWorldFrontEndHUD::EnterWorld(const FText& Notice, const bool bFres
     APWTitleView::Dismiss(*PlayerOwner);
     Root->Hide();
     ApplyGameInput();
-    if (!Notice.IsEmpty())
-    {
-        Root->ShowToast(Notice);
-    }
+    FText P314UEntryNotice = Notice;
     if (Pb2UsedOrigin && !bFreshLifeSaved)
-        Root->ShowToast(LOCTEXT("ResumeUsedOrigin", "Resumed safely at your opening home."));
+    {
+        const FText P314UOrigin = LOCTEXT("ResumeUsedOrigin", "Resumed safely at your opening home.");
+        P314UEntryNotice = Notice.IsEmpty() ? P314UOrigin
+            : FText::Format(LOCTEXT("P314UEntryNotices", "{0}\n\n{1}"), Notice, P314UOrigin);
+    }
+    if (!P314UEntryNotice.IsEmpty()) Root->ShowToast(P314UEntryNotice);
     // Last, and only now: input already belongs to the game, so the cue (an overlay that fades by itself) delays nothing.
     // A load or Continue is not a start and never plays it.
     if (PWUI::FStartAcknowledgement::ShouldPlay(bFreshLifeSaved, bEnPlaced))

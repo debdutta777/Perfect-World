@@ -1,4 +1,5 @@
 #include "PerfectWorldLaneLifeSubsystem.h"
+#include "PerfectWorldGuardNotice.h"
 
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
@@ -18,6 +19,7 @@
 #include "PerfectWorldCommerceBridge.h" // R88
 #include "PerfectWorldAwakeningBridge.h" // P38
 #include "PerfectWorldAwakeningResultBridge.h"
+#include "PerfectWorldExaminationBridge.h"
 
 DEFINE_LOG_CATEGORY(LogPWLaneLife);
 
@@ -54,6 +56,26 @@ PerfectWorld::DoorResult BrDoorResultFromCode(const FString& Code)
 /** Player-facing wording for a command the core refused. Empty means the refusal needs no words (a stale click). */
 FText BrRefusalText(const FString& Code)
 {
+    const FText P313Notice = P313GuardNotice(Code);
+    if (!P313Notice.IsEmpty()) return P313Notice;
+    if (Code == TEXT("awakening.recovery_not_needed"))
+        return LOCTEXT("P314URecoveryNotNeeded", "This life's Awakening is already prepared.");
+    if (Code == TEXT("awakening.recovery_missing_content"))
+        return LOCTEXT("P314URecoveryContent", "Awakening recovery needs the school and creation content. Try loading again when it is available.");
+    if (Code == TEXT("awakening.recovery_bad_creation"))
+        return LOCTEXT("P314URecoveryCreation", "The saved creation record could not be read for Awakening recovery.");
+    if (Code == TEXT("awakening.recovery_wrong_creation"))
+        return LOCTEXT("P314URecoveryWrongCreation", "The creation record does not belong to this life. Awakening recovery could not proceed.");
+    if (Code == TEXT("awakening.recovery_unbound"))
+        return LOCTEXT("P314URecoveryUnbound", "The examination countdown is not available to prepare this life yet.");
+    if (Code == TEXT("recovery.source"))
+        return LOCTEXT("P314URecoverySource", "Compatibility recovery runs only while loading a life.");
+    if (Code == TEXT("flag.reserved"))
+        return LOCTEXT("P314UReservedFlag", "This life record can only be changed by compatibility recovery.");
+    if (Code == TEXT("school.work.reconcile.nothing_missing"))
+        return LOCTEXT("P314UNoMissingWork", "All homework has already reached this life.");
+    if (Code.StartsWith(TEXT("exam.")) || Code.StartsWith(TEXT("tower.session.")))
+        return P406Exam::P406RefusalText(Code);
     if (Code == TEXT("tutorial.active")) // P38
         return LOCTEXT("P38TutorialActive", "Your supervised tutorial is in progress. Complete it or withdraw to the safe area first.");
     if (Code == TEXT("school.learning_refused"))
@@ -69,10 +91,6 @@ FText BrRefusalText(const FString& Code)
     if (Code == TEXT("world.unsettled") || Code == TEXT("conversation.charge_interrupted"))
     {
         return LOCTEXT("RefuseUnsettled", "Too much is happening at once. Try again in a moment.");
-    }
-    if (Code == TEXT("school.lesson_open") || Code == TEXT("school.paper_open")) // S05
-    {
-        return LOCTEXT("RefuseSchoolOpen", "Finish your lesson or paper first. Time and everything else wait until you do.");
     }
     if (Code == TEXT("conversation.already_open"))
     {
@@ -321,6 +339,12 @@ void UPWLaneLifeSubsystem::RequestDoorToggle(APWDoorActor& Door, APawn* By)
     if (!Result.Accepted)
     {
         UE_LOG(LogPWLaneLife, Display, TEXT("Door %s refused by the core: %hs"), *Door.GetDoorId().ToString(), Result.Why.Code.c_str());
+        const FText P313Notice = P313GuardNotice(PWLaneLife::ToFString(Result.Why.Code));
+        if (!P313Notice.IsEmpty())
+        {
+            ShowPlayerNotice(P313Notice, By);
+            return;
+        }
         const PerfectWorld::DoorResult Why = BrDoorResultFromCode(PWLaneLife::ToFString(Result.Why.Code));
         if (Why == PerfectWorld::DoorResult::Private && Set.Open && Set.Context.Direction == PerfectWorld::DoorDirection::Entry)
         {

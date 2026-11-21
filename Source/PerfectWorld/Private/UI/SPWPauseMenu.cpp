@@ -5,6 +5,7 @@
 #include "PerfectWorldCharacterCreatorSubsystem.h"
 #include "PerfectWorldFrontEndHUD.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
+#include "PerfectWorldExaminationBridge.h"
 #include "PerfectWorldCommerceText.h" // R88
 #include "UI/PWStyle.h"
 #include "UI/PWWidgets.h"
@@ -243,6 +244,9 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
     P312CountdownButton = CpPauseButton(LOCTEXT("P312Countdown", "Countdown"), PWUI::EButtonKind::Secondary,
         FOnClicked::CreateSPLambda(this, [this]() { P312OpenCountdown(); return FReply::Handled(); }));
     P312CountdownButton->SetTag(TEXT("P312PauseCountdown"));
+    P406ExaminationButton = CpPauseButton(LOCTEXT("P406Examination", "Examination"), PWUI::EButtonKind::Secondary,
+        FOnClicked::CreateSPLambda(this, [this]() { P406OpenExamination(); return FReply::Handled(); }));
+    P406ExaminationButton->SetTag(TEXT("P406PauseExamination"));
 
     SettingsButton = CpPauseButton(
         LOCTEXT("Settings", "Settings"), PWUI::EButtonKind::Secondary,
@@ -399,6 +403,10 @@ TSharedRef<SWidget> SPWPauseMenu::BuildMenuContent()
             + SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)[S03PlannerButton.ToSharedRef()] // S03
             + SVerticalBox::Slot().AutoHeight()
             [SNew(SBox).Padding(0.0f, 0.0f, 0.0f, 6.0f).Visibility_Lambda([WeakHud]()
+                { return P406Exam::P406PauseEntryVisible(WeakHud.IsValid() ? WeakHud->GetWorld() : nullptr)
+                    ? EVisibility::Visible : EVisibility::Collapsed; })[P406ExaminationButton.ToSharedRef()]]
+            + SVerticalBox::Slot().AutoHeight()
+            [SNew(SBox).Padding(0.0f, 0.0f, 0.0f, 6.0f).Visibility_Lambda([WeakHud]()
                 {
                     const auto* Life = UPWLaneLifeSubsystem::Get(WeakHud.Get());
                     return Life != nullptr && Life->GetSim().Countdown().has_value() ? EVisibility::Visible : EVisibility::Collapsed;
@@ -457,6 +465,11 @@ FReply SPWPauseMenu::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InK
         return FReply::Handled();
     }
     const FKey Key = InKeyEvent.GetKey();
+    if (P406ExaminationPanel.IsValid() && (Key == EKeys::Escape || Key == EKeys::Gamepad_FaceButton_Right || Key == EKeys::Gamepad_Special_Right))
+    {
+        P406CloseExamination();
+        return FReply::Handled();
+    }
     if (P312CountdownPanel.IsValid() && (Key == EKeys::Escape || Key == EKeys::Gamepad_FaceButton_Right || Key == EKeys::Gamepad_Special_Right))
     {
         P312CloseCountdown();

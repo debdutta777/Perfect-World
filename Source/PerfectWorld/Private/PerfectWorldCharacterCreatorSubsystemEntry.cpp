@@ -11,6 +11,7 @@
 #include "PerfectWorldPlayerCharacter.h"
 #include "PerfectWorldReadingPresenter.h"
 #include "PerfectWorldContentSubsystem.h" // P38
+#include "PerfectWorldExaminationBridge.h"
 #include "Engine/GameInstance.h"
 #include "LearningCredits.h"
 
@@ -70,14 +71,16 @@ bool UPerfectWorldCharacterCreatorSubsystem::StartLifeAndSaveToSlot(int32 SlotIn
     PerfectWorld::WorldSaveData Fresh;
     const auto Begun = PerfectWorld::BeginWorldFromCreation(Started.CaptureSave(), 0x50575F4C414E45ull, Fresh);
     if (!Begun.Succeeded()) return RecordFileError(FText::FromString(ToFString(Begun.Message)));
-    // P38: confirmation only. LoadFromSlot never seeds or reconstructs history.
+    // P38: fresh-life confirmation seeding. P314U legacy recovery belongs only to LoadWorldSlot after adoption.
     const auto* P38Instance = GetWorld() != nullptr ? GetWorld()->GetGameInstance() : nullptr;
     const auto* P38Content = P38Instance != nullptr ? P38Instance->GetSubsystem<UPWContentSubsystem>() : nullptr;
     if (P38Content == nullptr || P38Content->GetDb() == nullptr)
         return RecordFileError(FText::FromString(TEXT("Learning content is unavailable. Your creation has not started.")));
     const auto P36USeed = PerfectWorld::SeedNewLifeLearning(Fresh.World, *P38Content->GetDb(), Started.CaptureSave());
     if (!P36USeed.Ok()) return RecordFileError(FText::FromString(ToFString(P36USeed.Error)));
-    auto Prepared = MakeUnique<PerfectWorld::WorldSim>(Fresh.World);
+    auto Prepared = MakeUnique<PerfectWorld::WorldSim>(Fresh.World, PerfectWorld::MaxEventsPerAdvance,
+        PerfectWorld::DayLoopCatalogues{}, PerfectWorld::WorldCommerceCatalogues{}, PerfectWorld::WorldSchoolCatalogues{},
+        PerfectWorld::WorldAwakeningCatalogues{}, P406Exam::P406BExaminationCatalogues(GetWorld()));
     if (!Prepared->Submit({PerfectWorld::CommandSource::System,
         PerfectWorld::AdvanceTime{PWLaneLife::CampaignStartMinuteOfDay - 360}}).Accepted)
         return RecordFileError(FText::FromString(TEXT("The new world's clock could not start.")));

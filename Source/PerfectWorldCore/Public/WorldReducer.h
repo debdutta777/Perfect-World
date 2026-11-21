@@ -191,6 +191,8 @@ public:
     [[nodiscard]] P402ExamWorldView ExaminationWorldView() const;
     /** P4-02: the P4-03 seam's derived result of the stored session (refused "exam.not_terminal" while open). Never stored. */
     [[nodiscard]] P402ExamFinish ExaminationResult() const { return P402ExamFinishSeam(State_.Examination, Examination_.Followups); }
+    /** P407U: current result actions, resolved appointment slots and saved attendance. Pure. */
+    [[nodiscard]] std::vector<P407UFollowupView> P407UFollowups() const;
 
 private:
     std::optional<Rejection> Validate(const Command& command) const;
@@ -255,6 +257,7 @@ private:
     // P4-02 tower.session.apply (WorldExam.cpp): staged through P401ApplyExamChoice, terminal charge through ChargeTime.
     std::optional<Rejection> ValidateExamCommand(const Command& command) const;
     std::optional<Rejection> ApplyExamCommand(const TowerSessionCommand& command, CommandResult& result);
+    std::optional<Rejection> ApplyP407UFollowup(const P407UFollowupCommand& command, CommandResult& result);
     /** True in a routed sim whose awakened life has not yet decided on the examination: time paths stop at the instant. */
     [[nodiscard]] bool ExamDecisionPending() const noexcept;
     /** P4-09: the sitting instant a routed, awakened life must decide at (undecided, or deferred to the next sitting); -1 if none. */

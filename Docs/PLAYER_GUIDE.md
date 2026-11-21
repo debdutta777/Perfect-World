@@ -1,6 +1,6 @@
 # Perfect World Player Guide
 
-A practical guide for testing and playing development builds in the Nabapara worktree.
+A practical guide for testing and playing development builds. It reflects v0.9.1-alpha (21 November 2026).
 
 ---
 
@@ -266,9 +266,9 @@ The supernatural element of Perfect World is introduced through a formal, mandat
 | Tutorial Dungeon | Implemented | 3 non-combat situations and withdrawal verified in tests. |
 | Awakening Persistence | Implemented | Saved in Schema 12 (hash 9) under `pw.awakening/1`. |
 | Result & Countdown Panels | Implemented | UI displays Tattvas, capabilities, and countdown clock. |
-| Lesson-to-Awakening Growth | Not Connected | In v0.8.1, classroom lessons do not yet dynamically increment latent Awakening attributes. |
-| Virtual Tower Examination | Not Connected | Playable tower dungeon runs belong to post-v0.9.0 releases; current code stops at 2 February 2043, 06:00. |
-| Countdown Contacts | Not Connected | Contact lists remain deliberately empty; no mock contacts are fabricated. |
+| Lesson-to-Awakening Growth | Implemented (v0.9.0) | Lessons, handed-in papers and resolved weeks credit learning exactly once; the academic-foundation trait counts once as prior preparation. |
+| Virtual Tower Examination | In progress | The core can run the examination (sit, withdraw, defer or decline at 06:00 on 2 February 2043), but its screens are not in a published build yet. They are planned for v0.9.2. |
+| Countdown Contacts | Implemented (v0.9.1) | Your real household (parent, relative, grandparent, sibling or guardian, or a care worker) and your teacher. One neighbour obligation can still block a player who ignores all practice; it is being fixed. |
 
 <!-- Sources: Docs/PHASE3_PLAN_2026-11-09.md, Source/PerfectWorld/Private/PerfectWorldAcceptanceAwakening.cpp, Source/PerfectWorldCore/Private/TutorialDungeon.cpp, Source/PerfectWorldCore/Private/WorldCountdown.cpp, Source/PerfectWorldCore/Private/WorldSaveAwakening.cpp, release/notes_v0.8.0-alpha.md, release/notes_v0.8.1-alpha.md -->
 
@@ -341,7 +341,7 @@ The following issues and boundaries are present in the current build:
 3. **Playable Virtual Tower Examination:**
    Full interactive runs inside the virtual tower examination are planned for releases following v0.9.0. Current gameplay concludes at the examination morning boundary (2 February 2043, 06:00).
 4. **Dynamic Lesson-to-Awakening Progression:**
-   In build v0.8.1, completing classroom lessons does not yet dynamically increment latent Awakening attributes. The lesson credit adapter (P3-02) connects this in Phase 3.
+   Since v0.9.0, completed lessons, papers and resolved weeks feed Awakening growth exactly once (P3-02 and P3-06).
 5. **Medical Supply Usage:**
    Plasters and ORS purchased from the pharmacy are tagged as `unsupported_supply`. They can be carried in inventory, but specific injury conditions and treatment mechanics are not yet implemented.
 6. **Tutorial Dungeon Non-Combat Scope:**

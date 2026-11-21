@@ -10,6 +10,8 @@
 #include "PerfectWorldSchoolLive.h" // S05
 #include "PerfectWorldAwakeningBridge.h" // P38
 #include "PerfectWorldAwakeningResultBridge.h"
+#include "PerfectWorldCountdownContacts.h"
+#include "PerfectWorldExaminationBridge.h"
 #include "FaridaSchedule.h"
 #include "SchoolLifeContent.h"
 #include "LaneOrigin.h"
@@ -57,14 +59,12 @@ void UPWLaneLifeSubsystem::R88InstallCommerce()
     }
     PerfectWorld::WorldAwakeningCatalogues P38Awakening;
     P38Awakening.Recipes = P38Recipes.Get();
-    P38Awakening.Countdown.Player = "player";
-    // P312: use authored people, never a generated sibling or an adult relabelled as one.
-    for (const auto& P312Person : PerfectWorld::KnownSchoolLifeCast())
-        if (P312Person.Role == "teacher" && !P312Person.bProposedNewCast)
-        {
-            P38Awakening.Countdown.Contacts.push_back({"teacher", std::string(P312Person.PersonId)});
-            break;
-        }
+    // P315: retain registered authored identities, and validate each optional binding
+    // with the opening validator before it can reach the sim's ordinary-time path.
+    std::vector<std::string> P315People;
+    for (const auto& Person : PerfectWorld::KnownSchoolLifeCast())
+        if (!Person.bProposedNewCast) P315People.emplace_back(Person.PersonId);
+    const PerfectWorld::LaneOriginBinding* P315Origin = nullptr;
     const auto* P312Instance = GetWorld()->GetGameInstance();
     const auto* P312Creator = P312Instance != nullptr ? P312Instance->GetSubsystem<UPerfectWorldCharacterCreatorSubsystem>() : nullptr;
     if (P312Creator != nullptr)
@@ -75,18 +75,27 @@ void UPWLaneLifeSubsystem::R88InstallCommerce()
             for (const auto& P312Binding : PerfectWorld::AuthoredLaneOrigins())
                 if (P312Binding.CounterpartPersonId == P312Id && P312Binding.GrewUpInCare == P312Origin.bGrewUpInCare)
                 {
-                    const std::string P312Role = P312Origin.bGrewUpInCare ? "care_adult" :
-                        P312Binding.HouseholdTemplateId == "adult_sibling_household" ? "sibling" : "family_adult";
-                    P38Awakening.Countdown.Contacts.push_back({P312Role, P312Id});
+                    P315Origin = &P312Binding;
                     break;
                 }
     }
     const auto* P312Presence = GetWorld()->GetSubsystem<UPWNpcPresenceSubsystem>();
+    if (P315Origin != nullptr && P312Presence != nullptr &&
+        P312Presence->IsRegistered(PWLaneLife::ToName(P315Origin->CounterpartPersonId)))
+        P315People.push_back(P315Origin->CounterpartPersonId);
     if (P312Presence != nullptr && P312Presence->IsRegistered(PWLaneLife::ToName(PerfectWorld::FaridaPersonId)))
-        P38Awakening.Countdown.Contacts.push_back({"neighbour", std::string(PerfectWorld::FaridaPersonId)});
+        P315People.emplace_back(PerfectWorld::FaridaPersonId);
+    std::vector<std::string> P315Diagnostics;
+    P38Awakening.Countdown = PWAwakening::P315BuildCountdownContext(P315Origin, P315People, P315Diagnostics);
+    for (const auto& Diagnostic : P315Diagnostics)
+        UE_LOG(LogPWLaneLife, Warning, TEXT("P315 countdown contact %hs"), Diagnostic.c_str());
     // WorldState has no integrated relationship book yet. Leave it absent; never fabricate scores.
+    const auto* P314UInstance = GetWorld()->GetGameInstance();
+    const auto* ContentSubsystem = P314UInstance != nullptr ? P314UInstance->GetSubsystem<UPWContentSubsystem>() : nullptr;
+    P38Awakening.Content = ContentSubsystem != nullptr ? ContentSubsystem->GetDb() : nullptr;
+    const auto P406BExamination = P406Exam::P406BExaminationCatalogues(GetWorld());
     Sim = MakeUnique<PerfectWorld::WorldSim>(Sim->State(), PerfectWorld::MaxEventsPerAdvance,
-        R88School != nullptr ? R88School->Binding : PerfectWorld::DayLoopCatalogues{}, R88CommerceContent->Catalogues(), S05Lessons, P38Awakening);
+        R88School != nullptr ? R88School->Binding : PerfectWorld::DayLoopCatalogues{}, R88CommerceContent->Catalogues(), S05Lessons, P38Awakening, P406BExamination);
     PWAwakening::AwBridge::Install(GetWorld(), PWAwakening::P38MakeLiveFloorBridge(*GetWorld()));
     PWAwakening::ApBridge::Install(GetWorld(), PWAwakening::MakeLaneLifeAwakeningBridge(*GetWorld()));
     const TWeakObjectPtr<UPWLaneLifeSubsystem> Weak(this);

@@ -1,0 +1,14 @@
+{
+  "type": "school_followup",
+  "id": "school_followup.p2.p4_withdrawn_school_mentor",
+  "outcome": "withdrawn",
+  "offerId": "",
+  "appointmentId": "appointment.p2.p4_withdrawn_school_mentor",
+  "kind": "appointment",
+  "titleTextKey": "phase2.a8.p4_withdrawn_school_mentor.title",
+  "briefTextKey": "phase2.a8.p4_withdrawn_school_mentor.brief",
+  "destination": "place.school",
+  "dayOffset": 3,
+  "minute": 960,
+  "durationMinutes": 30
+}

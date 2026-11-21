@@ -224,6 +224,10 @@ const FPWSchoolDayRow* FPWSchoolDayModel::StartingRow() const
 {
     for (const FPWSchoolDayRow& Row : Rows)
     {
+        if (Row.Status == SchoolDayRowStatus::Active) return &Row;
+    }
+    for (const FPWSchoolDayRow& Row : Rows)
+    {
         if (Row.Status == SchoolDayRowStatus::Open || Row.Status == SchoolDayRowStatus::Active) return &Row;
     }
     for (const FPWSchoolDayRow& Row : Rows)
@@ -608,7 +612,8 @@ void SPWSchoolDay::RebuildDetail()
     {
         Column->AddSlot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 10.0f)
         [
-            PWUI::MakeText(LOCTEXT("ActiveNote", "This lesson is open. Carry on in the lesson window."), 17, Style.TextPrimary, false, true)
+            PWUI::MakeButton(LOCTEXT("P313Resume", "Resume lesson (finish or Leave early)"), PWUI::EButtonKind::Primary,
+                FOnClicked::CreateSPLambda(this, [this]() { RequestOpen(SchoolLessonMode::Foreground); return FReply::Handled(); }))
         ];
     }
     if (Row->Status == SchoolDayRowStatus::Open)
@@ -653,6 +658,17 @@ bool SPWSchoolDay::SelectGoal(const FString& GoalName)
 
 bool SPWSchoolDay::RequestOpen(const SchoolLessonMode Mode)
 {
+    // P313: resume the active run even if an earlier bell row remains selected. No second open command.
+    for (const FPWSchoolDayRow& P313Row : Model.Rows)
+    {
+        if (P313Row.Status == SchoolDayRowStatus::Active && OnOpened.IsBound())
+        {
+            SelectedId = P313Row.BindingId;
+            Notice = FText::GetEmpty();
+            OnOpened.ExecuteIfBound();
+            return true;
+        }
+    }
     const FPWSchoolDayRow* Row = GetSelectedRow();
     if (Row == nullptr || !World.IsValid())
     {

@@ -94,10 +94,22 @@ void P401RealContent(const ContentDb& db)
     const auto report = P401ValidateExamContract(db);
     for (const auto& issue : report.Issues) std::cerr << issue.Id << ": " << issue.Message << '\n';
     P401Require(report.Ok() && report.NonCombatClimb && report.ZeroPracticeContentViable, "real content has a complete zero-practice non-combat path");
-    P401Require(report.Routes.size() == 9 && report.DecisionSequences == 243 && report.RouteSequences == 27,
-        "all nine real routes, 243 local choices and 27 route combinations visited");
+    P401Require(report.Routes.size() == 9, "all nine real routes visited");
+    for (const auto& route : TowerRoutes())
+        P401Require(std::count_if(report.Routes.begin(), report.Routes.end(), [&](const auto& row) { return row.RouteId == route.Id; }) == 1,
+            "every authoritative route appears exactly once in the matrix");
+    P401Require(report.DecisionSequences == 405, "all 405 local decision sequences across fifteen variants visited");
+    P401Require(report.RouteSequences == 27, "all 27 route combinations for one selected variant per route visited");
     const auto catalogue = LoadTowerScenarioCatalogue(db, true);
     P401Require(catalogue.Ok(), "real scenario references and both scoring metrics resolve");
+    P401Require(catalogue.Catalogue.Scenarios.size() == 15, "fifteen authored variants contribute local paths");
+    // P405E: 15 variants x (3 choices per beat ^ 3 beats) = 405 paths.
+    for (const auto& variant : catalogue.Catalogue.Scenarios)
+    {
+        P401Require(variant.Beats.size() == 3, "each current variant has exactly three beats");
+        for (const auto& beat : variant.Beats)
+            P401Require(beat.Decisions.size() == 3, "each current beat has exactly three decisions, including recovery");
+    }
     std::array<bool, TowerMethodCount> methods{};
     for (const auto& row : report.Routes)
     {
@@ -105,6 +117,8 @@ void P401RealContent(const ContentDb& db)
         P401Require(route && row.Floor == route->Floor && row.DisciplineMask == route->DisciplineMask, "matrix projects core route authority");
         P401Require(row.NonCombatCompletes && row.CombatCompletes == route->AllowsCombat && !row.ScenarioId.empty(),
             "each allowed method has a real completion");
+        P401Require(row.ScenarioId == catalogue.Catalogue.P404BSelectForRoute(row.RouteId, 0, 0)->Id,
+            "matrix representative retains the standalone seed and sitting draw");
         for (std::size_t i = 0; i < methods.size(); ++i)
         {
             const auto method = static_cast<TowerMethod>(i);
@@ -165,19 +179,75 @@ void P401RealContent(const ContentDb& db)
     }
     P401Require(!P401ValidateExamContract({}).Ok(), "empty content cannot pass vacuously");
 }
+void P405EVariantMatrix(const ContentDb& db)
+{
+    const auto catalogue = LoadTowerScenarioCatalogue(db, true).Catalogue;
+    std::size_t probes = 0;
+    for (const auto& variant : catalogue.Scenarios)
+    {
+        const auto* representative = catalogue.P404BSelectForRoute(variant.RouteId, 0, 0);
+        if (variant.Id == representative->Id) continue;
+        for (const bool combat : {false, true})
+        {
+            if (combat && !variant.AllowsCombat) continue;
+            auto broken = catalogue;
+            auto target = std::find_if(broken.Scenarios.begin(), broken.Scenarios.end(),
+                [&](const auto& item) { return item.Id == variant.Id; });
+            for (auto& beat : target->Beats)
+                std::erase_if(beat.Decisions, [&](const auto& decision) { return combat ? decision.IsCombat : !decision.IsCombat; });
+            std::reverse(broken.Scenarios.begin(), broken.Scenarios.end());
+            const auto matrix = P401ExamRouteMatrix(broken);
+            const auto row = std::find_if(matrix.begin(), matrix.end(),
+                [&](const auto& item) { return item.RouteId == variant.RouteId; });
+            P401Require(row != matrix.end(), "multi-variant route remains represented");
+            P401Require(row->ScenarioId == representative->Id && !(combat ? row->CombatCompletes : row->NonCombatCompletes),
+                "unselected variant without a supported completion makes the whole route incomplete");
+            if (combat) P401Require(row->NonCombatCompletes, "removing combat preserves every variant's non-combat completion");
+            ++probes;
+        }
+    }
+    P401Require(probes == 7, "six alternate non-combat variants and the alternate encounter combat path were exercised");
+}
 void P401BrokenContent(const ContentDb& db)
 {
+    // P405E: routes are mandatory; an individual variant is replaceable.
+    for (const auto& route : TowerRoutes())
+    {
+        auto missing = db;
+        for (const auto* record : db.OfType("tower_scenario"))
+            if (record->Data.Find("route")->String == route.Id) missing.Records.erase(record->Id);
+        P401Require(!P401ValidateExamContract(missing).Ok(), "removing every variant of any real route is refused");
+    }
     for (const auto* record : db.OfType("tower_scenario"))
     {
         auto missing = db;
         missing.Records.erase(record->Id);
-        P401Require(!P401ValidateExamContract(missing).Ok(), "every real route is mandatory");
+        const auto remaining = LoadTowerScenarioCatalogue(missing, false);
+        const bool covered = remaining.Catalogue.P404BSelectForRoute(record->Data.Find("route")->String, 0, 0) != nullptr;
+        const auto report = P401ValidateExamContract(missing);
+        P401Require(report.Ok() == covered, "one variant may be removed exactly when its route still has a scenario");
+        if (covered) P401Require(report.Routes.size() == 9 && report.DecisionSequences == 378 && report.RouteSequences == 27,
+            "fourteen remaining variants contribute 378 paths over nine routes and 27 sitting combinations");
     }
     for (const auto* outcome : {"strong", "middle", "poor", "withdrawn", "deferred", "declined"})
     {
+        // P407C: several appointments may serve one outcome; the outcome itself stays mandatory.
         auto missing = db;
-        missing.Records.erase("school_followup.p2." + std::string(outcome));
+        std::size_t served = 0;
+        for (const auto* record : db.OfType("school_followup"))
+            if (record->Data.Find("outcome")->String == outcome && !record->Data.Find("appointmentId")->String.empty())
+            {
+                missing.Records.erase(record->Id);
+                ++served;
+            }
+        P401Require(served >= 1, "every outcome has at least one appointment-bearing continuation");
         P401Require(!P401ValidateExamContract(missing).Ok(), "each of six outcome continuations is mandatory");
+        if (served > 1)
+        {
+            auto one = db;
+            one.Records.erase("school_followup.p2." + std::string(outcome));
+            P401Require(P401ValidateExamContract(one).Ok(), "one of several appointments for an outcome is replaceable");
+        }
     }
     auto missing = db;
     for (const auto* record : db.OfType("school_followup")) missing.Records.erase(record->Id);
@@ -402,6 +472,7 @@ int main(int argc, char** argv)
     const auto db = P401Read(argv[1]);
     P401FrozenRules();
     P401RealContent(db);
+    P405EVariantMatrix(db);
     P401BrokenContent(db);
     P401SessionRules(LoadSchoolFollowupContent(db).Catalogue);
     std::cout << "P401 ExamContract: " << P401Assertions << " assertions passed\n";

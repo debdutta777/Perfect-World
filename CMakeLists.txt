@@ -1032,6 +1032,11 @@ add_executable(PerfectWorldExamResultTests Tests/ExamResultTests.cpp)
 target_link_libraries(PerfectWorldExamResultTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldExamResultTests COMMAND PerfectWorldExamResultTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
+# P407U: saved optional bookings and paid follow-up attendance; existing save format.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldExamFollowup.cpp)
+add_executable(PerfectWorldExamFollowupTests Tests/ExamFollowupTests.cpp)
+target_link_libraries(PerfectWorldExamFollowupTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldExamFollowupTests COMMAND PerfectWorldExamFollowupTests ${CMAKE_SOURCE_DIR}/Data/Content)
 # P405: production tower runners and real-content examination integration.
 target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/TowerRunnerContent.cpp)
 add_executable(PerfectWorldTowerRunnerContentTests Tests/TowerRunnerContentTests.cpp)
@@ -1043,3 +1048,8 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldExa
 add_executable(PerfectWorldExamSittingsTests Tests/WorldExamSittingsTests.cpp)
 target_link_libraries(PerfectWorldExamSittingsTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldExamSittingsTests COMMAND PerfectWorldExamSittingsTests ${CMAKE_SOURCE_DIR}/Data/Content)
+# P406B: production examination bindings and pause handoff, without an Unreal map.
+add_executable(PerfectWorldP406BExaminationTests Tests/P406BExaminationTests.cpp)
+target_include_directories(PerfectWorldP406BExaminationTests PRIVATE Source/PerfectWorld/Private)
+target_link_libraries(PerfectWorldP406BExaminationTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldP406BExaminationTests COMMAND PerfectWorldP406BExaminationTests ${CMAKE_SOURCE_DIR}/Data/Content)

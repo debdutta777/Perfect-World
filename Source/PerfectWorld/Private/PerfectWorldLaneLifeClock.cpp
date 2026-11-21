@@ -11,9 +11,11 @@
 #include "PerfectWorldNpcPresenceSubsystem.h"
 #include "PerfectWorldReadingPresenter.h"
 #include "PerfectWorldLaneLifePersistence.h"
+#include "PerfectWorldLegacyRecovery.h"
 #include "PerfectWorldPlayerCharacter.h"
 #include "PerfectWorldBuyPresenter.h" // R88
 #include "PerfectWorldSchoolPresenter.h" // S03
+#include "PerfectWorldExaminationBridge.h"
 #include "PerfectWorldCommerceText.h" // R88
 #include "UI/SPWClockReadout.h"
 #include "Widgets/SWeakWidget.h"
@@ -111,7 +113,9 @@ FText UPWLaneLifeSubsystem::GetClockText() const
 
 void UPWLaneLifeSubsystem::BuildWorld()
 {
-    Sim = MakeUnique<PerfectWorld::WorldSim>(BrWorldSeed);
+    Sim = MakeUnique<PerfectWorld::WorldSim>(BrWorldSeed, PerfectWorld::MaxEventsPerAdvance,
+        PerfectWorld::DayLoopCatalogues{}, PerfectWorld::WorldCommerceCatalogues{}, PerfectWorld::WorldSchoolCatalogues{},
+        PerfectWorld::WorldAwakeningCatalogues{}, P406Exam::P406BExaminationCatalogues(GetWorld()));
     ClockMode = PerfectWorld::TimeModeState();
     RealMsFraction = 0.0;
     LastClockRefusal.Reset();
@@ -187,7 +191,9 @@ bool UPWLaneLifeSubsystem::LoadWorldSlot(const std::string& Path, PerfectWorld::
     TUniquePtr<PerfectWorld::WorldSim> Prepared;
     if (Scratch.HasStarted())
     {
-        Prepared = MakeUnique<PerfectWorld::WorldSim>(Read.Data->World);
+        Prepared = MakeUnique<PerfectWorld::WorldSim>(Read.Data->World, PerfectWorld::MaxEventsPerAdvance,
+            PerfectWorld::DayLoopCatalogues{}, PerfectWorld::WorldCommerceCatalogues{}, PerfectWorld::WorldSchoolCatalogues{},
+            PerfectWorld::WorldAwakeningCatalogues{}, P406Exam::P406BExaminationCatalogues(GetWorld()));
         const std::string Person(PerfectWorld::OpenConversationPersonId(Prepared->State()));
         if (!Person.empty() && !Prepared->Submit({PerfectWorld::CommandSource::Player,
             PerfectWorld::ConversationLeave{Person}}).Accepted)
@@ -203,6 +209,30 @@ bool UPWLaneLifeSubsystem::LoadWorldSlot(const std::string& Path, PerfectWorld::
     {
         Placement = Read.Data->Player;
         AdoptSavedWorld(MoveTemp(Prepared));
+        PWLegacyRecovery::FP314ULoadActions P314UActions;
+        P314UActions.Read = [this]() -> const PerfectWorld::WorldState& { return Sim->State(); };
+        P314UActions.PendingWork = [this]() { return Sim->PendingSchoolWorkReconciliation(); };
+        P314UActions.Submit = [this](const PerfectWorld::Command& Command) { return SubmitCommand(Command); };
+        P314UActions.Autosave = [this, &Creation, &Path, &Read]() -> FText
+        {
+            // The player has not been placed yet. Preserve the slot's placement, never the title-screen pawn's position.
+            const auto P314UCapture = PWLaneLifePersistence::CaptureWorldSave(Creation.CaptureSave(), Sim->State(), Read.Data->Player);
+            if (P314UCapture.Succeeded())
+            {
+                const auto P314UWritten = PWLaneLifePersistence::WriteWorldSlot(Path, P314UCapture.Text);
+                if (P314UWritten.Ok) return FText::GetEmpty();
+                UE_LOG(LogPWLaneLife, Warning, TEXT("P314U recovery autosave failed: %hs"), P314UWritten.Message.c_str());
+            }
+            else
+                UE_LOG(LogPWLaneLife, Warning, TEXT("P314U recovery snapshot refused: %hs"), P314UCapture.Validation.Message.c_str());
+            return NSLOCTEXT("PerfectWorldP314U", "AutosaveFailed", "This life loaded, but its recovery could not be saved. Save it again before leaving; the earlier slot is kept.");
+        };
+        const FText P314UNotice = PWLegacyRecovery::P314URecoverLoadedLife(Creation.CaptureSave(), P314UActions);
+        if (!P314UNotice.IsEmpty())
+        {
+            if (!Message.empty()) Message += "\n\n";
+            Message += TCHAR_TO_UTF8(*P314UNotice.ToString());
+        }
     }
     return true;
 }
@@ -262,6 +292,9 @@ PerfectWorld::CommandResult UPWLaneLifeSubsystem::SubmitCommand(const PerfectWor
         }
         HandleClockMoved();
     }
+    // P406: commands may stop partially at 06:00 or refuse another action at that boundary.
+    if (Result.Why.Code == "exam.decision_required" || Sim->ExaminationWorldView().DecisionRequired)
+        P406Exam::P406PresentRequired(GetWorld());
     return Result;
 }
 
@@ -326,6 +359,7 @@ void UPWLaneLifeSubsystem::AdvanceClock(const int64 Minutes)
             return;
         }
         LastClockRefusal.Reset();
+        if (Sim->ExaminationWorldView().DecisionRequired) return; // do not consume the partial remainder past the decision
         Remaining -= Result.To - Result.From;
         if (!Result.Partial)
         {
@@ -368,6 +402,10 @@ bool UPWLaneLifeSubsystem::UpdateClockHold()
     else if (UPWSchoolPresenter::IsOpenIn(this)) // S03
     {
         Hold = EPWClockHold::School;
+    }
+    else if (Sim->ExaminationWorldView().DecisionRequired || Sim->ExaminationWorldView().CanWithdraw)
+    {
+        Hold = EPWClockHold::School; // P406: includes a decision waiting for another overlay to release input
     }
     else if (!FApp::HasFocus())
     {
@@ -414,6 +452,7 @@ void UPWLaneLifeSubsystem::Tick(const float DeltaTime)
     }
     EnsureClockReadout();
     CloseOrphanedConversation();
+    P406Exam::P406PresentRequired(GetWorld()); // includes Continue at the decision boundary
     if (UpdateClockHold())
     {
         RealMsFraction = 0.0;

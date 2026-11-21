@@ -147,11 +147,12 @@ P401ExamScoreDimensions P401ExamScoring() noexcept
     return out;
 }
 P401ExamStepResult P401ApplyExamChoice(const TowerSessionState& state, const TowerRunnerCatalogue& runners,
-    const TowerSessionCommand& command, const CountdownProfile& preparation, GameInstant now)
+    const TowerSessionCommand& command, const CountdownProfile& preparation, GameInstant now,
+    std::uint64_t worldSeed, std::uint32_t attemptNumber)
 {
     P401ExamStepResult out;
     out.State = state;
-    out.Resolution = ApplyTowerSession(out.State, runners, command, preparation, now);
+    out.Resolution = ApplyTowerSession(out.State, runners, command, preparation, now, worldSeed, attemptNumber);
     return out;
 }
 std::vector<P401ExamRouteRow> P401ExamRouteMatrix(const TowerScenarioCatalogue& scenarios)
@@ -168,12 +169,22 @@ std::vector<P401ExamRouteRow> P401ExamRouteMatrix(const TowerScenarioCatalogue& 
         if (const auto* scenario = scenarios.P404BSelectForRoute(route.Id, 0, 0))
         {
             row.ScenarioId = scenario->Id;
-            const auto nonCombat = BuildOptimalNonCombatAttempt(*scenario);
-            row.NonCombatCompletes = nonCombat.Valid && !nonCombat.UsedCombat && !nonCombat.CombatFedCommonJudgment;
-            if (route.AllowsCombat)
+            row.NonCombatCompletes = true;
+            row.CombatCompletes = route.AllowsCombat;
+            // P405E: the ID represents the standalone draw; completion covers
+            // every variant a life's seed and sitting ordinal could select.
+            for (const auto& variant : scenarios.Scenarios)
             {
-                const auto combat = BuildOptimalCombatAttempt(*scenario);
-                row.CombatCompletes = combat.Valid && combat.UsedCombat && !combat.CombatFedCommonJudgment;
+                if (variant.RouteId != route.Id) continue;
+                const auto nonCombat = BuildOptimalNonCombatAttempt(variant);
+                row.NonCombatCompletes = row.NonCombatCompletes && nonCombat.Valid &&
+                    !nonCombat.UsedCombat && !nonCombat.CombatFedCommonJudgment;
+                if (route.AllowsCombat)
+                {
+                    const auto combat = BuildOptimalCombatAttempt(variant);
+                    row.CombatCompletes = row.CombatCompletes && combat.Valid &&
+                        combat.UsedCombat && !combat.CombatFedCommonJudgment;
+                }
             }
         }
         rows.push_back(std::move(row));
@@ -229,8 +240,10 @@ P401ExamValidation P401ValidateExamContract(const ContentDb& db)
         std::vector<std::string_view> choices;
         P401DecisionPaths(scenario, scenario.EntryBeat, choices, baseline, followups.Catalogue, report);
     }
-    // All 27 route triples; each local choice path was resolved above. Scoring is
-    // separable by floor. Rank-independent offer mappings below close all mixtures.
+    // P405E: all 27 route triples for one variant per route in a sitting, not
+    // the Cartesian product of variant pools. Every variant's local paths were
+    // resolved above. Separable floor scoring and rank-independent offers below
+    // cover mixtures without assuming seed-zero variants are the only content.
     for (const auto& first : TowerRoutes()) if (first.Floor == 1)
     for (const auto& second : TowerRoutes()) if (second.Floor == 2)
     for (const auto& third : TowerRoutes()) if (third.Floor == 3)
@@ -276,12 +289,19 @@ SchoolIssue P401ValidateZeroPracticeRunner(const TowerRunnerCatalogue& runners)
     if (const auto issue = ValidateTowerRunnerCatalogue(runners); !issue.Ok()) return issue;
     CountdownProfile zero;
     zero.Final = true;
-    for (const auto& target : TowerRoutes())
+    for (const auto& scenario : runners.Scenarios)
     for (const bool combat : {false, true})
     {
+        const auto& target = *FindTowerRoute(scenario.RouteId);
         if (combat && !target.AllowsCombat) continue;
+        // P405D: isolate this variant on its route so the proof executes all
+        // candidates, including those not selected by the standalone seed.
+        auto pinned = runners;
+        std::erase_if(pinned.Scenarios, [&](const auto& item) {
+            return item.RouteId == target.Id && item.Id != scenario.Id;
+        });
         TowerSessionState state;
-        auto entered = ApplyTowerSession(state, runners, {}, zero, CountdownEndInstant());
+        auto entered = ApplyTowerSession(state, pinned, {}, zero, CountdownEndInstant());
         if (!entered.Ok()) return entered.Issue;
         for (std::int32_t floor = 1; floor <= TowerFloorCount; ++floor)
         {
@@ -290,9 +310,9 @@ SchoolIssue P401ValidateZeroPracticeRunner(const TowerRunnerCatalogue& runners)
             if (first == TowerRoutes().end()) return P401RunnerIssue("missing_floor");
             const auto& route = floor == target.Floor ? target : *first;
             const auto method = floor == target.Floor && combat ? TowerMethod::Combat : route.Method;
-            if (const auto issue = P401RunFloor(state, runners, route, method, zero); !issue.Ok()) return issue;
+            if (const auto issue = P401RunFloor(state, pinned, route, method, zero); !issue.Ok()) return issue;
         }
-        const auto view = QueryTowerSession(state, runners);
+        const auto view = QueryTowerSession(state, pinned);
         if (state.Participation != P401P::Completed || !view.Result.Ok() || !view.Result.Completed)
             return P401RunnerIssue("zero_practice_unfinished");
     }

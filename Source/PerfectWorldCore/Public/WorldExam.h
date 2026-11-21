@@ -123,8 +123,10 @@ using P402ExamFinish = P403ExamResult;
  * Content check (the save reader has no runners): rebuilds the whole session from Unset through ApplyTowerSession with
  * the stored frozen preparation, every attempt's and the active floor's choice provenance and a final Withdraw, and
  * compares the result with `state` field for field. Unset, Deferred and Declined must equal their empty form.
+ * P405D: selection uses the saved life's seed and original zero-based sitting ordinal.
  */
-[[nodiscard]] PERFECTWORLDCORE_API bool ExamStateMatchesRunners(const TowerSessionState& state, const TowerRunnerCatalogue& runners);
+[[nodiscard]] PERFECTWORLDCORE_API bool ExamStateMatchesRunners(const TowerSessionState& state,
+    const TowerRunnerCatalogue& runners, std::uint64_t worldSeed, std::uint32_t attemptNumber = 0);
 
 /**
  * The content-free rules the examination keeps inside `world` (save write and read): canonical empty form when Unset;

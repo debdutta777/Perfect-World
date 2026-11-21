@@ -1,4 +1,5 @@
 #include "PerfectWorldSchoolGate.h"
+#include "PerfectWorldGuardNotice.h"
 
 #include "Components/SceneComponent.h"
 #include "Components/TextRenderComponent.h"
@@ -51,6 +52,8 @@ void APWSchoolGateActor::Interact(APawn* By)
         LastResult.Code = TEXT("school.no_world");
         Message = NSLOCTEXT("PerfectWorldSchool", "NoRegister", "The attendance register is not available here.");
     }
+    const FText P313Notice = P313GuardNotice(LastResult.Code);
+    if (!P313Notice.IsEmpty()) Message = P313Notice;
     LastMessage = Message;
     ++SignInCount;
     if (Interaction != nullptr)

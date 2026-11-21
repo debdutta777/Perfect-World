@@ -55,10 +55,10 @@ struct P402World
     PerfectWorld::WorldState Before;
     PerfectWorld::WorldState Morning;
 
-    explicit P402World(const P2CFixture& f) : W(f)
+    explicit P402World(const P2CFixture& f, std::uint64_t P405DWorldSeed = 0x402) : W(f)
     {
         using namespace PerfectWorld;
-        WorldSim sim = Sim(W.Seeded(R94At(2043, 1, 23, 9, 0), 0x402));
+        WorldSim sim = Sim(W.Seeded(R94At(2043, 1, 23, 9, 0), P405DWorldSeed));
         S04Accept(sim, TutorialEnter{}, "the compulsory supervised session opens");
         S04Accept(sim, TutorialWithdraw{}, "safe withdrawal grants the Awakening");
         S04Accept(sim, AdvanceTime{CountdownStartInstant() - sim.State().Clock.Now()}, "ordinary life reaches the opening");

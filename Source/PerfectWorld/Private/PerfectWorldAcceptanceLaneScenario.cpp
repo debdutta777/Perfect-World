@@ -3,6 +3,7 @@
 #include "PerfectWorldAcceptanceSchool.h" // S03
 #include "PerfectWorldAcceptanceHomework.h" // P36U
 #include "PerfectWorldAcceptanceAwakening.h" // P38
+#include "PerfectWorldAcceptanceExamination.h" // P406
 #include "PerfectWorldAcceptancePhase3.h" // P39
 #include "PerfectWorldAcceptanceCountdown.h"
 #include "PerfectWorldAcceptanceFrontages.h"
@@ -481,7 +482,11 @@ bool BuildScenario(const FString& Name, TArray<FStepDef>& OutSteps)
         {TEXT("school_round7_late"), AppendSchoolRound7LateSteps},
         {TEXT("school_lesson_round9"), AppendSchoolLessonRound9Steps}, // S03
         {TEXT("homework_round9"), P36UAppendHomeworkSteps},
+        {TEXT("guards_resume_round9"), P313AppendGuardsResumeSteps},
         {TEXT("awakening_round9"), P38AppendAwakeningSteps}, // P38
+        {TEXT("exam_round9"), P406AppendExaminationSteps},
+        {TEXT("exam_withdraw_round9"), P406AppendExaminationWithdrawSteps},
+        {TEXT("exam_followup_round9"), P407UAppendExaminationFollowupSteps},
         {TEXT("continue_round9"), P39AppendContinueSteps},
         {TEXT("awakening_withdraw_round9"), P39AppendWithdrawalSteps},
         {TEXT("countdown_ordinary_round9"), P39AppendOrdinarySteps},

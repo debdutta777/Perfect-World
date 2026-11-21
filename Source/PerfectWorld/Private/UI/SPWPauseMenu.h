@@ -26,6 +26,8 @@ public:
     bool P312OpenCountdown();
     void P312CloseCountdown();
     TSharedPtr<class SPWCountdownPanel> P312GetCountdown() const { return P312CountdownPanel; }
+    bool P406OpenExamination();
+    void P406CloseExamination();
 
 private:
     enum class EPendingExit : uint8
@@ -64,6 +66,8 @@ private:
     TSharedPtr<SWidget> S03PlannerButton;
     TSharedPtr<SWidget> P312CountdownButton;
     TSharedPtr<class SPWCountdownPanel> P312CountdownPanel;
+    TSharedPtr<SWidget> P406ExaminationButton;
+    TSharedPtr<class SPWExaminationPanel> P406ExaminationPanel;
     TSharedPtr<SWidget> SettingsButton;
     TSharedPtr<SWidget> ReturnToTitleButton;
     TSharedPtr<SWidget> QuitButton;

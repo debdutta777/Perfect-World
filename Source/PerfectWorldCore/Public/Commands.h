@@ -6,6 +6,7 @@
 #include "WeekCompression.h"
 #include "WorldCountdown.h"
 #include "WorldState.h"
+#include "WorldExamFollowup.h"
 
 #include <cstdint>
 #include <string>
@@ -396,7 +397,7 @@ using CommandPayload = std::variant<AdvanceTime, ScheduleWorldEvent, SetWorldFla
                                     TutorialAct, TutorialAssist, TutorialRecover, TutorialWithdraw, TutorialAbsent,
                                     TutorialMakeUp, TutorialFinish, CountdownPracticeConfirm, CountdownTakeOpportunity,
                                     CountdownNegotiateObligation, CountdownResolveDays, AwakeningRecover, SchoolWorkReconcile,
-                                    TowerSessionCommand>;
+                                    TowerSessionCommand, P407UFollowupCommand>;
 
 struct Command
 {
