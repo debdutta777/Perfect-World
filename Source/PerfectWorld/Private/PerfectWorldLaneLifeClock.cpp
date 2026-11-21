@@ -112,7 +112,9 @@ FText UPWLaneLifeSubsystem::GetClockText() const
 
 void UPWLaneLifeSubsystem::BuildWorld()
 {
-    Sim = MakeUnique<PerfectWorld::WorldSim>(BrWorldSeed);
+    Sim = MakeUnique<PerfectWorld::WorldSim>(BrWorldSeed, PerfectWorld::MaxEventsPerAdvance,
+        PerfectWorld::DayLoopCatalogues{}, PerfectWorld::WorldCommerceCatalogues{}, PerfectWorld::WorldSchoolCatalogues{},
+        PerfectWorld::WorldAwakeningCatalogues{}, P406Exam::P406BExaminationCatalogues(GetWorld()));
     ClockMode = PerfectWorld::TimeModeState();
     RealMsFraction = 0.0;
     LastClockRefusal.Reset();
@@ -188,7 +190,9 @@ bool UPWLaneLifeSubsystem::LoadWorldSlot(const std::string& Path, PerfectWorld::
     TUniquePtr<PerfectWorld::WorldSim> Prepared;
     if (Scratch.HasStarted())
     {
-        Prepared = MakeUnique<PerfectWorld::WorldSim>(Read.Data->World);
+        Prepared = MakeUnique<PerfectWorld::WorldSim>(Read.Data->World, PerfectWorld::MaxEventsPerAdvance,
+            PerfectWorld::DayLoopCatalogues{}, PerfectWorld::WorldCommerceCatalogues{}, PerfectWorld::WorldSchoolCatalogues{},
+            PerfectWorld::WorldAwakeningCatalogues{}, P406Exam::P406BExaminationCatalogues(GetWorld()));
         const std::string Person(PerfectWorld::OpenConversationPersonId(Prepared->State()));
         if (!Person.empty() && !Prepared->Submit({PerfectWorld::CommandSource::Player,
             PerfectWorld::ConversationLeave{Person}}).Accepted)

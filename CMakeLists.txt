@@ -1037,3 +1037,9 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/TowerRun
 add_executable(PerfectWorldTowerRunnerContentTests Tests/TowerRunnerContentTests.cpp)
 target_link_libraries(PerfectWorldTowerRunnerContentTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldTowerRunnerContentTests COMMAND PerfectWorldTowerRunnerContentTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# P406B: production examination bindings and pause handoff, without an Unreal map.
+add_executable(PerfectWorldP406BExaminationTests Tests/P406BExaminationTests.cpp)
+target_include_directories(PerfectWorldP406BExaminationTests PRIVATE Source/PerfectWorld/Private)
+target_link_libraries(PerfectWorldP406BExaminationTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldP406BExaminationTests COMMAND PerfectWorldP406BExaminationTests ${CMAKE_SOURCE_DIR}/Data/Content)

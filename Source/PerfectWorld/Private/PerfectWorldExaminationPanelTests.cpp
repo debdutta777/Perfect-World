@@ -3,6 +3,8 @@
 
 #include "Input/Events.h"
 #include "InputCoreTypes.h"
+#include "P406BExaminationSupport.h"
+#include "UI/SPWPauseMenu.h"
 #include "Layout/Children.h"
 #include "Misc/AutomationTest.h"
 #include "Widgets/Text/STextBlock.h"
@@ -224,6 +226,47 @@ bool FP406TextTableTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("expanded passage resolves"), !P406Expanded.IsEmpty() && P406Expanded.ToString() != TEXT("Missing"));
     TestEqual(TEXT("unknown key uses words instead of exposing ID"),
         P406Exam::P406RunnerText("p406.unknown_key", TEXT("Text unavailable")).ToString(), FString(TEXT("Text unavailable")));
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FP406BDecisionPauseTest, "PerfectWorld.Examination.P406B.DecisionPause",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FP406BDecisionPauseTest::RunTest(const FString& Parameters)
+{
+    for (const auto& P406BKey : {EKeys::Escape, EKeys::Gamepad_FaceButton_Right, EKeys::Gamepad_Special_Right, EKeys::Enter})
+    {
+        const auto P406BFake = MakeShared<P406Exam::FFakeWorld>();
+        P406BFake->Model = P406TestDecision();
+        bool P406BPanelOpen = true;
+        bool P406BMenuOpen = false;
+        int32 P406BPresentations = 0;
+        TSharedPtr<SPWPauseMenu> P406BPause;
+        const auto P406BPanel = SNew(SPWExaminationPanel).BridgeOverride(P406BFake)
+            .OnClose(FSimpleDelegate::CreateLambda([&]()
+            {
+                P406Exam::P406BLeaveExamination(P406BFake->Model.World.DecisionRequired,
+                    [&]() { P406BPanelOpen = false; }, [&]()
+                    {
+                        TestFalse(TEXT("decision releases input before pause"), P406BPanelOpen);
+                        P406BMenuOpen = true;
+                        P406BPause = SNew(SPWPauseMenu);
+                    });
+            }));
+        if (P406BKey == EKeys::Enter) P406BPanel->P406SelectFocus(P406BPanel->P406GetFocusCount() - 1);
+        P406TestKey(P406BPanel, P406BKey);
+        TestTrue(TEXT("Esc, controller Back/Menu and footer open pause"), P406BMenuOpen && P406BPause.IsValid());
+        if (!P406BPause.IsValid()) return false;
+        const auto P406BText = P406TestAllText(P406BPause.ToSharedRef());
+        TestTrue(TEXT("pause exposes Save, Settings and Quit"), P406BText.Contains(TEXT("Save")) &&
+            P406BText.Contains(TEXT("Settings")) && P406BText.Contains(TEXT("Quit")));
+        for (int32 P406BFrame = 0; P406BFrame < 120; ++P406BFrame)
+            TestTrue(TEXT("pending decision still holds time in pause"), P406Exam::P406BPresentDecision(
+                P406BFake->Model.World.DecisionRequired, P406BMenuOpen, P406BPanelOpen, [&]() { ++P406BPresentations; }));
+        TestEqual(TEXT("pause is never displaced by a tick"), P406BPresentations, 0);
+        TestTrue(TEXT("decision remains required"), P406BFake->Model.World.DecisionRequired);
+        TestEqual(TEXT("dismissal submits no exam command"), P406BFake->Submitted.Num(), 0);
+    }
     return true;
 }
 

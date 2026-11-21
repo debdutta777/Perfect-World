@@ -78,6 +78,7 @@ void P402EnterRules(const P402World& w)
     // Missing preparation, and the explicit P3-14 zero-preparation policy.
     WorldState noCountdown = w.Morning;
     noCountdown.CountdownText.clear();
+    noCountdown.Gates.erase(std::string(CountdownWorldEvent().GateId)); // P406B: unavailable countdown has no Gate history.
     WorldSim missing = w.Sim(noCountdown);
     S04Refused(missing, P402Cmd(A::Enter), "exam.no_preparation", "no fabricated final profile");
     noCountdown.Flags[std::string(AwakeningCountdownUnavailableFlag)] = true;
@@ -302,6 +303,7 @@ void P405ZeroAndResume(const P405World& w)
 {
     WorldState morning = w.Base.Morning;
     morning.CountdownText.clear();
+    morning.Gates.erase(std::string(CountdownWorldEvent().GateId)); // P406B: keep this compatibility fixture saveable.
     morning.Flags[std::string(AwakeningCountdownUnavailableFlag)] = true;
     WorldSim sim = w.Sim(morning);
     S04Accept(sim, P402Cmd(A::Enter), "zero-practice candidate sits with real runners");
@@ -356,6 +358,7 @@ void P405RealExits(const P405World& w)
     {
         WorldState zero = w.Base.Morning;
         zero.CountdownText.clear();
+        zero.Gates.erase(std::string(CountdownWorldEvent().GateId)); // P406B: match the unavailable-countdown save contract.
         zero.Flags[std::string(AwakeningCountdownUnavailableFlag)] = true;
         WorldSim sim = w.Sim(zero);
         S04Accept(sim, P402Cmd(A::Enter), "sit before authored mistakes");

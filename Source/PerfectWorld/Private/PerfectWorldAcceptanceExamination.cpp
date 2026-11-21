@@ -1,9 +1,13 @@
 #include "PerfectWorldAcceptanceExamination.h"
 
 #include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
+#include "Input/Events.h"
+#include "InputCoreTypes.h"
 #include "PerfectWorldAcceptanceAwakening.h"
 #include "PerfectWorldAwakeningResultBridge.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
+#include "PerfectWorldFrontEndHUD.h"
 #include "PerfectWorldSchoolPresenter.h"
 #include "UI/SPWExaminationPanel.h"
 
@@ -149,6 +153,31 @@ void P406AppendExaminationSteps(TArray<FStepDef>& Out)
 void P406AppendExaminationWithdrawSteps(TArray<FStepDef>& Out)
 {
     P406ScenarioMorning(Out);
+    Out.Add(P406ScenarioAction(TEXT("p406b_pause_pending_decision"), [](UPWAcceptanceSubsystem& P406BSub, FStepRuntime&)
+    {
+        const auto P406BPanel = P406ScenarioPanel(P406BSub);
+        auto* P406BWorld = P406BSub.GetPlayWorld();
+        const auto* P406BPlayer = P406BWorld != nullptr ? P406BWorld->GetFirstPlayerController() : nullptr;
+        auto* P406BHud = P406BPlayer != nullptr ? Cast<APerfectWorldFrontEndHUD>(P406BPlayer->GetHUD()) : nullptr;
+        auto* P406BLife = UPWLaneLifeSubsystem::Get(P406BWorld);
+        auto* P406BHost = UPWSchoolPresenter::Get(P406BWorld);
+        if (!P406BPanel.IsValid() || P406BHud == nullptr || P406BLife == nullptr || P406BHost == nullptr)
+            return FStepOutcome::Fail(TEXT("the examination or pause host is absent"));
+        if (!P406BPanel->P406GetModel().World.CanSit)
+            return FStepOutcome::Fail(TEXT("real runner content did not enable Sit"));
+        const auto P406BBefore = P406BLife->GetNow();
+        P406BPanel->OnPreviewKeyDown(FGeometry(), FKeyEvent(EKeys::Escape, FModifierKeysState(), 0, false, 0, 0));
+        if (!P406BHud->IsPaused() || P406BHost->IsOpen())
+            return FStepOutcome::Fail(TEXT("Escape did not hand the required decision to pause"));
+        if (!P406Exam::P406PresentRequired(P406BWorld) || P406BHost->IsOpen() ||
+            !P406BLife->GetSim().ExaminationWorldView().DecisionRequired || P406BLife->GetNow() != P406BBefore)
+            return FStepOutcome::Fail(TEXT("automatic presentation displaced pause or changed the pending decision"));
+        P406BHud->ResumeGame();
+        P406Exam::P406PresentRequired(P406BWorld);
+        if (!P406ScenarioPanel(P406BSub).IsValid() || P406BLife->GetNow() != P406BBefore)
+            return FStepOutcome::Fail(TEXT("Resume did not restore the same required decision"));
+        return FStepOutcome::Pass(TEXT("Escape exposes pause; presentation leaves it alone; Resume returns to the required decision at the same instant"));
+    }));
     Out.Add(P406ScenarioPress(TEXT("p406_sit"), PerfectWorld::TowerSessionAction::Enter));
     Out.Add(P406ScenarioPress(TEXT("p406_open_route"), PerfectWorld::TowerSessionAction::OpenRoute));
     Out.Add(P406ScenarioPress(TEXT("p406_one_choice"), PerfectWorld::TowerSessionAction::Choose));

@@ -61,6 +61,7 @@ public:
     bool OpenAwakeningResult();
     bool OpenAwakeningCountdown();
     bool P406OpenExamination();
+    void P406BCloseExamination();
     /** Closes whatever is open, restores play input, then broadcasts OnClosed. */
     void Close();
 

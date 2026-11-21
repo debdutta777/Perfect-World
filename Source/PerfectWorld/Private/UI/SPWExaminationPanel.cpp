@@ -96,7 +96,8 @@ void SPWExaminationPanel::P406Rebuild()
             static_cast<long long>(P406Model.World.OutsideMinutes))), true, [this]() { return P406TriggerWithdraw(); }, true);
         P406Controls.Last()->SetTag(TEXT("P406Withdraw"));
     }
-    P406AddControl(FText::FromString(P406Model.Screen == P406Exam::EScreen::Result ? TEXT("Continue into the day") : TEXT("Close")),
+    P406AddControl(FText::FromString(P406Model.Screen == P406Exam::EScreen::Result ? TEXT("Continue into the day") :
+        P406Model.World.DecisionRequired ? TEXT("Pause menu") : TEXT("Close")),
         true, [this]() { P406Close(); return true; }, true);
     P406Selected = 0;
     P406SelectFocus(0);

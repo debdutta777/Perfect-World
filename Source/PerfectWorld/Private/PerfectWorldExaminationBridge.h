@@ -46,9 +46,8 @@ bool P406PauseEntryVisible(const UWorld* World);
 /** Retry hosting while another overlay owns input; never advances the clock or resubmits Enter. */
 bool P406PresentRequired(UWorld* World);
 
-/** P406 / P4-05c SEAM: replace ONLY this implementation with validated LoadTowerRunners(content).
- * The returned catalogue must outlive every new-life/Continue sim. Empty means honest exam.missing_content. */
-const PerfectWorld::TowerRunnerCatalogue& P406RunnerCatalogueSeam();
+/** Validated production content, owned for process lifetime. Failure logs and returns an empty binding. */
+PerfectWorld::P402WorldExamCatalogues P406BExaminationCatalogues(const UWorld* World);
 
 /** Scripted map-free fake: outcomes and projections are test inputs, never live rules. */
 class FFakeWorld final : public IWorld
