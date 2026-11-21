@@ -11,6 +11,7 @@
 #include "PerfectWorldAwakeningBridge.h" // P38
 #include "PerfectWorldAwakeningResultBridge.h"
 #include "PerfectWorldCountdownContacts.h"
+#include "PerfectWorldExaminationBridge.h"
 #include "FaridaSchedule.h"
 #include "SchoolLifeContent.h"
 #include "LaneOrigin.h"
@@ -92,8 +93,9 @@ void UPWLaneLifeSubsystem::R88InstallCommerce()
     const auto* P314UInstance = GetWorld()->GetGameInstance();
     const auto* ContentSubsystem = P314UInstance != nullptr ? P314UInstance->GetSubsystem<UPWContentSubsystem>() : nullptr;
     P38Awakening.Content = ContentSubsystem != nullptr ? ContentSubsystem->GetDb() : nullptr;
+    const auto P406BExamination = P406Exam::P406BExaminationCatalogues(GetWorld());
     Sim = MakeUnique<PerfectWorld::WorldSim>(Sim->State(), PerfectWorld::MaxEventsPerAdvance,
-        R88School != nullptr ? R88School->Binding : PerfectWorld::DayLoopCatalogues{}, R88CommerceContent->Catalogues(), S05Lessons, P38Awakening);
+        R88School != nullptr ? R88School->Binding : PerfectWorld::DayLoopCatalogues{}, R88CommerceContent->Catalogues(), S05Lessons, P38Awakening, P406BExamination);
     PWAwakening::AwBridge::Install(GetWorld(), PWAwakening::P38MakeLiveFloorBridge(*GetWorld()));
     PWAwakening::ApBridge::Install(GetWorld(), PWAwakening::MakeLaneLifeAwakeningBridge(*GetWorld()));
     const TWeakObjectPtr<UPWLaneLifeSubsystem> Weak(this);

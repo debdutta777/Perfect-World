@@ -19,6 +19,7 @@
 #include "PerfectWorldCommerceBridge.h" // R88
 #include "PerfectWorldAwakeningBridge.h" // P38
 #include "PerfectWorldAwakeningResultBridge.h"
+#include "PerfectWorldExaminationBridge.h"
 
 DEFINE_LOG_CATEGORY(LogPWLaneLife);
 
@@ -73,6 +74,8 @@ FText BrRefusalText(const FString& Code)
         return LOCTEXT("P314UReservedFlag", "This life record can only be changed by compatibility recovery.");
     if (Code == TEXT("school.work.reconcile.nothing_missing"))
         return LOCTEXT("P314UNoMissingWork", "All homework has already reached this life.");
+    if (Code.StartsWith(TEXT("exam.")) || Code.StartsWith(TEXT("tower.session.")))
+        return P406Exam::P406RefusalText(Code);
     if (Code == TEXT("tutorial.active")) // P38
         return LOCTEXT("P38TutorialActive", "Your supervised tutorial is in progress. Complete it or withdraw to the safe area first.");
     if (Code == TEXT("school.learning_refused"))
