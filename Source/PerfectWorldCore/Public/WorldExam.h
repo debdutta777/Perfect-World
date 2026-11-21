@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Countdown.h"
+#include "ExamResult.h"
 #include "TowerSession.h"
 #include "WorldState.h"
 
@@ -41,6 +42,8 @@ struct P402WorldExamCatalogues
 {
     /** Immutable, caller-owned runner content (ValidateTowerRunnerCatalogue), alive as long as the sim; bind on Continue too. */
     const TowerRunnerCatalogue* Runners = nullptr;
+    /** P405: validated school_followup content; caller-owned and bound on Continue/replay as well. */
+    const SchoolFollowupContent* Followups = nullptr;
 };
 
 /** The final preparation a Sit freezes, read from world authority only (never from presentation). */
@@ -82,18 +85,15 @@ struct P402ExamWorldView
  * P4-03 SEAM. The one place a finished examination's result is produced. WorldSim calls it inside the terminal
  * transaction (a refusal refuses that whole transaction, so no exit is published without a derivable result) and
  * WorldSim::ExaminationResult() calls it for reads after Continue. Per P4-01 and P4-03 NOTHING it returns is stored:
- * the terminal TowerSessionState is the only authority. P4-03 replaces this body with P403ResolveExamResult(state,
- * followups) (and widens the struct) without touching the reducer or the save; it must never refuse a coherent Withdraw.
+ * the terminal TowerSessionState is the only authority. P405 uses P403ResolveExamResult for bound reports.
+ * Without followups, the terminal transaction and save validation retain the content-free score projection:
+ * missing appointments must never trap a coherent Withdraw or invalidate an otherwise valid save. Such a
+ * projection has no next steps; bind Followups for the complete presentation report. An explicitly supplied
+ * incomplete catalogue reports P403.exam.missing_followup, without affecting the accepted exit.
  */
-struct P402ExamFinish
-{
-    SchoolIssue Issue;
-    TowerParticipation Participation = TowerParticipation::Unset;
-    /** TowerSession's own derived result (QueryTowerSession); Score.OutsideMinutes is a report, never a charge. */
-    TowerResult Score;
-    [[nodiscard]] bool Ok() const noexcept { return Issue.Ok(); }
-};
-[[nodiscard]] PERFECTWORLDCORE_API P402ExamFinish P402ExamFinishSeam(const TowerSessionState& terminal);
+using P402ExamFinish = P403ExamResult;
+[[nodiscard]] PERFECTWORLDCORE_API P402ExamFinish P402ExamFinishSeam(const TowerSessionState& terminal,
+    const SchoolFollowupContent* P405Followups = nullptr);
 
 /** True for any participation after the session closed (Completed, Ejected, Withdrawn, Deferred, Declined). */
 [[nodiscard]] PERFECTWORLDCORE_API bool P402ExamClosed(TowerParticipation participation) noexcept;

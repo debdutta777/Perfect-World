@@ -78,7 +78,7 @@ P402ExamPreparation P402FinalPreparation(const WorldState& world)
     return out;
 }
 
-P402ExamFinish P402ExamFinishSeam(const TowerSessionState& terminal)
+P402ExamFinish P402ExamFinishSeam(const TowerSessionState& terminal, const SchoolFollowupContent* P405Followups)
 {
     P402ExamFinish out;
     out.Participation = terminal.Participation;
@@ -87,10 +87,13 @@ P402ExamFinish P402ExamFinishSeam(const TowerSessionState& terminal)
         out.Issue = {"exam.not_terminal", {}};
         return out;
     }
-    static const TowerRunnerCatalogue noRunners;
-    out.Score = QueryTowerSession(terminal, noRunners).Result;
-    if (!out.Score.Ok())
-        out.Issue = {std::string(TowerErrorCode(out.Score.Error)), {}};
+    static const SchoolFollowupContent P405NoFollowups;
+    auto P405Report = P403ResolveExamResult(terminal, P405Followups ? *P405Followups : P405NoFollowups);
+    if (P405Followups || P405Report.Issue.Code != "P403.exam.missing_followup")
+        return P405Report;
+    // Terminal transactions and the codec have no content binding. Only absence of a follow-up is
+    // tolerated here: P403 already accepted the evidence, exit shape and time. No appointment is invented.
+    out.Score = QueryTowerSession(terminal, {}).Result;
     return out;
 }
 
