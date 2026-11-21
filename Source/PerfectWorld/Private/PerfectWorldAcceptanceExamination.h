@@ -8,4 +8,6 @@ namespace PWAcceptance
 void P406AppendExaminationSteps(TArray<FStepDef>& Out);
 /** Same real preparation, then Sit/OpenRoute/Choose/Withdraw. Missing runners FAIL with the real refusal. */
 void P406AppendExaminationWithdrawSteps(TArray<FStepDef>& Out);
+/** P407U: real result, mentor booking, paid campus session and retained attendance. */
+void P407UAppendExaminationFollowupSteps(TArray<FStepDef>& Out);
 }

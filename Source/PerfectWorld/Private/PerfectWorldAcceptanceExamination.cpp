@@ -132,8 +132,9 @@ void P406ScenarioResult(TArray<FStepDef>& P406Out, PerfectWorld::TowerParticipat
         auto* P406Life = UPWLaneLifeSubsystem::Get(P406Sub.GetPlayWorld());
         if (P406Host == nullptr || P406Life == nullptr) return FStepOutcome::Fail(TEXT("the live host is absent"));
         if (P406Rt.Phase == 0) { P406Host->Close(); P406Rt.NextPhase(); return FStepOutcome::Wait(); }
-        if (P406Exam::P406PauseEntryVisible(P406Sub.GetPlayWorld()))
-            return FStepOutcome::Fail(TEXT("the Examination pause entry remained after the session ended"));
+        const auto P407UView = P406Life->GetSim().ExaminationWorldView();
+        if (P407UView.DecisionRequired || P407UView.CanWithdraw)
+            return FStepOutcome::Fail(TEXT("the closed result still requires an examination decision"));
         const auto P406Reply = P406Life->SubmitAwakeningCommand({PerfectWorld::CommandSource::Player, PerfectWorld::AdvanceTime{1}});
         return P406Reply.Accepted ? FStepOutcome::Pass(TEXT("result closed; ordinary time advances after the examination"))
             : FStepOutcome::Fail(PWLaneLife::ToFString(P406Reply.Why.Code));
@@ -184,5 +185,80 @@ void P406AppendExaminationWithdrawSteps(TArray<FStepDef>& Out)
     Out.Add(MakeShotStep(TEXT("p406_shot_after_choice")));
     Out.Add(P406ScenarioPress(TEXT("p406_withdraw"), PerfectWorld::TowerSessionAction::Withdraw));
     P406ScenarioResult(Out, PerfectWorld::TowerParticipation::Withdrawn);
+}
+
+void P407UAppendExaminationFollowupSteps(TArray<FStepDef>& Out)
+{
+    P406ScenarioMorning(Out);
+    Out.Add(P406ScenarioPress(TEXT("p407u_sit"), PerfectWorld::TowerSessionAction::Enter));
+    Out.Add(P406ScenarioPress(TEXT("p407u_withdraw"), PerfectWorld::TowerSessionAction::Withdraw));
+    const auto P407UPress = [](const TCHAR* Name, PerfectWorld::P407UFollowupAction Kind, bool Wait)
+    {
+        return P406ScenarioAction(Name, [Kind, Wait](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
+        {
+            const auto Panel = P406ScenarioPanel(Sub);
+            auto* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
+            if (!Panel.IsValid() || Life == nullptr) return FStepOutcome::Fail(TEXT("live result panel is absent"));
+            Panel->P406Refresh();
+            const auto Rows = Panel->P406GetModel().Actions;
+            for (int32 Index = 0; Index < Rows.Num(); ++Index)
+            {
+                const auto& Row = Rows[Index];
+                if (!Row.bP407UFollowup || Row.bP407UWait != Wait || Row.P407UCommand.Kind != Kind ||
+                    Row.P407UCommand.ActionId != "school_followup.p2.p4_withdrawn_school_mentor") continue;
+                const auto Before = Life->GetNow();
+                if (!Row.bEnabled || !Panel->P406TriggerAction(Index))
+                    return FStepOutcome::Fail(TEXT("mentor action unavailable: ") + Panel->P406GetNotice().ToString());
+                if (Kind == PerfectWorld::P407UFollowupAction::Book && Before != Life->GetNow())
+                    return FStepOutcome::Fail(TEXT("booking spent time"));
+                if (Kind == PerfectWorld::P407UFollowupAction::Attend && !Wait &&
+                    (Life->GetNow() != Before || Panel->P406GetModel().Screen != P406Exam::EScreen::P407USession))
+                    return FStepOutcome::Fail(TEXT("opening the mentor session spent time or did not show the session"));
+                return FStepOutcome::Pass(TEXT("live result button submitted its accepted follow-up command"));
+            }
+            return FStepOutcome::Fail(TEXT("the school mentor action is missing"));
+        });
+    };
+    Out.Add(P407UPress(TEXT("p407u_book_school_mentor"), PerfectWorld::P407UFollowupAction::Book, false));
+    Out.Add(MakeShotStep(TEXT("p407u_shot_booked_mentor")));
+    Out.Add(P406ScenarioAction(TEXT("p407u_reopen_saved_reservation"), [](UPWAcceptanceSubsystem& Sub, FStepRuntime& Rt)
+    {
+        auto* Host = UPWSchoolPresenter::Get(Sub.GetPlayWorld());
+        if (Host == nullptr) return FStepOutcome::Fail(TEXT("school host is absent"));
+        if (Rt.Phase == 0) { Host->Close(); Rt.NextPhase(); return FStepOutcome::Wait(); }
+        if (!P406Exam::P406PauseEntryVisible(Sub.GetPlayWorld()) || !Host->P406OpenExamination())
+            return FStepOutcome::Fail(TEXT("the finished result cannot reopen"));
+        const auto Panel = P406ScenarioPanel(Sub);
+        if (!Panel.IsValid() || !P406Exam::P407UAtSchool(Sub.GetPlayWorld()))
+            return FStepOutcome::Fail(TEXT("the real pawn is not on the school campus"));
+        for (const auto& Row : Panel->P406GetModel().P407UFollowups)
+            if (Row.Action.Id == "school_followup.p2.p4_withdrawn_school_mentor" && Row.Booked && !Row.Attended)
+                return FStepOutcome::Pass(TEXT("reopened result retains the live reservation; pawn is on campus"));
+        return FStepOutcome::Fail(TEXT("the reservation disappeared on reopening"));
+    }));
+    Out.Add(P407UPress(TEXT("p407u_wait_to_mentor"), PerfectWorld::P407UFollowupAction::Attend, true));
+    Out.Add(P407UPress(TEXT("p407u_attend_school_mentor"), PerfectWorld::P407UFollowupAction::Attend, false));
+    Out.Add(MakeShotStep(TEXT("p407u_shot_mentor_session")));
+    Out.Add(P406ScenarioAction(TEXT("p407u_finish_school_mentor"), [](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
+    {
+        const auto Panel = P406ScenarioPanel(Sub);
+        const auto* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
+        if (!Panel.IsValid() || Life == nullptr) return FStepOutcome::Fail(TEXT("mentor session is absent"));
+        const auto Before = Life->GetNow();
+        if (!Panel->P407UFinishSession()) return FStepOutcome::Fail(Panel->P406GetNotice().ToString());
+        return Life->GetNow() - Before == 30 ? FStepOutcome::Pass(TEXT("mentor session charged thirty minutes once")) :
+            FStepOutcome::Fail(TEXT("mentor session charged the wrong duration"));
+    }));
+    Out.Add(P406ScenarioAction(TEXT("p407u_core_attendance_record"), [](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
+    {
+        const auto* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
+        if (Life == nullptr) return FStepOutcome::Fail(TEXT("live owner is absent"));
+        for (const auto& Row : Life->GetSim().P407UFollowups())
+            if (Row.Action.Id == "school_followup.p2.p4_withdrawn_school_mentor" && Row.Booked && Row.Attended &&
+                Life->GetNow() == Row.At + Row.Action.DurationMinutes)
+                return FStepOutcome::Pass(TEXT("core records the booked mentor session attended after its full charge"));
+        return FStepOutcome::Fail(TEXT("core has no completed mentor session"));
+    }));
+    Out.Add(MakeShotStep(TEXT("p407u_shot_recorded_mentor")));
 }
 }

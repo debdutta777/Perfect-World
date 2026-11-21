@@ -66,9 +66,7 @@ public:
                 P406Model.Lines.Add(FText::FromString(FString::Printf(TEXT("Evidence: %s | %d / 1000"),
                     P406Route != nullptr ? *PWLaneLife::ToFString(P406Route->Task) : TEXT("Cleared route"), P406Credential.ScoreMilli)));
             }
-            for (const auto P406Id : P406Score.OfferIds)
-                for (const auto& P406Offer : TowerOffers())
-                    if (P406Offer.Id == P406Id) P406Model.Offers.Add(PWLaneLife::ToText(P406Offer.NextAction));
+            P407UAppendFollowups(P406Model, P406Sim, P407UAtSchool(P406Life->GetWorld()));
             return P406Model;
         }
         if (P406World.DecisionRequired || P406World.CanDefer || P406World.CanDecline)
@@ -135,6 +133,29 @@ public:
     {
         auto* P406Life = P406Owner.Get();
         if (P406Life == nullptr) return {};
+        if (P406ActionRow.bP407UFollowup)
+        {
+            if (P406ActionRow.bP407UWait)
+            {
+                // Wait is ordinary time; it never records attendance.
+                for (const auto& P407URow : P406Life->GetSim().P407UFollowups())
+                    if (P407URow.Action.Id == P406ActionRow.P407UCommand.ActionId && P407URow.Booked && !P407URow.Attended &&
+                        P407URow.At == P406ActionRow.P407UCommand.ExpectedAt && P407URow.At > P406Life->GetNow())
+                        return P406Life->P406SubmitExaminationCommand({PerfectWorld::CommandSource::Player,
+                            PerfectWorld::AdvanceTime{P407URow.At - P406Life->GetNow()}});
+                PerfectWorld::CommandResult P407URefused;
+                P407URefused.Why = {"p407u.stale", "Read the current appointment time again."};
+                return P407URefused;
+            }
+            if (P406ActionRow.P407UCommand.Kind == PerfectWorld::P407UFollowupAction::Attend &&
+                !P407UAtSchool(P406Life->GetWorld()))
+            {
+                PerfectWorld::CommandResult P407URefused;
+                P407URefused.Why = {"p407u.place", "Visit the school campus for this session."};
+                return P407URefused;
+            }
+            return P406Life->P406SubmitExaminationCommand({PerfectWorld::CommandSource::Player, P406ActionRow.P407UCommand});
+        }
         const auto P406View = P406Life->GetSim().ExaminationView();
         PerfectWorld::TowerSessionCommand P406Command;
         P406Command.Kind = P406ActionRow.Kind;

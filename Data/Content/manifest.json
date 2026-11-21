@@ -1,7 +1,7 @@
 {
   "schema": "pw.content_manifest/1",
-  "fileCount": 308,
-  "recordCount": 367,
+  "fileCount": 320,
+  "recordCount": 379,
   "files": [
     {
       "path": "/ability_recipe/ability_recipe.agni_assay_flame.json",
@@ -1237,6 +1237,78 @@
       "path": "/school_followup/school_followup.p2.middle.json",
       "records": [
         { "id": "school_followup.p2.middle", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.p4_declined_stream_civic_path.json",
+      "records": [
+        { "id": "school_followup.p2.p4_declined_stream_civic_path", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.p4_declined_vocational_craft.json",
+      "records": [
+        { "id": "school_followup.p2.p4_declined_vocational_craft", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.p4_deferred_community_volunteer.json",
+      "records": [
+        { "id": "school_followup.p2.p4_deferred_community_volunteer", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.p4_deferred_year_study_plan.json",
+      "records": [
+        { "id": "school_followup.p2.p4_deferred_year_study_plan", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.p4_middle_coaching_scholarship.json",
+      "records": [
+        { "id": "school_followup.p2.p4_middle_coaching_scholarship", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.p4_middle_stream_review.json",
+      "records": [
+        { "id": "school_followup.p2.p4_middle_stream_review", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.p4_poor_retake_prep.json",
+      "records": [
+        { "id": "school_followup.p2.p4_poor_retake_prep", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.p4_poor_workshop_apprenticeship.json",
+      "records": [
+        { "id": "school_followup.p2.p4_poor_workshop_apprenticeship", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.p4_strong_mentor.json",
+      "records": [
+        { "id": "school_followup.p2.p4_strong_mentor", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.p4_strong_scholarship_interview.json",
+      "records": [
+        { "id": "school_followup.p2.p4_strong_scholarship_interview", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.p4_withdrawn_home_rest.json",
+      "records": [
+        { "id": "school_followup.p2.p4_withdrawn_home_rest", "kind": "school_followup" }
+      ]
+    },
+    {
+      "path": "/school_followup/school_followup.p2.p4_withdrawn_school_mentor.json",
+      "records": [
+        { "id": "school_followup.p2.p4_withdrawn_school_mentor", "kind": "school_followup" }
       ]
     },
     {

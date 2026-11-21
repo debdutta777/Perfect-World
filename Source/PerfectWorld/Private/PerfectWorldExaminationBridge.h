@@ -7,7 +7,7 @@ class UWorld;
 
 namespace P406Exam
 {
-enum class EScreen : uint8 { Unavailable, Decision, Routes, Beat, Result };
+enum class EScreen : uint8 { Unavailable, Decision, Routes, Beat, Result, P407USession };
 struct FAction
 {
     FText Label;
@@ -16,6 +16,9 @@ struct FAction
     PerfectWorld::TowerMethod Method = PerfectWorld::TowerMethod::Analysis;
     FString ChoiceId;
     bool bEnabled = true;
+    bool bP407UFollowup = false;
+    bool bP407UWait = false;
+    PerfectWorld::P407UFollowupCommand P407UCommand;
 };
 struct FModel
 {
@@ -26,6 +29,7 @@ struct FModel
     TArray<FText> Lines;
     TArray<FAction> Actions;
     TArray<FText> Offers;
+    std::vector<PerfectWorld::P407UFollowupView> P407UFollowups;
 };
 
 /** Presentation only. The bridge supplies the current runner nonce and beat for EVERY action. */
@@ -48,6 +52,9 @@ bool P406PresentRequired(UWorld* World);
 
 /** Validated production content, owned for process lifetime. Failure logs and returns an empty binding. */
 PerfectWorld::P402WorldExamCatalogues P406BExaminationCatalogues(const UWorld* World);
+FText P407UFollowupText(const std::string& Key);
+bool P407UAtSchool(UWorld* World);
+void P407UAppendFollowups(FModel& Model, const PerfectWorld::WorldSim& Sim, bool bAtSchool);
 
 /** Scripted map-free fake: outcomes and projections are test inputs, never live rules. */
 class FFakeWorld final : public IWorld
@@ -57,6 +64,7 @@ public:
     FModel AfterAccepted;
     PerfectWorld::CommandResult Reply;
     TArray<PerfectWorld::TowerSessionCommand> Submitted;
+    TArray<PerfectWorld::P407UFollowupCommand> P407USubmitted;
     FFakeWorld() { Reply.Accepted = true; }
     virtual FModel Read() const override { return Model; }
     virtual PerfectWorld::CommandResult Submit(const FAction& Action) override;

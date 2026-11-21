@@ -8,6 +8,7 @@
 #include "PerfectWorldFrontEndHUD.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
 #include "PerfectWorldSchoolPresenter.h"
+#include "TowerRunnerContent.h"
 
 namespace P406Exam
 {
@@ -33,6 +34,12 @@ PerfectWorld::P402WorldExamCatalogues P406BExaminationCatalogues(const UWorld* W
 
 PerfectWorld::CommandResult FFakeWorld::Submit(const FAction& Action)
 {
+    if (Action.bP407UFollowup)
+    {
+        P407USubmitted.Add(Action.P407UCommand);
+        if (Reply.Accepted) Model = AfterAccepted;
+        return Reply;
+    }
     PerfectWorld::TowerSessionCommand P406Command;
     P406Command.Kind = Action.Kind;
     P406Command.RouteId = TCHAR_TO_UTF8(*Action.RouteId);
@@ -50,7 +57,7 @@ bool P406PauseEntryVisible(const UWorld* World)
     const auto* P406Life = UPWLaneLifeSubsystem::Get(World);
     if (P406Life == nullptr) return false;
     const auto P406View = P406Life->GetSim().ExaminationWorldView();
-    return P406View.DecisionRequired || P406View.CanWithdraw;
+    return P406View.DecisionRequired || P406View.CanWithdraw || P406View.Finished;
 }
 
 bool P406PresentRequired(UWorld* World)

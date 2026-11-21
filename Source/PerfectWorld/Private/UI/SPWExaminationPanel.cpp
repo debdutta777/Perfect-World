@@ -79,6 +79,29 @@ void SPWExaminationPanel::P406Rebuild()
     P406Activations.Reset();
     P406Body->ClearChildren();
     P406Footer->ClearChildren();
+    if (P407USession.IsSet())
+    {
+        P406Model.Screen = P406Exam::EScreen::P407USession;
+        P406Model.Title = FText::FromString(TEXT("School follow-up session"));
+        const auto& P407UCommand = P407USession.GetValue().P407UCommand;
+        for (const auto& P407URow : P406Model.P407UFollowups)
+            if (P407URow.Action.Id == P407UCommand.ActionId)
+            {
+                P406AddLine(P406Exam::P407UFollowupText(P407URow.Action.TitleTextKey));
+                P406AddLine(P406Exam::P407UFollowupText(P407URow.Action.BriefTextKey));
+                if (P407URow.Action.Id == "school_followup.p2.p4_withdrawn_school_mentor")
+                    P406AddLine(P406Exam::P407UFollowupText("phase2.a8.p407u.mentor.session"));
+                P406AddLine(FText::FromString(FString::Printf(TEXT("Reading costs no time. Finishing records attendance and spends %d minutes. Leaving now records no attendance."),
+                    P407URow.Action.DurationMinutes)));
+            }
+        P406AddControl(FText::FromString(TEXT("Finish the session and record attendance")), true,
+            [this]() { return P407UFinishSession(); }, true);
+        P406AddControl(FText::FromString(TEXT("Leave without attending")), true,
+            [this]() { P407USession.Reset(); P406Refresh(); return true; }, true);
+        P406Selected = 0;
+        P406SelectFocus(0);
+        return;
+    }
     for (const auto& P406Line : P406Model.Lines) P406AddLine(P406Line);
     for (int32 P406Index = 0; P406Index < P406Model.Actions.Num(); ++P406Index)
     {
@@ -117,7 +140,22 @@ bool SPWExaminationPanel::P406TriggerAction(int32 Index)
 {
     if (!P406Model.Actions.IsValidIndex(Index) || !P406Model.Actions[Index].bEnabled) return false;
     const auto P406Action = P406Model.Actions[Index];
+    if (P406Action.bP407UFollowup && !P406Action.bP407UWait &&
+        P406Action.P407UCommand.Kind == PerfectWorld::P407UFollowupAction::Attend)
+    {
+        P407USession = P406Action;
+        P406Rebuild();
+        return true;
+    }
     return P406Send(P406Action);
+}
+
+bool SPWExaminationPanel::P407UFinishSession()
+{
+    if (!P407USession.IsSet()) return false;
+    const auto P407UAction = P407USession.GetValue();
+    P407USession.Reset();
+    return P406Send(P407UAction);
 }
 
 bool SPWExaminationPanel::P406TriggerWithdraw()
