@@ -35,7 +35,7 @@ void P406BRealContent(const P402World& P406BWorld, const ContentDb& P406BDb)
     const P406Exam::P406BExaminationContent P406BContent(&P406BDb);
     const auto P406BBinding = P406BContent.P406BBinding();
     P2CExpect(P406BContent.Ok() && P406BContent.Runners.Scenarios.size() == 15 &&
-        P406BContent.Followups.Actions.size() == 19 && P406BBinding.Runners == &P406BContent.Runners &&
+        P406BContent.Followups.Actions.size() == 31 && P406BBinding.Runners == &P406BContent.Runners &&
         P406BBinding.Followups == &P406BContent.Followups, "production owner retains every real variant and follow-up");
     const auto P406BBuild = [&](WorldState P406BState)
     {

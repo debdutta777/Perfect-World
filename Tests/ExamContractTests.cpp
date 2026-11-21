@@ -231,9 +231,23 @@ void P401BrokenContent(const ContentDb& db)
     }
     for (const auto* outcome : {"strong", "middle", "poor", "withdrawn", "deferred", "declined"})
     {
+        // P407C: several appointments may serve one outcome; the outcome itself stays mandatory.
         auto missing = db;
-        missing.Records.erase("school_followup.p2." + std::string(outcome));
+        std::size_t served = 0;
+        for (const auto* record : db.OfType("school_followup"))
+            if (record->Data.Find("outcome")->String == outcome && !record->Data.Find("appointmentId")->String.empty())
+            {
+                missing.Records.erase(record->Id);
+                ++served;
+            }
+        P401Require(served >= 1, "every outcome has at least one appointment-bearing continuation");
         P401Require(!P401ValidateExamContract(missing).Ok(), "each of six outcome continuations is mandatory");
+        if (served > 1)
+        {
+            auto one = db;
+            one.Records.erase("school_followup.p2." + std::string(outcome));
+            P401Require(P401ValidateExamContract(one).Ok(), "one of several appointments for an outcome is replaceable");
+        }
     }
     auto missing = db;
     for (const auto* record : db.OfType("school_followup")) missing.Records.erase(record->Id);
