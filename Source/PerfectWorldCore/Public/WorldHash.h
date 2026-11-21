@@ -36,8 +36,9 @@ namespace PerfectWorld
  * 7 (2026-10-23, R8-04): appends commerce, every CommerceState field in declaration order (WorldHash.cpp).
  * 8 (2026-11-07, S04): appends school, the canonical pw.school/1 text of the three school slices (SerialiseSchoolState).
  * 9 (2026-11-09, R9-04): appends awakening, the canonical pw.awakening/1 text of the four Round 9 slices (SerialiseAwakeningState).
+ * 10 (2026-11-15, P4-02): appends examination, the canonical pw.examination/1 text of the examination (SerialiseExamState).
  */
-constexpr std::uint32_t WorldHashVersion = 9;
+constexpr std::uint32_t WorldHashVersion = 10;
 
 struct WorldSectionHash
 {
@@ -45,7 +46,7 @@ struct WorldSectionHash
     std::uint64_t Hash = 0;
 };
 
-/** Fixed order: meta, clock, flags, gates, rng, dayloop, conversations, doors, journal, commerce, school, awakening. */
+/** Fixed order: meta, clock, flags, gates, rng, dayloop, conversations, doors, journal, commerce, school, awakening, examination. */
 [[nodiscard]] PERFECTWORLDCORE_API std::vector<WorldSectionHash> HashWorldSections(const WorldState& state);
 
 /** The fingerprint of the whole world. */
@@ -56,7 +57,8 @@ struct WorldSectionHash
  * set migrated on load authenticates its original checksum with this; for unmigrated doors it equals HashWorldState.
  * Pass hashVersion 5 only to authenticate historical v8 saves (that encoding excludes journal, commerce and school), 6 only for
  * historical v9 saves (it excludes commerce and school), 7 only for historical v10 saves (it excludes school) and 8 only for
- * historical v11 saves. Each historical version also excludes awakening (R9-04). Any other version hashes every current section.
+ * historical v11 saves, 9 only for historical v12 saves. Each of 5 to 8 also excludes awakening (R9-04), and each of 5 to 9
+ * excludes examination (P4-02). Any other version hashes every current section.
  */
 [[nodiscard]] PERFECTWORLDCORE_API std::uint64_t HashWorldStateWithDoorsText(const WorldState& state, std::string_view doorsText,
                                                                          std::uint32_t hashVersion = WorldHashVersion);
@@ -77,6 +79,8 @@ struct ReplayOptions
     WorldSchoolCatalogues Lessons{};
     /** Borrowed recipes and trusted countdown context (R9-04); use the same binding that produced tutorial/countdown commands. */
     WorldAwakeningCatalogues Awakening{};
+    /** Borrowed examination runners (P4-02); use the same binding that produced tower.session.apply commands. */
+    P402WorldExamCatalogues Examination{};
 };
 
 struct ReplayCheckpoint

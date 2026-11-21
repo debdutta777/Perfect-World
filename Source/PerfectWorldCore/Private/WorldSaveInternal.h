@@ -84,4 +84,8 @@ WorldSaveAwakeningSlices WorldSaveAwakeningOf(const WorldState& world);
 bool WorldSaveAwakeningDecode(std::string_view text, WorldSaveAwakeningSlices& out);
 /** R9-04 (WorldSaveAwakeningRules.cpp): the semantic rules of the world's Awakening slices inside that world. */
 bool WorldSaveAwakeningValid(const WorldState& world);
+/** P4-02 (WorldExamSave.cpp): the writer's "examination" member text, or empty when the session breaks a rule. */
+std::string WorldSaveWriteExam(const WorldState& world);
+/** v13 reads and validates pw.examination/1 against the world (clock, grant, countdown); v6 to v12 start Unset. */
+WorldSaveResult WorldSaveReadExam(const JsonValue& value, WorldState& world, std::int32_t version);
 } // namespace PerfectWorld

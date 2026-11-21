@@ -1,7 +1,7 @@
 {
   "schema": "pw.content_manifest/1",
-  "fileCount": 302,
-  "recordCount": 361,
+  "fileCount": 308,
+  "recordCount": 367,
   "files": [
     {
       "path": "/ability_recipe/ability_recipe.agni_assay_flame.json",
@@ -1768,9 +1768,21 @@
       ]
     },
     {
+      "path": "/tower_scenario/p2.alliance_p404.json",
+      "records": [
+        { "id": "p2.alliance_p404", "kind": "tower_scenario" }
+      ]
+    },
+    {
       "path": "/tower_scenario/p2.changed_rule.json",
       "records": [
         { "id": "p2.changed_rule", "kind": "tower_scenario" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.changed_rule_p404.json",
+      "records": [
+        { "id": "p2.changed_rule_p404", "kind": "tower_scenario" }
       ]
     },
     {
@@ -1786,6 +1798,12 @@
       ]
     },
     {
+      "path": "/tower_scenario/p2.encounter_p404.json",
+      "records": [
+        { "id": "p2.encounter_p404", "kind": "tower_scenario" }
+      ]
+    },
+    {
       "path": "/tower_scenario/p2.mediation.json",
       "records": [
         { "id": "p2.mediation", "kind": "tower_scenario" }
@@ -1798,15 +1816,33 @@
       ]
     },
     {
+      "path": "/tower_scenario/p2.pace_p404.json",
+      "records": [
+        { "id": "p2.pace_p404", "kind": "tower_scenario" }
+      ]
+    },
+    {
       "path": "/tower_scenario/p2.stabilise.json",
       "records": [
         { "id": "p2.stabilise", "kind": "tower_scenario" }
       ]
     },
     {
+      "path": "/tower_scenario/p2.stabilise_p404.json",
+      "records": [
+        { "id": "p2.stabilise_p404", "kind": "tower_scenario" }
+      ]
+    },
+    {
       "path": "/tower_scenario/p2.supply.json",
       "records": [
         { "id": "p2.supply", "kind": "tower_scenario" }
+      ]
+    },
+    {
+      "path": "/tower_scenario/p2.supply_p404.json",
+      "records": [
+        { "id": "p2.supply_p404", "kind": "tower_scenario" }
       ]
     },
     {

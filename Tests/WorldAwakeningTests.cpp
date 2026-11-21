@@ -225,6 +225,10 @@ void R94LateMakeUp(const R94World& w)
     S04Accept(free, AdvanceTime{R94Deadline - free.State().Clock.Now()}, "to examination morning");
     P2CExpect(free.Countdown()->Closed && free.Countdown()->End == R94Deadline && free.State().Clock.Now() == R94Deadline,
               "the countdown closes at exactly 2 February 2043 06:00");
+    // P4-02: an awakened, undecided life decides on the examination at its instant; deferring is one complete choice.
+    TowerSessionCommand defer;
+    defer.Kind = TowerSessionAction::Defer;
+    S04Accept(free, defer, "the examination is deferred at its instant");
     S04Accept(free, AdvanceTime{60}, "ordinary life after the deadline");
     P2CExpect(free.CountdownView().ExaminationDue && !free.CountdownView().PreparationAvailable, "no practice after the deadline");
 }

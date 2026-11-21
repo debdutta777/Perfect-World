@@ -1,6 +1,7 @@
 #include "TowerSession.h"
 
 #include "Countdown.h"
+#include "TowerScenarioSelection.h"
 
 #include <algorithm>
 #include <limits>
@@ -12,9 +13,9 @@ namespace PerfectWorld
 namespace
 {
 SchoolIssue P2CTowerIssue(std::string_view reason) { return {"tower.session." + std::string(reason), {}}; }
-const TowerRunnerScenario* P2CScenario(const TowerRunnerCatalogue& c, std::string_view route)
+const TowerRunnerScenario* P404BRunnerScenario(const TowerRunnerCatalogue& c, std::string_view id)
 {
-    for (const auto& s : c.Scenarios) if (s.RouteId == route) return &s;
+    for (const auto& s : c.Scenarios) if (s.Id == id) return &s;
     return nullptr;
 }
 bool P2CTowerTerminal(TowerParticipation p)
@@ -50,13 +51,14 @@ TowerResult P2CTowerScore(const TowerSessionState& state, bool includeActive)
 
 SchoolIssue ValidateTowerRunnerCatalogue(const TowerRunnerCatalogue& catalogue)
 {
-    if (catalogue.Scenarios.size() != TowerRoutes().size()) return P2CTowerIssue("route_coverage");
+    if (catalogue.Scenarios.size() < TowerRoutes().size()) return P2CTowerIssue("route_coverage");
     std::set<std::string> routes, scenarios;
     for (const auto& s : catalogue.Scenarios)
     {
-        if (!FindTowerRoute(s.RouteId) || !routes.insert(s.RouteId).second || !IsReceiptIdWellFormed(s.Id) ||
+        if (!FindTowerRoute(s.RouteId) || !IsReceiptIdWellFormed(s.Id) ||
             !scenarios.insert(s.Id).second || !IsReceiptIdWellFormed(s.TitleTextKey) ||
             s.Beats.empty() || s.Beats.size() > TowerRunnerBeatLimit) return P2CTowerIssue("bad_scenario");
+        routes.insert(s.RouteId);
         std::set<std::string> beats;
         for (const auto& b : s.Beats)
         {
@@ -71,14 +73,18 @@ SchoolIssue ValidateTowerRunnerCatalogue(const TowerRunnerCatalogue& catalogue)
                 if (!IsReceiptIdWellFormed(c.Id) || !choices.insert(c.Id).second || !IsReceiptIdWellFormed(c.TextKey) ||
                     c.MissionMinutes < 1 || c.MissionMinutes > 60 || c.Strain < 0 || c.Strain > 4 ||
                     c.Recovery < 0 || c.Recovery > 4 || c.DisciplineMilli < 0 || c.DisciplineMilli > TowerScoreMaxMilli ||
-                    c.CommonJudgmentMilli < 0 || c.CommonJudgmentMilli > TowerScoreMaxMilli)
+                    c.CommonJudgmentMilli < 0 || c.CommonJudgmentMilli > TowerScoreMaxMilli ||
+                    (c.P405CombatOnly && !FindTowerRoute(s.RouteId)->AllowsCombat))
                     return P2CTowerIssue("performance_bounds");
-                safePerfect = safePerfect || (c.DisciplineMilli == TowerScoreMaxMilli && c.CommonJudgmentMilli == TowerScoreMaxMilli && c.Recovery >= c.Strain);
+                safePerfect = safePerfect || (!c.P405CombatOnly && c.DisciplineMilli == TowerScoreMaxMilli &&
+                    c.CommonJudgmentMilli == TowerScoreMaxMilli && c.Recovery >= c.Strain);
             }
             // Every route retains the original Tower ceiling even with zero preparation.
             if (!safePerfect) return P2CTowerIssue("ceiling_unreachable");
         }
     }
+    for (const auto& route : TowerRoutes())
+        if (!routes.contains(std::string(route.Id))) return P2CTowerIssue("route_coverage");
     return {};
 }
 
@@ -91,7 +97,7 @@ TowerRunnerConditions TowerConditionsFromPreparation(const CountdownProfile& p, 
 }
 
 TowerSessionResult ApplyTowerSession(TowerSessionState& state, const TowerRunnerCatalogue& c, const TowerSessionCommand& command,
-    const CountdownProfile& preparation, GameInstant now)
+    const CountdownProfile& preparation, GameInstant now, std::uint64_t worldSeed, std::uint32_t attemptNumber)
 {
     TowerSessionResult result;
     if (now < 0 || now > DayLoopMaxInstant) { result.Issue = P2CTowerIssue("bad_time"); return result; }
@@ -113,7 +119,7 @@ TowerSessionResult ApplyTowerSession(TowerSessionState& state, const TowerRunner
         result.Issue = ValidateTowerRunnerCatalogue(c);
         if (!result.Issue.Ok()) break;
         const auto* route = FindTowerRoute(command.RouteId);
-        const auto* scenario = P2CScenario(c, command.RouteId);
+        const auto* scenario = P404BSelectRouteScenario(c.Scenarios, command.RouteId, worldSeed, attemptNumber);
         if (!route || !scenario) { result.Issue = P2CTowerIssue("unknown_route"); break; }
         if (route->Floor != static_cast<std::int32_t>(next.Attempts.size()) + 1) { result.Issue = P2CTowerIssue("floor_order"); break; }
         if (command.Method != route->Method && !(command.Method == TowerMethod::Combat && route->AllowsCombat))
@@ -138,12 +144,14 @@ TowerSessionResult ApplyTowerSession(TowerSessionState& state, const TowerRunner
         result.Issue = ValidateTowerRunnerCatalogue(c);
         if (!result.Issue.Ok()) break;
         auto& run = *next.Active;
-        const auto* scenario = P2CScenario(c, run.RouteId);
-        if (!scenario || scenario->Id != run.ScenarioId || run.Beat >= scenario->Beats.size())
+        const auto* scenario = P404BRunnerScenario(c, run.ScenarioId);
+        if (!scenario || scenario->RouteId != run.RouteId || run.Beat >= scenario->Beats.size())
             { result.Issue = P2CTowerIssue("invalid_state"); break; }
         const auto& beat = scenario->Beats[run.Beat];
         const auto choice = std::find_if(beat.Choices.begin(), beat.Choices.end(), [&](const auto& item) { return item.Id == command.ChoiceId; });
         if (choice == beat.Choices.end()) { result.Issue = P2CTowerIssue("unknown_choice"); break; }
+        if (choice->P405CombatOnly && run.Method != TowerMethod::Combat)
+            { result.Issue = P2CTowerIssue("method_not_allowed"); break; }
         run.MissionMinutes += std::max(1, choice->MissionMinutes - run.Conditions.MinuteDiscount);
         const bool defeated = choice->Strain > run.Conditions.Reserve;
         run.Conditions.Reserve = std::clamp(run.Conditions.Reserve - choice->Strain + choice->Recovery, 0, 10);
@@ -195,8 +203,8 @@ TowerSessionView QueryTowerSession(const TowerSessionState& state, const TowerRu
         return view;
     }
     const auto& run = *state.Active;
-    const auto* scenario = P2CScenario(c, run.RouteId);
-    if (!scenario || run.Beat >= scenario->Beats.size()) return view;
+    const auto* scenario = P404BRunnerScenario(c, run.ScenarioId);
+    if (!scenario || scenario->RouteId != run.RouteId || run.Beat >= scenario->Beats.size()) return view;
     view.Beat = run.Beat;
     view.Conditions = run.Conditions;
     const auto& beat = scenario->Beats[run.Beat];
@@ -204,6 +212,7 @@ TowerSessionView QueryTowerSession(const TowerSessionState& state, const TowerRu
     view.ClueTextKeys = beat.ClueTextKeys;
     if (!P2CTowerTerminal(state.Participation))
         for (const auto& choice : beat.Choices)
+            if (!choice.P405CombatOnly || run.Method == TowerMethod::Combat)
             view.Choices.push_back({choice.Id, choice.TextKey, std::max(1, choice.MissionMinutes - run.Conditions.MinuteDiscount), choice.Strain});
     return view;
 }

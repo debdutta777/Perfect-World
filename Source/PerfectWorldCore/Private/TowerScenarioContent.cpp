@@ -1,6 +1,7 @@
 #include "TowerScenarioContent.h"
 
 #include "ContentSchemas.h"
+#include "TowerScenarioSelection.h"
 
 #include <algorithm>
 #include <array>
@@ -179,10 +180,10 @@ const TowerScenario* TowerScenarioCatalogue::FindById(std::string_view id) const
     for (const auto& s : Scenarios) if (s.Id == id) return &s;
     return nullptr;
 }
-const TowerScenario* TowerScenarioCatalogue::FindByRoute(std::string_view routeId) const
+const TowerScenario* TowerScenarioCatalogue::P404BSelectForRoute(
+    std::string_view routeId, std::uint64_t worldSeed, std::uint32_t attemptNumber) const
 {
-    for (const auto& s : Scenarios) if (s.RouteId == routeId) return &s;
-    return nullptr;
+    return P404BSelectRouteScenario(Scenarios, routeId, worldSeed, attemptNumber);
 }
 
 TowerScenarioResult LoadTowerScenario(const ContentRecord& record)
@@ -283,11 +284,15 @@ TowerScenarioResult LoadTowerScenario(const ContentRecord& record)
 TowerScenarioCatalogueResult LoadTowerScenarioCatalogue(const ContentDb& db, bool requireFullRouteCoverage)
 {
     TowerScenarioCatalogueResult out;
-    std::set<std::string> seenRoutes;
+    std::set<std::string> seenScenarioIds;
     std::array<bool, TowerMethodCount> seenMethods{};
     for (const auto& [id, record] : db.Records)
     {
         if (record.Type != "tower_scenario") continue;
+        // P405D: direct ContentDb callers receive the same fairness rule as file loading.
+        const auto priorIssues = out.Issues.size();
+        ContentSchema::CheckFairness(record.Data, record.File, out.Issues);
+        if (out.Issues.size() != priorIssues) continue;
         TowerScenarioResult parsed = LoadTowerScenario(record);
         if (!parsed.Ok()) { out.Issues.push_back({record.File, id, parsed.Error}); continue; }
         if (parsed.Value->ClassroomModelId != "none")
@@ -300,9 +305,9 @@ TowerScenarioCatalogueResult LoadTowerScenarioCatalogue(const ContentDb& db, boo
                 continue;
             }
         }
-        if (!seenRoutes.insert(parsed.Value->RouteId).second)
+        if (!seenScenarioIds.insert(parsed.Value->Id).second)
         {
-            out.Issues.push_back({record.File, id, "duplicate scenario for route \"" + parsed.Value->RouteId + "\""});
+            out.Issues.push_back({record.File, id, "duplicate scenario id \"" + parsed.Value->Id + "\""});
             continue;
         }
         seenMethods[static_cast<std::size_t>(parsed.Value->PrimaryMethod)] = true;
@@ -317,7 +322,7 @@ TowerScenarioCatalogueResult LoadTowerScenarioCatalogue(const ContentDb& db, boo
     if (requireFullRouteCoverage)
     {
         for (const auto& route : TowerRoutes())
-            if (out.Catalogue.FindByRoute(route.Id) == nullptr)
+            if (out.Catalogue.P404BSelectForRoute(route.Id, 0, 0) == nullptr)
                 out.Issues.push_back({"<catalogue>", std::string(route.Id), "missing tower_scenario for route"});
         for (std::size_t idx = 0; idx < TowerMethodCount; ++idx)
             if (!seenMethods[idx])

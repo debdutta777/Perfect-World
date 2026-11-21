@@ -2,6 +2,7 @@
 
 #include "Commands.h"
 #include "SchoolWeek.h"
+#include "WorldExam.h"
 #include "WorldState.h"
 #include "WorldCommerce.h"
 
@@ -124,18 +125,19 @@ public:
      */
     explicit WorldSim(std::uint64_t worldSeed, std::size_t eventCap = MaxEventsPerAdvance,
                       DayLoopCatalogues school = {}, WorldCommerceCatalogues commerce = {},
-                      WorldSchoolCatalogues lessons = {}, WorldAwakeningCatalogues awakening = {});
+                      WorldSchoolCatalogues lessons = {}, WorldAwakeningCatalogues awakening = {},
+                      P402WorldExamCatalogues examination = {});
     explicit WorldSim(std::uint64_t worldSeed, const CharacterCreator& creation,
                       std::size_t eventCap = MaxEventsPerAdvance, DayLoopCatalogues school = {},
                       WorldCommerceCatalogues commerce = {}, WorldSchoolCatalogues lessons = {},
-                      WorldAwakeningCatalogues awakening = {});
+                      WorldAwakeningCatalogues awakening = {}, P402WorldExamCatalogues examination = {});
     /**
      * Continue a loaded world (DeserializeWorldSave's World). The state must be in step
      * (IsWorldDayInStep); the command log starts empty, so it holds the commands since the load.
      */
     explicit WorldSim(WorldState state, std::size_t eventCap = MaxEventsPerAdvance, DayLoopCatalogues school = {},
                       WorldCommerceCatalogues commerce = {}, WorldSchoolCatalogues lessons = {},
-                      WorldAwakeningCatalogues awakening = {});
+                      WorldAwakeningCatalogues awakening = {}, P402WorldExamCatalogues examination = {});
 
     /**
      * The only mutation entry point. Atomic: a rejected command, including a paid conversation choice whose charge
@@ -181,6 +183,14 @@ public:
      * when none, when no catalogue is bound or when the brief records disagree with the catalogue. Pure.
      */
     [[nodiscard]] std::vector<std::string> PendingSchoolWorkReconciliation() const;
+    /** P4-02: the bound examination runners (WorldExam.h). */
+    [[nodiscard]] const P402WorldExamCatalogues& ExaminationContent() const noexcept { return Examination_; }
+    /** P4-02: QueryTowerSession over the stored session and the bound runners. Pure; reading costs no time. */
+    [[nodiscard]] TowerSessionView ExaminationView() const;
+    /** P4-02: entry choices, withdrawal and the pending/charged outside minutes, with the session view. Pure. */
+    [[nodiscard]] P402ExamWorldView ExaminationWorldView() const;
+    /** P4-02: the P4-03 seam's derived result of the stored session (refused "exam.not_terminal" while open). Never stored. */
+    [[nodiscard]] P402ExamFinish ExaminationResult() const { return P402ExamFinishSeam(State_.Examination, Examination_.Followups); }
 
 private:
     std::optional<Rejection> Validate(const Command& command) const;
@@ -242,6 +252,13 @@ private:
     std::optional<Rejection> ValidateRecoveryCommand(const Command& command) const;
     std::optional<Rejection> ApplyRecoveryCommand(const Command& command, CommandResult& result);
     std::optional<Rejection> ReconcileSchoolWork(SchoolWorkIssuanceResult& out) const;
+    // P4-02 tower.session.apply (WorldExam.cpp): staged through P401ApplyExamChoice, terminal charge through ChargeTime.
+    std::optional<Rejection> ValidateExamCommand(const Command& command) const;
+    std::optional<Rejection> ApplyExamCommand(const TowerSessionCommand& command, CommandResult& result);
+    /** True in a routed sim whose awakened life has not yet decided on the examination: time paths stop at the instant. */
+    [[nodiscard]] bool ExamDecisionPending() const noexcept;
+    [[nodiscard]] GameInstant ExamTimeBoundary(GameInstant target) const;
+    bool StopForExamBoundary(GameInstant target, CommandResult& result);
 
     WorldState State_;
     std::vector<Command> Log_;
@@ -250,6 +267,7 @@ private:
     WorldCommerceCatalogues Commerce_;
     WorldSchoolCatalogues Lessons_;
     WorldAwakeningCatalogues Awakening_;
+    P402WorldExamCatalogues Examination_;
     /** R9-04: a countdown boundary refusal inside RunTimeTo, turned into the command's late refusal by Submit. */
     std::optional<Rejection> Boundary_;
     std::optional<SchoolSessionResult> StagedLesson_, LastLesson_;
@@ -294,4 +312,12 @@ private:
  * the day, conversations, commerce and school play wait until the session exits. Empty otherwise.
  */
 [[nodiscard]] PERFECTWORLDCORE_API std::optional<Rejection> TutorialOpenRefusal(const WorldState& state);
+/** P4-02: true for tower.session.apply (WorldExam.cpp). */
+[[nodiscard]] PERFECTWORLDCORE_API bool IsExamCommand(const CommandPayload& payload) noexcept;
+
+/**
+ * P4-02: "exam.active" while the examination session is Entered: the world clock stands still until the terminal command
+ * charges the mission's outside minutes, so time, the day, conversations, commerce and school play wait. Empty otherwise.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API std::optional<Rejection> ExamOpenRefusal(const WorldState& state);
 } // namespace PerfectWorld

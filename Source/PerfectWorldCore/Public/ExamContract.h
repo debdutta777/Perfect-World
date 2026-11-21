@@ -88,18 +88,22 @@ struct P401ExamStepResult
  * State equals input. All validation, evidence and time arithmetic stay in TowerSession.
  * Charge Resolution.OutsideMinutes only; Resolution.Result.OutsideMinutes is also
  * populated on nonterminal previews and must never move the world clock there.
+ * P405D: forward the saved world seed and the same zero-based sitting ordinal
+ * on every call, including after recovery. Defaults support standalone callers.
  */
 [[nodiscard]] PERFECTWORLDCORE_API P401ExamStepResult P401ApplyExamChoice(
     const TowerSessionState& state, const TowerRunnerCatalogue& runners,
-    const TowerSessionCommand& command, const CountdownProfile& preparation, GameInstant now);
+    const TowerSessionCommand& command, const CountdownProfile& preparation, GameInstant now,
+    std::uint64_t worldSeed = 0, std::uint32_t attemptNumber = 0);
 
 struct P401ExamRouteRow
 {
     std::string_view RouteId; // static Tower identity
-    std::string ScenarioId; // owned, independent of the input catalogue's lifetime
+    std::string ScenarioId; // owned representative from seed 0 / sitting 0, not the only variant
     std::int32_t Floor = 0;
     std::array<bool, TowerMethodCount> Methods{};
     std::uint32_t DisciplineMask = 0;
+    // P405E: completion flags require every variant on the route to complete.
     bool NonCombatCompletes = false;
     bool CombatCompletes = false;
 };
@@ -109,8 +113,8 @@ struct P401ExamValidation
 {
     std::vector<ContentIssue> Issues;
     std::vector<P401ExamRouteRow> Routes;
-    std::size_t DecisionSequences = 0;
-    std::size_t RouteSequences = 0;
+    std::size_t DecisionSequences = 0; // all local paths across all authored variants
+    std::size_t RouteSequences = 0; // route triples with one selected variant per route
     bool NonCombatClimb = false;
     /** Authored scenario evaluation has no practice prerequisite. This is NOT
      * proof that the separate TowerRunnerCatalogue has a production content adapter.
@@ -125,7 +129,7 @@ struct P401ExamValidation
  * route triples not enumerated explicitly. Does no IO and never alters the Db.
  */
 [[nodiscard]] PERFECTWORLDCORE_API P401ExamValidation P401ValidateExamContract(const ContentDb& db);
-/** Separate runner-layer proof: actually completes every route/method from final
+/** Separate runner-layer proof: actually completes every scenario/method from final
  * ZERO preparation via ApplyTowerSession. The caller supplies trusted runner content;
  * this function never invents a conversion from tower_scenario's different model.
  */

@@ -135,11 +135,18 @@ std::vector<std::pair<std::string, std::uint64_t>> RefSections(const WorldState&
     // R9-04 awakening: one text field, the canonical pw.awakening/1 envelope of the four Round 9 slices (the school precedent).
     RefBytes R94Awakening;
     R94Awakening.S(SerialiseAwakeningState(w));
+    // P4-02 examination: one text field, the canonical pw.examination/1 envelope. The undecided session is spelled out here
+    // independently of the library's encoder (the form both hand-built worlds hold); any other session uses the library's.
+    RefBytes P402Exam;
+    P402Exam.S(w.Examination == TowerSessionState{}
+                   ? std::string("pw.examination/1\nparticipation=0\npreparation=0,0,0,0,0,0,0,0\nrunner=1,0\nattempts=0\n"
+                                 "active=none\nend\n")
+                   : SerialiseExamState(w));
     return {{"meta", RefFnv1a(meta.Data)},   {"clock", RefFnv1a(clock.Data)}, {"flags", RefFnv1a(flags.Data)},
             {"gates", RefFnv1a(gates.Data)}, {"rng", RefFnv1a(rng.Data)},     {"dayloop", RefFnv1a(dayloop.Data)},
             {"conversations", RefFnv1a(conversations.Data)}, {"doors", RefFnv1a(doors.Data)}, {"journal", RefFnv1a(R4JJournal.Data)},
             {"commerce", RefFnv1a(R84Commerce.Data)}, {"school", RefFnv1a(S04School.Data)},
-            {"awakening", RefFnv1a(R94Awakening.Data)}};
+            {"awakening", RefFnv1a(R94Awakening.Data)}, {"examination", RefFnv1a(P402Exam.Data)}};
 }
 
 std::uint64_t RefWorld(const WorldState& w)
@@ -256,6 +263,10 @@ WorldState EdgeWorld()
 // R9-04 re-pin 2026-11-10 with PW_PRINT_GOLDEN=1 (RefWorld agreed section by section first): WorldHashVersion 9 appends the
 // awakening section (the empty pw.awakening/1 envelope of both hand-built worlds), schema 12. HandBuilt 0x190d7b75bff8532d ->
 // 0x8b6f3c05844b59bc; Edge 0xec18c2377c28ddf9 -> 0x1bfa4f976c943770. The eleven earlier section encodings are unchanged.
-constexpr std::uint64_t GoldenHandBuilt = 0x8b6f3c05844b59bcULL;
-constexpr std::uint64_t GoldenEdge = 0x1bfa4f976c943770ULL;
+// P4-02 re-pin 2026-11-16 with PW_PRINT_GOLDEN=1 (RefWorld agreed section by section first): WorldHashVersion 10 appends the
+// examination section (the undecided pw.examination/1 envelope of both hand-built worlds, spelled out independently above),
+// schema 13. HandBuilt 0x8b6f3c05844b59bc -> 0xb086190c16fc0947; Edge 0x1bfa4f976c943770 -> 0x713558c0951e7133. The twelve
+// earlier section encodings are unchanged.
+constexpr std::uint64_t GoldenHandBuilt = 0xb086190c16fc0947ULL;
+constexpr std::uint64_t GoldenEdge = 0x713558c0951e7133ULL;
 } // namespace
