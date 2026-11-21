@@ -1031,3 +1031,9 @@ target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ExamResu
 add_executable(PerfectWorldExamResultTests Tests/ExamResultTests.cpp)
 target_link_libraries(PerfectWorldExamResultTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldExamResultTests COMMAND PerfectWorldExamResultTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# P405: production tower runners and real-content examination integration.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/TowerRunnerContent.cpp)
+add_executable(PerfectWorldTowerRunnerContentTests Tests/TowerRunnerContentTests.cpp)
+target_link_libraries(PerfectWorldTowerRunnerContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldTowerRunnerContentTests COMMAND PerfectWorldTowerRunnerContentTests ${CMAKE_SOURCE_DIR}/Data/Content)

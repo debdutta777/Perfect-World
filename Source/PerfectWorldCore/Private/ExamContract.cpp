@@ -107,12 +107,12 @@ SchoolIssue P401RunFloor(TowerSessionState& state, const TowerRunnerCatalogue& r
     auto applied = ApplyTowerSession(state, runners, command, zero, CountdownEndInstant());
     if (!applied.Ok()) return applied.Issue;
     const auto scenario = std::find_if(runners.Scenarios.begin(), runners.Scenarios.end(),
-        [&](const auto& item) { return item.RouteId == route.Id; });
+        [&](const auto& item) { return state.Active && item.Id == state.Active->ScenarioId; });
     if (scenario == runners.Scenarios.end()) return P401RunnerIssue("missing_runner");
     for (const auto& beat : scenario->Beats)
     {
         const auto safe = std::find_if(beat.Choices.begin(), beat.Choices.end(), [](const auto& choice) {
-            return choice.DisciplineMilli == TowerScoreMaxMilli && choice.CommonJudgmentMilli == TowerScoreMaxMilli &&
+            return !choice.P405CombatOnly && choice.DisciplineMilli == TowerScoreMaxMilli && choice.CommonJudgmentMilli == TowerScoreMaxMilli &&
                 choice.Recovery >= choice.Strain;
         });
         if (safe == beat.Choices.end()) return P401RunnerIssue("no_zero_practice_choice");

@@ -22,6 +22,8 @@ struct TowerRunnerChoice
     std::int32_t DisciplineMilli = 0; // 0..1000; authored evidence, not an input command
     /** Must describe non-combat judgment, even for a combat route. */
     std::int32_t CommonJudgmentMilli = 0; // 0..1000
+    /** P405: local combat actions are unavailable when the route method is non-combat. */
+    bool P405CombatOnly = false;
 };
 struct TowerRunnerBeat
 {

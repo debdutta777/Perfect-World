@@ -2,6 +2,7 @@
 
 #include "LegacyRecovery.h"
 #include "P402ExamTestSupport.h"
+#include "P405ExamTestSupport.h"
 
 #include <iostream>
 
@@ -266,6 +267,152 @@ void P402Tampered(const P402World& w)
                "a forged session cannot continue");
     S04Accept(forgedSim, P402Cmd(A::Withdraw), "yet it can always leave");
 }
+
+void P405RealClimb(const P405World& w)
+{
+    WorldSim sim = w.Sim(w.Base.Morning);
+    P2CExpect(sim.ExaminationWorldView().CanSit, "real catalogue makes Sit available");
+    S04Accept(sim, P402Cmd(A::Enter), "sit with real content");
+    P405Floor(sim, w.Runners, P402Climb[0]);
+    P405Floor(sim, w.Runners, P402Climb[1]);
+    P405Floor(sim, w.Runners, P402Climb[2]);
+    const auto result = sim.ExaminationResult();
+    P405Next(result, "strong");
+    P405Same(result, P403ResolveExamResult(sim.State().Examination, w.Followups));
+    P2CExpect(sim.State().Examination.Preparation.Preparation == CountdownPoints{},
+        "the ordinary closed countdown candidate finished without practising");
+    P2CExpect(result.Score.Completed && result.Score.ScorePoints == 6000 && result.Score.Decile == 1 &&
+        sim.State().Clock.Now() == CountdownEndInstant() + result.Score.OutsideMinutes &&
+        ExamStateMatchesRunners(sim.State().Examination, w.Runners), "real non-combat climb finishes at the ceiling");
+    const auto beforeRead = HashWorldState(sim.State());
+    P405Same(result, sim.ExaminationResult());
+    P2CExpect(beforeRead == HashWorldState(sim.State()), "reading results is pure");
+    const auto replay = ReplayCommandLogFromSnapshot(w.Base.Morning, sim.Log(), w.Replay());
+    P2CExpect(replay.Complete && replay.Hash == beforeRead, "real-content command replay is identical");
+    WorldSim replayed = w.Sim(w.Base.Morning);
+    for (const auto& command : sim.Log())
+        P2CExpect(replayed.Submit(command).Accepted, "same accepted log reconstructs the result");
+    P2CExpect(HashWorldState(replayed.State()) == replay.Hash, "report replay matches the replay harness");
+    P405Same(result, replayed.ExaminationResult());
+    WorldSim reloaded = w.Sim(P402Reload(w.Base, sim.State(), "real terminal save round trip"));
+    P405Same(result, reloaded.ExaminationResult());
+}
+
+void P405ZeroAndResume(const P405World& w)
+{
+    WorldState morning = w.Base.Morning;
+    morning.CountdownText.clear();
+    morning.Flags[std::string(AwakeningCountdownUnavailableFlag)] = true;
+    WorldSim sim = w.Sim(morning);
+    S04Accept(sim, P402Cmd(A::Enter), "zero-practice candidate sits with real runners");
+    P2CExpect(sim.State().Examination.Preparation == TowerPreparationSnapshot{}, "real zero-practice snapshot");
+    S04Accept(sim, P402Cmd(A::OpenRoute, std::string(P402Climb[0]), TowerMethod::Endurance), "real first floor");
+    P405Beat(sim, w.Runners);
+    const WorldState saved = P402Reload(w.Base, sim.State(), "real save/load mid-examination");
+    P2CExpect(saved.Examination.Active && saved.Examination.Active->Beat == 1 &&
+        ExamStateMatchesRunners(saved.Examination, w.Runners), "recovery retains real scenario, choices, reserve and beat");
+    WorldSim resumed = w.Sim(saved);
+    P405Beat(sim, w.Runners);
+    P405Beat(resumed, w.Runners);
+    P2CExpect(HashWorldState(sim.State()) == HashWorldState(resumed.State()), "same next command after Continue");
+    for (auto* current : {&sim, &resumed})
+    {
+        P405Beat(*current, w.Runners);
+        P405Floor(*current, w.Runners, P402Climb[1]);
+        P405Floor(*current, w.Runners, P402Climb[2]);
+        P405Next(current->ExaminationResult(), "strong");
+    }
+    P2CExpect(HashWorldState(sim.State()) == HashWorldState(resumed.State()), "zero-practice resumed finish is identical");
+    P405Same(sim.ExaminationResult(), resumed.ExaminationResult());
+}
+
+void P405RealExits(const P405World& w)
+{
+    for (const auto kind : {A::Defer, A::Decline})
+    {
+        WorldSim sim = w.Sim(w.Base.Morning);
+        S04Accept(sim, P402Cmd(kind), "real outcome without sitting");
+        P405Next(sim.ExaminationResult(), kind == A::Defer ? "deferred" : "declined");
+        P2CExpect(sim.State().Clock.Now() == CountdownEndInstant(), "defer and decline spend no time");
+    }
+    for (int floors = 0; floors <= 2; ++floors)
+    for (int beats = -1; beats <= 2; ++beats)
+    {
+        WorldSim sim = w.Sim(w.Base.Morning);
+        S04Accept(sim, P402Cmd(A::Enter), "sit before withdrawal");
+        for (int floor = 0; floor < floors; ++floor) P405Floor(sim, w.Runners, P402Climb[floor]);
+        if (beats >= 0)
+        {
+            const auto* route = FindTowerRoute(P402Climb[floors]);
+            S04Accept(sim, P402Cmd(A::OpenRoute, std::string(route->Id), route->Method), "open before withdrawal");
+            for (int beat = 0; beat < beats; ++beat) P405Beat(sim, w.Runners);
+        }
+        const auto minutes = sim.ExaminationWorldView().OutsideMinutes;
+        S04Accept(sim, P402Cmd(A::Withdraw), "withdraw from every real beat and boundary");
+        P405Next(sim.ExaminationResult(), "withdrawn");
+        P2CExpect(sim.State().Clock.Now() == CountdownEndInstant() + minutes, "withdrawal charges elapsed time once");
+    }
+    for (int cleared : {0, 2})
+    {
+        WorldState zero = w.Base.Morning;
+        zero.CountdownText.clear();
+        zero.Flags[std::string(AwakeningCountdownUnavailableFlag)] = true;
+        WorldSim sim = w.Sim(zero);
+        S04Accept(sim, P402Cmd(A::Enter), "sit before authored mistakes");
+        for (int floor = 0; floor < cleared; ++floor) P405Floor(sim, w.Runners, P402Climb[floor]);
+        P405Floor(sim, w.Runners, P402Climb[cleared], true);
+        P2CExpect(sim.State().Examination.Participation == TowerParticipation::Ejected, "real mistakes eject");
+        P405Next(sim.ExaminationResult(), cleared == 0 ? "poor" : "middle");
+    }
+}
+
+void P405ContentFreeExit(const P405World& w)
+{
+    WorldSim sim = w.Sim(w.Base.Morning);
+    S04Accept(sim, P402Cmd(A::Enter), "sit before content becomes unavailable");
+    P405Floor(sim, w.Runners, P402Climb[0]);
+    S04Accept(sim, P402Cmd(A::OpenRoute, std::string(P402Climb[1]), TowerMethod::Analysis), "open second floor");
+    P405Beat(sim, w.Runners);
+    const SchoolFollowupContent empty;
+    WorldSim stranded(sim.State(), MaxEventsPerAdvance, w.Base.W.School.Cats.Day, {},
+        w.Base.W.School.School(), w.Base.W.Bind(), {nullptr, &empty});
+    const auto minutes = stranded.ExaminationWorldView().OutsideMinutes;
+    S04Accept(stranded, P402Cmd(A::Withdraw), "missing runners and appointments cannot refuse withdrawal");
+    P2CExpect(stranded.ExaminationResult().Issue.Code == "P403.exam.missing_followup" &&
+        stranded.State().Clock.Now() == CountdownEndInstant() + minutes, "a report refusal never rolls back the exit");
+    WorldSim restored = w.Sim(P402Reload(w.Base, stranded.State(), "unbound withdrawal still saves"));
+    P405Next(restored.ExaminationResult(), "withdrawn");
+    for (const auto kind : {A::Defer, A::Decline})
+    {
+        WorldSim unbound(w.Base.Morning, MaxEventsPerAdvance, w.Base.W.School.Cats.Day, {},
+            w.Base.W.School.School(), w.Base.W.Bind(), {nullptr, &empty});
+        S04Accept(unbound, P402Cmd(kind), "defer and decline remain independent of result content");
+        WorldSim rebound = w.Sim(unbound.State());
+        P405Next(rebound.ExaminationResult(), kind == A::Defer ? "deferred" : "declined");
+    }
+}
+
+void P405CombatBoundary(const P405World& w)
+{
+    WorldSim sim = w.Sim(w.Base.Morning);
+    S04Accept(sim, P402Cmd(A::Enter), "sit before method selection");
+    S04Accept(sim, P402Cmd(A::OpenRoute, "tower.route.encounter", TowerMethod::Endurance), "non-combat encounter");
+    const auto& beat = P405Active(sim, w.Runners).Beats.front();
+    const auto combat = std::find_if(beat.Choices.begin(), beat.Choices.end(),
+        [](const auto& choice) { return choice.P405CombatOnly; });
+    P2CExpect(combat != beat.Choices.end(), "encounter has an authored combat alternative");
+    const auto view = sim.ExaminationView();
+    P2CExpect(std::none_of(view.Choices.begin(), view.Choices.end(),
+        [&](const auto& choice) { return choice.Id == combat->Id; }), "non-combat view omits combat actions");
+    auto command = P402Cmd(A::Choose);
+    command.Runner = view.Runner;
+    command.Beat = view.Beat;
+    command.ChoiceId = combat->Id;
+    S04Refused(sim, command, "tower.session.method_not_allowed", "forged combat action cannot cross the method boundary");
+    P405Beat(sim, w.Runners);
+    S04Accept(sim, P402Cmd(A::Withdraw), "non-combat play continues after a refused combat choice");
+    P405Next(sim.ExaminationResult(), "withdrawn");
+}
 } // namespace
 
 int main(int argc, char** argv)
@@ -282,6 +429,12 @@ int main(int argc, char** argv)
     P402Rollback(world);
     P402Replay(world);
     P402Tampered(world);
+    const P405World real(world, fixture.Content);
+    P405RealClimb(real);
+    P405ZeroAndResume(real);
+    P405RealExits(real);
+    P405ContentFreeExit(real);
+    P405CombatBoundary(real);
     std::cout << "P4-02 WorldExam passed\n";
     return 0;
 }
