@@ -1014,9 +1014,37 @@ add_test(NAME PerfectWorldLegacyRecoveryTests COMMAND PerfectWorldLegacyRecovery
 add_executable(PerfectWorldHomeworkReconcileTests Tests/HomeworkReconcileTests.cpp)
 target_link_libraries(PerfectWorldHomeworkReconcileTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldHomeworkReconcileTests COMMAND PerfectWorldHomeworkReconcileTests ${CMAKE_SOURCE_DIR}/Data/Content)
+# P402: the examination as world state (tower.session.apply through WorldSim), save schema 13 / hash 10.
+target_sources(PerfectWorldCore PRIVATE
+    Source/PerfectWorldCore/Private/WorldExam.cpp
+    Source/PerfectWorldCore/Private/WorldExamSave.cpp)
+add_executable(PerfectWorldWorldExamTests Tests/WorldExamTests.cpp)
+target_link_libraries(PerfectWorldWorldExamTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldWorldExamTests COMMAND PerfectWorldWorldExamTests ${CMAKE_SOURCE_DIR}/Data/Content)
+add_executable(PerfectWorldWorldSaveExamTests Tests/WorldSaveExamTests.cpp)
+target_link_libraries(PerfectWorldWorldSaveExamTests PRIVATE PerfectWorldCore)
+target_compile_definitions(PerfectWorldWorldSaveExamTests PRIVATE PW_EXAM_FIXTURE_DIR="${CMAKE_SOURCE_DIR}/Tests/Fixtures")
+add_test(NAME PerfectWorldWorldSaveExamTests COMMAND PerfectWorldWorldSaveExamTests ${CMAKE_SOURCE_DIR}/Data/Content)
 
 # P403: pure examination result reports, stable evidence reasons and authored next steps.
 target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/ExamResult.cpp)
 add_executable(PerfectWorldExamResultTests Tests/ExamResultTests.cpp)
 target_link_libraries(PerfectWorldExamResultTests PRIVATE PerfectWorldCore)
 add_test(NAME PerfectWorldExamResultTests COMMAND PerfectWorldExamResultTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# P407U: saved optional bookings and paid follow-up attendance; existing save format.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/WorldExamFollowup.cpp)
+add_executable(PerfectWorldExamFollowupTests Tests/ExamFollowupTests.cpp)
+target_link_libraries(PerfectWorldExamFollowupTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldExamFollowupTests COMMAND PerfectWorldExamFollowupTests ${CMAKE_SOURCE_DIR}/Data/Content)
+# P405: production tower runners and real-content examination integration.
+target_sources(PerfectWorldCore PRIVATE Source/PerfectWorldCore/Private/TowerRunnerContent.cpp)
+add_executable(PerfectWorldTowerRunnerContentTests Tests/TowerRunnerContentTests.cpp)
+target_link_libraries(PerfectWorldTowerRunnerContentTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldTowerRunnerContentTests COMMAND PerfectWorldTowerRunnerContentTests ${CMAKE_SOURCE_DIR}/Data/Content)
+
+# P406B: production examination bindings and pause handoff, without an Unreal map.
+add_executable(PerfectWorldP406BExaminationTests Tests/P406BExaminationTests.cpp)
+target_include_directories(PerfectWorldP406BExaminationTests PRIVATE Source/PerfectWorld/Private)
+target_link_libraries(PerfectWorldP406BExaminationTests PRIVATE PerfectWorldCore)
+add_test(NAME PerfectWorldP406BExaminationTests COMMAND PerfectWorldP406BExaminationTests ${CMAKE_SOURCE_DIR}/Data/Content)

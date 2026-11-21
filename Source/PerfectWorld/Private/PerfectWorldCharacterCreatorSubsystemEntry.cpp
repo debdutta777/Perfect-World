@@ -11,6 +11,7 @@
 #include "PerfectWorldPlayerCharacter.h"
 #include "PerfectWorldReadingPresenter.h"
 #include "PerfectWorldContentSubsystem.h" // P38
+#include "PerfectWorldExaminationBridge.h"
 #include "Engine/GameInstance.h"
 #include "LearningCredits.h"
 
@@ -77,7 +78,9 @@ bool UPerfectWorldCharacterCreatorSubsystem::StartLifeAndSaveToSlot(int32 SlotIn
         return RecordFileError(FText::FromString(TEXT("Learning content is unavailable. Your creation has not started.")));
     const auto P36USeed = PerfectWorld::SeedNewLifeLearning(Fresh.World, *P38Content->GetDb(), Started.CaptureSave());
     if (!P36USeed.Ok()) return RecordFileError(FText::FromString(ToFString(P36USeed.Error)));
-    auto Prepared = MakeUnique<PerfectWorld::WorldSim>(Fresh.World);
+    auto Prepared = MakeUnique<PerfectWorld::WorldSim>(Fresh.World, PerfectWorld::MaxEventsPerAdvance,
+        PerfectWorld::DayLoopCatalogues{}, PerfectWorld::WorldCommerceCatalogues{}, PerfectWorld::WorldSchoolCatalogues{},
+        PerfectWorld::WorldAwakeningCatalogues{}, P406Exam::P406BExaminationCatalogues(GetWorld()));
     if (!Prepared->Submit({PerfectWorld::CommandSource::System,
         PerfectWorld::AdvanceTime{PWLaneLife::CampaignStartMinuteOfDay - 360}}).Accepted)
         return RecordFileError(FText::FromString(TEXT("The new world's clock could not start.")));

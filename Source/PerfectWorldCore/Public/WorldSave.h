@@ -19,7 +19,8 @@ namespace PerfectWorld
 struct CommerceContent;
 
 /**
- * The world save, schema v12 (ROADMAP M1-05, M2-12; lane order SV, R4-04; commerce R8-04; school S04; awakening R9-04).
+ * The world save, schema v13 (ROADMAP M1-05, M2-12; lane order SV, R4-04; commerce R8-04; school S04; awakening R9-04;
+ * examination P4-02).
  *
  * A v12 slot is one JSON document holding the creation record (written and read
  * by CreationSaveSerialization, unchanged) plus a world snapshot: the clock, the
@@ -69,13 +70,14 @@ struct CommerceContent;
  * original encodings.
  *
  * Layout (key order as written; readers accept any order, but every key is required and unknown keys are refused):
- *   format "perfectworld.save", schemaVersion 12, creation {...},
+ *   format "perfectworld.save", schemaVersion 13, creation {...},
  *   world { seed, seq, clock{now,nextHandle,pending[{handle,when,id}]}, flags{id:bool},
  *           gates{id:{rank,status,since,onsets}}, rng[{stream,words[4],draws}], dayloop "<pw.dayloop/1 text>",
  *           conversations{personId:"<pw.conversation/2 text>"}, doors "<pw.doors/2 text>", journal "<pw.lane_journal/1 text>",
- *           commerce "<pw.commerce/1 text>", school "<pw.school/1 text>" },
+ *           commerce "<pw.commerce/1 text>", school "<pw.school/1 text>", awakening "<pw.awakening/1 text>",
+ *           examination "<pw.examination/1 text>" },
  *   player { zone, posCm[3], yawCdeg, pitchCdeg, camera }, hashVersion, stateHash.
- * V10 omits school; v9 also omits commerce; v8 also omits journal; v7 also omits conversations and doors; v6 also omits dayloop.
+ * V12 omits examination; v11 also omits awakening; v10 omits school; v9 also omits commerce; v8 also omits journal; v7 also omits conversations and doors; v6 also omits dayloop.
  *
  * pw.commerce/1 is lines of text, every number in canonical decimal, every field of CommerceState in declaration order:
  *   pw.commerce/1, wallet=<paise>, slot=<itemId>,<quantity> (exactly twelve; an empty slot is "slot=,0"),
@@ -125,8 +127,15 @@ struct CommerceContent;
  *   end. The grant's conduct summary, world seed and starting profile are not stored: they are SummariseConduct(conduct), the
  *   seed and AwakenedStartingProfile(result, grant day). Only the canonical spelling is accepted, and the decoded slices must
  *   keep IsAwakeningStateValidInWorld.
+ *
+ * v13 (P4-02) adds required examination text, world key "examination" after "awakening": the pw.examination/1 envelope of
+ * WorldState::Examination (format and rules in WorldExam.h: SerialiseExamState, IsExamStateValidInWorld). Every v6 to v12
+ * world loads Unset: no sitting, deferral or result is invented. Historical v12/hash-v9 is authenticated with its original
+ * twelve-section encoding first and loads unverified; its first v13 save is certified.
  */
-constexpr std::int32_t WorldSaveSchemaVersion = 12;
+constexpr std::int32_t WorldSaveSchemaVersion = 13;
+/** P4-02: the last schema without the examination: v6 to v12 load Unset (undecided), with no sitting or result. */
+constexpr std::int32_t WorldSaveLastWithoutExamVersion = 12;
 /** R9-04: the last schema without the Awakening slices: v6 to v11 load unseeded, with no session, countdown or profile. */
 constexpr std::int32_t WorldSaveLastWithoutAwakeningVersion = 11;
 /** S04: the last schema without the school slices: v6 to v10 load with empty lessons, papers and standing orders. */
@@ -218,13 +227,13 @@ struct WorldSaveResult
                                                                           std::uint64_t worldSeed, WorldSaveData& out);
 
 /**
- * Always the current schema (v12). Invalid lane, commerce, school or awakening authority returns an empty string, as does commerce whose funding
+ * Always the current schema (v13). Invalid lane, commerce, school or awakening authority returns an empty string, as does commerce whose funding
  * is not the creation record's Household Resources row or whose allowance cursor is not the world clock.
  */
 [[nodiscard]] PERFECTWORLDCORE_API std::string SerializeWorldSave(const WorldSaveData& data);
 
 /**
- * Reads v12, v11 (empty Awakening slices), v10 (also empty school slices), v9 (household commerce initialised at the saved instant), v8 (also an empty journal), v7 (authored lane defaults), v6 (also a fresh day), or migrates a v1 to v5 creation-only record (the migrated
+ * Reads v13, v12 (an Unset examination), v11 (empty Awakening slices), v10 (also empty school slices), v9 (household commerce initialised at the saved instant), v8 (also an empty journal), v7 (authored lane defaults), v6 (also a fresh day), or migrates a v1 to v5 creation-only record (the migrated
  * world's seed is FNV-1a 64 of the file's bytes, so migrating the same file
  * twice gives the same world). Truncated, corrupt or inconsistent text is
  * refused with a message; `out` is untouched on any failure.

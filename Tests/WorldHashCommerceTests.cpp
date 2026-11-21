@@ -123,7 +123,7 @@ void R84CommerceFieldEdits()
         apply(edited.Commerce);
         Check(!(edited.Commerce == base.Commerce), name);
         const auto sections = HashWorldSections(edited);
-        Check(sections.size() == baseSections.size() && sections.size() == 12 && sections[9].Name == "commerce", name);
+        Check(sections.size() == baseSections.size() && sections.size() == 13 && sections[9].Name == "commerce", name);
         for (std::size_t i = 0; i < sections.size(); ++i)
             Check((sections[i].Hash != baseSections[i].Hash) == (sections[i].Name == "commerce"), name);
         CheckAgainstReference(edited, name);
@@ -156,7 +156,7 @@ void R84FrozenFixtureAuthentication()
     all.U(6);
     for (const auto& [name, hash] : RefSections(loaded.World))
     {
-        if (name == "commerce" || name == "school" || name == "awakening")
+        if (name == "commerce" || name == "school" || name == "awakening" || name == "examination")
             continue;
         all.S(name);
         all.U(hash);
@@ -182,7 +182,7 @@ void S04FrozenV10Authentication()
     all.U(7);
     for (const auto& [name, hash] : RefSections(loaded.World))
     {
-        if (name == "school" || name == "awakening")
+        if (name == "school" || name == "awakening" || name == "examination")
             continue;
         all.S(name);
         all.U(hash);
@@ -208,7 +208,7 @@ void R94FrozenV11Authentication()
     all.U(8);
     for (const auto& [name, hash] : RefSections(loaded.World))
     {
-        if (name == "awakening")
+        if (name == "awakening" || name == "examination")
             continue;
         all.S(name);
         all.U(hash);

@@ -1,6 +1,7 @@
 #include "WorldReducer.h"
 
 #include "R94AwakeningTestSupport.h"
+#include "../Source/PerfectWorld/Private/PerfectWorldCountdownContacts.h"
 
 #include <algorithm>
 #include <array>
@@ -42,8 +43,8 @@ WorldState P37Reload(const R94World& world, const WorldState& state)
     P2CExpect(!text.empty(), "command-produced state saves through existing schema");
     WorldSaveData loaded;
     const auto result = DeserializeWorldSave(text, loaded);
-    P2CExpect(result.Succeeded() && result.HashVerified && result.SourceVersion == 12 &&
-                  HashWorldState(loaded.World) == HashWorldState(state), "existing hash 9 authenticates the reload");
+    P2CExpect(result.Succeeded() && result.HashVerified && result.SourceVersion == 13 &&
+                  HashWorldState(loaded.World) == HashWorldState(state), "the current hash authenticates the reload");
     return loaded.World;
 }
 
@@ -73,6 +74,7 @@ void P37FinishDays(WorldSim& sim, bool daily)
     }
     P2CExpect(sim.Countdown()->Closed && sim.State().Clock.Now() == CountdownEndInstant() && news == 1,
               "all ten days reach exactly 2 February 2043 06:00 with one news interrupt");
+    if (daily) P2CExpect(calls == CountdownDays, "one accepted ordinary-day resolution for each of the ten calendar days");
     P2CExpect(sim.State().LiveAwakenedProfile && sim.State().LiveAwakenedProfile->SupervisedPracticeMinutes == 0,
               "ignoring every supernatural practice session remains a complete route");
 }
@@ -122,6 +124,67 @@ void P37TenDayProperty(const R94World& world)
                       "ordinary countdown resolution preserves the immutable grant");
             P37Reload(world, restored.State());
         }
+    }
+}
+
+// P317: use the production contact builder and authored people, including Farida, rather than an empty context.
+void P317OrdinaryWithAuthoredContacts(const R94World& world)
+{
+    const auto origin = ResolveLaneOrigin(world.School.Creator.ResolveOpeningHome());
+    P2CExpect(origin.Ok(), "the creation record resolves its actual home counterpart");
+    std::vector<std::string> people;
+    for (const auto& person : KnownSchoolLifeCast())
+        if (!person.bProposedNewCast) people.emplace_back(person.PersonId);
+    people.emplace_back(FaridaPersonId);
+    people.push_back(origin.Binding.CounterpartPersonId);
+    std::vector<std::string> diagnostics;
+    auto binding = world.Bind();
+    binding.Countdown = PWAwakening::P315BuildCountdownContext(&origin.Binding, people, diagnostics);
+    P2CExpect(diagnostics.empty() && binding.Countdown.Contacts.size() == 3,
+              "production teacher, origin counterpart and neighbour all bind");
+    for (const bool decline : {false, true})
+    {
+        WorldSim sim(world.Seeded(R94At(2043, 1, 23, 9, 0), 31701), MaxEventsPerAdvance,
+                     world.School.Cats.Day, {}, world.School.School(), binding);
+        S04Accept(sim, TutorialEnter{}, "ordinary life attends its compulsory supervision");
+        S04Accept(sim, TutorialWithdraw{}, "safe withdrawal grants without any practice");
+        S04Accept(sim, AdvanceTime{CountdownStartInstant() - sim.State().Clock.Now()}, "reach the countdown opening");
+        const auto opened = *sim.Countdown();
+        const auto* neighbour = CountdownFindRecord(opened, "oblig.neighbour_shop_shift");
+        const auto* teacher = CountdownFindRecord(opened, "oblig.teacher_hall_setup");
+        P2CExpect(neighbour && neighbour->Person == FaridaPersonId && teacher && !teacher->Person.empty(),
+                  "real contact obligations exist before any time passes");
+        const auto grant = R94Profile(sim.State().Awakening.Granted->StartingProfile);
+        S04Refused(sim, AdvanceTime{neighbour->Start + 1 - sim.State().Clock.Now()}, "countdown.plan_conflict",
+                   "the published bare-time failure is atomic with authored contacts");
+        if (decline)
+        {
+            const auto proposals = CountdownProposals(sim.State(), opened, binding.Countdown, neighbour->Id);
+            const auto proposal = std::find_if(proposals.begin(), proposals.end(), [](const auto& item)
+                { return item.Proposal == CountdownProposal::Decline; });
+            P2CExpect(proposal != proposals.end() && proposal->Available && proposal->AcceptPermille == 1000,
+                      "decline has a disclosed certain outcome before submission");
+            S04Accept(sim, CountdownNegotiateObligation{neighbour->Id, CountdownProposal::Decline},
+                      "the ordinary scenario declines through the real command");
+            P2CExpect(sim.Countdown()->Goodwill == opened.Goodwill + proposal->GoodwillIfAccepted &&
+                          sim.State().Clock.Now() == CountdownStartInstant(),
+                      "decline applies exactly its disclosed goodwill cost without spending time");
+        }
+        P37FinishDays(sim, true);
+        const auto finished = *sim.Countdown();
+        P2CExpect(finished.Obligations.size() == opened.Obligations.size() &&
+                      sim.AwakeningContent().Countdown.Contacts.size() == binding.Countdown.Contacts.size(),
+                  "no real contact or obligation was disabled to finish the ten days");
+        for (const auto& record : finished.Obligations)
+            P2CExpect(record.Id == neighbour->Id && decline ? record.Disposition == CountdownDisposition::Declined
+                                                          : record.Done && record.Disposition == CountdownDisposition::Standing,
+                      "every standing promise was honoured except the explicitly declined neighbour shift");
+        P2CExpect(finished.Commitments.empty() && R94Profile(sim.State().Awakening.Granted->StartingProfile) == grant,
+                  "ordinary progression took no opportunities and preserved the supervised grant");
+        for (const auto& window : sim.State().LiveAwakenedProfile->Window)
+            for (const auto& day : window)
+                P2CExpect(day.Minutes == 0 && day.GainCentipoints == 0, "all ten days contain zero supernatural practice");
+        P37Reload(world, sim.State());
     }
 }
 
@@ -289,10 +352,11 @@ int main(int argc, char** argv)
     P2CExpect(argc == 2, "content root");
     const P2CFixture fixture(argv[1]);
     const R94World world(fixture);
+    P317OrdinaryWithAuthoredContacts(world);
     P37TenDayProperty(world);
     P37OffersAndCredits(world);
     P37AbsenceAndLateMakeUp(world);
     P37AtomicTimePaths(world);
-    std::cout << "P3-07 WorldCountdownCommands passed\n";
+    std::cout << "P3-07/P317 WorldCountdownCommands passed\n";
     return 0;
 }

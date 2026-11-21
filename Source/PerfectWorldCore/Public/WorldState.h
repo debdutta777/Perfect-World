@@ -12,6 +12,7 @@
 #include "SchoolSessions.h"
 #include "SchoolWeekState.h"
 #include "SchoolWork.h"
+#include "TowerSession.h"
 #include "TutorialDungeon.h"
 
 #include <cstdint>
@@ -132,6 +133,14 @@ struct WorldState
     TutorialDungeonState Tutorial;
     std::string CountdownText;
     std::optional<AwakenedProfile> LiveAwakenedProfile;
+    /**
+     * P4-02: the national tower examination of 2 February 2043 (WorldExam.h), the one TowerSessionState P4-01 froze: entry
+     * choice and final outcome (Participation), the frozen preparation, runner nonces, the active floor with its choice prefix
+     * and mission minutes, and every finished floor with its provenance. Changed only by tower.session.apply through WorldSim
+     * (WorldExam.cpp). Unset for a new life and for every world saved before v13. Since world v13 saved as one
+     * "pw.examination/1" text and hashed as the "examination" section. Results are derived from it, never stored beside it.
+     */
+    TowerSessionState Examination;
 };
 
 /** A fresh world: the clock at the campaign epoch (2 Jun 2042 06:00), no flags or Gates, RNG streams seeded from the world seed, a fresh day. */

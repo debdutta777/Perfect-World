@@ -67,28 +67,35 @@ bool R94AllowedDuringTutorial(const CommandPayload& payload)
     return IsAwakeningCommand(payload) || std::holds_alternative<ScheduleWorldEvent>(payload) ||
            std::holds_alternative<SetWorldFlag>(payload) || std::holds_alternative<SettleDueEvents>(payload) || IsGateCommand(payload);
 }
+
+/** P4-02: what may still run while the examination holds the clock: its own command and the same system bookkeeping. */
+bool P402AllowedDuringExam(const CommandPayload& payload)
+{
+    return IsExamCommand(payload) || std::holds_alternative<ScheduleWorldEvent>(payload) ||
+           std::holds_alternative<SetWorldFlag>(payload) || std::holds_alternative<SettleDueEvents>(payload) || IsGateCommand(payload);
+}
 } // namespace
 
 WorldSim::WorldSim(std::uint64_t worldSeed, std::size_t eventCap, DayLoopCatalogues school, WorldCommerceCatalogues commerce,
-                   WorldSchoolCatalogues lessons, WorldAwakeningCatalogues awakening)
+                   WorldSchoolCatalogues lessons, WorldAwakeningCatalogues awakening, P402WorldExamCatalogues examination)
     : EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap), School_(school), Commerce_(commerce), Lessons_(lessons),
-      Awakening_(std::move(awakening))
+      Awakening_(std::move(awakening)), Examination_(examination)
 {
     State_ = MakeWorldState(worldSeed);
 }
 
 WorldSim::WorldSim(std::uint64_t worldSeed, const CharacterCreator& creation, std::size_t eventCap,
                    DayLoopCatalogues school, WorldCommerceCatalogues commerce, WorldSchoolCatalogues lessons,
-                   WorldAwakeningCatalogues awakening)
+                   WorldAwakeningCatalogues awakening, P402WorldExamCatalogues examination)
     : State_(MakeWorldState(worldSeed, creation)), EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap),
-      School_(school), Commerce_(commerce), Lessons_(lessons), Awakening_(std::move(awakening))
+      School_(school), Commerce_(commerce), Lessons_(lessons), Awakening_(std::move(awakening)), Examination_(examination)
 {
 }
 
 WorldSim::WorldSim(WorldState state, std::size_t eventCap, DayLoopCatalogues school, WorldCommerceCatalogues commerce,
-                   WorldSchoolCatalogues lessons, WorldAwakeningCatalogues awakening)
+                   WorldSchoolCatalogues lessons, WorldAwakeningCatalogues awakening, P402WorldExamCatalogues examination)
     : State_(std::move(state)), EventCap_(eventCap == 0 ? MaxEventsPerAdvance : eventCap), School_(school), Commerce_(commerce),
-      Lessons_(lessons), Awakening_(std::move(awakening))
+      Lessons_(lessons), Awakening_(std::move(awakening)), Examination_(examination)
 {
     // R8-04: the save reader supplies authenticated commerce (v10) or the one-time household initialisation (v6 to v9), so
     // the snapshot is taken exactly as given; a slice out of step with the clock refuses time commands rather than being repaired.
@@ -118,6 +125,13 @@ std::optional<Rejection> WorldSim::Validate(const Command& command) const
         if (std::optional<Rejection> open = TutorialOpenRefusal(State_))
             return open;
     }
+    if (!P402AllowedDuringExam(command.Payload))
+    {
+        if (std::optional<Rejection> open = ExamOpenRefusal(State_))
+            return open;
+    }
+    if (IsExamCommand(command.Payload))
+        return ValidateExamCommand(command);
     if (IsAwakeningCommand(command.Payload))
         return ValidateAwakeningCommand(command);
     if (IsLegacyRecoveryCommand(command.Payload))
@@ -165,8 +179,12 @@ std::optional<Rejection> WorldSim::Validate(const Command& command) const
         // P3-14: compatibility markers are written only by awakening.recover and authenticated by the save rules.
         if (IsAwakeningCompatFlag(flag->FlagId))
             return R83Reject("flag.reserved", "That flag belongs to Awakening compatibility recovery.");
+        if (flag->FlagId.starts_with(P407UFollowupFlagPrefix))
+            return R83Reject("flag.reserved", "Follow-up reservations belong to the appointment command.");
         return std::nullopt;
     }
+    if (std::holds_alternative<P407UFollowupCommand>(command.Payload))
+        return std::nullopt; // Staged application authenticates the current result and reservation.
     if (IsGateCommand(command.Payload))
         return ValidateGateCommand(State_, command);
     if (std::holds_alternative<ConversationOpen>(command.Payload) && !ServiceShop_.empty())
@@ -204,6 +222,9 @@ void WorldSim::RunTimeTo(GameInstant target, CommandResult& result)
     for (;;)
     {
         if (StopForTutorialBoundary(target, result))
+            return;
+        // P4-02: an awakened, undecided routed life meets the examination at its fixed instant (WorldExam.cpp).
+        if (StopForExamBoundary(target, result))
             return;
         // R9-04: the countdown opens at exactly 18:00 on Awakening Day, before anything else happens at that instant and
         // whatever the player was doing (R95OpenBoundary). A refusal stops the path; Submit refuses the whole command.
@@ -245,7 +266,7 @@ void WorldSim::RunTimeTo(GameInstant target, CommandResult& result)
         // sleep, activities, paid choices and lessons all stop there and open it, then carry on.
         if (CountdownRouted() && State_.CountdownText.empty() && now < CountdownStartInstant())
             step = std::min(step, CountdownStartInstant());
-        step = TutorialTimeBoundary(step);
+        step = ExamTimeBoundary(TutorialTimeBoundary(step));
         const AdvanceResult advanced = State_.Clock.AdvanceToCapped(step, EventCap_ - fired);
         if (State_.Clock.Now() == now)
         {
@@ -326,6 +347,10 @@ std::optional<Rejection> WorldSim::Apply(const Command& command, CommandResult& 
         return ApplyCountdownCommand(command, result);
     else if (IsLegacyRecoveryCommand(command.Payload))
         return ApplyRecoveryCommand(command, result);
+    else if (const auto* exam = std::get_if<TowerSessionCommand>(&command.Payload))
+        return ApplyExamCommand(*exam, result);
+    else if (const auto* followup = std::get_if<P407UFollowupCommand>(&command.Payload))
+        return ApplyP407UFollowup(*followup, result);
     else
         return ApplyCommerceCommand(command);
     return std::nullopt;
@@ -348,7 +373,8 @@ CommandResult WorldSim::Submit(const Command& command)
     if (NeedsRollbackSnapshot(command) || std::holds_alternative<AdvanceTime>(command.Payload) ||
         std::holds_alternative<WorldDayCommand>(command.Payload) || IsSchoolPhase2Command(command.Payload) ||
         IsAwakeningCommand(command.Payload) || IsCountdownCommand(command.Payload) || State_.Awakening.Seeded ||
-        IsLegacyRecoveryCommand(command.Payload) ||
+        IsLegacyRecoveryCommand(command.Payload) || IsExamCommand(command.Payload) ||
+        std::holds_alternative<P407UFollowupCommand>(command.Payload) ||
         Lessons_.WorkBriefs != nullptr) // P3-06: any command may reach a homework boundary, and issuance can refuse.
         before = State_;
     // S04: a school command's result is published only once the whole transaction is accepted.

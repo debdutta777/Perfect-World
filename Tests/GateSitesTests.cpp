@@ -450,7 +450,7 @@ int main()
         const std::vector<WorldSectionHash> base = HashWorldSections(w);
         // Hash v9 has twelve sections (v5 added conversations and doors, v6 the journal, v7 commerce, v8 school, v9 awakening);
         // gates remains at index 3.
-        Check(base.size() == 12 && base[3].Name == "gates", "the hash has a gates section");
+        Check(base.size() == 13 && base[3].Name == "gates", "the hash has a gates section");
         auto changes = [&](const std::function<void(GateSiteState&)>& edit) {
             WorldState e = w;
             edit(e.Gates["gate.t.h"]);

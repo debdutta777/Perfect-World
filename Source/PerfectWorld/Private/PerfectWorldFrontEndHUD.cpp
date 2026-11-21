@@ -144,7 +144,9 @@ void APerfectWorldFrontEndHUD::ToggleInWorldMenu()
     }
     if (UPWSchoolPresenter::IsOpenIn(this)) // S03: Back leaves the school panel before any pause menu
     {
-        UPWSchoolPresenter::Get(this)->Close();
+        auto* P406BPresenter = UPWSchoolPresenter::Get(this);
+        if (P406BPresenter->GetKind() == EPWSchoolPanel::P406Examination) P406BPresenter->P406BCloseExamination();
+        else P406BPresenter->Close();
         return;
     }
     if (!Root.IsValid())

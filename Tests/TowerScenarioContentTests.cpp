@@ -1,6 +1,7 @@
 #include "TowerScenarioContent.h"
 
 #include "Tower.h"
+#include "TowerScenarioSelectionTests.h"
 
 #include <algorithm>
 #include <array>
@@ -112,7 +113,7 @@ void ResolveDataPaths(
 
 std::vector<ContentFile> LoadAuthoredScenarioFiles(const std::filesystem::path& dir)
 {
-    static constexpr std::array<std::string_view, 9> expectedStems = {
+    static constexpr std::array<std::string_view, 15> expectedStems = {
         "p2.encounter",
         "p2.pace",
         "p2.team_transit",
@@ -121,7 +122,9 @@ std::vector<ContentFile> LoadAuthoredScenarioFiles(const std::filesystem::path& 
         "p2.design",
         "p2.alliance",
         "p2.supply",
-        "p2.mediation"};
+        "p2.mediation",
+        "p2.encounter_p404", "p2.pace_p404", "p2.changed_rule_p404",
+        "p2.stabilise_p404", "p2.alliance_p404", "p2.supply_p404"};
 
     std::vector<ContentFile> files;
     for (const auto stem : expectedStems)
@@ -135,18 +138,31 @@ std::vector<ContentFile> LoadAuthoredScenarioFiles(const std::filesystem::path& 
 
 void TestCatalogueCoverageAndMetrics(const TowerScenarioCatalogue& catalogue)
 {
-    Require(catalogue.Scenarios.size() == 9, "all nine route scenarios are present");
+    Require(catalogue.Scenarios.size() == 15, "all fifteen scenarios are present on nine routes");
 
     std::array<bool, TowerMethodCount> methodSeen{};
     std::set<std::string> classroomModels;
 
     for (const auto& route : TowerRoutes())
     {
-        const TowerScenario* scenario = catalogue.FindByRoute(route.Id);
-        Require(scenario != nullptr, "every TowerRoute has a bound tower_scenario");
-        Require(scenario->Floor == route.Floor, "scenario floor matches TowerRoute floor");
-        Require(scenario->PrimaryMethod == route.Method, "scenario primaryMethod matches TowerRoute method");
-        Require(scenario->AllowsCombat == route.AllowsCombat, "scenario allowsCombat matches TowerRoute contract");
+        Require(catalogue.P404BSelectForRoute(route.Id, 404, 0) != nullptr, "every TowerRoute has a selectable scenario");
+    }
+    // P405E: variants add content, while a sitting retains three routes per floor.
+    for (std::int32_t floor = 1; floor <= TowerFloorCount; ++floor)
+    {
+        Require(std::count_if(TowerRoutes().begin(), TowerRoutes().end(), [&](const auto& route) { return route.Floor == floor; }) == 3,
+            "each floor retains exactly three selectable routes");
+        Require(std::count_if(catalogue.Scenarios.begin(), catalogue.Scenarios.end(), [&](const auto& scenario) { return scenario.Floor == floor; }) == 5,
+            "each floor has exactly five authored variants across those three routes");
+    }
+    for (const auto& authored : catalogue.Scenarios)
+    {
+        const TowerScenario* scenario = &authored;
+        const auto* route = FindTowerRoute(scenario->RouteId);
+        Require(route != nullptr, "every scenario binds an existing route");
+        Require(scenario->Floor == route->Floor, "scenario floor matches TowerRoute floor");
+        Require(scenario->PrimaryMethod == route->Method, "scenario primaryMethod matches TowerRoute method");
+        Require(scenario->AllowsCombat == route->AllowsCombat, "scenario allowsCombat matches TowerRoute contract");
         Require(scenario->Beats.size() >= 3, "scenario has at least three playable beats");
 
         methodSeen[static_cast<std::size_t>(scenario->PrimaryMethod)] = true;
@@ -217,15 +233,15 @@ void TestCatalogueCoverageAndMetrics(const TowerScenarioCatalogue& catalogue)
 
 void TestFullNonCombatExaminationAndParity(const TowerScenarioCatalogue& catalogue)
 {
-    const TowerScenario* f1Encounter = catalogue.FindByRoute("tower.route.encounter");
-    const TowerScenario* f1Pace = catalogue.FindByRoute("tower.route.pace");
-    const TowerScenario* f1Transit = catalogue.FindByRoute("tower.route.team_transit");
-    const TowerScenario* f2Rule = catalogue.FindByRoute("tower.route.changed_rule");
-    const TowerScenario* f2Stabilise = catalogue.FindByRoute("tower.route.stabilise");
-    const TowerScenario* f2Design = catalogue.FindByRoute("tower.route.design");
-    const TowerScenario* f3Alliance = catalogue.FindByRoute("tower.route.alliance");
-    const TowerScenario* f3Supply = catalogue.FindByRoute("tower.route.supply");
-    const TowerScenario* f3Mediation = catalogue.FindByRoute("tower.route.mediation");
+    const TowerScenario* f1Encounter = catalogue.P404BSelectForRoute("tower.route.encounter", 404, 0);
+    const TowerScenario* f1Pace = catalogue.P404BSelectForRoute("tower.route.pace", 404, 0);
+    const TowerScenario* f1Transit = catalogue.P404BSelectForRoute("tower.route.team_transit", 404, 0);
+    const TowerScenario* f2Rule = catalogue.P404BSelectForRoute("tower.route.changed_rule", 404, 0);
+    const TowerScenario* f2Stabilise = catalogue.P404BSelectForRoute("tower.route.stabilise", 404, 0);
+    const TowerScenario* f2Design = catalogue.P404BSelectForRoute("tower.route.design", 404, 0);
+    const TowerScenario* f3Alliance = catalogue.P404BSelectForRoute("tower.route.alliance", 404, 0);
+    const TowerScenario* f3Supply = catalogue.P404BSelectForRoute("tower.route.supply", 404, 0);
+    const TowerScenario* f3Mediation = catalogue.P404BSelectForRoute("tower.route.mediation", 404, 0);
 
     Require(f1Encounter && f1Pace && f1Transit && f2Rule && f2Stabilise && f2Design &&
                 f3Alliance && f3Supply && f3Mediation,
@@ -305,11 +321,11 @@ void TestLocalizationTextKeys(
     std::map<std::string, std::string> textTable;
     std::string err;
     Require(LoadTowerScenarioTextTable(jsonText, textTable, err), "phase2_a7.json parses as a valid text table");
-    Require(textTable.size() == 345, "phase2_a7.json contains all 345 authored A7 strings");
+    Require(textTable.size() == 575, "phase2_a7.json contains 345 original plus 230 P404 strings");
 
     std::vector<ContentIssue> issues;
     ValidateTowerScenarioTextKeys(catalogue, textTable, issues);
-    Require(issues.empty(), "zero missing or empty localization keys across all nine scenarios");
+    Require(issues.empty(), "zero missing or empty localization keys across all fifteen scenarios");
 
     std::map<std::string, std::string> missingOne = textTable;
     missingOne.erase("p2.a7.changed_rule.changed_rule");
@@ -373,9 +389,19 @@ void TestMalformedRefusals(const std::vector<ContentFile>& files, const ContentD
     Field(Field(Field(bad, "beats").Array[0], "decisions").Array[1], "nextBeat").String = "complete";
     RefuseRecord(bad, "unreachable beats refused");
 
-    std::vector<ContentFile> incompleteFiles(files.begin(), files.end() - 1);
+    std::vector<ContentFile> incompleteFiles = files;
+    std::erase_if(incompleteFiles, [](const auto& file) { return file.Path.ends_with("/p2.mediation.json"); });
     Require(!LoadTowerScenarioFiles(incompleteFiles, true, cases).Ok(),
             "catalogue missing one of the nine routes is refused when full coverage is required");
+    // P405E: losing one pace variant retains coverage; losing both does not.
+    incompleteFiles = files;
+    std::erase_if(incompleteFiles, [](const auto& file) { return file.Path.ends_with("/p2.pace.json"); });
+    Require(LoadTowerScenarioFiles(incompleteFiles, true, cases).Ok(), "alternate pace variant preserves full route coverage");
+    std::erase_if(incompleteFiles, [](const auto& file) { return file.Path.ends_with("/p2.pace_p404.json"); });
+    Require(!LoadTowerScenarioFiles(incompleteFiles, true, cases).Ok(), "removing both pace variants removes a mandatory route");
+    auto duplicateFiles = files;
+    duplicateFiles.push_back(files.front());
+    Require(!LoadTowerScenarioFiles(duplicateFiles, true, cases).Ok(), "duplicate scenario IDs remain refused");
 }
 
 void S02CaseReferences(const std::vector<ContentFile>& files, const std::vector<ContentFile>& allFiles,
@@ -383,16 +409,21 @@ void S02CaseReferences(const std::vector<ContentFile>& files, const std::vector<
 {
     const auto loaded = LoadTowerScenarioCatalogue(db, true);
     Require(loaded.Ok(), "registry catalogue resolves all classroom cases");
-    const std::array<std::pair<std::string_view, std::string_view>, 3> expected = {{
+    const std::array<std::pair<std::string_view, std::string_view>, 9> expected = {{
         {"p2.changed_rule", "problem_case.xi_overhead_tank_draw"},
         {"p2.stabilise", "problem_case.xi_dc_series_parallel"},
-        {"p2.design", "problem_case.xi_spring_mass_shm"}}};
+        {"p2.design", "problem_case.xi_spring_mass_shm"},
+        {"p2.changed_rule_p404", "problem_case.xi_spring_mass_shm"},
+        {"p2.stabilise_p404", "problem_case.xi_dc_series_parallel"},
+        {"p2.encounter_p404", "none"}, {"p2.pace_p404", "none"},
+        {"p2.alliance_p404", "none"}, {"p2.supply_p404", "none"}}};
     for (const auto& [id, targetId] : expected)
     {
         const auto* scenario = loaded.Catalogue.FindById(id);
         const auto* target = db.Find(targetId);
-        Require(scenario && scenario->ClassroomModelId == targetId && target && target->Type == "problem_case",
-            "authored mapping names the intended existing Model case");
+        Require(scenario && scenario->ClassroomModelId == targetId &&
+            (targetId == "none" ? scenario->Floor != 2 : target && target->Type == "problem_case"),
+            "authored classroom mapping resolves or explicitly uses none outside Floor 2");
     }
     Require(!LoadTowerScenarioFiles(files, true).Ok(), "standalone loader refuses unresolved classroom references");
     const auto refused = [](const ContentDb& broken) {
@@ -442,12 +473,13 @@ int main(int argc, char** argv)
     {
         std::cerr << issue.File << " [" << issue.Id << "]: " << issue.Message << '\n';
     }
-    Require(loaded.Ok(), "all nine tower_scenario files load and pass fairness and semantic validation");
+    Require(loaded.Ok(), "all fifteen tower_scenario files load and pass fairness and semantic validation");
     const std::vector<std::string> knownTypes = KnownContentTypes();
     Require(std::find(knownTypes.begin(), knownTypes.end(), "tower_scenario") != knownTypes.end(),
             "tower_scenario is a registered content type");
 
     TestCatalogueCoverageAndMetrics(loaded.Catalogue);
+    P404BSelectionCases(loaded.Catalogue, files, content.Db, Require);
     TestFullNonCombatExaminationAndParity(loaded.Catalogue);
     TestLocalizationTextKeys(loaded.Catalogue, textFile);
     TestMalformedRefusals(files, content.Db);

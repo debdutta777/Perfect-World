@@ -6,6 +6,7 @@
 #include "WeekCompression.h"
 #include "WorldCountdown.h"
 #include "WorldState.h"
+#include "WorldExamFollowup.h"
 
 #include <cstdint>
 #include <string>
@@ -387,6 +388,7 @@ struct SchoolWorkReconcile
 };
 
 // SchoolWorkCommand ("school.work.apply") is SchoolWork.h's delivered command type, routed as is.
+// P4-02: TowerSessionCommand ("tower.session.apply") is TowerSession.h's frozen P4-01 command, routed as is (WorldExam.h).
 using CommandPayload = std::variant<AdvanceTime, ScheduleWorldEvent, SetWorldFlag, GateRegister, GateScheduleOnset, GateContain, GateSeal,
                                     SettleDueEvents, ConversationOpen, ConversationChoose, ConversationLeave, DoorSet, DoorSettle,
                                     SchoolPlanDay, SchoolArrive, CommerceServiceRequest, CommerceServiceClose,
@@ -394,7 +396,8 @@ using CommandPayload = std::variant<AdvanceTime, ScheduleWorldEvent, SetWorldFla
                                     SchoolLessonClose, SchoolWorkCommand, SchoolWeekOrder, SchoolWeekResolve, TutorialEnter,
                                     TutorialAct, TutorialAssist, TutorialRecover, TutorialWithdraw, TutorialAbsent,
                                     TutorialMakeUp, TutorialFinish, CountdownPracticeConfirm, CountdownTakeOpportunity,
-                                    CountdownNegotiateObligation, CountdownResolveDays, AwakeningRecover, SchoolWorkReconcile>;
+                                    CountdownNegotiateObligation, CountdownResolveDays, AwakeningRecover, SchoolWorkReconcile,
+                                    TowerSessionCommand, P407UFollowupCommand>;
 
 struct Command
 {

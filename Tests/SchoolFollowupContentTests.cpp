@@ -114,7 +114,7 @@ void A8Continuation(const SchoolFollowupContent& content, const TowerSessionView
             mappedOffers.insert(action.OfferId);
         }
     }
-    A8Expect(specific == 1, "one outcome-specific conversation");
+    A8Expect(specific == 3, "three outcome-specific next steps");
     A8Expect(kinds.contains("school") && kinds.contains("study") && kinds.contains("rest"), "ordinary school life continues");
     A8Expect(mappedOffers.size() == view.Result.OfferIds.size() && mappedOffers.size() >= 3, "all eligible offers are actionable, including bottom decile");
 }
@@ -126,7 +126,7 @@ int main(int argc, char** argv)
     const auto db = A8Read(argv[1]);
     const auto loaded = LoadSchoolFollowupContent(db);
     for (const auto& issue : loaded.Issues) std::cerr << issue.Id << ": " << issue.Message << '\n';
-    A8Expect(loaded.Ok() && loaded.Catalogue.Actions.size() == 19, "all authored follow-ups load without shared registration");
+    A8Expect(loaded.Ok() && loaded.Catalogue.Actions.size() == 31, "all authored follow-ups load without shared registration");
     std::ifstream wordsInput(std::filesystem::path(argv[1]).parent_path() / "Text/en/phase2_a8.json", std::ios::binary);
     A8Expect(wordsInput.good(), "English text fragment opens");
     const std::string wordsText{std::istreambuf_iterator<char>(wordsInput), {}};
@@ -164,7 +164,7 @@ int main(int argc, char** argv)
     }
     auto changed = poor; changed.Result.OfferIds.clear();
     const auto ordinary = QuerySchoolFollowups(loaded.Catalogue, changed);
-    A8Expect(ordinary.size() == 4, "lost eligibility keeps ordinary life and conversation only");
+    A8Expect(ordinary.size() == 6, "lost eligibility keeps ordinary life and outcome next steps");
     changed = poor; changed.Result.Error = TowerError::InvalidScore;
     A8Expect(QuerySchoolFollowups(loaded.Catalogue, changed).empty(), "invalid result exposes no final actions");
     for (const int decile : {0, 11})

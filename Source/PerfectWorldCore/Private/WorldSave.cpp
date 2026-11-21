@@ -106,6 +106,9 @@ WorldSaveResult WorldSaveReadEnvelope(std::string_view text, const JsonValue& do
     if (WorldSaveResult awakening = WorldSaveReadAwakening(*doc.Find("world"), data.World, static_cast<std::int32_t>(version));
         !awakening)
         return awakening;
+    // P4-02: after the Awakening slices, whose grant and countdown the examination rules read; v6 to v12 start Unset.
+    if (WorldSaveResult exam = WorldSaveReadExam(*doc.Find("world"), data.World, static_cast<std::int32_t>(version)); !exam)
+        return exam;
 
     std::int64_t hashVersion = 0;
     std::uint64_t storedHash = 0;
@@ -115,9 +118,10 @@ WorldSaveResult WorldSaveReadEnvelope(std::string_view text, const JsonValue& do
     result.SourceVersion = static_cast<std::int32_t>(version);
     // Historical encodings this build still authenticates: v8 with hash 5 (no journal, commerce, school or awakening), v9 with
     // hash 6 (no commerce, school or awakening), v10 with hash 7 (no school or awakening, S04), v11 with hash 8 (no awakening,
-    // R9-04).
+    // R9-04), v12 with hash 9 (no examination, P4-02).
     const bool historicalHash = (version == 8 && hashVersion == 5) || (version == 9 && hashVersion == 6) ||
-                                (version == 10 && hashVersion == 7) || (version == 11 && hashVersion == 8);
+                                (version == 10 && hashVersion == 7) || (version == 11 && hashVersion == 8) ||
+                                (version == 12 && hashVersion == 9);
     if (historicalHash || (version == WorldSaveSchemaVersion && hashVersion == static_cast<std::int64_t>(WorldHashVersion)))
     {
         // Historical door rosters and the empty-journal and household-commerce migrations change the loaded world from the
@@ -217,7 +221,8 @@ std::string SerializeWorldSave(const WorldSaveData& data)
     const std::string commerce = WorldSaveWriteCommerce(world, data.Creation);
     const std::string school = WorldSaveWriteSchool(world);
     const std::string awakening = WorldSaveWriteAwakening(world);
-    if (lane.empty() || commerce.empty() || school.empty() || awakening.empty())
+    const std::string exam = WorldSaveWriteExam(world);
+    if (lane.empty() || commerce.empty() || school.empty() || awakening.empty() || exam.empty())
         return {};
     std::string creation = SerializeCreationSave(data.Creation);
     while (!creation.empty() && std::isspace(static_cast<unsigned char>(creation.back())) != 0)
@@ -273,7 +278,7 @@ std::string SerializeWorldSave(const WorldSaveData& data)
         out += "], \"draws\": " + WorldSaveHexQuoted(stream.Draws) + " }";
     }
     // The player's day is its own envelope text, hash line included, carried as one string.
-    out += "\n    ],\n    \"dayloop\": " + WorldSaveQuoted(SerialiseDayLoop(world.DayLoop)) + lane + commerce + school + awakening + "\n  }";
+    out += "\n    ],\n    \"dayloop\": " + WorldSaveQuoted(SerialiseDayLoop(world.DayLoop)) + lane + commerce + school + awakening + exam + "\n  }";
 
     const PlayerPlacement& player = data.Player;
     out += ",\n  \"player\": { \"zone\": " + WorldSaveQuoted(player.ZoneId) + ", \"posCm\": [" + std::to_string(player.PositionCm[0]) + ", " +

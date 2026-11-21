@@ -15,6 +15,7 @@
 #include "PerfectWorldPlayerCharacter.h"
 #include "PerfectWorldBuyPresenter.h" // R88
 #include "PerfectWorldSchoolPresenter.h" // S03
+#include "PerfectWorldExaminationBridge.h"
 #include "PerfectWorldCommerceText.h" // R88
 #include "UI/SPWClockReadout.h"
 #include "Widgets/SWeakWidget.h"
@@ -112,7 +113,9 @@ FText UPWLaneLifeSubsystem::GetClockText() const
 
 void UPWLaneLifeSubsystem::BuildWorld()
 {
-    Sim = MakeUnique<PerfectWorld::WorldSim>(BrWorldSeed);
+    Sim = MakeUnique<PerfectWorld::WorldSim>(BrWorldSeed, PerfectWorld::MaxEventsPerAdvance,
+        PerfectWorld::DayLoopCatalogues{}, PerfectWorld::WorldCommerceCatalogues{}, PerfectWorld::WorldSchoolCatalogues{},
+        PerfectWorld::WorldAwakeningCatalogues{}, P406Exam::P406BExaminationCatalogues(GetWorld()));
     ClockMode = PerfectWorld::TimeModeState();
     RealMsFraction = 0.0;
     LastClockRefusal.Reset();
@@ -188,7 +191,9 @@ bool UPWLaneLifeSubsystem::LoadWorldSlot(const std::string& Path, PerfectWorld::
     TUniquePtr<PerfectWorld::WorldSim> Prepared;
     if (Scratch.HasStarted())
     {
-        Prepared = MakeUnique<PerfectWorld::WorldSim>(Read.Data->World);
+        Prepared = MakeUnique<PerfectWorld::WorldSim>(Read.Data->World, PerfectWorld::MaxEventsPerAdvance,
+            PerfectWorld::DayLoopCatalogues{}, PerfectWorld::WorldCommerceCatalogues{}, PerfectWorld::WorldSchoolCatalogues{},
+            PerfectWorld::WorldAwakeningCatalogues{}, P406Exam::P406BExaminationCatalogues(GetWorld()));
         const std::string Person(PerfectWorld::OpenConversationPersonId(Prepared->State()));
         if (!Person.empty() && !Prepared->Submit({PerfectWorld::CommandSource::Player,
             PerfectWorld::ConversationLeave{Person}}).Accepted)
@@ -287,6 +292,9 @@ PerfectWorld::CommandResult UPWLaneLifeSubsystem::SubmitCommand(const PerfectWor
         }
         HandleClockMoved();
     }
+    // P406: commands may stop partially at 06:00 or refuse another action at that boundary.
+    if (Result.Why.Code == "exam.decision_required" || Sim->ExaminationWorldView().DecisionRequired)
+        P406Exam::P406PresentRequired(GetWorld());
     return Result;
 }
 
@@ -351,6 +359,7 @@ void UPWLaneLifeSubsystem::AdvanceClock(const int64 Minutes)
             return;
         }
         LastClockRefusal.Reset();
+        if (Sim->ExaminationWorldView().DecisionRequired) return; // do not consume the partial remainder past the decision
         Remaining -= Result.To - Result.From;
         if (!Result.Partial)
         {
@@ -393,6 +402,10 @@ bool UPWLaneLifeSubsystem::UpdateClockHold()
     else if (UPWSchoolPresenter::IsOpenIn(this)) // S03
     {
         Hold = EPWClockHold::School;
+    }
+    else if (Sim->ExaminationWorldView().DecisionRequired || Sim->ExaminationWorldView().CanWithdraw)
+    {
+        Hold = EPWClockHold::School; // P406: includes a decision waiting for another overlay to release input
     }
     else if (!FApp::HasFocus())
     {
@@ -439,6 +452,7 @@ void UPWLaneLifeSubsystem::Tick(const float DeltaTime)
     }
     EnsureClockReadout();
     CloseOrphanedConversation();
+    P406Exam::P406PresentRequired(GetWorld()); // includes Continue at the decision boundary
     if (UpdateClockHold())
     {
         RealMsFraction = 0.0;
