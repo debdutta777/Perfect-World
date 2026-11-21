@@ -147,6 +147,14 @@ void TestCatalogueCoverageAndMetrics(const TowerScenarioCatalogue& catalogue)
     {
         Require(catalogue.P404BSelectForRoute(route.Id, 404, 0) != nullptr, "every TowerRoute has a selectable scenario");
     }
+    // P405E: variants add content, while a sitting retains three routes per floor.
+    for (std::int32_t floor = 1; floor <= TowerFloorCount; ++floor)
+    {
+        Require(std::count_if(TowerRoutes().begin(), TowerRoutes().end(), [&](const auto& route) { return route.Floor == floor; }) == 3,
+            "each floor retains exactly three selectable routes");
+        Require(std::count_if(catalogue.Scenarios.begin(), catalogue.Scenarios.end(), [&](const auto& scenario) { return scenario.Floor == floor; }) == 5,
+            "each floor has exactly five authored variants across those three routes");
+    }
     for (const auto& authored : catalogue.Scenarios)
     {
         const TowerScenario* scenario = &authored;
@@ -385,6 +393,12 @@ void TestMalformedRefusals(const std::vector<ContentFile>& files, const ContentD
     std::erase_if(incompleteFiles, [](const auto& file) { return file.Path.ends_with("/p2.mediation.json"); });
     Require(!LoadTowerScenarioFiles(incompleteFiles, true, cases).Ok(),
             "catalogue missing one of the nine routes is refused when full coverage is required");
+    // P405E: losing one pace variant retains coverage; losing both does not.
+    incompleteFiles = files;
+    std::erase_if(incompleteFiles, [](const auto& file) { return file.Path.ends_with("/p2.pace.json"); });
+    Require(LoadTowerScenarioFiles(incompleteFiles, true, cases).Ok(), "alternate pace variant preserves full route coverage");
+    std::erase_if(incompleteFiles, [](const auto& file) { return file.Path.ends_with("/p2.pace_p404.json"); });
+    Require(!LoadTowerScenarioFiles(incompleteFiles, true, cases).Ok(), "removing both pace variants removes a mandatory route");
     auto duplicateFiles = files;
     duplicateFiles.push_back(files.front());
     Require(!LoadTowerScenarioFiles(duplicateFiles, true, cases).Ok(), "duplicate scenario IDs remain refused");

@@ -289,6 +289,10 @@ TowerScenarioCatalogueResult LoadTowerScenarioCatalogue(const ContentDb& db, boo
     for (const auto& [id, record] : db.Records)
     {
         if (record.Type != "tower_scenario") continue;
+        // P405D: direct ContentDb callers receive the same fairness rule as file loading.
+        const auto priorIssues = out.Issues.size();
+        ContentSchema::CheckFairness(record.Data, record.File, out.Issues);
+        if (out.Issues.size() != priorIssues) continue;
         TowerScenarioResult parsed = LoadTowerScenario(record);
         if (!parsed.Ok()) { out.Issues.push_back({record.File, id, parsed.Error}); continue; }
         if (parsed.Value->ClassroomModelId != "none")

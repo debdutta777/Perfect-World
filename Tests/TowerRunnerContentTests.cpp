@@ -144,6 +144,44 @@ void P405Failures(const ContentDb& db)
     invalid.Records.erase("problem_case.xi_spring_mass_shm");
     P2CExpect(!LoadTowerRunners(invalid).Ok(), "classroom reference must resolve");
 }
+
+void P405DFairness(const ContentDb& db)
+{
+    for (const auto field : {"religionMultiplier", "languageBonus", "familyXp", "streamRate"})
+    {
+        auto synthetic = db;
+        auto& record = synthetic.Records.at("p2.mediation");
+        JsonValue value;
+        value.Type = JsonValue::Kind::Number;
+        value.Number = 2;
+        value.Integer = 2;
+        record.Data.Object.emplace_back(field, value);
+        const auto loaded = LoadTowerRunners(synthetic);
+        P2CExpect(!loaded.Ok() && loaded.Catalogue.Scenarios.empty() &&
+            std::any_of(loaded.Issues.begin(), loaded.Issues.end(), [](const auto& issue) {
+                return issue.Id == "p2.mediation" && issue.Message.find("fairness rule:") != std::string::npos;
+            }), "direct ContentDb input cannot bypass the fairness rule");
+    }
+}
+
+void P405DAdapter(const TowerRunnerCatalogue& runners)
+{
+    CountdownProfile zero;
+    zero.Final = true;
+    for (std::uint64_t seed = 0; seed < 8; ++seed)
+    for (std::uint32_t attempt = 0; attempt < 4; ++attempt)
+    {
+        const auto entered = P401ApplyExamChoice({}, runners, {}, zero, CountdownEndInstant(), seed, attempt);
+        P2CExpect(entered.Resolution.Ok(), "adapter enters with explicit selection inputs");
+        auto command = P405Action(TowerSessionAction::OpenRoute);
+        command.RouteId = "tower.route.encounter";
+        command.Method = TowerMethod::Endurance;
+        const auto opened = P401ApplyExamChoice(entered.State, runners, command, zero, CountdownEndInstant(), seed, attempt);
+        const auto* selected = P404BSelectRouteScenario(runners.Scenarios, command.RouteId, seed, attempt);
+        P2CExpect(opened.Resolution.Ok() && opened.State.Active && opened.State.Active->ScenarioId == selected->Id,
+            "adapter forwards both seed and examination attempt");
+    }
+}
 } // namespace
 
 int main(int argc, char** argv)
@@ -158,5 +196,7 @@ int main(int argc, char** argv)
     P405Selection(fixture.Content, loaded.Catalogue);
     P405EveryVariant(loaded.Catalogue);
     P405Failures(fixture.Content);
+    P405DFairness(fixture.Content);
+    P405DAdapter(loaded.Catalogue);
     std::cout << "P405 TowerRunnerContent passed\n";
 }

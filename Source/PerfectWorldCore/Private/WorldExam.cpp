@@ -14,6 +14,16 @@ namespace PerfectWorld
 {
 namespace
 {
+// P405D: derive the sitting key from the saved examination date, never the live
+// clock, floor Attempts or runner nonces. The current saved Awakening contract
+// pins ExaminationAt to the first sitting in 2043, so every valid life uses zero.
+std::uint32_t P405DSittingNumber(const WorldState& world)
+{
+    const auto year = GameClock::ToCalendar(world.Awakening.ExaminationAt).Year;
+    const auto firstYear = GameClock::ToCalendar(CountdownEndInstant()).Year;
+    return year > firstYear ? static_cast<std::uint32_t>(year - firstYear) : 0;
+}
+
 Rejection P402Refusal(std::string code, std::string message)
 {
     return Rejection{std::move(code), std::move(message)};
@@ -97,7 +107,8 @@ P402ExamFinish P402ExamFinishSeam(const TowerSessionState& terminal, const Schoo
     return out;
 }
 
-bool ExamStateMatchesRunners(const TowerSessionState& state, const TowerRunnerCatalogue& runners)
+bool ExamStateMatchesRunners(const TowerSessionState& state, const TowerRunnerCatalogue& runners,
+    std::uint64_t worldSeed, std::uint32_t attemptNumber)
 {
     if (state.Participation == TowerParticipation::Unset || state.Participation == TowerParticipation::Deferred ||
         state.Participation == TowerParticipation::Declined)
@@ -113,7 +124,7 @@ bool ExamStateMatchesRunners(const TowerSessionState& state, const TowerRunnerCa
     frozen.RouteDelayMinutes = state.Preparation.RouteDelayMinutes;
     TowerSessionState rebuilt;
     const auto apply = [&](const TowerSessionCommand& command) {
-        return ApplyTowerSession(rebuilt, runners, command, frozen, CountdownEndInstant()).Ok();
+        return ApplyTowerSession(rebuilt, runners, command, frozen, CountdownEndInstant(), worldSeed, attemptNumber).Ok();
     };
     const auto floor = [&](const std::string& route, TowerMethod method, const std::vector<std::string>& choices) {
         TowerSessionCommand open = P402Command(TowerSessionAction::OpenRoute);
@@ -227,7 +238,7 @@ std::optional<Rejection> WorldSim::ValidateExamCommand(const Command& command) c
         if (Examination_.Runners == nullptr)
             return P402Refusal("exam.missing_content", "The examination floors are not bound to the world.");
         if (State_.Examination.Participation == TowerParticipation::Entered &&
-            !ExamStateMatchesRunners(State_.Examination, *Examination_.Runners))
+            !ExamStateMatchesRunners(State_.Examination, *Examination_.Runners, State_.WorldSeed, P405DSittingNumber(State_)))
             return P402Refusal("exam.invalid_state", "The stored examination does not match the bound floors.");
         return std::nullopt;
     }
@@ -245,7 +256,8 @@ std::optional<Rejection> WorldSim::ApplyExamCommand(const TowerSessionCommand& c
             return P402FromIssue(frozen.Issue);
         preparation = frozen.Profile;
     }
-    P401ExamStepResult step = P401ApplyExamChoice(State_.Examination, P402Runners(Examination_), command, preparation, now);
+    P401ExamStepResult step = P401ApplyExamChoice(State_.Examination, P402Runners(Examination_), command, preparation, now,
+        State_.WorldSeed, P405DSittingNumber(State_));
     if (!step.Resolution.Ok())
         return P402FromIssue(step.Resolution.Issue);
     const std::int64_t minutes = step.Resolution.OutsideMinutes;
@@ -306,7 +318,8 @@ P402ExamWorldView WorldSim::ExaminationWorldView() const
             // Dry run on a copy: the contract's own guards (catalogue, preparation bounds) decide the rest.
             const P402ExamPreparation preparation = P402FinalPreparation(State_);
             const P401ExamStepResult dry = P401ApplyExamChoice(State_.Examination, P402Runners(Examination_),
-                P402Command(TowerSessionAction::Enter), preparation.Profile, State_.Clock.Now());
+                P402Command(TowerSessionAction::Enter), preparation.Profile, State_.Clock.Now(),
+                State_.WorldSeed, P405DSittingNumber(State_));
             view.SitRefusal = dry.Resolution.Issue.Code;
         }
         view.CanSit = view.SitRefusal.empty();

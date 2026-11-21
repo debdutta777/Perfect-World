@@ -3,6 +3,7 @@
 #include "LegacyRecovery.h"
 #include "P402ExamTestSupport.h"
 #include "P405ExamTestSupport.h"
+#include "P405DExamTestSupport.h"
 
 #include <iostream>
 
@@ -260,7 +261,8 @@ void P402Tampered(const P402World& w)
     WorldState forged = sim.State();
     forged.Examination.Attempts.front().DisciplineMilli = 999;
     P2CExpect(IsExamStateValidInWorld(forged), "a forged score can be structurally plausible");
-    P2CExpect(!ExamStateMatchesRunners(forged.Examination, w.Runners) && ExamStateMatchesRunners(sim.State().Examination, w.Runners),
+    P2CExpect(!ExamStateMatchesRunners(forged.Examination, w.Runners, forged.WorldSeed) &&
+              ExamStateMatchesRunners(sim.State().Examination, w.Runners, sim.State().WorldSeed),
               "replaying provenance against the runners exposes it");
     WorldSim forgedSim = w.Sim(forged);
     S04Refused(forgedSim, P402Cmd(A::OpenRoute, std::string(P402Climb[1]), TowerMethod::Analysis), "exam.invalid_state",
@@ -283,7 +285,7 @@ void P405RealClimb(const P405World& w)
         "the ordinary closed countdown candidate finished without practising");
     P2CExpect(result.Score.Completed && result.Score.ScorePoints == 6000 && result.Score.Decile == 1 &&
         sim.State().Clock.Now() == CountdownEndInstant() + result.Score.OutsideMinutes &&
-        ExamStateMatchesRunners(sim.State().Examination, w.Runners), "real non-combat climb finishes at the ceiling");
+        ExamStateMatchesRunners(sim.State().Examination, w.Runners, sim.State().WorldSeed), "real non-combat climb finishes at the ceiling");
     const auto beforeRead = HashWorldState(sim.State());
     P405Same(result, sim.ExaminationResult());
     P2CExpect(beforeRead == HashWorldState(sim.State()), "reading results is pure");
@@ -310,7 +312,7 @@ void P405ZeroAndResume(const P405World& w)
     P405Beat(sim, w.Runners);
     const WorldState saved = P402Reload(w.Base, sim.State(), "real save/load mid-examination");
     P2CExpect(saved.Examination.Active && saved.Examination.Active->Beat == 1 &&
-        ExamStateMatchesRunners(saved.Examination, w.Runners), "recovery retains real scenario, choices, reserve and beat");
+        ExamStateMatchesRunners(saved.Examination, w.Runners, saved.WorldSeed), "recovery retains real scenario, choices, reserve and beat");
     WorldSim resumed = w.Sim(saved);
     P405Beat(sim, w.Runners);
     P405Beat(resumed, w.Runners);
@@ -435,6 +437,7 @@ int main(int argc, char** argv)
     P405RealExits(real);
     P405ContentFreeExit(real);
     P405CombatBoundary(real);
+    P405DPopulation(fixture, real.Runners);
     std::cout << "P4-02 WorldExam passed\n";
     return 0;
 }
