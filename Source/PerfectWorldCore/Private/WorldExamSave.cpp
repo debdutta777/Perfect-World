@@ -1,6 +1,7 @@
 #include "WorldExam.h"
 
 #include "OpportunityReceipts.h"
+#include "WorldExamSittings.h"
 #include "WorldSaveInternal.h"
 
 #include <algorithm>
@@ -11,11 +12,14 @@
 // and its place in the world save (schema 13, after "awakening"). Decoding parses into a temporary, re-encodes it and demands
 // the identical text (one canonical spelling), then applies the world rules; the reader never trusts a stored score, and the
 // replay of choice provenance against runner content is ExamStateMatchesRunners at the WorldSim boundary.
+// P4-09: earlier annual sittings ride in the same section as pw.examination/2 (only when there are any), so worlds with one
+// sitting keep P4-02's exact bytes and hash; the per-session rules live in WorldExamSittings.cpp.
 namespace PerfectWorld
 {
 namespace
 {
 constexpr std::string_view P402Header = "pw.examination/1";
+constexpr std::string_view P409Header = "pw.examination/2";
 
 bool P402Id(std::string_view id) { return IsReceiptIdWellFormed(id); }
 
@@ -35,10 +39,11 @@ std::string P402Joined(const std::vector<std::string>& ids, bool& ok)
 template <typename T>
 std::string P402Num(T value) { return std::to_string(value); }
 
-std::string P402Encode(const TowerSessionState& s)
+/** One session's lines, each ending "\n": participation, preparation, runner, attempts, attempt*, active. */
+std::string P402Body(const TowerSessionState& s, bool& ok)
 {
-    bool ok = static_cast<unsigned>(s.Participation) <= static_cast<unsigned>(TowerParticipation::Declined);
-    std::string out = std::string(P402Header) + "\nparticipation=" + P402Num(static_cast<unsigned>(s.Participation));
+    ok = ok && static_cast<unsigned>(s.Participation) <= static_cast<unsigned>(TowerParticipation::Declined);
+    std::string out = "participation=" + P402Num(static_cast<unsigned>(s.Participation));
     out += "\npreparation=";
     for (const std::int32_t value : s.Preparation.Preparation)
         out += P402Num(value) + ',';
@@ -62,7 +67,26 @@ std::string P402Encode(const TowerSessionState& s)
                ',' + P402Num(r.Conditions.Reserve) + ',' + P402Num(r.Conditions.MinuteDiscount) + ',' + P402Num(r.DisciplineSum) +
                ',' + P402Num(r.JudgmentSum) + ',' + P402Num(r.MissionMinutes) + ',' + P402Joined(r.Choices, ok);
     }
-    out += "\nend\n";
+    return out + '\n';
+}
+
+/**
+ * P4-09: pw.examination/1 (header, the current body, end) while there is no earlier sitting, byte for byte P4-02's format;
+ * otherwise pw.examination/2, "sittings=<n>", the n earlier bodies in sitting order, then the current body and end.
+ */
+std::string P402Encode(const std::vector<TowerSessionState>& earlier, const TowerSessionState& s)
+{
+    bool ok = earlier.size() <= P409MaxSitting;
+    std::string out;
+    if (earlier.empty())
+        out = std::string(P402Header) + '\n';
+    else
+    {
+        out = std::string(P409Header) + "\nsittings=" + P402Num(earlier.size()) + '\n';
+        for (const TowerSessionState& e : earlier)
+            out += P402Body(e, ok);
+    }
+    out += P402Body(s, ok) + "end\n";
     return ok ? out : std::string{};
 }
 
@@ -133,16 +157,10 @@ bool P402Method(std::string_view field, TowerMethod& out)
     return true;
 }
 
-bool P402Decode(std::string_view text, TowerSessionState& s)
+bool P402DecodeBody(const std::vector<std::string_view>& lines, std::size_t& at, TowerSessionState& s)
 {
-    if (text.size() < 2 || text.back() != '\n')
-        return false;
-    const std::vector<std::string_view> lines = P402Split(text.substr(0, text.size() - 1), '\n');
-    std::size_t at = 0;
     std::string_view v;
     const auto next = [&](std::string_view key) { return at < lines.size() && P402Value(lines[at++], key, v); };
-    if (lines.empty() || lines[at++] != P402Header)
-        return false;
     unsigned participation = 0;
     if (!next("participation") || !P402Read(v, participation, static_cast<unsigned>(TowerParticipation::Declined)))
         return false;
@@ -198,134 +216,72 @@ bool P402Decode(std::string_view text, TowerSessionState& s)
         r.RouteId = std::string(f[1]);
         s.Active = std::move(r);
     }
+    return true;
+}
+
+/** Version-gated: /1 holds the current session only; /2 adds "sittings=<n>" (1..P409MaxSitting) earlier bodies first. */
+bool P402Decode(std::string_view text, std::vector<TowerSessionState>& earlier, TowerSessionState& s)
+{
+    if (text.size() < 2 || text.back() != '\n')
+        return false;
+    const std::vector<std::string_view> lines = P402Split(text.substr(0, text.size() - 1), '\n');
+    std::size_t at = 0;
+    if (lines.empty())
+        return false;
+    const std::string_view header = lines[at++];
+    if (header == P409Header)
+    {
+        std::string_view v;
+        std::size_t count = 0;
+        if (at >= lines.size() || !P402Value(lines[at++], "sittings", v) || !P402Read(v, count, std::uint64_t{P409MaxSitting}) ||
+            count == 0)
+            return false;
+        earlier.resize(count);
+        for (TowerSessionState& e : earlier)
+            if (!P402DecodeBody(lines, at, e))
+                return false;
+    }
+    else if (header != P402Header)
+        return false;
+    if (!P402DecodeBody(lines, at, s))
+        return false;
     return at + 1 == lines.size() && lines[at] == "end";
 }
 
-bool P402MethodAllowed(const TowerRouteDefinition& route, TowerMethod method)
-{
-    return method == route.Method || (method == TowerMethod::Combat && route.AllowsCombat);
-}
-
-bool P402ChoicesValid(const std::vector<std::string>& choices, std::size_t low)
-{
-    return choices.size() >= low && choices.size() <= TowerRunnerBeatLimit &&
-           std::all_of(choices.begin(), choices.end(), [](const std::string& id) { return P402Id(id); });
-}
-
-bool P402AttemptValid(const TowerSessionAttempt& a, std::size_t floor)
-{
-    const TowerRouteDefinition* route = FindTowerRoute(a.RouteId);
-    const auto beats = static_cast<std::int64_t>(a.ChoiceIds.size());
-    return route != nullptr && route->Floor == static_cast<std::int32_t>(floor) && P402MethodAllowed(*route, a.Method) &&
-           P402Id(a.ScenarioId) && P402ChoicesValid(a.ChoiceIds, 1) && a.DisciplineMilli >= 0 &&
-           a.DisciplineMilli <= TowerScoreMaxMilli && a.CommonJudgmentMilli >= 0 && a.CommonJudgmentMilli <= TowerScoreMaxMilli &&
-           a.MissionMinutes >= beats && a.MissionMinutes <= 60 * beats;
-}
-
-bool P402ActiveValid(const TowerRunnerRun& r, std::size_t floor)
-{
-    const TowerRouteDefinition* route = FindTowerRoute(r.RouteId);
-    const auto beats = static_cast<std::int64_t>(r.Beat);
-    return route != nullptr && route->Floor == static_cast<std::int32_t>(floor) && P402MethodAllowed(*route, r.Method) &&
-           P402Id(r.ScenarioId) && r.Beat == r.Choices.size() && r.Beat < TowerRunnerBeatLimit && P402ChoicesValid(r.Choices, 0) &&
-           r.Conditions.Reserve >= 0 && r.Conditions.Reserve <= 10 && r.Conditions.MinuteDiscount >= 0 &&
-           r.Conditions.MinuteDiscount <= 2 && r.DisciplineSum >= 0 && r.DisciplineSum <= TowerScoreMaxMilli * beats &&
-           r.JudgmentSum >= 0 && r.JudgmentSum <= TowerScoreMaxMilli * beats && r.MissionMinutes >= beats &&
-           r.MissionMinutes <= 60 * beats;
-}
-
-bool P402PreparationValid(const WorldState& world, const TowerSessionState& s)
-{
-    const TowerPreparationSnapshot& p = s.Preparation;
-    if (p.Composure < 0 || p.Composure > CountdownScoreMax || p.RouteDelayMinutes < 0 || p.RouteDelayMinutes > TowerWorldCapMinutes ||
-        std::any_of(p.Preparation.begin(), p.Preparation.end(), [](std::int32_t v) { return v < 0 || v > CountdownScoreMax; }))
-        return false;
-    const P402ExamPreparation authority = P402FinalPreparation(world);
-    if (!authority.Ok())
-        return false;
-    if (authority.ZeroByCompatibility)
-        return p == TowerPreparationSnapshot{};
-    // Composure reads today's condition, so it is exact only while the clock stands at the entry instant.
-    return p.Preparation == authority.Profile.Preparation && p.RouteDelayMinutes == authority.Profile.RouteDelayMinutes &&
-           (s.Participation != TowerParticipation::Entered || p.Composure == authority.Profile.Composure);
-}
 } // namespace
 
 bool IsExamStateValidInWorld(const WorldState& world)
 {
-    const TowerSessionState& s = world.Examination;
-    const GameInstant at = CountdownEndInstant();
-    const GameInstant now = world.Clock.Now();
-    TowerSessionState empty;
-    empty.Participation = s.Participation;
-    switch (s.Participation)
-    {
-    case TowerParticipation::Unset: return s == empty;
-    case TowerParticipation::Deferred:
-    case TowerParticipation::Declined: return s == empty && now >= at;
-    case TowerParticipation::Entered:
-    case TowerParticipation::Completed:
-    case TowerParticipation::Ejected:
-    case TowerParticipation::Withdrawn: break;
-    default: return false;
-    }
-    if (!world.Awakening.Granted || now < at || !P402PreparationValid(world, s))
+    // P4-09: every earlier sitting closed or absent, then the current one under the live-session rules.
+    const std::uint32_t current = P409CurrentSitting(world);
+    if (current > P409MaxSitting)
         return false;
-    const std::uint64_t opened = s.Attempts.size() + (s.Active ? 1U : 0U);
-    if (s.Attempts.size() > static_cast<std::size_t>(TowerFloorCount) || s.NextRunner != opened + 1 || s.Runner != opened)
-        return false;
-    for (std::size_t i = 0; i < s.Attempts.size(); ++i)
-    {
-        const bool last = i + 1 == s.Attempts.size();
-        if (!P402AttemptValid(s.Attempts[i], i + 1) || (s.Attempts[i].Defeated && !last))
+    for (std::uint32_t sitting = 0; sitting < current; ++sitting)
+        if (!P409SessionValidInWorld(world, world.ExaminationEarlier[sitting], sitting, false))
             return false;
-    }
-    const bool defeated = !s.Attempts.empty() && s.Attempts.back().Defeated;
-    const bool climbed = s.Attempts.size() == static_cast<std::size_t>(TowerFloorCount);
-    if (s.Active && !P402ActiveValid(*s.Active, s.Attempts.size() + 1))
-        return false;
-    switch (s.Participation)
-    {
-    case TowerParticipation::Entered:
-        // The clock stands still while the examination runs: it moves only with the terminal charge.
-        if (defeated || climbed || now != at)
-            return false;
-        return true;
-    case TowerParticipation::Completed:
-        if (defeated || !climbed || s.Active)
-            return false;
-        break;
-    case TowerParticipation::Ejected:
-        if (!defeated || s.Active)
-            return false;
-        break;
-    default: // Withdrawn
-        if (defeated || climbed)
-            return false;
-        break;
-    }
-    const P402ExamFinish finished = P402ExamFinishSeam(s);
-    return finished.Ok() && finished.Score.OutsideMinutes >= 0 && finished.Score.OutsideMinutes <= TowerWorldCapMinutes &&
-           now >= at + finished.Score.OutsideMinutes;
+    return P409SessionValidInWorld(world, world.Examination, current, true);
 }
 
 std::string SerialiseExamState(const WorldState& world)
 {
     if (!IsExamStateValidInWorld(world))
         return {};
-    return P402Encode(world.Examination);
+    return P402Encode(world.ExaminationEarlier, world.Examination);
 }
 
 bool DeserialiseExamState(std::string_view text, WorldState& world)
 {
+    std::vector<TowerSessionState> earlier;
     TowerSessionState decoded;
-    if (!P402Decode(text, decoded) || P402Encode(decoded) != text)
+    if (!P402Decode(text, earlier, decoded) || P402Encode(earlier, decoded) != text)
         return false;
     WorldState staged = world;
     staged.Examination = std::move(decoded);
+    staged.ExaminationEarlier = std::move(earlier);
     if (!IsExamStateValidInWorld(staged))
         return false;
     world.Examination = std::move(staged.Examination);
+    world.ExaminationEarlier = std::move(staged.ExaminationEarlier);
     return true;
 }
 
@@ -341,6 +297,7 @@ WorldSaveResult WorldSaveReadExam(const JsonValue& value, WorldState& world, std
     {
         // No sitting, deferral or result is inferred from anything an older world kept: those lives are undecided.
         world.Examination = {};
+        world.ExaminationEarlier.clear();
         return {};
     }
     const JsonValue* exam = value.Find("examination");

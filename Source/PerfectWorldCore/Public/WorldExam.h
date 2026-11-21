@@ -25,7 +25,8 @@ namespace PerfectWorld
  * every accepted command is itself the recovery checkpoint, saved whole. Refusals carry the contract's "tower.session.*" codes;
  * the world adds only these "exam.*" codes:
  *   exam.not_open          before the fixed instant, for every entry choice;
- *   exam.missed            Enter after the fixed instant (late arrival belongs to a later qualification order);
+ *   exam.missed            Enter after the sitting's late-entry window (P4-09, WorldExamSittings.h; next sitting remains);
+ *   exam.age_limit         P4-09: a later sitting at which the candidate would be older than twenty;
  *   exam.decision_required a time path starting at the instant in a routed, awakened, undecided life;
  *   exam.active            any unrelated command while Entered (the tutorial.active precedent);
  *   exam.not_awakened      Enter without the compulsory Awakening grant (legacy post-deadline lives);
@@ -44,6 +45,25 @@ struct P402WorldExamCatalogues
     const TowerRunnerCatalogue* Runners = nullptr;
     /** P405: validated school_followup content; caller-owned and bound on Continue/replay as well. */
     const SchoolFollowupContent* Followups = nullptr;
+    /** P4-09: the life's date of birth (creation record) for the age-twenty limit; caller-owned, bound on Continue/replay. */
+    const DateOfBirth* P409Birth = nullptr;
+};
+
+/** P4-09: the sittings for presentation (WorldExamSittings.h). Pure. */
+struct P409SittingView
+{
+    /** The sitting the stored session belongs to, and the one a Sit now would join (equal unless a later one opened). */
+    std::uint32_t Sitting = 0;
+    std::uint32_t SitTarget = 0;
+    GameInstant OpensAt = 0;
+    /** The last instant Enter is accepted for SitTarget. */
+    GameInstant EntryClosesAt = 0;
+    /** While Entered: lateness and the reduced outside allowance. */
+    std::int64_t LateMinutes = 0;
+    std::int64_t AllowanceMinutes = TowerWorldCapMinutes;
+    /** The next sitting after the current one that the age limit still allows. */
+    bool HasNextSitting = false;
+    GameInstant NextSittingAt = 0;
 };
 
 /** The final preparation a Sit freezes, read from world authority only (never from presentation). */
@@ -79,6 +99,7 @@ struct P402ExamWorldView
     /** While Entered: what withdrawing now would charge. Terminal: what the exit charged. Never authority to charge. */
     std::int64_t OutsideMinutes = 0;
     TowerSessionView Session;
+    P409SittingView Sittings;
 };
 
 /**
@@ -122,6 +143,10 @@ using P402ExamFinish = P403ExamResult;
  *   then n attempt=<route>,<method>,<discipline>,<judgment>,<minutes>,<defeated>,<scenario>,<choices>,
  *   active=none | active=<scenario>,<route>,<method>,<beat>,<reserve>,<discount>,<disciplineSum>,<judgmentSum>,<minutes>,
  *   <choices>, end.
+ * P4-09: with earlier annual sittings (WorldState::ExaminationEarlier) the header is pw.examination/2, followed by
+ * sittings=<n> and the n earlier session bodies (participation..active) before the current body; a world with no earlier
+ * sitting keeps the /1 bytes above exactly, so its hash and every P4-02 save are unchanged. IsExamStateValidInWorld applies
+ * P409SessionValidInWorld to each earlier sitting and to the current one (late-entry window, reduced allowance).
  */
 [[nodiscard]] PERFECTWORLDCORE_API std::string SerialiseExamState(const WorldState& world);
 /** Strict canonical parse into world.Examination, validated in `world`; false and untouched otherwise. */

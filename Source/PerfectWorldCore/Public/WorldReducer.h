@@ -260,6 +260,8 @@ private:
     std::optional<Rejection> ApplyP407UFollowup(const P407UFollowupCommand& command, CommandResult& result);
     /** True in a routed sim whose awakened life has not yet decided on the examination: time paths stop at the instant. */
     [[nodiscard]] bool ExamDecisionPending() const noexcept;
+    /** P4-09: the sitting instant a routed, awakened life must decide at (undecided, or deferred to the next sitting); -1 if none. */
+    [[nodiscard]] GameInstant ExamDecisionAt() const noexcept;
     [[nodiscard]] GameInstant ExamTimeBoundary(GameInstant target) const;
     bool StopForExamBoundary(GameInstant target, CommandResult& result);
 
