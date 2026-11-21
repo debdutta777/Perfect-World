@@ -1,0 +1,26 @@
+{
+  "type": "investigate_case",
+  "id": "investigate_case.xi_lab_lan_switch",
+  "family": "investigate_family.xi_fault_finding",
+  "name": "The window-row terminals that keep dropping",
+  "subject": "computing",
+  "symptom": "intermittent",
+  "role": "critic",
+  "scarce": "equipment",
+  "method": "method.swap_known_good",
+  "brief": "In the computer room at Nabapara Vidyalaya the four terminals along the window lose their connection to the file server together every few minutes and then recover on their own. The other rows never drop. The one network tester belongs to the computer teacher and must be signed out, and as critic you are asked to say honestly what each test has and has not shown.",
+  "causes": [
+    { "id": "c_dhcp_lease_clash", "name": "static IP on Terminal 12 colliding with the teacher workstation address", "fault": false },
+    { "id": "c_uplink_patch_cord", "name": "corroded pins on the short grey Cat5e uplink jumper feeding the window-row switch", "fault": true },
+    { "id": "c_wall_adapter_brick", "name": "overheating 9 V DC power adapter on the eight-port window switch", "fault": false },
+    { "id": "c_nic_driver_sleep", "name": "energy-saver settings putting the window terminals' network cards to sleep", "fault": false }
+  ],
+  "tests": [
+    { "id": "t_watch_port_one_led", "name": "watch the amber link lamp on trunk Port 1 while all four window terminals drop together", "kind": "observe", "units": 1, "implicates": ["c_dhcp_lease_clash", "c_uplink_patch_cord"] },
+    { "id": "t_inspect_rj45_gold", "name": "unclip the trunk jumper and inspect the eight brass contacts for green verdigris", "kind": "observe", "units": 2, "implicates": ["c_uplink_patch_cord", "c_wall_adapter_brick"] },
+    { "id": "t_ping_local_vs_server", "name": "measure packet loss between two window PCs versus across the uplink to the server", "kind": "measure", "units": 2, "implicates": ["c_uplink_patch_cord", "c_nic_driver_sleep"] },
+    { "id": "t_brick_voltage_load", "name": "measure the 9 V DC rail under load with the multimeter", "kind": "measure", "units": 3, "implicates": ["c_wall_adapter_brick"] },
+    { "id": "t_swap_trunk_jumper", "name": "swap the uplink jumper with a sealed blue patch lead from the store cupboard", "kind": "swap", "units": 3, "implicates": ["c_uplink_patch_cord"] }
+  ],
+  "note": "Set in the computer room at Nabapara Vidyalaya (loc_nhss). All four window-row terminals lose the file server together every few minutes, which points to the shared uplink and not to any one terminal. The corroded contacts on the short uplink patch lead are the fault; swapping in a sealed lead from the store cures it."
+}

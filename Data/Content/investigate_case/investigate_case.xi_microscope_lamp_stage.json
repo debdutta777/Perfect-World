@@ -1,0 +1,26 @@
+{
+  "type": "investigate_case",
+  "id": "investigate_case.xi_microscope_lamp_stage",
+  "family": "investigate_family.xi_fault_finding",
+  "name": "The dark lamp under the microscope",
+  "subject": "practical_science",
+  "symptom": "no_response",
+  "role": "inspector",
+  "scarce": "access",
+  "method": "method.half_split",
+  "brief": "In the biology practical at Nabapara Vidyalaya, three students are sharing one compound microscope to sketch onion-root mitosis stages. When the substage rocker switch is pressed, the 6-volt halogen lamp beneath the condenser stays dark. Because the other two students are waiting to draw, you cannot keep the instrument dismantled for long.",
+  "causes": [
+    { "id": "c_bench_socket_dead", "name": "The brass 15-ampere bench wall socket has tripped its breaker", "fault": false },
+    { "id": "c_base_fuse_holder", "name": "The spring cap on the microscope's base glass-fuse holder has worked loose half a turn", "fault": true },
+    { "id": "c_dimmer_pot_track", "name": "The rotary brightness rheostat in the base has an open carbon track", "fault": false },
+    { "id": "c_halogen_filament", "name": "The 6-volt, 20-watt bi-pin halogen capsule filament has burned through", "fault": false }
+  ],
+  "tests": [
+    { "id": "t_glimpse_neon_socket", "name": "Look at the red neon indicator on the bench wall socket and feel the base fuse cap", "kind": "observe", "units": 1, "implicates": ["c_bench_socket_dead", "c_base_fuse_holder"] },
+    { "id": "t_inspect_fuse_and_knob", "name": "Unscrew the knurled fuse cap on the heel of the stand and inspect the dimmer knob stop", "kind": "observe", "units": 2, "implicates": ["c_base_fuse_holder", "c_dimmer_pot_track"] },
+    { "id": "t_probe_transformer_input", "name": "Measure AC voltage at the bench socket and after the dimmer wiper", "kind": "measure", "units": 2, "implicates": ["c_bench_socket_dead", "c_dimmer_pot_track"] },
+    { "id": "t_continuity_fuse_cap", "name": "Measure continuity across the base fuse holder terminals before and after tightening the cap", "kind": "measure", "units": 3, "implicates": ["c_base_fuse_holder"] },
+    { "id": "t_fit_spare_capsule", "name": "Fit the demonstrator's spare 6-volt halogen capsule into the ceramic lampholder", "kind": "swap", "units": 3, "implicates": ["c_halogen_filament"] }
+  ],
+  "note": "Set in the biology room at Nabapara Vidyalaya (loc_nhss). The spring cap of the fuse holder in the microscope's base has backed out half a turn, so the lamp circuit is open though the wall socket is live. Looking at the wall neon and then the fuse cap isolates it."
+}

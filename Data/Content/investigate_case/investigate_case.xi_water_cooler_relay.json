@@ -1,0 +1,26 @@
+{
+  "type": "investigate_case",
+  "id": "investigate_case.xi_water_cooler_relay",
+  "family": "investigate_family.xi_fault_finding",
+  "name": "The cooler that hums but never chills",
+  "subject": "repair",
+  "symptom": "no_response",
+  "role": "inspector",
+  "scarce": "time",
+  "method": "method.swap_known_good",
+  "brief": "The drinking-water cooler on the ground floor corridor of Nabapara Vidyalaya has its pilot lamp lit, but the compressor never starts and the water stays warm. It is the hottest week of the term and the caretaker has given you only part of one period to find the fault. As inspector you look first and touch last.",
+  "causes": [
+    { "id": "c_wall_socket_fuse", "name": "blown 15 A porcelain rewirable fuse in the corridor switchboard", "fault": false },
+    { "id": "c_pitted_overload_klixon", "name": "burnt contacts inside the round thermal overload protector clipped to the compressor", "fault": true },
+    { "id": "c_open_thermostat_bellows", "name": "leaked capillary bulb on the cold-tank thermostat keeping its switch open", "fault": false },
+    { "id": "c_seized_condenser_fan", "name": "gummed sleeve bearing on the small condenser cooling fan behind the louvres", "fault": false }
+  ],
+  "tests": [
+    { "id": "t_watch_pilot_and_fan_blades", "name": "peer through the side louvres to see whether the neon pilot glows and the fan spins", "kind": "observe", "units": 1, "implicates": ["c_wall_socket_fuse", "c_pitted_overload_klixon"] },
+    { "id": "t_inspect_terminal_cover_box", "name": "unclip the compressor terminal cover and look for soot on the overload disc", "kind": "observe", "units": 2, "implicates": ["c_pitted_overload_klixon", "c_open_thermostat_bellows"] },
+    { "id": "t_continuity_across_protector", "name": "unplug the unit and measure ohms across the cold thermal protector terminals", "kind": "measure", "units": 2, "implicates": ["c_pitted_overload_klixon", "c_seized_condenser_fan"] },
+    { "id": "t_thermostat_cut_in_test", "name": "measure continuity across the thermostat spades while turning the knob to coldest", "kind": "measure", "units": 3, "implicates": ["c_open_thermostat_bellows"] },
+    { "id": "t_swap_overload_relay", "name": "clip on the spare thermal overload disc from the caretaker's tool tin", "kind": "swap", "units": 3, "implicates": ["c_pitted_overload_klixon"] }
+  ],
+  "note": "Set at Nabapara Vidyalaya (loc_nhss), the ground-floor corridor. The pilot lamp is lit, so the socket and fuse are sound, yet the compressor never starts: the contacts of the thermal overload protector clipped to it are burnt. The spare protector from the caretaker's tin cures it."
+}

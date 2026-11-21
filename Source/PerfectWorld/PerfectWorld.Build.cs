@@ -14,6 +14,7 @@ public class PerfectWorld : ModuleRules
             "PerfectWorldCore"
         });
         // Slate draws the front end (title, creation flow, pause menu) in code, with no UI assets.
-        PrivateDependencyModuleNames.AddRange(new[] { "InputCore", "Slate", "SlateCore" });
+        // EnhancedInput drives the walking player; its actions and mappings are built in code, so no input assets exist.
+        PrivateDependencyModuleNames.AddRange(new[] { "InputCore", "Slate", "SlateCore", "EnhancedInput" });
     }
 }

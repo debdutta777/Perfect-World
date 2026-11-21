@@ -92,9 +92,17 @@ void TestContentRules(const std::vector<ContentFile>& files)
     Refuses(files, {{"xi_stationery_notebooks", "\"role\": \"recorder\"", "\"role\": \"experimenter\""},
                     {"xi_stationery_notebooks", "\"scarce\": \"readings\"", "\"scarce\": \"help\""}},
             "repeats the unknown, role and scarce resource of problem_case.xi_roof_rainwater_tank");
-    Refuses(files, {{"xi_stationery_notebooks", "\"fault\": \"none\"", "\"fault\": \"timing\""}, {"xi_roof_rainwater_tank", "\"fault\": \"none\"", "\"fault\": \"timing\""}},
+    Refuses(files, {{"xi_stationery_notebooks", "\"fault\": \"none\"", "\"fault\": \"timing\""}, {"xi_roof_rainwater_tank", "\"fault\": \"none\"", "\"fault\": \"timing\""},
+                    {"xi_coop_petty_cash", "\"fault\": \"none\"", "\"fault\": \"timing\""},
+                    {"xi_laterite_well_recharge", "\"fault\": \"none\"", "\"fault\": \"timing\""},
+                    {"xi_ferry_ghat_waiting", "\"fault\": \"none\"", "\"fault\": \"timing\""},
+                    {"xi_seedling_nursery_plot", "\"fault\": \"none\"", "\"fault\": \"timing\""},
+                    {"xi_printing_press_reams", "\"fault\": \"none\"", "\"fault\": \"timing\""}},
             "no case uses the fault none the family lists");
-    Refuses(files, {{"xi_water_tank_level", "\"subject\": \"physics\"", "\"subject\": \"geography\""}, {"xi_overhead_tank_draw", "\"subject\": \"physics\"", "\"subject\": \"geography\""}},
+    Refuses(files, {{"xi_water_tank_level", "\"subject\": \"physics\"", "\"subject\": \"geography\""}, {"xi_overhead_tank_draw", "\"subject\": \"physics\"", "\"subject\": \"geography\""},
+                    {"xi_dc_series_parallel", "\"subject\": \"physics\"", "\"subject\": \"geography\""},
+                    {"xi_spring_mass_shm", "\"subject\": \"physics\"", "\"subject\": \"geography\""},
+                    {"xi_calorimeter_cooling", "\"subject\": \"physics\"", "\"subject\": \"geography\""}},
             "no case uses the subject physics the family lists");
     Refuses(files, {{Family, "\"knownAtMilli\": 140000 }", "\"knownAtMilli\": 140000 },\n    { \"id\": \"method.unused\", \"name\": \"Unused\", \"unknowns\": [\"stock\"], \"knownAtMilli\": 150000 }"}},
             "no case uses the method method.unused the family lists");
@@ -104,9 +112,11 @@ void TestContentRules(const std::vector<ContentFile>& files)
 
     // At least eight cases for a classroom model family, declared and actual.
     std::vector<ContentFile> fewer;
+    int casesKept = 0;
     for (const ContentFile& file : files)
     {
-        if (file.Path.find("xi_roof_rainwater_tank") == std::string::npos)
+        // The library now holds more than the declared minimum, so keep seven problem cases and every other file.
+        if (file.Path.find("problem_case.") == std::string::npos || ++casesKept <= 7)
             fewer.push_back(file);
     }
     Check(HasIssue(LoadContent(fewer), "needs at least 8 cases, found 7"), "seven cases are too few for a family that declares eight");
@@ -136,7 +146,7 @@ void TestCatalogueRules(const std::vector<ContentFile>& files)
 {
     const ContentLoadResult real = LoadContent(files);
     const ModelCatalogueResult loaded = LoadModelCatalogue(real.Db);
-    Check(loaded.Ok() && loaded.Catalogue.Families.size() == 1 && loaded.Catalogue.Families.front().Cases.size() == 8, "the real content loads as one family of eight");
+    Check(loaded.Ok() && loaded.Catalogue.Families.size() == 1 && loaded.Catalogue.Families.front().Cases.size() == 20, "the real content loads as one family of twenty");
     const ModelFamilyDef& family = loaded.Catalogue.Families.front();
     Check(family.SkillId == "skill.academics" && family.MinCases == 8 && family.Methods.size() == 3, "the family names its skill, minimum and methods");
     const ModelCaseDef* tank = loaded.Catalogue.FindCase("problem_case.xi_water_tank_level");

@@ -1,0 +1,368 @@
+{
+  "type": "school_scene",
+  "id": "p2.canteen_petition",
+  "note": "Order C2 scene 10: the school canteen raises the price of its tiffin singara and rotating lunch plate, and Mira Sen, Tara Das, Ishan Sheikh and Amrita Basu weigh a student petition against shared tiffin routines and Farida Qadri's stall comparisons (INDIA_WORLD_BIBLE.md named cast: Mira Sen, Tara Das, Ishan Sheikh, Amrita Basu, Farida Qadri, plus household adult and care worker).",
+  "arcKind": "changing_friendship",
+  "titleKey": "school_scene.p2.canteen_petition.title",
+  "summaryKey": "school_scene.p2.canteen_petition.summary",
+  "institution": "institution.nabapara_vidyalaya",
+  "calendar": "calendar.nabapara_2042_43",
+  "term": "term_2",
+  "calendarSpan": "unit_test_2",
+  "threadTemplate": "thread.hidden_pickup",
+  "entryScene": "scene_canteen_board_chalk",
+  "cast": [
+    {
+      "person": "person.mira_sen",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.tara_das",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.ishan_sheikh",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.amrita_basu",
+      "role": "teacher",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.household_adult",
+      "role": "family_adult",
+      "originVariant": "family",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.care_worker",
+      "role": "care_adult",
+      "originVariant": "care_home",
+      "proposedNewCast": false
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_canteen_board_chalk",
+      "titleKey": "school_scene.p2.canteen_petition.board.title",
+      "promptKey": "school_scene.p2.canteen_petition.board.prompt",
+      "speaker": "person.mira_sen",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "school_break",
+        "bellSchedule": "bell_schedule.nabapara_xi_commerce",
+        "periodIndex": -1,
+        "zone": "nhss.court",
+        "startMinute": 770,
+        "endMinute": 800
+      },
+      "conversationTopic": "topic.mira_sen.canteen_tariff_board",
+      "choices": [
+        {
+          "id": "tally_item_costs_with_mira",
+          "labelKey": "school_scene.p2.canteen_petition.board.tally.label",
+          "outcomeKey": "school_scene.p2.canteen_petition.board.tally.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_economics_petition_draft",
+          "consequence": {
+            "targetPerson": "person.mira_sen",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.canteen.tariff_sheet_tallied",
+            "threadEvent": "confidence_shared",
+            "factSet": "school.canteen.tallied_prices_with_mira"
+          }
+        },
+        {
+          "id": "talk_over_packed_tiffin_at_home",
+          "labelKey": "school_scene.p2.canteen_petition.board.family.label",
+          "outcomeKey": "school_scene.p2.canteen_petition.board.family.outcome",
+          "costMinutes": 5,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_family_tiffin_budget",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.canteen.family_tiffin_discussed",
+            "factSet": "school.canteen.planning_family_tiffin"
+          }
+        },
+        {
+          "id": "talk_over_tiffin_tin_at_care_home",
+          "labelKey": "school_scene.p2.canteen_petition.board.care.label",
+          "outcomeKey": "school_scene.p2.canteen_petition.board.care.outcome",
+          "costMinutes": 5,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_care_tiffin_handover",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.canteen.care_tiffin_discussed",
+            "factSet": "school.canteen.planning_care_tiffin"
+          }
+        },
+        {
+          "id": "stay_off_petition_sheet_refusal",
+          "labelKey": "school_scene.p2.canteen_petition.board.refuse.label",
+          "outcomeKey": "school_scene.p2.canteen_petition.board.refuse.outcome",
+          "costMinutes": 0,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.mira_sen",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.canteen.stayed_out_of_petition",
+            "factSet": "school.canteen.kept_out_of_petition"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_family_tiffin_budget",
+      "titleKey": "school_scene.p2.canteen_petition.family.title",
+      "promptKey": "school_scene.p2.canteen_petition.family.prompt",
+      "speaker": "person.household_adult",
+      "originVariant": "family",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.player_home",
+        "startMinute": 1110,
+        "endMinute": 1170
+      },
+      "conversationTopic": "topic.household_adult.canteen_price_increase",
+      "choices": [
+        {
+          "id": "pack_extra_muri_tin_from_home",
+          "labelKey": "school_scene.p2.canteen_petition.family.pack.label",
+          "outcomeKey": "school_scene.p2.canteen_petition.family.pack.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_economics_petition_draft",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.canteen.family_tiffin_tin_packed",
+            "factSet": "school.canteen.family_tiffin_arranged",
+            "journalAgreementFact": "c2_canteen_family_tiffin_tin"
+          }
+        },
+        {
+          "id": "keep_daily_tiffin_allowance_as_is_refusal",
+          "labelKey": "school_scene.p2.canteen_petition.family.refuse.label",
+          "outcomeKey": "school_scene.p2.canteen_petition.family.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.canteen.family_allowance_unchanged",
+            "factSet": "school.canteen.kept_family_tiffin_routine"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_care_tiffin_handover",
+      "titleKey": "school_scene.p2.canteen_petition.care.title",
+      "promptKey": "school_scene.p2.canteen_petition.care.prompt",
+      "speaker": "person.care_worker",
+      "originVariant": "care_home",
+      "schedule": {
+        "slotKind": "care_handover",
+        "periodIndex": -1,
+        "zone": "location.nabapara.care_home",
+        "startMinute": 840,
+        "endMinute": 885
+      },
+      "conversationTopic": "topic.care_worker.canteen_price_increase",
+      "choices": [
+        {
+          "id": "arrange_shared_kitchen_tiffin_tin",
+          "labelKey": "school_scene.p2.canteen_petition.care.pack.label",
+          "outcomeKey": "school_scene.p2.canteen_petition.care.pack.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_economics_petition_draft",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.canteen.care_tiffin_tin_logged",
+            "factSet": "school.canteen.care_tiffin_arranged",
+            "journalAgreementFact": "c2_canteen_care_tiffin_tin"
+          }
+        },
+        {
+          "id": "keep_usual_care_tiffin_pack_refusal",
+          "labelKey": "school_scene.p2.canteen_petition.care.refuse.label",
+          "outcomeKey": "school_scene.p2.canteen_petition.care.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.canteen.care_tiffin_unchanged",
+            "factSet": "school.canteen.kept_care_tiffin_routine"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_economics_petition_draft",
+      "titleKey": "school_scene.p2.canteen_petition.draft.title",
+      "promptKey": "school_scene.p2.canteen_petition.draft.prompt",
+      "speaker": "person.mira_sen",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "timetable_period",
+        "bellSchedule": "bell_schedule.nabapara_xi_commerce",
+        "periodIndex": 2,
+        "subject": "economics",
+        "zone": "nhss.room_xi_commerce",
+        "startMinute": 720,
+        "endMinute": 765
+      },
+      "conversationTopic": "topic.mira_sen.student_canteen_representation",
+      "choices": [
+        {
+          "id": "organise_shared_tiffin_bench_with_tara",
+          "labelKey": "school_scene.p2.canteen_petition.draft.share.label",
+          "outcomeKey": "school_scene.p2.canteen_petition.draft.share.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_after_school_canteen_committee",
+          "consequence": {
+            "targetPerson": "person.tara_das",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.canteen.tiffin_bench_pooled",
+            "threadEvent": "pickup_covered",
+            "factSet": "school.canteen.sharing_tiffin_bench",
+            "journalAgreementFact": "c2_canteen_shared_tiffin_bench"
+          }
+        },
+        {
+          "id": "present_cost_sheet_to_amrita_basu",
+          "labelKey": "school_scene.p2.canteen_petition.draft.adviser.label",
+          "outcomeKey": "school_scene.p2.canteen_petition.draft.adviser.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "support_found",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "defend",
+            "relationshipEvent": "school.canteen.representation_taken_to_adviser",
+            "threadEvent": "adviser_consulted",
+            "factSet": "school.canteen.amrita_forwarded_note",
+            "journalAgreementFact": "c2_canteen_amrita_representation"
+          }
+        },
+        {
+          "id": "decline_to_sign_petition_refusal",
+          "labelKey": "school_scene.p2.canteen_petition.draft.refuse.label",
+          "outcomeKey": "school_scene.p2.canteen_petition.draft.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.mira_sen",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.canteen.declined_signature_politely",
+            "factSet": "school.canteen.declined_without_argument"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_after_school_canteen_committee",
+      "titleKey": "school_scene.p2.canteen_petition.committee.title",
+      "promptKey": "school_scene.p2.canteen_petition.committee.prompt",
+      "speaker": "person.tara_das",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "after_school",
+        "bellSchedule": "bell_schedule.nabapara_xi_commerce",
+        "periodIndex": -1,
+        "zone": "nhss.court",
+        "startMinute": 955,
+        "endMinute": 1005
+      },
+      "conversationTopic": "topic.tara_das.courtyard_tiffin_rotation",
+      "choices": [
+        {
+          "id": "settle_courtyard_tiffin_sharing_group",
+          "labelKey": "school_scene.p2.canteen_petition.committee.share.label",
+          "outcomeKey": "school_scene.p2.canteen_petition.committee.share.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "lightened",
+          "consequence": {
+            "targetPerson": "person.tara_das",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.canteen.tiffin_circle_settled",
+            "threadEvent": "pickup_covered",
+            "factSet": "school.canteen.tiffin_circle_active"
+          }
+        },
+        {
+          "id": "file_joint_staple_plate_note_with_amrita",
+          "labelKey": "school_scene.p2.canteen_petition.committee.adviser.label",
+          "outcomeKey": "school_scene.p2.canteen_petition.committee.adviser.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "support_found",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.canteen.staple_plate_kept_affordable",
+            "threadEvent": "adviser_consulted",
+            "factSet": "school.canteen.staple_rate_retained"
+          }
+        },
+        {
+          "id": "step_back_from_committee_after_bell_refusal",
+          "labelKey": "school_scene.p2.canteen_petition.committee.refuse.label",
+          "outcomeKey": "school_scene.p2.canteen_petition.committee.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.canteen.parted_after_committee_talk",
+            "factSet": "school.canteen.stepped_back_from_committee",
+            "factCleared": "school.canteen.sharing_tiffin_bench"
+          }
+        }
+      ]
+    }
+  ],
+  "resolutions": [
+    "lightened",
+    "support_found",
+    "carried_alone"
+  ]
+}

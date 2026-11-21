@@ -1,0 +1,363 @@
+{
+  "type": "school_scene",
+  "id": "p2.broken_beaker",
+  "note": "Order C2 scene 2: a 250 ml borosilicate laboratory beaker cracks at the shared bench during practical work, and the bench partners decide how to own up to Amrita Basu (INDIA_WORLD_BIBLE.md named cast: Amrita Basu, Ishan Sheikh, plus proposed classmate Deven Chakraborty, household adult and care worker).",
+  "arcKind": "changing_friendship",
+  "titleKey": "school_scene.p2.broken_beaker.title",
+  "summaryKey": "school_scene.p2.broken_beaker.summary",
+  "institution": "institution.nabapara_vidyalaya",
+  "calendar": "calendar.nabapara_2042_43",
+  "term": "term_1",
+  "calendarSpan": "unit_test_1",
+  "threadTemplate": "thread.hidden_pickup",
+  "entryScene": "scene_lab_beaker_slip",
+  "cast": [
+    {
+      "person": "person.deven_chakraborty",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": true
+    },
+    {
+      "person": "person.ishan_sheikh",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.amrita_basu",
+      "role": "teacher",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.household_adult",
+      "role": "family_adult",
+      "originVariant": "family",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.care_worker",
+      "role": "care_adult",
+      "originVariant": "care_home",
+      "proposedNewCast": false
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_lab_beaker_slip",
+      "titleKey": "school_scene.p2.broken_beaker.lab.title",
+      "promptKey": "school_scene.p2.broken_beaker.lab.prompt",
+      "speaker": "person.deven_chakraborty",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "timetable_period",
+        "bellSchedule": "bell_schedule.nabapara_xi_science",
+        "periodIndex": 4,
+        "subject": "physics",
+        "zone": "nhss.science_lab",
+        "startMinute": 855,
+        "endMinute": 900
+      },
+      "conversationTopic": "topic.deven_chakraborty.cracked_lab_beaker",
+      "choices": [
+        {
+          "id": "talk_quietly_with_deven",
+          "labelKey": "school_scene.p2.broken_beaker.lab.talk.label",
+          "outcomeKey": "school_scene.p2.broken_beaker.lab.talk.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_chemistry_register",
+          "consequence": {
+            "targetPerson": "person.deven_chakraborty",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.beaker.bench_slip_discussed",
+            "threadEvent": "confidence_shared",
+            "factSet": "school.beaker.deven_confided"
+          }
+        },
+        {
+          "id": "ask_family_about_deposit",
+          "labelKey": "school_scene.p2.broken_beaker.lab.family.label",
+          "outcomeKey": "school_scene.p2.broken_beaker.lab.family.outcome",
+          "costMinutes": 5,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_family_breakage_deposit",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.beaker.family_deposit_planned",
+            "factSet": "school.beaker.asking_family_deposit"
+          }
+        },
+        {
+          "id": "ask_care_about_voucher",
+          "labelKey": "school_scene.p2.broken_beaker.lab.care.label",
+          "outcomeKey": "school_scene.p2.broken_beaker.lab.care.outcome",
+          "costMinutes": 5,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_care_breakage_note",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.beaker.care_voucher_planned",
+            "factSet": "school.beaker.asking_care_voucher"
+          }
+        },
+        {
+          "id": "sweep_glass_and_stay_out_refusal",
+          "labelKey": "school_scene.p2.broken_beaker.lab.refuse.label",
+          "outcomeKey": "school_scene.p2.broken_beaker.lab.refuse.outcome",
+          "costMinutes": 0,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.deven_chakraborty",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.beaker.sink_cleared_quietly",
+            "factSet": "school.beaker.left_to_deven"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_family_breakage_deposit",
+      "titleKey": "school_scene.p2.broken_beaker.family.title",
+      "promptKey": "school_scene.p2.broken_beaker.family.prompt",
+      "speaker": "person.household_adult",
+      "originVariant": "family",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.player_home",
+        "startMinute": 1110,
+        "endMinute": 1170
+      },
+      "conversationTopic": "topic.household_adult.lab_breakage_slip",
+      "choices": [
+        {
+          "id": "set_aside_half_replacement_fee",
+          "labelKey": "school_scene.p2.broken_beaker.family.agree.label",
+          "outcomeKey": "school_scene.p2.broken_beaker.family.agree.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_chemistry_register",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.beaker.family_share_arranged",
+            "factSet": "school.beaker.family_share_ready",
+            "journalAgreementFact": "c2_beaker_family_deposit"
+          }
+        },
+        {
+          "id": "keep_household_purse_unopened_refusal",
+          "labelKey": "school_scene.p2.broken_beaker.family.refuse.label",
+          "outcomeKey": "school_scene.p2.broken_beaker.family.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.beaker.family_budget_untouched",
+            "factSet": "school.beaker.kept_family_budget"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_care_breakage_note",
+      "titleKey": "school_scene.p2.broken_beaker.care.title",
+      "promptKey": "school_scene.p2.broken_beaker.care.prompt",
+      "speaker": "person.care_worker",
+      "originVariant": "care_home",
+      "schedule": {
+        "slotKind": "care_handover",
+        "periodIndex": -1,
+        "zone": "location.nabapara.care_home",
+        "startMinute": 840,
+        "endMinute": 885
+      },
+      "conversationTopic": "topic.care_worker.lab_breakage_waiver",
+      "choices": [
+        {
+          "id": "request_school_deposit_counter_sign",
+          "labelKey": "school_scene.p2.broken_beaker.care.agree.label",
+          "outcomeKey": "school_scene.p2.broken_beaker.care.agree.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_chemistry_register",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.beaker.care_note_countersigned",
+            "factSet": "school.beaker.care_note_ready",
+            "journalAgreementFact": "c2_beaker_care_voucher"
+          }
+        },
+        {
+          "id": "leave_care_ledger_unmarked_refusal",
+          "labelKey": "school_scene.p2.broken_beaker.care.refuse.label",
+          "outcomeKey": "school_scene.p2.broken_beaker.care.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.beaker.care_ledger_unchanged",
+            "factSet": "school.beaker.kept_care_ledger"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_chemistry_register",
+      "titleKey": "school_scene.p2.broken_beaker.register.title",
+      "promptKey": "school_scene.p2.broken_beaker.register.prompt",
+      "speaker": "person.amrita_basu",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "timetable_period",
+        "bellSchedule": "bell_schedule.nabapara_xi_science",
+        "periodIndex": 2,
+        "subject": "chemistry",
+        "zone": "nhss.room_xi_science",
+        "startMinute": 720,
+        "endMinute": 765
+      },
+      "conversationTopic": "topic.amrita_basu.apparatus_breakage_book",
+      "choices": [
+        {
+          "id": "sign_breakage_book_together",
+          "labelKey": "school_scene.p2.broken_beaker.register.share.label",
+          "outcomeKey": "school_scene.p2.broken_beaker.register.share.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_after_school_apparatus",
+          "consequence": {
+            "targetPerson": "person.deven_chakraborty",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.beaker.signed_together",
+            "threadEvent": "pickup_covered",
+            "factSet": "school.beaker.shared_bench_responsibility",
+            "journalAgreementFact": "c2_beaker_joint_entry"
+          }
+        },
+        {
+          "id": "explain_wet_clamp_to_amrita",
+          "labelKey": "school_scene.p2.broken_beaker.register.adviser.label",
+          "outcomeKey": "school_scene.p2.broken_beaker.register.adviser.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "support_found",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "apologise",
+            "relationshipEvent": "school.beaker.clamp_fault_logged",
+            "threadEvent": "adviser_consulted",
+            "factSet": "school.beaker.logged_as_wear_and_tear",
+            "journalAgreementFact": "c2_beaker_wear_logged"
+          }
+        },
+        {
+          "id": "let_deven_speak_alone_refusal",
+          "labelKey": "school_scene.p2.broken_beaker.register.refuse.label",
+          "outcomeKey": "school_scene.p2.broken_beaker.register.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.beaker.stayed_at_bench",
+            "factSet": "school.beaker.stayed_in_seat"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_after_school_apparatus",
+      "titleKey": "school_scene.p2.broken_beaker.after_school.title",
+      "promptKey": "school_scene.p2.broken_beaker.after_school.prompt",
+      "speaker": "person.ishan_sheikh",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "after_school",
+        "bellSchedule": "bell_schedule.nabapara_xi_science",
+        "periodIndex": -1,
+        "zone": "nhss.court",
+        "startMinute": 955,
+        "endMinute": 1005
+      },
+      "conversationTopic": "topic.ishan_sheikh.lab_cupboard_tally",
+      "choices": [
+        {
+          "id": "sort_apparatus_shelf_with_deven",
+          "labelKey": "school_scene.p2.broken_beaker.after_school.sort.label",
+          "outcomeKey": "school_scene.p2.broken_beaker.after_school.sort.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "lightened",
+          "consequence": {
+            "targetPerson": "person.deven_chakraborty",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.beaker.shelf_sorted_together",
+            "threadEvent": "pickup_covered",
+            "factSet": "school.beaker.cupboard_squared_away"
+          }
+        },
+        {
+          "id": "have_amrita_sign_off_stock_book",
+          "labelKey": "school_scene.p2.broken_beaker.after_school.adviser.label",
+          "outcomeKey": "school_scene.p2.broken_beaker.after_school.adviser.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "support_found",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.beaker.stock_book_signed",
+            "threadEvent": "adviser_consulted",
+            "factSet": "school.beaker.stock_book_closed"
+          }
+        },
+        {
+          "id": "leave_after_signing_only_refusal",
+          "labelKey": "school_scene.p2.broken_beaker.after_school.refuse.label",
+          "outcomeKey": "school_scene.p2.broken_beaker.after_school.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.deven_chakraborty",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.beaker.parted_at_courtyard",
+            "factSet": "school.beaker.headed_home_after_bell",
+            "factCleared": "school.beaker.shared_bench_responsibility"
+          }
+        }
+      ]
+    }
+  ],
+  "resolutions": [
+    "lightened",
+    "support_found",
+    "carried_alone"
+  ]
+}

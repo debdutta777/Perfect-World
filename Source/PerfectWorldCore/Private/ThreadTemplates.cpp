@@ -1,5 +1,6 @@
 #include "Threads.h"
 
+#include "KnownCommitments.h"
 #include "ThreadsInternal.h"
 
 #include <algorithm>
@@ -276,6 +277,11 @@ std::vector<std::string> ReadAndValidateThread(const ContentDb& content, const C
 {
     std::vector<std::string> problems;
     out = ParseThreadTemplateRecord(record, problems);
+    if (record.Id == "thread.evening_rota")
+    {
+        const KnownCommitmentContentResult metadata = LoadKnownCommitmentContent(content);
+        if (!metadata.Ok()) problems.push_back(metadata.Error);
+    }
     if (!problems.empty())
         return problems;
     SchoolCalendar calendar;

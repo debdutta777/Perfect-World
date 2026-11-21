@@ -1,0 +1,19 @@
+{
+  "type": "school_work_brief",
+  "id": "school.work.term2_science_closing",
+  "calendar": "calendar.nabapara_2042_43",
+  "bellSchedule": "bell_schedule.nabapara_xi_science",
+  "stream": "science",
+  "subject": "chemistry",
+  "term": "term_2",
+  "issueDate": "2042-12-15",
+  "period": 2,
+  "dueDate": "2042-12-22",
+  "dueMinute": 1080,
+  "paper": "assessment_paper.xi_half_yearly_mixed",
+  "titleKey": "phase3.p304.term2.science.closing.title",
+  "briefKey": "phase3.p304.term2.science.closing.brief",
+  "criteriaKey": "phase3.p304.term2.science.closing.criteria",
+  "recoveryKey": "phase3.p304.term2.science.closing.recovery",
+  "note": "C3 Term 2 assignment. Chemistry hosts a titration bench hand-over rehearsal; the existing mixed paper is deliberately reused. Dates, timetable and deadlines are authored production assumptions, not a new syllabus or a cultural-review claim."
+}

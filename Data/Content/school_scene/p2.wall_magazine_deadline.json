@@ -1,0 +1,367 @@
+{
+  "type": "school_scene",
+  "id": "p2.wall_magazine_deadline",
+  "note": "Order C2 scene 7: the school's annual Sharadiya Durga Puja wall-magazine (*Prachir Patrika*) hits its final paste-up deadline before the Puja vacation with Amrita Basu, Mira Sen, Tara Das and Deven Chakraborty (INDIA_WORLD_BIBLE.md named cast: Amrita Basu, Mira Sen, Tara Das, plus proposed classmate Deven Chakraborty, household adult and care worker).",
+  "arcKind": "group_project",
+  "titleKey": "school_scene.p2.wall_magazine_deadline.title",
+  "summaryKey": "school_scene.p2.wall_magazine_deadline.summary",
+  "institution": "institution.nabapara_vidyalaya",
+  "calendar": "calendar.nabapara_2042_43",
+  "term": "term_1",
+  "calendarSpan": "durga_puja",
+  "threadTemplate": "thread.borrowed_notes",
+  "entryScene": "scene_wall_magazine_call",
+  "cast": [
+    {
+      "person": "person.amrita_basu",
+      "role": "teacher",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.mira_sen",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.tara_das",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.deven_chakraborty",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": true
+    },
+    {
+      "person": "person.household_adult",
+      "role": "family_adult",
+      "originVariant": "family",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.care_worker",
+      "role": "care_adult",
+      "originVariant": "care_home",
+      "proposedNewCast": false
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_wall_magazine_call",
+      "titleKey": "school_scene.p2.wall_magazine_deadline.call.title",
+      "promptKey": "school_scene.p2.wall_magazine_deadline.call.prompt",
+      "speaker": "person.amrita_basu",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "timetable_period",
+        "bellSchedule": "bell_schedule.nabapara_xi_humanities",
+        "periodIndex": 5,
+        "subject": "bengali",
+        "zone": "nhss.room_xi_humanities",
+        "startMinute": 905,
+        "endMinute": 950
+      },
+      "conversationTopic": "topic.amrita_basu.puja_wall_magazine_layout",
+      "choices": [
+        {
+          "id": "take_border_and_proof_columns",
+          "labelKey": "school_scene.p2.wall_magazine_deadline.call.share.label",
+          "outcomeKey": "school_scene.p2.wall_magazine_deadline.call.share.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_tiffin_column_pasteup",
+          "consequence": {
+            "targetPerson": "person.mira_sen",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.wallmag.columns_divided",
+            "factSet": "school.wallmag.joined_editorial_team",
+            "journalAgreementFact": "c2_wallmag_column_share"
+          }
+        },
+        {
+          "id": "plan_family_evening_lettering",
+          "labelKey": "school_scene.p2.wall_magazine_deadline.call.family.label",
+          "outcomeKey": "school_scene.p2.wall_magazine_deadline.call.family.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_family_lettering_evening",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.wallmag.family_table_asked",
+            "factSet": "school.wallmag.planning_family_lettering"
+          }
+        },
+        {
+          "id": "plan_care_evening_lettering",
+          "labelKey": "school_scene.p2.wall_magazine_deadline.call.care.label",
+          "outcomeKey": "school_scene.p2.wall_magazine_deadline.call.care.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_care_lettering_evening",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.wallmag.care_table_asked",
+            "factSet": "school.wallmag.planning_care_lettering"
+          }
+        },
+        {
+          "id": "skip_wall_magazine_committee_refusal",
+          "labelKey": "school_scene.p2.wall_magazine_deadline.call.refuse.label",
+          "outcomeKey": "school_scene.p2.wall_magazine_deadline.call.refuse.outcome",
+          "costMinutes": 0,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.wallmag.stepped_aside_before_puja",
+            "factSet": "school.wallmag.kept_pre_puja_evenings_free"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_family_lettering_evening",
+      "titleKey": "school_scene.p2.wall_magazine_deadline.family.title",
+      "promptKey": "school_scene.p2.wall_magazine_deadline.family.prompt",
+      "speaker": "person.household_adult",
+      "originVariant": "family",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.player_home",
+        "startMinute": 1140,
+        "endMinute": 1200
+      },
+      "conversationTopic": "topic.household_adult.wall_magazine_lettering",
+      "choices": [
+        {
+          "id": "ink_masthead_strips_at_home",
+          "labelKey": "school_scene.p2.wall_magazine_deadline.family.ink.label",
+          "outcomeKey": "school_scene.p2.wall_magazine_deadline.family.ink.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_tiffin_column_pasteup",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.wallmag.family_masthead_inked",
+            "factSet": "school.wallmag.family_masthead_ready",
+            "journalAgreementFact": "c2_wallmag_family_lettering"
+          }
+        },
+        {
+          "id": "keep_evening_for_revision_refusal",
+          "labelKey": "school_scene.p2.wall_magazine_deadline.family.refuse.label",
+          "outcomeKey": "school_scene.p2.wall_magazine_deadline.family.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.wallmag.family_evening_saved",
+            "factSet": "school.wallmag.deferred_home_lettering"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_care_lettering_evening",
+      "titleKey": "school_scene.p2.wall_magazine_deadline.care.title",
+      "promptKey": "school_scene.p2.wall_magazine_deadline.care.prompt",
+      "speaker": "person.care_worker",
+      "originVariant": "care_home",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.care_home",
+        "startMinute": 1140,
+        "endMinute": 1200
+      },
+      "conversationTopic": "topic.care_worker.wall_magazine_lettering",
+      "choices": [
+        {
+          "id": "ink_masthead_strips_in_common_room",
+          "labelKey": "school_scene.p2.wall_magazine_deadline.care.ink.label",
+          "outcomeKey": "school_scene.p2.wall_magazine_deadline.care.ink.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_tiffin_column_pasteup",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.wallmag.care_masthead_inked",
+            "factSet": "school.wallmag.care_masthead_ready",
+            "journalAgreementFact": "c2_wallmag_care_lettering"
+          }
+        },
+        {
+          "id": "leave_common_table_free_refusal",
+          "labelKey": "school_scene.p2.wall_magazine_deadline.care.refuse.label",
+          "outcomeKey": "school_scene.p2.wall_magazine_deadline.care.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.wallmag.care_evening_saved",
+            "factSet": "school.wallmag.deferred_care_lettering"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_tiffin_column_pasteup",
+      "titleKey": "school_scene.p2.wall_magazine_deadline.tiffin.title",
+      "promptKey": "school_scene.p2.wall_magazine_deadline.tiffin.prompt",
+      "speaker": "person.mira_sen",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "school_break",
+        "bellSchedule": "bell_schedule.nabapara_xi_humanities",
+        "periodIndex": -1,
+        "zone": "nhss.court",
+        "startMinute": 770,
+        "endMinute": 800
+      },
+      "conversationTopic": "topic.mira_sen.wall_magazine_pasteup",
+      "choices": [
+        {
+          "id": "return_fair_copied_slips_on_bell",
+          "labelKey": "school_scene.p2.wall_magazine_deadline.tiffin.return.label",
+          "outcomeKey": "school_scene.p2.wall_magazine_deadline.tiffin.return.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "returned",
+          "consequence": {
+            "targetPerson": "person.mira_sen",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.wallmag.fair_slips_returned",
+            "threadEvent": "notes_returned",
+            "factSet": "school.wallmag.slips_handed_in"
+          }
+        },
+        {
+          "id": "stay_after_school_to_mount_board",
+          "labelKey": "school_scene.p2.wall_magazine_deadline.tiffin.mount.label",
+          "outcomeKey": "school_scene.p2.wall_magazine_deadline.tiffin.mount.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_after_school_board_hanging",
+          "consequence": {
+            "targetPerson": "person.tara_das",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.wallmag.mounting_session_agreed",
+            "threadEvent": "notes_explained_together",
+            "factSet": "school.wallmag.staying_to_mount",
+            "journalAgreementFact": "c2_wallmag_after_school_mount"
+          }
+        },
+        {
+          "id": "hand_over_draft_and_step_back_refusal",
+          "labelKey": "school_scene.p2.wall_magazine_deadline.tiffin.refuse.label",
+          "outcomeKey": "school_scene.p2.wall_magazine_deadline.tiffin.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.deven_chakraborty",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.wallmag.stepped_back_at_tiffin",
+            "factSet": "school.wallmag.left_pasteup_to_team"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_after_school_board_hanging",
+      "titleKey": "school_scene.p2.wall_magazine_deadline.hanging.title",
+      "promptKey": "school_scene.p2.wall_magazine_deadline.hanging.prompt",
+      "speaker": "person.tara_das",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "after_school",
+        "bellSchedule": "bell_schedule.nabapara_xi_humanities",
+        "periodIndex": -1,
+        "zone": "nhss.court",
+        "startMinute": 955,
+        "endMinute": 1005
+      },
+      "conversationTopic": "topic.tara_das.corridor_board_hanging",
+      "choices": [
+        {
+          "id": "trim_and_hang_sharadiya_board_together",
+          "labelKey": "school_scene.p2.wall_magazine_deadline.hanging.explain.label",
+          "outcomeKey": "school_scene.p2.wall_magazine_deadline.hanging.explain.outcome",
+          "costMinutes": 25,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "shared_understanding",
+          "consequence": {
+            "targetPerson": "person.tara_das",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.wallmag.board_mounted_together",
+            "threadEvent": "notes_explained_together",
+            "factSet": "school.wallmag.sharadiya_board_hung"
+          }
+        },
+        {
+          "id": "return_mira_calligraphy_pens_and_leave",
+          "labelKey": "school_scene.p2.wall_magazine_deadline.hanging.return.label",
+          "outcomeKey": "school_scene.p2.wall_magazine_deadline.hanging.return.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "returned",
+          "consequence": {
+            "targetPerson": "person.mira_sen",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.wallmag.pens_and_folder_returned",
+            "threadEvent": "notes_returned",
+            "factSet": "school.wallmag.pens_returned_cleanly"
+          }
+        },
+        {
+          "id": "leave_before_final_pinning_refusal",
+          "labelKey": "school_scene.p2.wall_magazine_deadline.hanging.refuse.label",
+          "outcomeKey": "school_scene.p2.wall_magazine_deadline.hanging.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.deven_chakraborty",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.wallmag.headed_out_before_hanging",
+            "factSet": "school.wallmag.left_before_pinning",
+            "factCleared": "school.wallmag.staying_to_mount"
+          }
+        }
+      ]
+    }
+  ],
+  "resolutions": [
+    "returned",
+    "shared_understanding",
+    "faded"
+  ]
+}

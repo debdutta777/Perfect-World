@@ -1,0 +1,28 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_printing_press_reams",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "Question-paper reams in the cyclostyle room",
+  "subject": "mathematics",
+  "unknown": "time",
+  "role": "solver",
+  "scarce": "equipment",
+  "fault": "none",
+  "method": "method.time_to_target",
+  "brief": "Before the terminal test, 90 reams of foolscap paper stand on the trestle in the school's cyclostyle room. The peon carries up 4 reams an hour from the ground-floor store while the two duplicators run through 19 reams an hour. The examination secretary wants to know how many hours the run can go on before the trestle drops to its reserve of 15 reams. You are working it out with the one ruler and the one calculator in the room.",
+  "quantities": [
+    { "id": "q_trestle_reams", "name": "Reams on the trestle", "kind": "stock", "given": true },
+    { "id": "q_store_carry", "name": "Reams carried up from the store an hour", "kind": "inflow", "given": true },
+    { "id": "q_duplicator_use", "name": "Reams used by the duplicators an hour", "kind": "outflow", "given": true },
+    { "id": "q_run_hours", "name": "Hours until the trestle reaches the reserve", "kind": "time", "given": false },
+    { "id": "q_ink_tins", "name": "Tins of stencil ink on the ledge", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_carry_adds", "from": "q_store_carry", "to": "q_trestle_reams", "effect": "adds", "sound": true },
+    { "id": "l_use_subtracts", "from": "q_duplicator_use", "to": "q_trestle_reams", "effect": "subtracts", "sound": true },
+    { "id": "l_hours_accumulate", "from": "q_run_hours", "to": "q_trestle_reams", "effect": "adds", "sound": true },
+    { "id": "l_ink_subtracts", "from": "q_ink_tins", "to": "q_trestle_reams", "effect": "subtracts", "sound": false },
+    { "id": "l_carry_drives_use", "from": "q_store_carry", "to": "q_duplicator_use", "effect": "adds", "sound": false }
+  ],
+  "note": "Set at Nabapara Vidyalaya (loc_nhss). Worked answer: the trestle loses 19 - 4 = 15 reams an hour, it may fall from 90 to 15 reams, a drop of 75, which takes 75 / 15 = 5 hours. The common mistakes are 90 / 19 = 4.7 hours (forgetting the peon) and 90 / 15 = 6 hours (forgetting the reserve). There is no fault."
+}

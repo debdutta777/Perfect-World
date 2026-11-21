@@ -1,0 +1,203 @@
+{
+  "type": "tower_scenario",
+  "id": "p2.pace_p404",
+  "note": "Floor 1 route pace (P4-04): sustained traverse along a mist-slick tidal bund while managing brick traction and breathing rhythm.",
+  "route": "tower.route.pace",
+  "floor": 1,
+  "runner": "tower.runner.pace",
+  "primaryMethod": "endurance",
+  "allowsCombat": false,
+  "classroomModel": "none",
+  "changedRuleKey": "",
+  "titleKey": "p2.a7.pace_p404.title",
+  "setupKey": "p2.a7.pace_p404.setup",
+  "entryBeat": "beat.1",
+  "beats": [
+    {
+      "id": "beat.1",
+      "promptKey": "p2.a7.pace_p404.b1.prompt",
+      "metric": "discipline",
+      "clues": [
+        {
+          "id": "clue.1",
+          "method": "endurance",
+          "textKey": "p2.a7.pace_p404.b1.clue1"
+        },
+        {
+          "id": "clue.2",
+          "method": "analysis",
+          "textKey": "p2.a7.pace_p404.b1.clue2"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "opt.herringbone_crown_step",
+          "labelKey": "p2.a7.pace_p404.b1.opt1.label",
+          "outcomeKey": "p2.a7.pace_p404.b1.opt1.outcome",
+          "method": "endurance",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 500,
+          "minutes": 5,
+          "nextBeat": "beat.2"
+        },
+        {
+          "id": "opt.dry_berm_detour",
+          "labelKey": "p2.a7.pace_p404.b1.opt2.label",
+          "outcomeKey": "p2.a7.pace_p404.b1.opt2.outcome",
+          "method": "endurance",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 350,
+          "minutes": 7,
+          "nextBeat": "beat.2"
+        },
+        {
+          "id": "opt.bound_silt_shoulder",
+          "labelKey": "p2.a7.pace_p404.b1.opt3.label",
+          "outcomeKey": "p2.a7.pace_p404.b1.opt3.outcome",
+          "method": "endurance",
+          "isCombat": false,
+          "isMistake": true,
+          "scoreMilli": 150,
+          "minutes": 4,
+          "nextBeat": "recovery"
+        }
+      ],
+      "recovery": {
+        "id": "rec.1",
+        "promptKey": "p2.a7.pace_p404.b1.rec.prompt",
+        "actionKey": "p2.a7.pace_p404.b1.rec.action",
+        "outcomeKey": "p2.a7.pace_p404.b1.rec.outcome",
+        "method": "endurance",
+        "restoredScoreMilli": 400,
+        "minutes": 3,
+        "nextBeat": "beat.2"
+      }
+    },
+    {
+      "id": "beat.2",
+      "promptKey": "p2.a7.pace_p404.b2.prompt",
+      "metric": "discipline",
+      "clues": [
+        {
+          "id": "clue.1",
+          "method": "endurance",
+          "textKey": "p2.a7.pace_p404.b2.clue1"
+        },
+        {
+          "id": "clue.2",
+          "method": "analysis",
+          "textKey": "p2.a7.pace_p404.b2.clue2"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "opt.banquette_nasal_rhythm",
+          "labelKey": "p2.a7.pace_p404.b2.opt1.label",
+          "outcomeKey": "p2.a7.pace_p404.b2.opt1.outcome",
+          "method": "endurance",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 500,
+          "minutes": 5,
+          "nextBeat": "beat.3"
+        },
+        {
+          "id": "opt.sluice_post_crouch",
+          "labelKey": "p2.a7.pace_p404.b2.opt2.label",
+          "outcomeKey": "p2.a7.pace_p404.b2.opt2.outcome",
+          "method": "endurance",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 350,
+          "minutes": 6,
+          "nextBeat": "beat.3"
+        },
+        {
+          "id": "opt.charge_exposed_crest",
+          "labelKey": "p2.a7.pace_p404.b2.opt3.label",
+          "outcomeKey": "p2.a7.pace_p404.b2.opt3.outcome",
+          "method": "endurance",
+          "isCombat": false,
+          "isMistake": true,
+          "scoreMilli": 150,
+          "minutes": 4,
+          "nextBeat": "recovery"
+        }
+      ],
+      "recovery": {
+        "id": "rec.2",
+        "promptKey": "p2.a7.pace_p404.b2.rec.prompt",
+        "actionKey": "p2.a7.pace_p404.b2.rec.action",
+        "outcomeKey": "p2.a7.pace_p404.b2.rec.outcome",
+        "method": "endurance",
+        "restoredScoreMilli": 400,
+        "minutes": 3,
+        "nextBeat": "beat.3"
+      }
+    },
+    {
+      "id": "beat.3",
+      "promptKey": "p2.a7.pace_p404.b3.prompt",
+      "metric": "common_judgment",
+      "clues": [
+        {
+          "id": "clue.1",
+          "method": "logistics",
+          "textKey": "p2.a7.pace_p404.b3.clue1"
+        },
+        {
+          "id": "clue.2",
+          "method": "endurance",
+          "textKey": "p2.a7.pace_p404.b3.clue2"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "opt.repeg_rope_and_share_salts",
+          "labelKey": "p2.a7.pace_p404.b3.opt1.label",
+          "outcomeKey": "p2.a7.pace_p404.b3.opt1.outcome",
+          "method": "endurance",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 1000,
+          "minutes": 3,
+          "nextBeat": "complete"
+        },
+        {
+          "id": "opt.point_out_dry_bricks",
+          "labelKey": "p2.a7.pace_p404.b3.opt2.label",
+          "outcomeKey": "p2.a7.pace_p404.b3.opt2.outcome",
+          "method": "endurance",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 750,
+          "minutes": 2,
+          "nextBeat": "complete"
+        },
+        {
+          "id": "opt.ignore_loose_post",
+          "labelKey": "p2.a7.pace_p404.b3.opt3.label",
+          "outcomeKey": "p2.a7.pace_p404.b3.opt3.outcome",
+          "method": "endurance",
+          "isCombat": false,
+          "isMistake": true,
+          "scoreMilli": 250,
+          "minutes": 2,
+          "nextBeat": "recovery"
+        }
+      ],
+      "recovery": {
+        "id": "rec.3",
+        "promptKey": "p2.a7.pace_p404.b3.rec.prompt",
+        "actionKey": "p2.a7.pace_p404.b3.rec.action",
+        "outcomeKey": "p2.a7.pace_p404.b3.rec.outcome",
+        "method": "endurance",
+        "restoredScoreMilli": 800,
+        "minutes": 2,
+        "nextBeat": "complete"
+      }
+    }
+  ]
+}

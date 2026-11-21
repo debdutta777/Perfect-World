@@ -1,6 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+class SWidget;
+DECLARE_DELEGATE_OneParam(FPWWidgetDelegate, TSharedPtr<SWidget>);
 
 /** The step numbers of the creation flow, in order. */
 namespace PWUI

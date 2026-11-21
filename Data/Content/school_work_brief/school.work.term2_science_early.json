@@ -1,0 +1,19 @@
+{
+  "type": "school_work_brief",
+  "id": "school.work.term2_science_early",
+  "calendar": "calendar.nabapara_2042_43",
+  "bellSchedule": "bell_schedule.nabapara_xi_science",
+  "stream": "science",
+  "subject": "mathematics",
+  "term": "term_2",
+  "issueDate": "2042-11-03",
+  "period": 0,
+  "dueDate": "2042-11-10",
+  "dueMinute": 1080,
+  "paper": "assessment_paper.xi_half_yearly_mixed",
+  "titleKey": "phase3.p304.term2.science.early.title",
+  "briefKey": "phase3.p304.term2.science.early.brief",
+  "criteriaKey": "phase3.p304.term2.science.early.criteria",
+  "recoveryKey": "phase3.p304.term2.science.early.recovery",
+  "note": "C3 Term 2 assignment. Mathematics hosts a stock-and-flow rate worksheet rehearsal; the existing mixed paper is deliberately reused. Dates, timetable and deadlines are authored production assumptions, not a new syllabus or a cultural-review claim."
+}

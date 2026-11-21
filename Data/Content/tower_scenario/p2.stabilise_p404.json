@@ -1,0 +1,203 @@
+{
+  "type": "tower_scenario",
+  "id": "p2.stabilise_p404",
+  "note": "Floor 2 route stabilise (P4-04): Class XI DC series-parallel accumulator bench where voltage-surge resistance inversion starves the secondary cooling branch.",
+  "route": "tower.route.stabilise",
+  "floor": 2,
+  "runner": "tower.runner.stabilise",
+  "primaryMethod": "construction",
+  "allowsCombat": false,
+  "classroomModel": "problem_case.xi_dc_series_parallel",
+  "changedRuleKey": "p2.a7.stabilise_p404.changed_rule",
+  "titleKey": "p2.a7.stabilise_p404.title",
+  "setupKey": "p2.a7.stabilise_p404.setup",
+  "entryBeat": "beat.1",
+  "beats": [
+    {
+      "id": "beat.1",
+      "promptKey": "p2.a7.stabilise_p404.b1.prompt",
+      "metric": "discipline",
+      "clues": [
+        {
+          "id": "clue.1",
+          "method": "analysis",
+          "textKey": "p2.a7.stabilise_p404.b1.clue1"
+        },
+        {
+          "id": "clue.2",
+          "method": "construction",
+          "textKey": "p2.a7.stabilise_p404.b1.clue2"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "opt.audit_coulomb_drain_rate",
+          "labelKey": "p2.a7.stabilise_p404.b1.opt1.label",
+          "outcomeKey": "p2.a7.stabilise_p404.b1.opt1.outcome",
+          "method": "construction",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 500,
+          "minutes": 5,
+          "nextBeat": "beat.2"
+        },
+        {
+          "id": "opt.swap_ammeter_between_legs",
+          "labelKey": "p2.a7.stabilise_p404.b1.opt2.label",
+          "outcomeKey": "p2.a7.stabilise_p404.b1.opt2.outcome",
+          "method": "construction",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 350,
+          "minutes": 6,
+          "nextBeat": "beat.2"
+        },
+        {
+          "id": "opt.short_series_rheostat",
+          "labelKey": "p2.a7.stabilise_p404.b1.opt3.label",
+          "outcomeKey": "p2.a7.stabilise_p404.b1.opt3.outcome",
+          "method": "construction",
+          "isCombat": false,
+          "isMistake": true,
+          "scoreMilli": 150,
+          "minutes": 4,
+          "nextBeat": "recovery"
+        }
+      ],
+      "recovery": {
+        "id": "rec.1",
+        "promptKey": "p2.a7.stabilise_p404.b1.rec.prompt",
+        "actionKey": "p2.a7.stabilise_p404.b1.rec.action",
+        "outcomeKey": "p2.a7.stabilise_p404.b1.rec.outcome",
+        "method": "construction",
+        "restoredScoreMilli": 400,
+        "minutes": 3,
+        "nextBeat": "beat.2"
+      }
+    },
+    {
+      "id": "beat.2",
+      "promptKey": "p2.a7.stabilise_p404.b2.prompt",
+      "metric": "discipline",
+      "clues": [
+        {
+          "id": "clue.1",
+          "method": "construction",
+          "textKey": "p2.a7.stabilise_p404.b2.clue1"
+        },
+        {
+          "id": "clue.2",
+          "method": "analysis",
+          "textKey": "p2.a7.stabilise_p404.b2.clue2"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "opt.fit_compensating_trimmer",
+          "labelKey": "p2.a7.stabilise_p404.b2.opt1.label",
+          "outcomeKey": "p2.a7.stabilise_p404.b2.opt1.outcome",
+          "method": "construction",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 500,
+          "minutes": 5,
+          "nextBeat": "beat.3"
+        },
+        {
+          "id": "opt.step_rheostat_by_hand",
+          "labelKey": "p2.a7.stabilise_p404.b2.opt2.label",
+          "outcomeKey": "p2.a7.stabilise_p404.b2.opt2.outcome",
+          "method": "construction",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 350,
+          "minutes": 6,
+          "nextBeat": "beat.3"
+        },
+        {
+          "id": "opt.disconnect_trickle_charger",
+          "labelKey": "p2.a7.stabilise_p404.b2.opt3.label",
+          "outcomeKey": "p2.a7.stabilise_p404.b2.opt3.outcome",
+          "method": "construction",
+          "isCombat": false,
+          "isMistake": true,
+          "scoreMilli": 150,
+          "minutes": 4,
+          "nextBeat": "recovery"
+        }
+      ],
+      "recovery": {
+        "id": "rec.2",
+        "promptKey": "p2.a7.stabilise_p404.b2.rec.prompt",
+        "actionKey": "p2.a7.stabilise_p404.b2.rec.action",
+        "outcomeKey": "p2.a7.stabilise_p404.b2.rec.outcome",
+        "method": "construction",
+        "restoredScoreMilli": 400,
+        "minutes": 3,
+        "nextBeat": "beat.3"
+      }
+    },
+    {
+      "id": "beat.3",
+      "promptKey": "p2.a7.stabilise_p404.b3.prompt",
+      "metric": "common_judgment",
+      "clues": [
+        {
+          "id": "clue.1",
+          "method": "construction",
+          "textKey": "p2.a7.stabilise_p404.b3.clue1"
+        },
+        {
+          "id": "clue.2",
+          "method": "logistics",
+          "textKey": "p2.a7.stabilise_p404.b3.clue2"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "opt.collar_range_pin_and_label",
+          "labelKey": "p2.a7.stabilise_p404.b3.opt1.label",
+          "outcomeKey": "p2.a7.stabilise_p404.b3.opt1.outcome",
+          "method": "construction",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 1000,
+          "minutes": 3,
+          "nextBeat": "complete"
+        },
+        {
+          "id": "opt.coil_leads_on_hook",
+          "labelKey": "p2.a7.stabilise_p404.b3.opt2.label",
+          "outcomeKey": "p2.a7.stabilise_p404.b3.opt2.outcome",
+          "method": "construction",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 750,
+          "minutes": 2,
+          "nextBeat": "complete"
+        },
+        {
+          "id": "opt.leave_five_amp_shunt_bridged",
+          "labelKey": "p2.a7.stabilise_p404.b3.opt3.label",
+          "outcomeKey": "p2.a7.stabilise_p404.b3.opt3.outcome",
+          "method": "construction",
+          "isCombat": false,
+          "isMistake": true,
+          "scoreMilli": 250,
+          "minutes": 2,
+          "nextBeat": "recovery"
+        }
+      ],
+      "recovery": {
+        "id": "rec.3",
+        "promptKey": "p2.a7.stabilise_p404.b3.rec.prompt",
+        "actionKey": "p2.a7.stabilise_p404.b3.rec.action",
+        "outcomeKey": "p2.a7.stabilise_p404.b3.rec.outcome",
+        "method": "construction",
+        "restoredScoreMilli": 800,
+        "minutes": 2,
+        "nextBeat": "complete"
+      }
+    }
+  ]
+}

@@ -1,0 +1,198 @@
+{
+  "type": "npc_schedule",
+  "id": "npc_schedule.purnima_das",
+  "note": "R4-03. Seven-day local walks through the north and south side-alley thresholds. Explicit off-lane home and destination; all-pairs travel is sorted strictly by (from,to). The vendor serves at three road-edge bays, with two rounds and an off-lane meal/rest interval. Passers pause briefly on the north footpath while crossing between off-lane commitments. No purchasing command is implied.",
+  "person": "person.purnima_das",
+  "home": "location.ambient.purnima.home",
+  "workplace": "anchor.ambient.purnima.west",
+  "door": "door.nabapara.ambient_north_threshold",
+  "speedCmPerMinute": 140,
+  "routine": [
+    {
+      "days": 127,
+      "start": 0,
+      "end": 360,
+      "zone": "location.ambient.purnima.home",
+      "role": "sleeping"
+    },
+    {
+      "days": 127,
+      "start": 360,
+      "end": 420,
+      "zone": "location.ambient.purnima.home",
+      "role": "at_home"
+    },
+    {
+      "days": 127,
+      "start": 420,
+      "end": 480,
+      "zone": "location.ambient.purnima.home",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 480,
+      "end": 528,
+      "zone": "location.ambient.purnima.home",
+      "role": "stocking"
+    },
+    {
+      "days": 127,
+      "start": 540,
+      "end": 600,
+      "zone": "anchor.ambient.purnima.east",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 609,
+      "end": 669,
+      "zone": "anchor.ambient.purnima.middle",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 678,
+      "end": 738,
+      "zone": "anchor.ambient.purnima.west",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 768,
+      "end": 840,
+      "zone": "location.ambient.purnima.home",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 840,
+      "end": 888,
+      "zone": "location.ambient.purnima.home",
+      "role": "resting"
+    },
+    {
+      "days": 127,
+      "start": 900,
+      "end": 960,
+      "zone": "anchor.ambient.purnima.east",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 969,
+      "end": 1029,
+      "zone": "anchor.ambient.purnima.middle",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 1038,
+      "end": 1098,
+      "zone": "anchor.ambient.purnima.west",
+      "role": "serving"
+    },
+    {
+      "days": 127,
+      "start": 1128,
+      "end": 1200,
+      "zone": "location.ambient.purnima.home",
+      "role": "stocking"
+    },
+    {
+      "days": 127,
+      "start": 1200,
+      "end": 1260,
+      "zone": "location.ambient.purnima.home",
+      "role": "break"
+    },
+    {
+      "days": 127,
+      "start": 1260,
+      "end": 1320,
+      "zone": "location.ambient.purnima.home",
+      "role": "resting"
+    },
+    {
+      "days": 127,
+      "start": 1320,
+      "end": 1440,
+      "zone": "location.ambient.purnima.home",
+      "role": "sleeping"
+    }
+  ],
+  "routes": [
+    {
+      "id": "route.purnima.home_east",
+      "from": "location.ambient.purnima.home",
+      "to": "anchor.ambient.purnima.east",
+      "lengthCm": 1680
+    },
+    {
+      "id": "route.purnima.east_middle",
+      "from": "anchor.ambient.purnima.east",
+      "to": "anchor.ambient.purnima.middle",
+      "lengthCm": 1260
+    },
+    {
+      "id": "route.purnima.middle_west",
+      "from": "anchor.ambient.purnima.middle",
+      "to": "anchor.ambient.purnima.west",
+      "lengthCm": 1260
+    }
+  ],
+  "travel": [
+    {
+      "from": "anchor.ambient.purnima.east",
+      "to": "anchor.ambient.purnima.middle",
+      "minutes": 9,
+      "routes": [
+        "route.purnima.east_middle"
+      ]
+    },
+    {
+      "from": "anchor.ambient.purnima.east",
+      "to": "anchor.ambient.purnima.west",
+      "minutes": 18,
+      "routes": [
+        "route.purnima.east_middle",
+        "route.purnima.middle_west"
+      ]
+    },
+    {
+      "from": "anchor.ambient.purnima.east",
+      "to": "location.ambient.purnima.home",
+      "minutes": 12,
+      "routes": [
+        "route.purnima.home_east"
+      ]
+    },
+    {
+      "from": "anchor.ambient.purnima.middle",
+      "to": "anchor.ambient.purnima.west",
+      "minutes": 9,
+      "routes": [
+        "route.purnima.middle_west"
+      ]
+    },
+    {
+      "from": "anchor.ambient.purnima.middle",
+      "to": "location.ambient.purnima.home",
+      "minutes": 21,
+      "routes": [
+        "route.purnima.east_middle",
+        "route.purnima.home_east"
+      ]
+    },
+    {
+      "from": "anchor.ambient.purnima.west",
+      "to": "location.ambient.purnima.home",
+      "minutes": 30,
+      "routes": [
+        "route.purnima.middle_west",
+        "route.purnima.east_middle",
+        "route.purnima.home_east"
+      ]
+    }
+  ]
+}

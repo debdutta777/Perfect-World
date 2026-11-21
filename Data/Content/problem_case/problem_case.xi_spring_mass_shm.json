@@ -1,0 +1,28 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_spring_mass_shm",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "Twenty swings of the spring",
+  "subject": "physics",
+  "unknown": "time",
+  "role": "recorder",
+  "scarce": "readings",
+  "fault": "timing",
+  "method": "method.time_to_target",
+  "brief": "On Stand Two a 0.25 kilogram slotted mass hangs from a helical spring of stiffness 10 newtons per metre and is released from 3 centimetres below its rest position. Tara Das counts the oscillations, calling 'one' at the release, while you record the time. Her one stopwatch run from the release to her call of 'twenty' was 20.9 seconds, and the formula for the period seems to disagree with it. How many seconds should the tally take to reach twenty complete oscillations? You are the recorder, and the stopwatch run is the only reading you have.",
+  "quantities": [
+    { "id": "q_oscillations", "name": "Complete oscillations on the tally", "kind": "stock", "given": true },
+    { "id": "q_rate", "name": "Oscillations completed per second, from the stiffness and the mass", "kind": "inflow", "given": true },
+    { "id": "q_seconds", "name": "Seconds until the tally reaches twenty", "kind": "time", "given": false },
+    { "id": "q_amplitude", "name": "Starting displacement of 3 centimetres", "kind": "context", "given": true },
+    { "id": "q_stand_mass", "name": "Mass of the retort stand", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_rate_adds", "from": "q_rate", "to": "q_oscillations", "effect": "adds", "sound": true },
+    { "id": "l_seconds_accumulate", "from": "q_seconds", "to": "q_oscillations", "effect": "adds", "sound": true },
+    { "id": "l_amplitude_adds", "from": "q_amplitude", "to": "q_oscillations", "effect": "adds", "sound": false },
+    { "id": "l_stand_subtracts", "from": "q_stand_mass", "to": "q_oscillations", "effect": "subtracts", "sound": false },
+    { "id": "l_oscillations_drive_rate", "from": "q_oscillations", "to": "q_rate", "effect": "adds", "sound": false }
+  ],
+  "note": "Simple harmonic motion of a spring and mass (Class XI physics), modelled as a tally that gathers oscillations at a steady rate. Ishan Sheikh and Tara Das (npc_ishan_sheikh, npc_tara_das) are classmates; Tara counts. Worked answer: the period is T = 2 x pi x sqrt(m / k) = 2 x 3.1416 x sqrt(0.25 / 10) = 2 x 3.1416 x 0.1581 = 0.9935 s, so the rate is 1 / T = 1.0066 oscillations a second, and twenty oscillations take 20 x 0.9935 = 19.87 s, about 19.9 s. The 3 cm amplitude and the stand do not change the period. The timing fault is the count: calling 'one' at the release means the run from release to 'twenty' held 21 periods, 21 x 0.9935 = 20.86 s, which is the 20.9 s she recorded. The tally needs 20 periods, not 21."
+}

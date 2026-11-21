@@ -60,7 +60,8 @@ void TestSelection()
         ++counts[PlayNext(state, Catalogue(), 7, i)];
     Check(counts.size() == family.Cases.size(), "every case is offered");
     for (const auto& [id, count] : counts)
-        Check(count >= 25 && count <= 80, "no case is starved or dominates (400 exposures over 8 cases)");
+        Check(count * static_cast<int>(family.Cases.size()) >= 400 / 2 && count * static_cast<int>(family.Cases.size()) <= 400 * 8 / 5,
+              "no case is starved or dominates (400 exposures; between 0.5 and 1.6 times the even share, as 25 to 80 was for eight cases)");
     Check(!SelectModelCase(Catalogue(), state, ModelTestFamily, 7, 99999).FromUnseen, "once every case is seen the pool is the eligible ones");
     Check(SelectModelCase(Catalogue(), state, ModelTestFamily, 7, 99999).Candidates == family.Cases.size() - ModelRecentKept,
           "the last three shown are held back");

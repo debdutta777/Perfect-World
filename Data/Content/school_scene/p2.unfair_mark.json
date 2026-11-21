@@ -1,0 +1,361 @@
+{
+  "type": "school_scene",
+  "id": "p2.unfair_mark",
+  "note": "Order C2 scene 4: a half-yearly answer script comes back with an unfair-seeming deduction on an alternate working method, and the player weighs asking Amrita Basu for a calm script review with Mira Sen and Ishan Sheikh (INDIA_WORLD_BIBLE.md named cast: Amrita Basu, Mira Sen, Ishan Sheikh, plus household adult and care worker).",
+  "arcKind": "group_project",
+  "titleKey": "school_scene.p2.unfair_mark.title",
+  "summaryKey": "school_scene.p2.unfair_mark.summary",
+  "institution": "institution.nabapara_vidyalaya",
+  "calendar": "calendar.nabapara_2042_43",
+  "term": "term_1",
+  "calendarSpan": "half_yearly",
+  "threadTemplate": "thread.borrowed_notes",
+  "entryScene": "scene_script_handed_back",
+  "cast": [
+    {
+      "person": "person.amrita_basu",
+      "role": "teacher",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.mira_sen",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.ishan_sheikh",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.household_adult",
+      "role": "family_adult",
+      "originVariant": "family",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.care_worker",
+      "role": "care_adult",
+      "originVariant": "care_home",
+      "proposedNewCast": false
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_script_handed_back",
+      "titleKey": "school_scene.p2.unfair_mark.script.title",
+      "promptKey": "school_scene.p2.unfair_mark.script.prompt",
+      "speaker": "person.mira_sen",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "timetable_period",
+        "bellSchedule": "bell_schedule.nabapara_xi_commerce",
+        "periodIndex": 3,
+        "subject": "english",
+        "zone": "nhss.room_xi_commerce",
+        "startMinute": 805,
+        "endMinute": 850
+      },
+      "conversationTopic": "topic.mira_sen.half_yearly_mark_deduction",
+      "choices": [
+        {
+          "id": "compare_marking_scheme_with_mira",
+          "labelKey": "school_scene.p2.unfair_mark.script.compare.label",
+          "outcomeKey": "school_scene.p2.unfair_mark.script.compare.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_tiffin_paper_comparison",
+          "consequence": {
+            "targetPerson": "person.mira_sen",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.mark.rubric_compared",
+            "factSet": "school.mark.compared_with_mira",
+            "journalAgreementFact": "c2_mark_scheme_comparison"
+          }
+        },
+        {
+          "id": "show_paper_at_home_first",
+          "labelKey": "school_scene.p2.unfair_mark.script.family.label",
+          "outcomeKey": "school_scene.p2.unfair_mark.script.family.outcome",
+          "costMinutes": 5,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_family_paper_signature",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.mark.family_review_planned",
+            "factSet": "school.mark.taking_script_home"
+          }
+        },
+        {
+          "id": "show_paper_at_care_home_first",
+          "labelKey": "school_scene.p2.unfair_mark.script.care.label",
+          "outcomeKey": "school_scene.p2.unfair_mark.script.care.outcome",
+          "costMinutes": 5,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_care_paper_signature",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.mark.care_review_planned",
+            "factSet": "school.mark.taking_script_to_care"
+          }
+        },
+        {
+          "id": "fold_paper_away_refusal",
+          "labelKey": "school_scene.p2.unfair_mark.script.refuse.label",
+          "outcomeKey": "school_scene.p2.unfair_mark.script.refuse.outcome",
+          "costMinutes": 0,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.mark.script_filed_quietly",
+            "factSet": "school.mark.accepted_as_marked"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_family_paper_signature",
+      "titleKey": "school_scene.p2.unfair_mark.family.title",
+      "promptKey": "school_scene.p2.unfair_mark.family.prompt",
+      "speaker": "person.household_adult",
+      "originVariant": "family",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.player_home",
+        "startMinute": 1140,
+        "endMinute": 1200
+      },
+      "conversationTopic": "topic.household_adult.script_margin_note",
+      "choices": [
+        {
+          "id": "write_polite_re_total_query",
+          "labelKey": "school_scene.p2.unfair_mark.family.query.label",
+          "outcomeKey": "school_scene.p2.unfair_mark.family.query.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_tiffin_paper_comparison",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.mark.family_query_signed",
+            "factSet": "school.mark.family_query_prepared",
+            "journalAgreementFact": "c2_mark_family_query_note"
+          }
+        },
+        {
+          "id": "sign_without_query_refusal",
+          "labelKey": "school_scene.p2.unfair_mark.family.refuse.label",
+          "outcomeKey": "school_scene.p2.unfair_mark.family.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.mark.family_signed_as_is",
+            "factSet": "school.mark.family_signed_without_query"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_care_paper_signature",
+      "titleKey": "school_scene.p2.unfair_mark.care.title",
+      "promptKey": "school_scene.p2.unfair_mark.care.prompt",
+      "speaker": "person.care_worker",
+      "originVariant": "care_home",
+      "schedule": {
+        "slotKind": "care_handover",
+        "periodIndex": -1,
+        "zone": "location.nabapara.care_home",
+        "startMinute": 840,
+        "endMinute": 885
+      },
+      "conversationTopic": "topic.care_worker.script_margin_note",
+      "choices": [
+        {
+          "id": "draft_re_total_request_at_desk",
+          "labelKey": "school_scene.p2.unfair_mark.care.query.label",
+          "outcomeKey": "school_scene.p2.unfair_mark.care.query.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_tiffin_paper_comparison",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.mark.care_query_signed",
+            "factSet": "school.mark.care_query_prepared",
+            "journalAgreementFact": "c2_mark_care_query_note"
+          }
+        },
+        {
+          "id": "file_report_card_as_is_refusal",
+          "labelKey": "school_scene.p2.unfair_mark.care.refuse.label",
+          "outcomeKey": "school_scene.p2.unfair_mark.care.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.mark.care_signed_as_is",
+            "factSet": "school.mark.care_signed_without_query"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_tiffin_paper_comparison",
+      "titleKey": "school_scene.p2.unfair_mark.tiffin.title",
+      "promptKey": "school_scene.p2.unfair_mark.tiffin.prompt",
+      "speaker": "person.ishan_sheikh",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "school_break",
+        "bellSchedule": "bell_schedule.nabapara_xi_commerce",
+        "periodIndex": -1,
+        "zone": "nhss.court",
+        "startMinute": 770,
+        "endMinute": 800
+      },
+      "conversationTopic": "topic.ishan_sheikh.step_marking_comparison",
+      "choices": [
+        {
+          "id": "hand_back_borrowed_model_script",
+          "labelKey": "school_scene.p2.unfair_mark.tiffin.return.label",
+          "outcomeKey": "school_scene.p2.unfair_mark.tiffin.return.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "returned",
+          "consequence": {
+            "targetPerson": "person.mira_sen",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.mark.model_script_returned",
+            "threadEvent": "notes_returned",
+            "factSet": "school.mark.returned_mira_script"
+          }
+        },
+        {
+          "id": "request_after_school_script_review",
+          "labelKey": "school_scene.p2.unfair_mark.tiffin.review.label",
+          "outcomeKey": "school_scene.p2.unfair_mark.tiffin.review.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_after_school_mark_review",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.mark.review_slot_requested",
+            "threadEvent": "notes_explained_together",
+            "factSet": "school.mark.booked_script_review",
+            "journalAgreementFact": "c2_mark_amrita_appointment"
+          }
+        },
+        {
+          "id": "let_the_two_marks_go_refusal",
+          "labelKey": "school_scene.p2.unfair_mark.tiffin.refuse.label",
+          "outcomeKey": "school_scene.p2.unfair_mark.tiffin.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.mark.dropped_before_review",
+            "factSet": "school.mark.let_deduction_stand"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_after_school_mark_review",
+      "titleKey": "school_scene.p2.unfair_mark.review.title",
+      "promptKey": "school_scene.p2.unfair_mark.review.prompt",
+      "speaker": "person.amrita_basu",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "after_school",
+        "bellSchedule": "bell_schedule.nabapara_xi_commerce",
+        "periodIndex": -1,
+        "zone": "nhss.xi_a",
+        "startMinute": 955,
+        "endMinute": 1000
+      },
+      "conversationTopic": "topic.amrita_basu.alternate_method_marking",
+      "choices": [
+        {
+          "id": "walk_through_step_deduction_with_amrita",
+          "labelKey": "school_scene.p2.unfair_mark.review.explain.label",
+          "outcomeKey": "school_scene.p2.unfair_mark.review.explain.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "shared_understanding",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.mark.method_worked_through",
+            "threadEvent": "notes_explained_together",
+            "factSet": "school.mark.partial_credit_clarified"
+          }
+        },
+        {
+          "id": "accept_re_total_and_return_script",
+          "labelKey": "school_scene.p2.unfair_mark.review.return.label",
+          "outcomeKey": "school_scene.p2.unfair_mark.review.return.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "returned",
+          "consequence": {
+            "targetPerson": "person.mira_sen",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.mark.script_returned_after_tally",
+            "threadEvent": "notes_returned",
+            "factSet": "school.mark.tally_settled"
+          }
+        },
+        {
+          "id": "withdraw_query_politely_refusal",
+          "labelKey": "school_scene.p2.unfair_mark.review.refuse.label",
+          "outcomeKey": "school_scene.p2.unfair_mark.review.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.mark.query_withdrawn_politely",
+            "factSet": "school.mark.withdrew_without_friction",
+            "factCleared": "school.mark.booked_script_review"
+          }
+        }
+      ]
+    }
+  ],
+  "resolutions": [
+    "returned",
+    "shared_understanding",
+    "faded"
+  ]
+}

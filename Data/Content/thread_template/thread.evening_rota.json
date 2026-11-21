@@ -6,6 +6,7 @@
   "kind": "obligation",
   "opensWhen": "The household's evening jobs and the player's study window collide on three evenings in a row.",
   "calendar": "calendar.nabapara_2042_43",
+  "eveningCommitment": { "startMinute": 1080, "durationMinutes": 60, "activity": "activity.household_chores" },
   "note": "SCHOOL_AND_PROGRESSION.md innovation 7: 'Obligations can be redesigned' - a required outcome, not a compulsory animation. The carer role is the guardian of any household template, or children's-home staff at Household Resources rank 0 (INDIA_WORLD_BIBLE.md, opening household life). Nobody in the thread is a villain. Authored draft.",
   "roles": [
     { "id": "player", "name": "You" },

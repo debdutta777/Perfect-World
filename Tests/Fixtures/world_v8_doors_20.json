@@ -1,0 +1,78 @@
+{
+  "format": "perfectworld.save",
+  "schemaVersion": 8,
+  "creation": {
+  "schemaVersion": 5,
+  "age": 16,
+  "hasStarted": true,
+  "resumePoint": "in_world",
+  "householdTemplateId": "parent_household",
+  "identity": {
+    "givenName": "Ananya",
+    "familyName": "Sen",
+    "pronouns": "she/her",
+    "homeCity": "Kolkata",
+    "primaryLanguage": "Bengali",
+    "additionalLanguages": [],
+    "dateOfBirth": "2026-01-01"
+  },
+  "school": {
+    "streamId": "science",
+    "reason": ""
+  },
+  "identityMigrated": false,
+  "appearance": {
+    "schemaVersion": 1,
+    "faceShapeId": "face_oval",
+    "hairStyleId": "hair_short_crop",
+    "buildId": "build_average",
+    "uniformVariantId": "uniform_school_navy",
+    "skinTone": { "r": 166, "g": 124, "b": 91 },
+    "hairColor": { "r": 36, "g": 28, "b": 24 },
+    "eyeColor": { "r": 74, "g": 52, "b": 38 }
+  },
+  "traitRanks": {
+    "physical_presence": 1,
+    "personal_presentation": 1,
+    "household_resources": 1,
+    "guardian_support": 3,
+    "housing_stability": 2,
+    "vitality": 2,
+    "strength": 1,
+    "agility": 2,
+    "analytical_reasoning": 2,
+    "learning_discipline": 3,
+    "perception": 1,
+    "technical_aptitude": 2,
+    "creative_aptitude": 1,
+    "athletic_aptitude": 0,
+    "empathy": 3,
+    "confidence": 1,
+    "community_connections": 0,
+    "academic_foundation": 3,
+    "practical_experience": 1,
+    "adversity_resilience": 2
+  }
+},
+  "world": {
+    "seed": "0x000000004e4c3031",
+    "seq": "0x000000000000000d",
+    "clock": { "now": 760, "nextHandle": 1, "pending": [] },
+    "flags": {},
+    "gates": {},
+    "rng": [
+      { "stream": "opportunity", "words": ["0x92eb00750f305cf4", "0xdf5a06e915a57e0c", "0x105ec89aebe7f0f8", "0xf96b1cb80264d325"], "draws": "0x0000000000000000" },
+      { "stream": "tower", "words": ["0x27a42d001d07bba3", "0xc68553fa3aa9cbe0", "0x5521d9b05b4c5222", "0xfa54eddc9b0a6986"], "draws": "0x0000000000000000" },
+      { "stream": "ambience", "words": ["0xd77c8e8e529ca90a", "0x07c8b7ada7f41cd8", "0x29fae1e9360685b8", "0x7c5297677584d552"], "draws": "0x0000000000000000" },
+      { "stream": "crystallisation", "words": ["0xcf9a2d785a081055", "0x716e5c492cb0fe54", "0x69a41acdf67976fe", "0x03099c64f13d8e91"], "draws": "0x0000000000000000" }
+    ],
+    "dayloop": "pw.dayloop/1\nstate now=760 phase=plan seq=0 wakes=0 planned=0 asleep=0 slept_at=0 school_until=0\ncondition energy=80000 hunger=20000 health=100000 stress=10000\nlast kind=none at=0 activity=-\nplan=0\ncommitment=0\nsection runner 70\npw.activity_runner/1\ninstance=0\napplied=0\nstarted_at=0\nactivity=-\nend\nsection practice 48\npw.practice/1\nlast_at=0\nfamilies=0\nskills=0\nend\nsection receipts 95\npw.receipts/1\nstate next_seq=1 last_decided=0 folded_before=0\nentries=0\noverflow=0\nweeks=0\nend\nsection attendance 79\npw.attendance 1\nrange 0 0\ntotals 0 0 0 0 0 0 0\ndays 0\nend 17648352320939687205\nhash 2ae44777dfda2772\nend\n",
+    "conversations": {
+      "person.household_adult": "pw.conversation/2\nopen=0\nperson=\nnode=\nsessions=1\ntaken=0\nreceipts=1\nreceipt=choice.household_adult.talk_rota@1\nfacts=0\nend\n"
+    },
+    "doors": "pw.doors/2\ncount=20\ndoor=door.nabapara.home_front,1,-1\ndoor=door.nabapara.home_living,0,0\ndoor=door.nabapara.home_bedroom,1,1\ndoor=door.nabapara.home_kitchen,1,1\ndoor=door.nabapara.home_washroom,0,0\ndoor=door.nabapara.shanti_chai_shutter,1,-1\ndoor=door.nabapara.care_front,0,0\ndoor=door.nabapara.care_dormitory,0,0\ndoor=door.nabapara.care_common,0,0\ndoor=door.nabapara.care_washroom,0,0\ndoor=door.nabapara.stationery_front,1,-1\ndoor=door.nabapara.caretaker_flat_front,0,0\ndoor=door.nabapara.tall_flats_front,1,-1\ndoor=door.nabapara.tall_flats_unit_a,0,0\ndoor=door.nabapara.tall_flats_unit_b,0,0\ndoor=door.nabapara.tea_row_house_front,1,1\ndoor=door.nabapara.repair_workshop_front,0,0\ndoor=door.nabapara.hardware_store_front,0,0\ndoor=door.nabapara.old_house_front,0,0\ndoor=door.nabapara.tall_flats_upper_a,0,0\nend\n"
+  },
+  "player": { "zone": "zone.street.nabapara_lane", "posCm": [120, -3400, 20], "yawCdeg": 9000, "pitchCdeg": 0, "camera": "first_person" },
+  "hashVersion": 5,
+  "stateHash": "0x8503af99beee2232"
+}

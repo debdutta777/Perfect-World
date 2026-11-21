@@ -1,0 +1,31 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_dc_series_parallel",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "The two branches on Bench Four",
+  "subject": "physics",
+  "unknown": "outflow",
+  "role": "experimenter",
+  "scarce": "equipment",
+  "fault": "scale",
+  "method": "method.rate_from_readings",
+  "brief": "On Bench Four a 6.0 volt accumulator feeds a 2.0 ohm rheostat in series with two branches side by side: a 6.0 ohm lamp and a second branch of unknown resistance. A trickle charger puts 0.50 amp back into the accumulator while the circuit runs. The accumulator's charge read 2,000 coulombs at the start and 1,600 coulombs after 400 seconds, and the group's ammeter A1 in the lamp branch read 0.50 amp. A1 has two ranges on one dial, 0 to 1 amp and 0 to 5 amp, and the group did not write down which lead was in use. What current does the second branch draw? There is only one ammeter for the whole room.",
+  "quantities": [
+    { "id": "q_charge", "name": "Charge held by the accumulator in coulombs", "kind": "stock", "given": true },
+    { "id": "q_charger", "name": "Charger current into the accumulator in amps", "kind": "inflow", "given": true },
+    { "id": "q_lamp_branch", "name": "Current through the 6.0 ohm lamp branch in amps", "kind": "outflow", "given": true },
+    { "id": "q_second_branch", "name": "Current through the second branch in amps", "kind": "outflow", "given": false },
+    { "id": "q_run_seconds", "name": "Seconds the circuit ran", "kind": "time", "given": true },
+    { "id": "q_lead_gauge", "name": "Gauge of the connecting leads", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_charger_adds", "from": "q_charger", "to": "q_charge", "effect": "adds", "sound": true },
+    { "id": "l_lamp_subtracts", "from": "q_lamp_branch", "to": "q_charge", "effect": "subtracts", "sound": true },
+    { "id": "l_second_subtracts", "from": "q_second_branch", "to": "q_charge", "effect": "subtracts", "sound": true },
+    { "id": "l_seconds_accumulate", "from": "q_run_seconds", "to": "q_charge", "effect": "adds", "sound": true },
+    { "id": "l_gauge_adds", "from": "q_lead_gauge", "to": "q_charge", "effect": "adds", "sound": false },
+    { "id": "l_second_adds", "from": "q_second_branch", "to": "q_charge", "effect": "adds", "sound": false },
+    { "id": "l_charge_drives_second", "from": "q_charge", "to": "q_second_branch", "effect": "adds", "sound": false }
+  ],
+  "note": "A series-and-parallel direct-current circuit with Ohm's law; the stock is the charge on the accumulator and the branch currents are its outflows. Ishan Sheikh (npc_ishan_sheikh) is the lab partner. Worked answer: the charge fell by 2,000 - 1,600 = 400 C in 400 s while the charger added 0.50 x 400 = 200 C, so the circuit drew 600 C, which is 600 / 400 = 1.5 A in total. The lamp branch carries 0.50 A, so the second branch carries 1.5 - 0.50 = 1.0 A. Ohm's law agrees: the 6.0 and 3.0 ohm branches in parallel make 2.0 ohm, the whole circuit is 2.0 + 2.0 = 4.0 ohm, the current is 6.0 / 4.0 = 1.5 A, the voltage across the pair is 1.5 x 2.0 = 3.0 V, the lamp branch takes 3.0 / 6.0 = 0.50 A and the other 3.0 / 3.0 = 1.0 A. The scale fault is the A1 range: reading the 0 to 5 amp scale as if it were the 0 to 1 amp scale would make a 0.50 amp current look like 0.10 or 2.5 amp, and only the charge readings and Ohm's law expose it."
+}

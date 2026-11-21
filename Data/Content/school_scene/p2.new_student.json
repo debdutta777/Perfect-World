@@ -1,0 +1,367 @@
+{
+  "type": "school_scene",
+  "id": "p2.new_student",
+  "note": "Order C2 scene 1: a new student from another district (Deven Chakraborty) joins the Class XI section mid-term and bridges the syllabus gap with Amrita Basu, Ishan Sheikh and Mira Sen (INDIA_WORLD_BIBLE.md named cast: Amrita Basu, Ishan Sheikh, Mira Sen, plus household adult and care worker).",
+  "arcKind": "group_project",
+  "titleKey": "school_scene.p2.new_student.title",
+  "summaryKey": "school_scene.p2.new_student.summary",
+  "institution": "institution.nabapara_vidyalaya",
+  "calendar": "calendar.nabapara_2042_43",
+  "term": "term_1",
+  "calendarSpan": "unit_test_1",
+  "threadTemplate": "thread.borrowed_notes",
+  "entryScene": "scene_new_student_arrival",
+  "cast": [
+    {
+      "person": "person.amrita_basu",
+      "role": "teacher",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.deven_chakraborty",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": true
+    },
+    {
+      "person": "person.ishan_sheikh",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.mira_sen",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.household_adult",
+      "role": "family_adult",
+      "originVariant": "family",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.care_worker",
+      "role": "care_adult",
+      "originVariant": "care_home",
+      "proposedNewCast": false
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_new_student_arrival",
+      "titleKey": "school_scene.p2.new_student.arrival.title",
+      "promptKey": "school_scene.p2.new_student.arrival.prompt",
+      "speaker": "person.amrita_basu",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "timetable_period",
+        "bellSchedule": "bell_schedule.nabapara_xi_science",
+        "periodIndex": 0,
+        "subject": "mathematics",
+        "zone": "nhss.room_xi_science",
+        "startMinute": 620,
+        "endMinute": 665
+      },
+      "conversationTopic": "topic.amrita_basu.new_student_seating",
+      "choices": [
+        {
+          "id": "share_bench_and_notes",
+          "labelKey": "school_scene.p2.new_student.arrival.share.label",
+          "outcomeKey": "school_scene.p2.new_student.arrival.share.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_tiffin_syllabus_gap",
+          "consequence": {
+            "targetPerson": "person.deven_chakraborty",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.new_student.bench_shared",
+            "factSet": "school.new_student.shared_bench",
+            "journalAgreementFact": "c2_new_student_bench_share"
+          }
+        },
+        {
+          "id": "plan_family_spare_notebooks",
+          "labelKey": "school_scene.p2.new_student.arrival.family.label",
+          "outcomeKey": "school_scene.p2.new_student.arrival.family.outcome",
+          "costMinutes": 5,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_family_spare_notebooks",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.new_student.family_folder_planned",
+            "factSet": "school.new_student.sorting_family_notes"
+          }
+        },
+        {
+          "id": "plan_care_desk_copying",
+          "labelKey": "school_scene.p2.new_student.arrival.care.label",
+          "outcomeKey": "school_scene.p2.new_student.arrival.care.outcome",
+          "costMinutes": 5,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_care_desk_copying",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.new_student.care_copying_planned",
+            "factSet": "school.new_student.sorting_care_notes"
+          }
+        },
+        {
+          "id": "keep_own_bench_refusal",
+          "labelKey": "school_scene.p2.new_student.arrival.refuse.label",
+          "outcomeKey": "school_scene.p2.new_student.arrival.refuse.outcome",
+          "costMinutes": 0,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.new_student.kept_own_routine",
+            "factSet": "school.new_student.politely_kept_routine"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_family_spare_notebooks",
+      "titleKey": "school_scene.p2.new_student.family.title",
+      "promptKey": "school_scene.p2.new_student.family.prompt",
+      "speaker": "person.household_adult",
+      "originVariant": "family",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.player_home",
+        "startMinute": 1110,
+        "endMinute": 1170
+      },
+      "conversationTopic": "topic.household_adult.new_student_notebooks",
+      "choices": [
+        {
+          "id": "pack_first_month_carbons",
+          "labelKey": "school_scene.p2.new_student.family.pack.label",
+          "outcomeKey": "school_scene.p2.new_student.family.pack.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_tiffin_syllabus_gap",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.new_student.family_notes_packed",
+            "factSet": "school.new_student.family_notes_ready",
+            "journalAgreementFact": "c2_new_student_family_notes"
+          }
+        },
+        {
+          "id": "keep_notebooks_at_home_refusal",
+          "labelKey": "school_scene.p2.new_student.family.refuse.label",
+          "outcomeKey": "school_scene.p2.new_student.family.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.new_student.family_notes_kept_home",
+            "factSet": "school.new_student.kept_family_notebooks"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_care_desk_copying",
+      "titleKey": "school_scene.p2.new_student.care.title",
+      "promptKey": "school_scene.p2.new_student.care.prompt",
+      "speaker": "person.care_worker",
+      "originVariant": "care_home",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.care_home",
+        "startMinute": 1110,
+        "endMinute": 1170
+      },
+      "conversationTopic": "topic.care_worker.new_student_copying_slot",
+      "choices": [
+        {
+          "id": "book_evening_copying_hour",
+          "labelKey": "school_scene.p2.new_student.care.book.label",
+          "outcomeKey": "school_scene.p2.new_student.care.book.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_tiffin_syllabus_gap",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.new_student.care_copying_logged",
+            "factSet": "school.new_student.care_notes_ready",
+            "journalAgreementFact": "c2_new_student_care_notes"
+          }
+        },
+        {
+          "id": "keep_care_evening_quiet_refusal",
+          "labelKey": "school_scene.p2.new_student.care.refuse.label",
+          "outcomeKey": "school_scene.p2.new_student.care.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.new_student.care_evening_unchanged",
+            "factSet": "school.new_student.kept_care_notebooks"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_tiffin_syllabus_gap",
+      "titleKey": "school_scene.p2.new_student.tiffin.title",
+      "promptKey": "school_scene.p2.new_student.tiffin.prompt",
+      "speaker": "person.deven_chakraborty",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "school_break",
+        "bellSchedule": "bell_schedule.nabapara_xi_science",
+        "periodIndex": -1,
+        "zone": "nhss.court",
+        "startMinute": 770,
+        "endMinute": 800
+      },
+      "conversationTopic": "topic.deven_chakraborty.district_transfer_notes",
+      "choices": [
+        {
+          "id": "hand_over_topic_summary",
+          "labelKey": "school_scene.p2.new_student.tiffin.return.label",
+          "outcomeKey": "school_scene.p2.new_student.tiffin.return.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "returned",
+          "consequence": {
+            "targetPerson": "person.deven_chakraborty",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.new_student.summary_handed_over",
+            "threadEvent": "notes_returned",
+            "factSet": "school.new_student.summary_shared"
+          }
+        },
+        {
+          "id": "arrange_after_school_catchup",
+          "labelKey": "school_scene.p2.new_student.tiffin.catchup.label",
+          "outcomeKey": "school_scene.p2.new_student.tiffin.catchup.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_after_school_catchup",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.new_student.catchup_arranged",
+            "threadEvent": "notes_explained_together",
+            "factSet": "school.new_student.staying_for_catchup",
+            "journalAgreementFact": "c2_new_student_catchup_hour"
+          }
+        },
+        {
+          "id": "leave_tiffin_free_refusal",
+          "labelKey": "school_scene.p2.new_student.tiffin.refuse.label",
+          "outcomeKey": "school_scene.p2.new_student.tiffin.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.mira_sen",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.new_student.tiffin_kept_light",
+            "factSet": "school.new_student.tiffin_break_rested"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_after_school_catchup",
+      "titleKey": "school_scene.p2.new_student.catchup.title",
+      "promptKey": "school_scene.p2.new_student.catchup.prompt",
+      "speaker": "person.ishan_sheikh",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "after_school",
+        "bellSchedule": "bell_schedule.nabapara_xi_science",
+        "periodIndex": -1,
+        "zone": "nhss.xi_a",
+        "startMinute": 955,
+        "endMinute": 1000
+      },
+      "conversationTopic": "topic.ishan_sheikh.transfer_chapter_walkthrough",
+      "choices": [
+        {
+          "id": "work_through_previous_chapters",
+          "labelKey": "school_scene.p2.new_student.catchup.explain.label",
+          "outcomeKey": "school_scene.p2.new_student.catchup.explain.outcome",
+          "costMinutes": 25,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "shared_understanding",
+          "consequence": {
+            "targetPerson": "person.deven_chakraborty",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.new_student.chapters_worked_together",
+            "threadEvent": "notes_explained_together",
+            "factSet": "school.new_student.settled_into_section"
+          }
+        },
+        {
+          "id": "return_clean_index_only",
+          "labelKey": "school_scene.p2.new_student.catchup.return.label",
+          "outcomeKey": "school_scene.p2.new_student.catchup.return.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "returned",
+          "consequence": {
+            "targetPerson": "person.mira_sen",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.new_student.index_sheet_returned",
+            "threadEvent": "notes_returned",
+            "factSet": "school.new_student.index_handed_back"
+          }
+        },
+        {
+          "id": "head_home_on_bell_refusal",
+          "labelKey": "school_scene.p2.new_student.catchup.refuse.label",
+          "outcomeKey": "school_scene.p2.new_student.catchup.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.deven_chakraborty",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.new_student.parted_at_dismissal",
+            "factSet": "school.new_student.left_at_dismissal",
+            "factCleared": "school.new_student.staying_for_catchup"
+          }
+        }
+      ]
+    }
+  ],
+  "resolutions": [
+    "returned",
+    "shared_understanding",
+    "faded"
+  ]
+}

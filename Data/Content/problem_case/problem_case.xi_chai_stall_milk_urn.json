@@ -1,0 +1,28 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_chai_stall_milk_urn",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "The morning milk urn at Shanti Chai Corner",
+  "subject": "accounting",
+  "unknown": "outflow",
+  "role": "presenter",
+  "scarce": "time",
+  "fault": "hidden_flow",
+  "method": "method.rate_from_readings",
+  "brief": "Farida Qadri has asked you to explain her morning milk tally at Shanti Chai Corner before the school bell goes. The brass urn held 28 litres at six o'clock and 12 litres at ten o'clock, and the dairy cycle-wallah poured in 3 litres an hour in between. How many litres an hour left the urn in all? Her ladle tally for the tea kettle looks lower than the fall in the urn suggests, and a clay pot of warm milk also goes to the back shelf for curd. You will present your answer to the class, and the bell is soon.",
+  "quantities": [
+    { "id": "q_urn_milk", "name": "Litres of milk in the brass urn", "kind": "stock", "given": true },
+    { "id": "q_dairy_pour", "name": "Litres poured in by the dairy man an hour", "kind": "inflow", "given": true },
+    { "id": "q_milk_out", "name": "Litres leaving the urn an hour", "kind": "outflow", "given": false },
+    { "id": "q_morning_hours", "name": "Hours from six to ten o'clock", "kind": "time", "given": true },
+    { "id": "q_cup_price", "name": "Price of a clay cup of tea in rupees", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_pour_adds", "from": "q_dairy_pour", "to": "q_urn_milk", "effect": "adds", "sound": true },
+    { "id": "l_milk_out_subtracts", "from": "q_milk_out", "to": "q_urn_milk", "effect": "subtracts", "sound": true },
+    { "id": "l_hours_accumulate", "from": "q_morning_hours", "to": "q_urn_milk", "effect": "adds", "sound": true },
+    { "id": "l_cup_price_subtracts", "from": "q_cup_price", "to": "q_urn_milk", "effect": "subtracts", "sound": false },
+    { "id": "l_urn_drives_out", "from": "q_urn_milk", "to": "q_milk_out", "effect": "adds", "sound": false }
+  ],
+  "note": "Shanti Chai Corner (loc_shanti_chai) and Farida Qadri (npc_farida_qadri) are from INDIA_WORLD_BIBLE.md. Worked answer: the urn fell 28 - 12 = 16 litres in 4 hours, which is 4 litres an hour net; with 3 litres an hour poured in, the total outflow is 3 + 4 = 7 litres an hour. The hidden flow is the curd pot, which the kettle ladle tally never counted: the 7 litres an hour is the whole outflow, and the kettle's share of it is smaller."
+}

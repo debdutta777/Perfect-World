@@ -1,0 +1,320 @@
+{
+  "type": "school_scene",
+  "id": "p2.stream_change_doubt",
+  "note": "Order C2 scene 12: after the first term results, the player weighs a stream-change doubt between Science, Commerce and Humanities with Amrita Basu, Mira Sen, Tara Das, Ishan Sheikh, household adult and care worker (INDIA_WORLD_BIBLE.md named cast: Amrita Basu, Mira Sen, Tara Das, Ishan Sheikh). Note: relationshipEvent tokens use 'elective' rather than 'stream' to honour IsRelationshipEventTypeFair in Relationships.cpp.",
+  "arcKind": "household_responsibility",
+  "titleKey": "school_scene.p2.stream_change_doubt.title",
+  "summaryKey": "school_scene.p2.stream_change_doubt.summary",
+  "institution": "institution.nabapara_vidyalaya",
+  "calendar": "calendar.nabapara_2042_43",
+  "term": "term_2",
+  "calendarSpan": "unit_test_2",
+  "threadTemplate": "thread.evening_rota",
+  "entryScene": "scene_term_two_timetable_doubt",
+  "cast": [
+    {
+      "person": "person.amrita_basu",
+      "role": "teacher",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.mira_sen",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.tara_das",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.ishan_sheikh",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.household_adult",
+      "role": "family_adult",
+      "originVariant": "family",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.care_worker",
+      "role": "care_adult",
+      "originVariant": "care_home",
+      "proposedNewCast": false
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_term_two_timetable_doubt",
+      "titleKey": "school_scene.p2.stream_change_doubt.opening.title",
+      "promptKey": "school_scene.p2.stream_change_doubt.opening.prompt",
+      "speaker": "person.amrita_basu",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "timetable_period",
+        "bellSchedule": "bell_schedule.nabapara_xi_humanities",
+        "periodIndex": 0,
+        "subject": "history",
+        "zone": "nhss.room_xi_humanities",
+        "startMinute": 620,
+        "endMinute": 665
+      },
+      "conversationTopic": "topic.amrita_basu.second_term_subject_doubt",
+      "choices": [
+        {
+          "id": "talk_through_subject_load_at_home",
+          "labelKey": "school_scene.p2.stream_change_doubt.opening.family.label",
+          "outcomeKey": "school_scene.p2.stream_change_doubt.opening.family.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_family_subject_counsel",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.elective.family_counsel_planned",
+            "factSet": "school.elective.discussing_family_load"
+          }
+        },
+        {
+          "id": "talk_through_subject_load_at_care_home",
+          "labelKey": "school_scene.p2.stream_change_doubt.opening.care.label",
+          "outcomeKey": "school_scene.p2.stream_change_doubt.opening.care.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_care_subject_handover",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.elective.care_counsel_planned",
+            "factSet": "school.elective.discussing_care_load"
+          }
+        },
+        {
+          "id": "put_aside_transfer_form_refusal",
+          "labelKey": "school_scene.p2.stream_change_doubt.opening.refuse.label",
+          "outcomeKey": "school_scene.p2.stream_change_doubt.opening.refuse.outcome",
+          "costMinutes": 0,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.elective.kept_current_subjects",
+            "factSet": "school.elective.stayed_in_section"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_family_subject_counsel",
+      "titleKey": "school_scene.p2.stream_change_doubt.family.title",
+      "promptKey": "school_scene.p2.stream_change_doubt.family.prompt",
+      "speaker": "person.household_adult",
+      "originVariant": "family",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.player_home",
+        "startMinute": 1095,
+        "endMinute": 1155
+      },
+      "conversationTopic": "topic.household_adult.subject_combination_talk",
+      "choices": [
+        {
+          "id": "reshape_evening_study_by_subject_weight",
+          "labelKey": "school_scene.p2.stream_change_doubt.family.redesign.label",
+          "outcomeKey": "school_scene.p2.stream_change_doubt.family.redesign.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_evening_subject_settlement",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.elective.family_study_plan_redesigned",
+            "threadEvent": "obligation_covered",
+            "factSet": "school.elective.family_plan_reshaped",
+            "journalAgreementFact": "c2_elective_family_redesigned"
+          }
+        },
+        {
+          "id": "pair_peer_notes_across_sections",
+          "labelKey": "school_scene.p2.stream_change_doubt.family.share.label",
+          "outcomeKey": "school_scene.p2.stream_change_doubt.family.share.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_evening_subject_settlement",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.elective.family_cross_notes_agreed",
+            "threadEvent": "jobs_shared",
+            "factSet": "school.elective.family_shared_reading",
+            "journalAgreementFact": "c2_elective_family_shared"
+          }
+        },
+        {
+          "id": "leave_subject_hours_as_they_were_refusal",
+          "labelKey": "school_scene.p2.stream_change_doubt.family.refuse.label",
+          "outcomeKey": "school_scene.p2.stream_change_doubt.family.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.elective.family_routine_left_as_was",
+            "factSet": "school.elective.family_kept_old_hours"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_care_subject_handover",
+      "titleKey": "school_scene.p2.stream_change_doubt.care.title",
+      "promptKey": "school_scene.p2.stream_change_doubt.care.prompt",
+      "speaker": "person.care_worker",
+      "originVariant": "care_home",
+      "schedule": {
+        "slotKind": "care_handover",
+        "periodIndex": -1,
+        "zone": "location.nabapara.care_home",
+        "startMinute": 850,
+        "endMinute": 895
+      },
+      "conversationTopic": "topic.care_worker.subject_combination_talk",
+      "choices": [
+        {
+          "id": "rebalance_care_study_desk_hours",
+          "labelKey": "school_scene.p2.stream_change_doubt.care.redesign.label",
+          "outcomeKey": "school_scene.p2.stream_change_doubt.care.redesign.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_evening_subject_settlement",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.elective.care_study_plan_redesigned",
+            "threadEvent": "obligation_covered",
+            "factSet": "school.elective.care_plan_reshaped",
+            "journalAgreementFact": "c2_elective_care_redesigned"
+          }
+        },
+        {
+          "id": "pair_cross_section_study_with_seniors",
+          "labelKey": "school_scene.p2.stream_change_doubt.care.share.label",
+          "outcomeKey": "school_scene.p2.stream_change_doubt.care.share.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_evening_subject_settlement",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.elective.care_cross_notes_agreed",
+            "threadEvent": "jobs_shared",
+            "factSet": "school.elective.care_shared_reading",
+            "journalAgreementFact": "c2_elective_care_shared"
+          }
+        },
+        {
+          "id": "keep_current_section_routine_refusal",
+          "labelKey": "school_scene.p2.stream_change_doubt.care.refuse.label",
+          "outcomeKey": "school_scene.p2.stream_change_doubt.care.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.elective.care_routine_left_as_was",
+            "factSet": "school.elective.care_kept_old_hours"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_evening_subject_settlement",
+      "titleKey": "school_scene.p2.stream_change_doubt.settlement.title",
+      "promptKey": "school_scene.p2.stream_change_doubt.settlement.prompt",
+      "speaker": "person.mira_sen",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.evening_study",
+        "startMinute": 1170,
+        "endMinute": 1230
+      },
+      "conversationTopic": "topic.mira_sen.cross_section_study_plan",
+      "choices": [
+        {
+          "id": "confirm_rebalanced_subject_plan_with_amrita",
+          "labelKey": "school_scene.p2.stream_change_doubt.settlement.redesigned.label",
+          "outcomeKey": "school_scene.p2.stream_change_doubt.settlement.redesigned.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "redesigned",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.elective.rebalanced_plan_settled",
+            "threadEvent": "rota_renegotiated",
+            "factSet": "school.elective.settled_redesigned"
+          }
+        },
+        {
+          "id": "confirm_cross_section_reading_circle",
+          "labelKey": "school_scene.p2.stream_change_doubt.settlement.shared.label",
+          "outcomeKey": "school_scene.p2.stream_change_doubt.settlement.shared.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "shared_out",
+          "consequence": {
+            "targetPerson": "person.tara_das",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.elective.reading_circle_settled",
+            "threadEvent": "jobs_shared",
+            "factSet": "school.elective.settled_shared_out"
+          }
+        },
+        {
+          "id": "set_aside_doubt_and_keep_old_routine_refusal",
+          "labelKey": "school_scene.p2.stream_change_doubt.settlement.refuse.label",
+          "outcomeKey": "school_scene.p2.stream_change_doubt.settlement.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "stayed_as_was",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.elective.returned_to_old_hours",
+            "factSet": "school.elective.reverted_without_fuss",
+            "factCleared": "school.elective.discussing_family_load"
+          }
+        }
+      ]
+    }
+  ],
+  "resolutions": [
+    "redesigned",
+    "shared_out",
+    "stayed_as_was"
+  ]
+}
