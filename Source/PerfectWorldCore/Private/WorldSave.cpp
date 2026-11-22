@@ -4,6 +4,7 @@
 #include "Doors.h"
 #include "GateSites.h"
 #include "Json.h"
+#include "WorldExam.h"
 #include "WorldHash.h"
 #include "WorldSaveInternal.h"
 
@@ -118,10 +119,10 @@ WorldSaveResult WorldSaveReadEnvelope(std::string_view text, const JsonValue& do
     result.SourceVersion = static_cast<std::int32_t>(version);
     // Historical encodings this build still authenticates: v8 with hash 5 (no journal, commerce, school or awakening), v9 with
     // hash 6 (no commerce, school or awakening), v10 with hash 7 (no school or awakening, S04), v11 with hash 8 (no awakening,
-    // R9-04), v12 with hash 9 (no examination, P4-02).
+    // R9-04), v12 with hash 9 (no examination, P4-02), v13 with hash 10 (follow-ups still flags, P5-03).
     const bool historicalHash = (version == 8 && hashVersion == 5) || (version == 9 && hashVersion == 6) ||
                                 (version == 10 && hashVersion == 7) || (version == 11 && hashVersion == 8) ||
-                                (version == 12 && hashVersion == 9);
+                                (version == 12 && hashVersion == 9) || (version == 13 && hashVersion == 10);
     if (historicalHash || (version == WorldSaveSchemaVersion && hashVersion == static_cast<std::int64_t>(WorldHashVersion)))
     {
         // Historical door rosters and the empty-journal and household-commerce migrations change the loaded world from the
@@ -137,6 +138,13 @@ WorldSaveResult WorldSaveReadEnvelope(std::string_view text, const JsonValue& do
         if (expected != storedHash)
             return WorldSaveFail(WorldSaveError::HashMismatch, "This save file is damaged: its world does not match its checksum.");
         result.HashVerified = !doorsMigrated && !historicalHash;
+    }
+    // P5-03: after authentication, so the checksum is read over the flags exactly as written. Refusal keeps the file.
+    if (version <= WorldSaveLastFollowupFlagsVersion)
+    {
+        std::string why;
+        if (!P503MigrateLegacyFollowupFlags(data.World, why))
+            return WorldSaveInvalid("its examination follow-ups cannot be migrated: " + why);
     }
     out = std::move(data);
     return result;

@@ -10,5 +10,6 @@
   "destination": "place.school",
   "dayOffset": 4,
   "minute": 960,
-  "durationMinutes": 25
+  "durationMinutes": 25,
+  "taskId": "stream_review"
 }

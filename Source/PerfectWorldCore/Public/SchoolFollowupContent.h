@@ -21,6 +21,8 @@ struct SchoolFollowupAction
     std::int32_t DayOffset = 1; // preferred day after exam; bridge resolves calendar
     std::int32_t Minute = 960;
     std::int32_t DurationMinutes = 15;
+    /** P502 optional rule variant; empty for attendance-only continuations. */
+    std::string P502TaskId;
 };
 struct SchoolFollowupContent { std::vector<SchoolFollowupAction> Actions; };
 struct SchoolFollowupContentResult

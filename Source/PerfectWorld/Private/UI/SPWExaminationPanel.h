@@ -41,6 +41,8 @@ private:
     void P406AddLine(const FText& Text);
     void P406AddControl(const FText& Text, bool bEnabled, TFunction<bool()> Activate, bool bFooter);
 
+    /** Unpaid confirmation for attendance-only meetings; task progress always comes from the core. */
+    TOptional<P406Exam::FAction> P506Meeting;
     TSharedPtr<P406Exam::IWorld> P406Bridge;
     P406Exam::FModel P406Model;
     FText P406Notice;
@@ -52,5 +54,4 @@ private:
     TArray<TSharedPtr<SWidget>> P406Controls;
     TArray<TFunction<bool()>> P406Activations;
     int32 P406Selected = 0;
-    TOptional<P406Exam::FAction> P407USession;
 };

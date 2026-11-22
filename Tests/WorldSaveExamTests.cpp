@@ -187,9 +187,9 @@ void P402Legacy(const P402World& w, const std::string& dir)
     const std::string resaved = SerializeWorldSave(data);
     WorldSaveData again;
     const WorldSaveResult certified = DeserializeWorldSave(resaved, again);
-    P2CExpect(!resaved.empty() && certified.Succeeded() && certified.HashVerified && certified.SourceVersion == 13 &&
+    P2CExpect(!resaved.empty() && certified.Succeeded() && certified.HashVerified && certified.SourceVersion == WorldSaveSchemaVersion &&
                   resaved.find("\"examination\": \"pw.examination/1") != std::string::npos,
-              "its first v13 save is certified");
+              "its first current-schema save is certified");
     std::string missing = resaved;
     const std::size_t key = missing.find(",\n    \"examination\"");
     missing.erase(key, missing.find("\n  },\n  \"player\"") - key);

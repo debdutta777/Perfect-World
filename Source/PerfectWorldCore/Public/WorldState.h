@@ -61,6 +61,44 @@ struct GateSiteState
 };
 
 /**
+ * P5-03: one booked examination follow-up session (WorldExamFollowup.h). Booked, Arrived, Active and Paused are open;
+ * Paid (attendance charged once, including every migrated pre-v14 attendance), Completed (the record's one task
+ * completion), Cancelled (by the player), Missed (its slot passed and a new booking replaced it) and Released (a pre-v14
+ * reservation released for an unrecorded reason) are terminal. The ordinals are the saved spelling: append only.
+ */
+enum class P503SessionState : std::uint8_t { Booked, Arrived, Active, Paused, Paid, Completed, Cancelled, Missed, Released };
+struct P503FollowupSession
+{
+    /** Unique and increasing within its record; it distinguishes two sessions booked at the same instant. */
+    std::uint64_t Generation = 0;
+    GameInstant At = 0;
+    P503SessionState State = P503SessionState::Booked;
+    friend bool operator==(const P503FollowupSession&, const P503FollowupSession&) = default;
+};
+/** The immutable once-only task consequence: the chosen rule choice and its records, snapshotted when earned. */
+struct P503FollowupCompletion
+{
+    std::uint64_t Generation = 0;
+    std::string TaskId;
+    std::string ChoiceId;
+    std::vector<std::string> Records;
+    GameInstant CompletedAt = 0;
+    friend bool operator==(const P503FollowupCompletion&, const P503FollowupCompletion&) = default;
+};
+/** Follow-up progress for one content appointment offered by one sitting's result. */
+struct P503FollowupRecord
+{
+    /** The examination sitting whose result offered the appointment: stored, never inferred from the live year. */
+    std::uint32_t Sitting = 0;
+    std::string AppointmentId;
+    /** The command freshness token: advances on every accepted transition and never resets on cancel or rebook. */
+    std::uint64_t Revision = 0;
+    std::vector<P503FollowupSession> Sessions;
+    std::optional<P503FollowupCompletion> Completion;
+    friend bool operator==(const P503FollowupRecord&, const P503FollowupRecord&) = default;
+};
+
+/**
  * The authoritative world (SYSTEMS.md §2). Each member is one save section,
  * mutated only by the reducer through its owning system. This version holds the
  * clock, world flags, Gate sites, the RNG streams and the player's day; systems
@@ -149,6 +187,13 @@ struct WorldState
      * save; written inside the examination section (pw.examination/2 only when non-empty), so no schema or hash change.
      */
     std::vector<TowerSessionState> ExaminationEarlier;
+    /**
+     * P5-03: examination follow-up bookings, sessions and task completions, sorted by (Sitting, AppointmentId), changed only
+     * by exam.followup.apply (WorldExamFollowup.cpp). Saved inside the examination section from world v14
+     * (pw.examination/3, only when non-empty, so every world without follow-ups keeps its exact bytes and hash); the
+     * reserved p407u.followup.* flags of older saves migrate here on load. Content-free rules: P503FollowupsValidInWorld.
+     */
+    std::vector<P503FollowupRecord> ExaminationFollowups;
 };
 
 /** A fresh world: the clock at the campaign epoch (2 Jun 2042 06:00), no flags or Gates, RNG streams seeded from the world seed, a fresh day. */

@@ -10,5 +10,6 @@
   "destination": "location.nabapara.repair_workshop",
   "dayOffset": 2,
   "minute": 1020,
-  "durationMinutes": 45
+  "durationMinutes": 45,
+  "taskId": "practical_step"
 }

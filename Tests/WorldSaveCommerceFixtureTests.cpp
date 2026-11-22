@@ -67,13 +67,19 @@ void R84FrozenV9()
     // era's own v10 output, now itself a historical save that authenticates in hash 7 and loads unverified.
     // R9-04: the current writer is schema 12 (empty Awakening slices); S04's migrated_v11 output is now historical too.
     // P4-02: the current writer is schema 13 (an undecided examination); R9-04's migrated_v12 output is now historical too.
-    const std::string frozen = R84Fixture("world_v9_doors_29_migrated_v13.json");
-    Check(migrated == frozen, "the migration produces exactly the frozen expected v13 save");
+    // P5-03: the current writer is schema 14 (no follow-up records); P4-02's migrated_v13 output is now historical too.
+    const std::string frozen = R84Fixture("world_v9_doors_29_migrated_v14.json");
+    Check(migrated == frozen, "the migration produces exactly the frozen expected v14 save");
     WorldSaveData frozenLoaded;
     const WorldSaveResult frozenResult = DeserializeWorldSave(frozen, frozenLoaded);
-    Check(frozenResult.Succeeded() && frozenResult.HashVerified && frozenResult.SourceVersion == 13 && frozenLoaded.World.Commerce == commerce,
-          "the expected migrated save is a certified v13 world");
+    Check(frozenResult.Succeeded() && frozenResult.HashVerified && frozenResult.SourceVersion == 14 && frozenLoaded.World.Commerce == commerce,
+          "the expected migrated save is a certified v14 world");
     CheckSame(loaded, frozenLoaded, "the expected migrated save holds the migrated world");
+    WorldSaveData p402Loaded;
+    const WorldSaveResult p402Result = DeserializeWorldSave(R84Fixture("world_v9_doors_29_migrated_v13.json"), p402Loaded);
+    Check(p402Result.Succeeded() && !p402Result.HashVerified && p402Result.SourceVersion == 13 && p402Loaded.World.Commerce == commerce,
+          "P4-02's v13 output authenticates its hash-10 checksum and loads unverified");
+    CheckSame(loaded, p402Loaded, "P4-02's v13 output holds the same world");
     WorldSaveData r94Loaded;
     const WorldSaveResult r94Result = DeserializeWorldSave(R84Fixture("world_v9_doors_29_migrated_v12.json"), r94Loaded);
     Check(r94Result.Succeeded() && !r94Result.HashVerified && r94Result.SourceVersion == 12 && r94Loaded.World.Commerce == commerce,

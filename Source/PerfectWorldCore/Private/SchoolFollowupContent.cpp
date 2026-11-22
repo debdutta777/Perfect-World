@@ -65,6 +65,17 @@ SchoolFollowupContentResult LoadSchoolFollowupContent(const ContentDb& db)
             A8Text(data, "appointmentId"), A8Text(data, "kind"), A8Text(data, "titleTextKey"),
             A8Text(data, "briefTextKey"), A8Text(data, "destination"), A8Int(data, "dayOffset"),
             A8Int(data, "minute"), A8Int(data, "durationMinutes")};
+        // P502 compatibility defaults bind the frozen six existing records without rewriting P5-04/05's content.
+        const std::pair<std::string_view, std::string_view> P502Defaults[]{
+            {"school_followup.p2.p4_strong_mentor", "term_plan"},
+            {"school_followup.p2.p4_middle_stream_review", "stream_review"},
+            {"school_followup.p2.p4_poor_workshop_apprenticeship", "practical_step"},
+            {"school_followup.p2.p4_withdrawn_school_mentor", "pacing_plan"},
+            {"school_followup.p2.p4_deferred_community_volunteer", "volunteer_enquiry"},
+            {"school_followup.p2.p4_declined_stream_civic_path", "route_sheet"}};
+        for (const auto& [id, task] : P502Defaults)
+            if (action.Id == id) action.P502TaskId = task;
+        if (const auto* task = data.Find("taskId")) action.P502TaskId = task->String;
         if (!A8Token(action.AppointmentId, "appointment.p2.") || !appointments.insert(action.AppointmentId).second)
             issue("invalid or duplicate appointment identity");
         if (!A8Token(action.TitleTextKey, "phase2.a8.") || !A8Token(action.BriefTextKey, "phase2.a8."))
@@ -138,7 +149,8 @@ const TypeSchema& SchoolFollowupSchema()
         OneOf("kind", true, {"appointment", "school", "study", "rest"}),
         Str("titleTextKey", true), Str("briefTextKey", true),
         OneOf("destination", true, {"place.school", "place.home", "location.nabapara.repair_workshop"}),
-        Int("dayOffset", true, 1, 7), Int("minute", true, 0, 1439), Int("durationMinutes", true, 1, 120)})};
+        Int("dayOffset", true, 1, 7), Int("minute", true, 0, 1439), Int("durationMinutes", true, 1, 120),
+        OneOf("taskId", false, {"term_plan", "stream_review", "practical_step", "pacing_plan", "volunteer_enquiry", "route_sheet"})})};
     return schema;
 }
 void ValidateSchoolFollowupSemantics(const ContentDb& db, std::vector<ContentIssue>& issues)

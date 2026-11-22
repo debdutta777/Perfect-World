@@ -161,9 +161,9 @@ void R84RoundTrip()
     Check(R84Creator(creation).GetTraitRank(HouseholdResourcesTraitId) == 1, "the test life has household rank 1");
     const WorldSaveData data = R84Save(creation, R84History(1, 70));
     const std::string text = SerializeWorldSave(data);
-    Check(text.find("\"schemaVersion\": 13") != std::string::npos && text.find("\"hashVersion\": 10") != std::string::npos &&
+    Check(text.find("\"schemaVersion\": 14") != std::string::npos && text.find("\"hashVersion\": 10") != std::string::npos &&
               text.find("\"commerce\": \"pw.commerce/1\\nwallet=") != std::string::npos,
-          "the writer emits schema 13, hash 10 and the commerce envelope");
+          "the writer emits schema 14, hash 10 and the commerce envelope");
     WorldSaveData loaded;
     const WorldSaveResult result = DeserializeWorldSave(text, loaded);
     Check(result.Succeeded() && result.HashVerified && result.SourceVersion == WorldSaveSchemaVersion && !result.Migrated,
@@ -223,9 +223,9 @@ void R84WriterAndReaderRefusals()
     Check(ErrorOf(ReplaceOnce(text, tea, "tea_eligible=" + std::to_string(data.World.Commerce.NextTeaEligibleAt - 1))) == WorldSaveError::HashMismatch,
           "a valid but altered eligibility instant fails the checksum");
     Check(ErrorOf(ReplaceOnce(text, ",\n    \"commerce\": " + envelope, "")) == WorldSaveError::Malformed, "v10 requires commerce");
-    Check(ErrorOf(ReplaceOnce(text, "\"schemaVersion\": 13", "\"schemaVersion\": 9")) == WorldSaveError::Malformed,
+    Check(ErrorOf(ReplaceOnce(text, "\"schemaVersion\": 14", "\"schemaVersion\": 9")) == WorldSaveError::Malformed,
           "a v9 record refuses the commerce section");
-    Check(ErrorOf(ReplaceOnce(text, "\"schemaVersion\": 13", "\"schemaVersion\": 14")) == WorldSaveError::UnsupportedVersion,
+    Check(ErrorOf(ReplaceOnce(text, "\"schemaVersion\": 14", "\"schemaVersion\": 15")) == WorldSaveError::UnsupportedVersion,
           "a newer schema is refused");
     Check(ErrorOf(ReplaceOnce(text, envelope, "17")) == WorldSaveError::InvalidWorld, "commerce must be text");
 }

@@ -43,7 +43,7 @@ WorldState P37Reload(const R94World& world, const WorldState& state)
     P2CExpect(!text.empty(), "command-produced state saves through existing schema");
     WorldSaveData loaded;
     const auto result = DeserializeWorldSave(text, loaded);
-    P2CExpect(result.Succeeded() && result.HashVerified && result.SourceVersion == 13 &&
+    P2CExpect(result.Succeeded() && result.HashVerified && result.SourceVersion == WorldSaveSchemaVersion &&
                   HashWorldState(loaded.World) == HashWorldState(state), "the current hash authenticates the reload");
     return loaded.World;
 }
