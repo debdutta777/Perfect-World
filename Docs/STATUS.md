@@ -2399,3 +2399,53 @@ v0.9.2 is queued to merge these, run Rung 1, compile, package and run 13 scenari
 - A run killed mid-scenario leaves `.pw-lane-acceptance.lock` in Python's virtualised AppData (`AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_*\LocalCache\Local\PerfectWorld\`), not in the plain AppData path. `auto_release.ps1` clears it when no game is running.
 - Gemini Argon and Hydrogen sometimes attempt shell commands in headless mode and are denied. Gemini Neon worked cleanly edit-only. `--dangerously-skip-permissions` is never used.
 - Release work now runs as resumable PowerShell pipelines (`auto_release.ps1`, `auto_p4core.ps1`) instead of Claude agents, because power-offs and usage limits kept killing the agents.
+
+---
+
+## Checkpoint: v0.9.2 to v0.9.4 published; Phase 4 closing and Phase 5 started, 2026-11-22
+
+**Releases** (prerelease, exact in-game results in each set of notes):
+
+| Release | Commit | In-game tests | Notes |
+|---|---|---|---|
+| v0.9.2 | `cfe0d9f` | 11 of 14 PASS | The tower examination became playable. The three failures were out-of-date test drivers. |
+| v0.9.3 | `9cb816f` | 14 of 14 PASS | Late arrival. |
+| v0.9.4 | `f31b4bf` | 15 of 16 PASS | One sitting per life. `exam_late_round9`'s driver still expected a 2044 sitting; fixed in `c144d39`. |
+
+**Owner decisions, 2026-11-22** (`GAME_PLAN.md` §10):
+- One examination sitting per life. Entering, declining or missing the entry window uses it.
+- Defer is allowed once.
+- A later sitting only for a student not yet awakened.
+- The 60-minute late window is kept.
+- The tester slice starts from a compressed year (`COMPRESSED_YEAR.md`, proposal, eight open questions).
+
+**Implemented and merged** (rung reached in brackets):
+
+| Order | Model | What | Rung |
+|---|---|---|---|
+| P4-09 | Claude Opus | Late entry and sittings; the retake part is superseded by P4-13 | CTest |
+| P4-10 | GPT-6.1 sol | Game hookup | Editor compile, v0.9.3 package |
+| P4-11 | GPT-6.1 sol | A late finish is time called | CTest, v0.9.4 package |
+| P4-12 | GPT-6.1 sol | Late-entry and retake scenarios | v0.9.4 package |
+| P4-13 | GPT-6.1 sol | One sitting | CTest, v0.9.4 package |
+| P3-18 | GPT-6.1 sol | Scenario drivers | v0.9.3: 14/14 |
+
+**Phase 5** (`PHASE5_PLAN_2026-11-22.md`, GPT-6 astra):
+- **P5-01**, Sonnet: six week outlines in `POST_EXAM_WEEK.md`. Proposal.
+- **P5-02**, sol: follow-up attendance becomes a consequential task.
+- **P5-03**, Opus: typed per-sitting follow-up records; save schema 14 / hash 10; v6 to v13 flag migration never grants a completion; Rung 1 243/243.
+- **P5-04/05**, Gemini Neon: the six continuations' content; the retake text was neutralised.
+- **P5-06**, sol: the weeks in the game, with six `post_exam_week_*_round10` scenarios.
+- **Status:** all merged at `35268c2`. Editor compiled; Rung 1 243/243. v0.9.5 packaging and its 22 scenarios are in progress, so no gameplay claim yet.
+- **P5-09**, the session log (sol), is in progress.
+
+**Known gaps:**
+- The workshop and clinic sessions are hosted at school, with the player told so on screen.
+- There is no 2043-44 (Class XII) school calendar, so a deferred sitting has no school booking slots.
+- The not-awakened late-sitting path has no in-game route yet.
+- The M4 gate rows still needing the owner are listed in `PHASE5_PLAN_2026-11-22.md` §2.
+
+**Environment:**
+- From 2026-11-22 the host powers off every 20 to 60 minutes.
+- The pipelines resume from their stage files. A scenario cut by a power-off reports INCOMPLETE and is rerun; release notes say so.
+- `rung1.ps1` now builds with `--parallel 6`, which cut Rung 1 from about 30 minutes to about 8.
