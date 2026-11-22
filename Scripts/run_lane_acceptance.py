@@ -28,7 +28,7 @@ STEP_NAME = re.compile(r'[A-Za-z0-9_]{1,64}\Z')
 RESTART_PAIR_SCENARIOS = ('save_restart', 'frontages_round4', 'journal_state', 'journal_today', 'homes_round5', 'frontages_round5', 'proprietors_workday', 'tailor_workday', 'homes_round6', 'frontages_round6', 'continue_round9', 'exam_retake_round9',
                           'post_exam_week_strong_round10', 'post_exam_week_middle_round10',
                           'post_exam_week_poor_round10', 'post_exam_week_withdrawn_round10',
-                          'post_exam_week_deferred_round10', 'post_exam_week_declined_round10')
+                          'post_exam_week_deferred_round10', 'post_exam_week_declined_round10', 'session_log_round10')
 FLAGS = ['-RenderOffScreen', '-unattended', '-nosplash', '-nosound',
          '-windowed', '-ResX=1280', '-ResY=720', '-log']
 
