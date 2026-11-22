@@ -67,6 +67,32 @@ inline void P405Floor(PerfectWorld::WorldSim& sim, const PerfectWorld::TowerRunn
     P2CExpect(!sim.State().Examination.Active, "real floor reached its boundary");
 }
 
+/** P5-15 middle witness on real content: on each floor the plain non-combat choice (strain 0, below the perfect
+ * evidence) on beats 1 and 3 and the recoverable mistake (strain 4; every reserve starts at 4 or more and resets
+ * per route) on beat 2. Normalised: discipline (700+800+1000)/3 = 833, judgment (1000+1000+750)/3 = 916,
+ * quality 849, so a full climb scores 3 x 1849 = 5547, rank 453, decile 5 (middle).
+ */
+inline void P405MiddleFloor(PerfectWorld::WorldSim& sim, const PerfectWorld::TowerRunnerCatalogue& runners,
+    std::string_view route)
+{
+    const auto* definition = PerfectWorld::FindTowerRoute(route);
+    S04Accept(sim, P402Cmd(PerfectWorld::TowerSessionAction::OpenRoute, std::string(route), definition->Method),
+        "real route opens with its non-combat method");
+    for (std::size_t guard = 0; sim.State().Examination.Active && guard < PerfectWorld::TowerRunnerBeatLimit; ++guard)
+    {
+        const auto index = sim.ExaminationView().Beat;
+        const auto& beat = P405Active(sim, runners).Beats[index];
+        const auto chosen = std::find_if(beat.Choices.begin(), beat.Choices.end(), [&](const auto& choice) {
+            return !choice.P405CombatOnly && (index == 1 ? choice.Strain == 4 :
+                choice.Strain == 0 && !(choice.DisciplineMilli == 1000 && choice.CommonJudgmentMilli == 1000));
+        });
+        P2CExpect(chosen != beat.Choices.end(), "authored plain or recoverable non-combat action exists");
+        P402Choose(sim, chosen->Id, "real-content middle beat accepted");
+    }
+    P2CExpect(!sim.State().Examination.Active && sim.State().Examination.Participation != PerfectWorld::TowerParticipation::Ejected,
+        "middle floor survives its one mistake");
+}
+
 inline void P405Next(const PerfectWorld::P402ExamFinish& result, std::string_view outcome)
 {
     P2CExpect(result.Ok() && result.Outcome == outcome && !result.Reasons.empty() &&

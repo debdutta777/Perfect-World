@@ -286,9 +286,9 @@ void P407UOutcomes(const P405World& w)
     P407UOutcome(poor, "poor");
     auto middle = w.Sim(poorState);
     S04Accept(middle, P402Cmd(TowerSessionAction::Enter), "sit before a middle result");
-    P405Floor(middle, w.Runners, P402Climb[0]);
-    P405Floor(middle, w.Runners, P402Climb[1]);
-    P405Floor(middle, w.Runners, P402Climb[2], true);
+    // P5-15 cohort: two clean floors and a floor-3 ejection (3500) is now poor; a full climb with one recovered
+    // mistake per floor (5547, rank 453, decile 5) is the middle witness.
+    for (const auto route : P402Climb) P405MiddleFloor(middle, w.Runners, route);
     P407UOutcome(middle, "middle");
 }
 

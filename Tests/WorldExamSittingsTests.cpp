@@ -393,9 +393,10 @@ void P413Spent(WorldSim& sim, const P402World& w, const TowerRunnerCatalogue& ru
 
 void P413OneLife(const P402World& w)
 {
-    // Three completed quality levels. The synthetic cohort's depth floor means even zero-quality completion is middle;
-    // poor is reached by ejection below. Participation, never rank or quality, consumes the sitting.
-    for (const std::int32_t P413Quality : {1000, 500, 0})
+    // Four completed quality levels under the P5-15 cohort: 1000 (6000, rank 1) is strong, 900 (5700, rank 300,
+    // decile 3) is middle, and 500 (4500, rank 910) and 0 (3000, rank 937) are completed but poor; ejection below is
+    // poor too. Participation, never rank or quality, consumes the sitting.
+    for (const std::int32_t P413Quality : {1000, 900, 500, 0})
     {
         TowerRunnerCatalogue P413Runners = w.Runners;
         for (auto& P413Scenario : P413Runners.Scenarios)
@@ -410,8 +411,8 @@ void P413OneLife(const P402World& w)
         P2CExpect(P413Sim.State().Examination.Participation == TowerParticipation::Completed,
             "P413 strong, middle and lowest-quality climbs complete");
         const auto P413Decile = P413Sim.ExaminationResult().Score.Decile;
-        P2CExpect(P413Quality == 1000 ? P413Decile == 1 : P413Decile > 1 && P413Decile <= 5,
-            "P413 completed fixtures reach strong and middle bands under the unchanged cohort");
+        P2CExpect(P413Quality == 1000 ? P413Decile == 1 : P413Quality == 900 ? P413Decile > 1 && P413Decile <= 5 :
+            P413Decile == 10, "P413 completed fixtures reach strong, middle and poor bands under the P5-15 cohort");
         P413Spent(P413Sim, w, P413Runners, w.Morning);
     }
     for (const A P413Exit : {A::Withdraw, A::Decline})

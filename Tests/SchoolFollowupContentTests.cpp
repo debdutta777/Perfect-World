@@ -67,8 +67,9 @@ TowerRunnerCatalogue A8Runners()
             TowerRunnerBeat beat;
             beat.Id = "beat." + std::to_string(index);
             beat.PromptTextKey = "phase2.a8.test.prompt";
+            // P5-15 cohort: middle quality 900 gives 5700, rank 300, decile 3 (middle band 2..5).
             beat.Choices = {{"careful", "phase2.a8.test.careful", 5, 1, 1, 1000, 1000},
-                {"middle", "phase2.a8.test.middle", 5, 1, 1, 300, 300},
+                {"middle", "phase2.a8.test.middle", 5, 1, 1, 900, 900},
                 {"rush", "phase2.a8.test.rush", 2, 4, 0, 0, 0}};
             scenario.Beats.push_back(std::move(beat));
         }
