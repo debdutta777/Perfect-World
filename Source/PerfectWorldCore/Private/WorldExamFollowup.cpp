@@ -414,14 +414,8 @@ namespace PerfectWorld
 {
 bool P503IsTaskChoice(std::string_view task, std::string_view choice) noexcept
 {
-    try
-    {
-        const auto choices = P502ChoiceTable(task);
-        return std::any_of(choices.begin(), choices.end(), [&](const auto& item) { return item.Id == choice; });
-    }
-    catch (...)
-    {
-        return false;
-    }
+    // The game target builds without C++ exceptions: no try/catch in core code.
+    const auto choices = P502ChoiceTable(task);
+    return std::any_of(choices.begin(), choices.end(), [&](const auto& item) { return item.Id == choice; });
 }
 } // namespace PerfectWorld
