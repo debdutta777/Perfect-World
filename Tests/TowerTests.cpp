@@ -195,11 +195,12 @@ void TestRoutesAndRanking()
     Expect(ResolveTower(combat) == endurance, "combat and endurance earn identical rank and credentials");
 
     const auto empty = ResolveTower({});
-    Expect(empty.Ok() && empty.NationalRank == 923 && empty.Decile == 10,
+    // Score 0: 91 low-band peers (i=9..99, -500+56i >= 0) plus all 899 dense-band peers are ahead.
+    Expect(empty.Ok() && empty.NationalRank == 991 && empty.Decile == 10,
            "declining has a bottom-decile result");
     Expect(empty.Credentials.empty() && empty.OutsideMinutes == 0, "declining invents no evidence or time");
     ExpectOffers(empty);
-    Expect(empty.ScorePoints == 0 && empty.NationalRank == 923 && empty.Withdrew && !empty.Completed && !empty.Ejected,
+    Expect(empty.ScorePoints == 0 && empty.NationalRank == 991 && empty.Withdrew && !empty.Completed && !empty.Ejected,
            "declining scores nothing and withdraws");
     auto early = FullRoute(0);
     early.resize(1);
@@ -221,21 +222,27 @@ void TestRoutesAndRanking()
         Expect(result.Decile >= 1 && result.Decile <= 10, "decile stays in range");
         previousRank = result.NationalRank;
     }
-    const auto tied = ResolveTower(FullRoute(0));
-    Expect(tied.ScorePoints == 3000 && tied.NationalRank == 461 && tied.Decile == 5 && tied.Completed,
+    // Score 5700 equals dense-band peer 5700; it and the 298 peers above it (5701..5998) are ahead.
+    const auto tied = ResolveTower(FullRoute(900));
+    Expect(tied.ScorePoints == 5700 && tied.NationalRank == 300 && tied.Decile == 3 && tied.Completed,
            "synthetic cohort counts equal-score peers ahead of the player");
     ExpectOffers(tied);
+    // Zero-quality completion (3000): 37 low-band peers (i=63..99) and all 899 dense-band peers ahead.
+    const auto zeroQuality = ResolveTower(FullRoute(0));
+    Expect(zeroQuality.ScorePoints == 3000 && zeroQuality.NationalRank == 937 && zeroQuality.Decile == 10 &&
+           zeroQuality.Completed, "a zero-quality completion sits in the sparse bottom tail");
+    ExpectOffers(zeroQuality);
     // The top-decile boundary of the synthetic cohort, for every all-non-combat combination: a
-    // uniform quality of 800 (score 5400) is rank 92; 780 (5340) is rank 101, just outside.
+    // uniform quality of 967 (score 5901) is rank 99; 966 (5898) is rank 102, just outside.
     for (const auto& a : TowerRoutes())
         for (const auto& b : TowerRoutes())
             for (const auto& c : TowerRoutes())
             {
                 if (a.Floor != 1 || b.Floor != 2 || c.Floor != 3)
                     continue;
-                const auto in = ResolveTower({Attempt(a, 800), Attempt(b, 800), Attempt(c, 800)});
-                const auto out = ResolveTower({Attempt(a, 780), Attempt(b, 780), Attempt(c, 780)});
-                Expect(in.NationalRank == 92 && in.Decile == 1 && out.NationalRank == 101 && out.Decile == 2,
+                const auto in = ResolveTower({Attempt(a, 967), Attempt(b, 967), Attempt(c, 967)});
+                const auto out = ResolveTower({Attempt(a, 966), Attempt(b, 966), Attempt(c, 966)});
+                Expect(in.NationalRank == 99 && in.Decile == 1 && out.NationalRank == 102 && out.Decile == 2,
                        "top-decile boundary is the same for every non-combat route combination");
             }
     // A partial climb is a withdrawal that keeps what it earned.

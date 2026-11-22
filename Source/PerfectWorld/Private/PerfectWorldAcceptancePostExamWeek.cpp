@@ -155,7 +155,12 @@ FStepDef P506Climb(const TSharedRef<FP506Run>& Run)
         else
         {
             // Scripted authored choices, never injected scores. Recovery beats have a single disclosed action.
-            const auto Suffix = Run->Outcome == "poor" ? ".opt3.label" : Run->Outcome == "middle" ? ".opt2.label" : ".opt1.label";
+            // P5-15 cohort: strong takes opt1 everywhere (6000, rank 1); poor takes opt3 and is ejected. Plain opt2
+            // everywhere (5469, decile 6) and a floor-3 ejection (3500) are both poor now, so middle takes, on every
+            // floor, opt2 on beat 1, the opt3 mistake on beat 2 and opt2 on beat 3. The mistake's strain 4 never
+            // exceeds the reserve (4 or more, reset per route), so each floor survives it: 5547, rank 453, decile 5.
+            const auto Suffix = Run->Outcome == "poor" ? ".opt3.label" :
+                Run->Outcome == "middle" ? (Model.Session.Beat == 1 ? ".opt3.label" : ".opt2.label") : ".opt1.label";
             for (const auto& Choice : Model.Session.Choices)
                 if (Model.Session.Choices.size() == 1 || Choice.TextKey.ends_with(Suffix))
                     for (int32 Index = 0; Index < Model.Actions.Num(); ++Index)

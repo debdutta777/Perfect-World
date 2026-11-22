@@ -139,14 +139,19 @@ void P401RealContent(const ContentDb& db)
             if (strong) attempts.push_back(BuildOptimalNonCombatAttempt(scenario).Attempt);
             else
             {
+                // P5-15 cohort: the lower non-mistake choice on beat 1 and the best on beats 2 and 3
+                // (discipline 350+500, judgment 1000: quality 880) scores 3 x 1880 = 5640, rank 360,
+                // decile 4. The lowest choice on every beat (quality 710, 5130) is now a poor result.
                 std::vector<std::string_view> choices;
-                for (const auto& beat : scenario.Beats)
+                for (std::size_t index = 0; index < scenario.Beats.size(); ++index)
                 {
-                    const TowerScenarioDecision* lowest = nullptr;
-                    for (const auto& decision : beat.Decisions)
-                        if (!decision.IsCombat && !decision.IsMistake && (!lowest || decision.ScoreMilli < lowest->ScoreMilli)) lowest = &decision;
-                    P401Require(lowest != nullptr, "real low-evidence non-combat choice exists");
-                    choices.push_back(lowest->Id);
+                    const bool low = index == 0;
+                    const TowerScenarioDecision* picked = nullptr;
+                    for (const auto& decision : scenario.Beats[index].Decisions)
+                        if (!decision.IsCombat && !decision.IsMistake && (!picked ||
+                            (low ? decision.ScoreMilli < picked->ScoreMilli : decision.ScoreMilli > picked->ScoreMilli))) picked = &decision;
+                    P401Require(picked != nullptr, "real low-evidence non-combat choice exists");
+                    choices.push_back(picked->Id);
                 }
                 const auto run = EvaluateTowerScenarioRun(scenario, choices);
                 P401Require(run.Valid && !run.UsedCombat, "real low-evidence path completes");

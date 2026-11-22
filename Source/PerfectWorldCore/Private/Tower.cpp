@@ -83,21 +83,36 @@ TowerResult Refused(TowerError error)
     return result;
 }
 
-/** Synthetic M4-04 fixture, NOT real exam data or the global rankings model:
- * 999 peers with scores TowerCohortMinPoints + floor(i * span / 1000), i=0..998, where the span
- * runs from a defeated first floor (-500) to a perfect three-floor climb (6000). Equal scores
- * place ahead of the player (conservative competition rank). No seed, no randomness, no identity
- * bias: the same score is always the same rank. Source: this uniform authored distribution.
+// P5-15 provisional cohort shape (GAME_PLAN section 10, 2026-11-22). A sparse low band of 100
+// peers spaced 56 points apart from a defeated first floor (-500 .. 5044), then a dense band of
+// 899 peers, one per point, from 5100 to 5998 (just below a perfect 6000).
+constexpr std::int32_t TowerCohortLowPeers = 100;
+constexpr std::int32_t TowerCohortLowStepPoints = 56;
+constexpr std::int32_t TowerCohortHighMinPoints = 5100;
+static_assert(TowerCohortLowPeers < TowerCohortCount - 1);
+static_assert(TowerCohortMinPoints + (TowerCohortLowPeers - 1) * TowerCohortLowStepPoints < TowerCohortHighMinPoints);
+static_assert(TowerCohortHighMinPoints + (TowerCohortCount - 2 - TowerCohortLowPeers) <
+    TowerFloorCount * (TowerDepthPoints + TowerScoreMaxMilli), "a perfect climb is ranked first");
+
+/** Synthetic slice fixture, NOT real exam data or the global rankings model (P5-15, provisional):
+ * 999 peers. Peers i=0..99 score TowerCohortMinPoints + 56*i (-500 .. 5044), a sparse tail of
+ * defeats, withdrawals and weak climbs; peers i=100..998 score 5100 + (i-100) (5100 .. 5998), the
+ * dense body of three-floor climbs. Only a perfect 6000 is rank 1; a clean but plain climb (opt2 on
+ * every beat, 5469) lands in decile 6; ejection on any floor lands in decile 10. Equal scores place
+ * ahead of the player (conservative competition rank). No seed, no randomness, no identity bias:
+ * the same score is always the same rank. Source: this authored distribution.
  * TODO M6: calibrated national cohort distribution with published provenance.
  */
 std::int32_t NationalRank(std::int32_t score)
 {
-    constexpr std::int32_t ceiling = TowerFloorCount * (TowerDepthPoints + TowerScoreMaxMilli);
-    constexpr std::int32_t span = ceiling - TowerCohortMinPoints;
     std::int32_t rank = 1;
     for (std::int32_t i = 0; i < TowerCohortCount - 1; ++i)
-        if (TowerCohortMinPoints + i * span / TowerCohortCount >= score)
+    {
+        const auto peer = i < TowerCohortLowPeers ? TowerCohortMinPoints + i * TowerCohortLowStepPoints
+                                                  : TowerCohortHighMinPoints + (i - TowerCohortLowPeers);
+        if (peer >= score)
             ++rank;
+    }
     return rank;
 }
 } // namespace
