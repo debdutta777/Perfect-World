@@ -144,6 +144,11 @@ void P406ScenarioResult(TArray<FStepDef>& P406Out, PerfectWorld::TowerParticipat
 
 namespace PWAcceptance
 {
+void P412AppendExaminationMorningSteps(TArray<FStepDef>& Out)
+{
+    P406ScenarioMorning(Out);
+}
+
 void P406AppendExaminationSteps(TArray<FStepDef>& Out)
 {
     P406ScenarioMorning(Out);
