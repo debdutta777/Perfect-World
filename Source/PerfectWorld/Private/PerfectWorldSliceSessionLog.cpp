@@ -109,8 +109,14 @@ struct FP509Writer
     const FString File = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("SessionLogs"), TEXT("session_") + Id + TEXT(".jsonl"));
     const double Started = FPlatformTime::Seconds();
     const FString Utc = FDateTime::UtcNow().ToIso8601();
+#if IS_MONOLITHIC
+    // A packaged game links every module into the executable, so both digests name the same binary.
+    const FString Module = FPlatformProcess::ExecutablePath();
+    const FString CoreModule = Module;
+#else
     const FString Module = FModuleManager::Get().GetModuleFilename(FName(TEXT("PerfectWorld")));
     const FString CoreModule = FModuleManager::Get().GetModuleFilename(FName(TEXT("PerfectWorldCore")));
+#endif
     TQueue<FString, EQueueMode::Mpsc> Queue;
     std::atomic<int32> Pending{0};
     std::atomic<bool> Stopping{false};
