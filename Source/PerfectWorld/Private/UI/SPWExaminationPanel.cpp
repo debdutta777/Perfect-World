@@ -47,6 +47,32 @@ void SPWExaminationPanel::Construct(const FArguments& InArgs)
 void SPWExaminationPanel::P406Refresh()
 {
     P406Model = P406Bridge.IsValid() ? P406Bridge->Read() : P406Exam::FModel{};
+    if (P506Meeting.IsSet())
+    {
+        bool P506Available = false;
+        const auto& P506Command = P506Meeting.GetValue().P407UCommand;
+        for (const auto& P506Row : P406Model.P407UFollowups)
+            if (P506Row.Action.Id == P506Command.ActionId && P506Row.Action.P502TaskId.empty() &&
+                P506Row.CanAttend && P506Row.At == P506Command.ExpectedAt &&
+                P506Row.P502Revision == P506Command.P502ExpectedRevision)
+            {
+                P506Available = true;
+                P406Model.Screen = P406Exam::EScreen::P407USession;
+                P406Model.Title = P406Exam::P407UFollowupText(P506Row.Action.TitleTextKey);
+                P406Model.Lines.Reset();
+                P406Model.Lines.Add(P406Exam::P407UFollowupText(P506Row.Action.BriefTextKey));
+                P406Model.Lines.Add(FText::FromString(FString::Printf(
+                    TEXT("Reading costs no time. Finish meeting spends %d minutes once and records attendance. Close to leave without attending."),
+                    P506Row.Action.DurationMinutes)));
+                P406Model.Offers.Reset();
+                P406Model.Actions.Reset();
+                auto P506Finish = P506Meeting.GetValue();
+                P506Finish.Label = FText::FromString(TEXT("Finish meeting and record attendance"));
+                P406Model.Actions.Add(MoveTemp(P506Finish));
+                break;
+            }
+        if (!P506Available) P506Meeting.Reset();
+    }
     P406Rebuild();
 }
 
@@ -79,29 +105,6 @@ void SPWExaminationPanel::P406Rebuild()
     P406Activations.Reset();
     P406Body->ClearChildren();
     P406Footer->ClearChildren();
-    if (P407USession.IsSet())
-    {
-        P406Model.Screen = P406Exam::EScreen::P407USession;
-        P406Model.Title = FText::FromString(TEXT("School follow-up session"));
-        const auto& P407UCommand = P407USession.GetValue().P407UCommand;
-        for (const auto& P407URow : P406Model.P407UFollowups)
-            if (P407URow.Action.Id == P407UCommand.ActionId)
-            {
-                P406AddLine(P406Exam::P407UFollowupText(P407URow.Action.TitleTextKey));
-                P406AddLine(P406Exam::P407UFollowupText(P407URow.Action.BriefTextKey));
-                if (P407URow.Action.Id == "school_followup.p2.p4_withdrawn_school_mentor")
-                    P406AddLine(P406Exam::P407UFollowupText("phase2.a8.p407u.mentor.session"));
-                P406AddLine(FText::FromString(FString::Printf(TEXT("Reading costs no time. Finishing records attendance and spends %d minutes. Leaving now records no attendance."),
-                    P407URow.Action.DurationMinutes)));
-            }
-        P406AddControl(FText::FromString(TEXT("Finish the session and record attendance")), true,
-            [this]() { return P407UFinishSession(); }, true);
-        P406AddControl(FText::FromString(TEXT("Leave without attending")), true,
-            [this]() { P407USession.Reset(); P406Refresh(); return true; }, true);
-        P406Selected = 0;
-        P406SelectFocus(0);
-        return;
-    }
     // P410: render the portable sitting projection verbatim; no age, lateness or allowance rules live here.
     const auto& P410Sittings = P406Model.World.Sittings;
     if (P406Model.Screen == P406Exam::EScreen::Decision)
@@ -136,7 +139,7 @@ void SPWExaminationPanel::P406Rebuild()
             static_cast<long long>(P406Model.World.OutsideMinutes))), true, [this]() { return P406TriggerWithdraw(); }, true);
         P406Controls.Last()->SetTag(TEXT("P406Withdraw"));
     }
-    P406AddControl(FText::FromString(P406Model.Screen == P406Exam::EScreen::Result ? TEXT("Continue into the day") :
+    P406AddControl(FText::FromString(P406Model.World.Finished ? TEXT("Continue into the day / close (task progress retained)") :
         P406Model.World.DecisionRequired ? TEXT("Pause menu") : TEXT("Close")),
         true, [this]() { P406Close(); return true; }, true);
     P406Selected = 0;
@@ -147,9 +150,15 @@ bool SPWExaminationPanel::P406Send(const P406Exam::FAction& Action)
 {
     if (!P406Bridge.IsValid()) return false;
     const auto P406Reply = P406Bridge->Submit(Action);
+    const auto P506Code = FString(UTF8_TO_TCHAR(P406Reply.Why.Code.c_str()));
     P406Notice = P406Reply.Accepted ? FText::GetEmpty() :
-        P406Exam::P406RefusalText(FString(UTF8_TO_TCHAR(P406Reply.Why.Code.c_str())));
-    P406Refresh();
+        ((P506Code.StartsWith(TEXT("p502.")) || P506Code.StartsWith(TEXT("p506.")))
+            ? FText::FromString(FString(UTF8_TO_TCHAR(P406Reply.Why.Message.c_str()))) : P406Exam::P406RefusalText(P506Code));
+    // A successful handoff gives focus to the timetable or the world. The detached
+    // examination panel must not queue another focus request while that happens.
+    if (P406Reply.Accepted && (Action.bP506SchoolDay || Action.bP506ReturnToWorld))
+        PWUI::CancelPendingFocus(AsShared());
+    else P406Refresh();
     return P406Reply.Accepted;
 }
 
@@ -157,22 +166,47 @@ bool SPWExaminationPanel::P406TriggerAction(int32 Index)
 {
     if (!P406Model.Actions.IsValidIndex(Index) || !P406Model.Actions[Index].bEnabled) return false;
     const auto P406Action = P406Model.Actions[Index];
+    if (P506Meeting.IsSet()) return P407UFinishSession();
     if (P406Action.bP407UFollowup && !P406Action.bP407UWait &&
         P406Action.P407UCommand.Kind == PerfectWorld::P407UFollowupAction::Attend)
-    {
-        P407USession = P406Action;
-        P406Rebuild();
-        return true;
-    }
-    return P406Send(P406Action);
+        for (const auto& P506Row : P406Model.P407UFollowups)
+            if (P506Row.Action.Id == P406Action.P407UCommand.ActionId && P506Row.Action.P502TaskId.empty())
+            {
+                P506Meeting = P406Action;
+                P406Notice = FText::GetEmpty();
+                P406Refresh();
+                return true;
+            }
+    const bool P506Accepted = P406Send(P406Action);
+    if (P506Accepted && P406Action.bP506ReturnToWorld) P406Close();
+    return P506Accepted;
 }
 
 bool SPWExaminationPanel::P407UFinishSession()
 {
-    if (!P407USession.IsSet()) return false;
-    const auto P407UAction = P407USession.GetValue();
-    P407USession.Reset();
-    return P406Send(P407UAction);
+    if (P506Meeting.IsSet())
+    {
+        const auto P506Finish = P506Meeting.GetValue();
+        P506Meeting.Reset();
+        return P406Send(P506Finish);
+    }
+    // Compatibility with the earlier attendance scenario: explicitly finish the first displayed task choice.
+    // Actual UI buttons each submit one disclosed command; no widget-local session state survives reload.
+    using PerfectWorld::P407UFollowupAction;
+    for (const auto& P506Action : P406Model.Actions)
+        if (P506Action.bP407UFollowup && P506Action.P407UCommand.Kind == P407UFollowupAction::P502Start && P506Action.bEnabled)
+        {
+            const auto P506Start = P506Action;
+            if (!P406Send(P506Start)) return false;
+            break;
+        }
+    for (const auto& P506Action : P406Model.Actions)
+        if (P506Action.bP407UFollowup && P506Action.P407UCommand.Kind == P407UFollowupAction::P502Resolve && P506Action.bEnabled)
+        {
+            const auto P506Finish = P506Action;
+            return P406Send(P506Finish);
+        }
+    return false;
 }
 
 bool SPWExaminationPanel::P406TriggerWithdraw()
@@ -185,6 +219,7 @@ bool SPWExaminationPanel::P406TriggerWithdraw()
 
 void SPWExaminationPanel::P406Close()
 {
+    P506Meeting.Reset();
     PWUI::CancelPendingFocus(AsShared());
     P406OnClose.ExecuteIfBound();
 }

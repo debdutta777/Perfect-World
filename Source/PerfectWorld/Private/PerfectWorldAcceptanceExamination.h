@@ -16,4 +16,11 @@ void P406AppendExaminationSteps(TArray<FStepDef>& Out);
 void P406AppendExaminationWithdrawSteps(TArray<FStepDef>& Out);
 /** P407U: real result, mentor booking, paid campus session and retained attendance. */
 void P407UAppendExaminationFollowupSteps(TArray<FStepDef>& Out);
+/** P506: seven ordinary days, live consequential task/refusal, then fresh-process Continue. */
+void P506AppendStrongWeekSteps(TArray<FStepDef>& Out);
+void P506AppendMiddleWeekSteps(TArray<FStepDef>& Out);
+void P506AppendPoorWeekSteps(TArray<FStepDef>& Out);
+void P506AppendWithdrawnWeekSteps(TArray<FStepDef>& Out);
+void P506AppendDeferredWeekSteps(TArray<FStepDef>& Out);
+void P506AppendDeclinedWeekSteps(TArray<FStepDef>& Out);
 }
