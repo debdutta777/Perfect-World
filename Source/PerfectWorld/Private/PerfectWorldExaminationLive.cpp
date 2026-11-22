@@ -165,7 +165,7 @@ public:
         if (P406ActionRow.bP407UFollowup)
         {
             const auto P506Kind = P406ActionRow.P407UCommand.Kind;
-            const bool P506NeedsHost = P406ActionRow.bP407UWait || P506Kind == PerfectWorld::P407UFollowupAction::Attend ||
+            bool P506NeedsHost = P406ActionRow.bP407UWait || P506Kind == PerfectWorld::P407UFollowupAction::Attend ||
                 P506Kind == PerfectWorld::P407UFollowupAction::P502Start ||
                 P506Kind == PerfectWorld::P407UFollowupAction::P502Resume ||
                 P506Kind == PerfectWorld::P407UFollowupAction::P502Resolve;
@@ -174,6 +174,11 @@ public:
                 if (P506Row.Action.Id == P406ActionRow.P407UCommand.ActionId)
                     P506SchoolHosted = P506Row.Action.Destination == "place.school" ||
                         (!P506Row.Action.P502TaskId.empty() && P506Row.Action.Destination == "location.nabapara.repair_workshop");
+            // A completed task answers a repeat Resolve from the core (p502.completed) wherever the pawn stands.
+            for (const auto& P506Row : P406Life->GetSim().P407UFollowups())
+                if (P506Row.Action.Id == P406ActionRow.P407UCommand.ActionId && P506Row.P502Stage == PerfectWorld::P502TaskStage::Completed &&
+                    P506Kind == PerfectWorld::P407UFollowupAction::P502Resolve)
+                    P506NeedsHost = false;
             // All six tasks are school-hosted, including the workshop practical and clinic enquiry.
             // Leaving/cancelling remains possible even after movement or a loaded location change.
             if (P506NeedsHost && (!P506SchoolHosted || !P406Exam::P407UAtSchool(P406Life->GetWorld())))
