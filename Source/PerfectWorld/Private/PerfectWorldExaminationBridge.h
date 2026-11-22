@@ -50,8 +50,8 @@ bool P406PauseEntryVisible(const UWorld* World);
 /** Retry hosting while another overlay owns input; never advances the clock or resubmits Enter. */
 bool P406PresentRequired(UWorld* World);
 
-/** Validated production content, owned for process lifetime. Failure logs and returns an empty binding. */
-PerfectWorld::P402WorldExamCatalogues P406BExaminationCatalogues(const UWorld* World);
+/** Shared production content plus the caller-owned life birth, alive for every borrowing sim (including replay). */
+PerfectWorld::P402WorldExamCatalogues P406BExaminationCatalogues(const UWorld* World, const PerfectWorld::DateOfBirth* P410Birth);
 FText P407UFollowupText(const std::string& Key);
 bool P407UAtSchool(UWorld* World);
 void P407UAppendFollowups(FModel& Model, const PerfectWorld::WorldSim& Sim, bool bAtSchool);

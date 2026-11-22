@@ -102,6 +102,23 @@ void SPWExaminationPanel::P406Rebuild()
         P406SelectFocus(0);
         return;
     }
+    // P410: render the portable sitting projection verbatim; no age, lateness or allowance rules live here.
+    const auto& P410Sittings = P406Model.World.Sittings;
+    if (P406Model.Screen == P406Exam::EScreen::Decision)
+    {
+        const auto P410Opening = PerfectWorld::GameClock::ToCalendar(P410Sittings.OpensAt);
+        P406AddLine(FText::FromString(FString::Printf(TEXT("Sitting opens: %04d-%02d-%02d %02d:%02d"),
+            P410Opening.Year, P410Opening.Month, P410Opening.Day, P410Opening.Hour, P410Opening.Minute)));
+    }
+    if (P406Model.World.CanWithdraw && P410Sittings.LateMinutes > 0)
+        P406AddLine(FText::FromString(FString::Printf(TEXT("Late entry: %lld minutes late | Reduced outside allowance: %lld minutes"),
+            static_cast<long long>(P410Sittings.LateMinutes), static_cast<long long>(P410Sittings.AllowanceMinutes))));
+    if (P410Sittings.HasNextSitting)
+    {
+        const auto P410Next = PerfectWorld::GameClock::ToCalendar(P410Sittings.NextSittingAt);
+        P406AddLine(FText::FromString(FString::Printf(TEXT("Next annual sitting: %04d-%02d-%02d %02d:%02d"),
+            P410Next.Year, P410Next.Month, P410Next.Day, P410Next.Hour, P410Next.Minute)));
+    }
     for (const auto& P406Line : P406Model.Lines) P406AddLine(P406Line);
     for (int32 P406Index = 0; P406Index < P406Model.Actions.Num(); ++P406Index)
     {
