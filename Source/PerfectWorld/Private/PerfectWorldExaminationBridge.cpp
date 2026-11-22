@@ -12,8 +12,10 @@
 
 namespace P406Exam
 {
-PerfectWorld::P402WorldExamCatalogues P406BExaminationCatalogues(const UWorld* World)
+PerfectWorld::P402WorldExamCatalogues P406BExaminationCatalogues(const UWorld* World, const PerfectWorld::DateOfBirth* P410Birth)
 {
+    PerfectWorld::P402WorldExamCatalogues P410Binding;
+    P410Binding.P409Birth = P410Birth;
     static TUniquePtr<const P406BExaminationContent> P406BContent;
     if (!P406BContent.IsValid())
     {
@@ -25,11 +27,13 @@ PerfectWorld::P402WorldExamCatalogues P406BExaminationCatalogues(const UWorld* W
             for (const auto& P406BIssue : P406BLoaded->Issues)
                 UE_LOG(LogPWLaneLife, Error, TEXT("P406B examination content unavailable: %hs %hs: %hs"),
                     P406BIssue.File.c_str(), P406BIssue.Id.c_str(), P406BIssue.Message.c_str());
-            return {}; // No cached failure: a later new-life/load binding may retry.
+            return P410Binding; // Keep the life birth even when content must be retried on new-life/load.
         }
         P406BContent = MoveTemp(P406BLoaded);
     }
-    return P406BContent->P406BBinding();
+    P410Binding = P406BContent->P406BBinding();
+    P410Binding.P409Birth = P410Birth;
+    return P410Binding;
 }
 
 PerfectWorld::CommandResult FFakeWorld::Submit(const FAction& Action)
@@ -57,7 +61,8 @@ bool P406PauseEntryVisible(const UWorld* World)
     const auto* P406Life = UPWLaneLifeSubsystem::Get(World);
     if (P406Life == nullptr) return false;
     const auto P406View = P406Life->GetSim().ExaminationWorldView();
-    return P406View.DecisionRequired || P406View.CanWithdraw || P406View.Finished;
+    return P406View.DecisionRequired || P406View.CanSit || P406View.CanDefer || P406View.CanDecline ||
+        P406View.CanWithdraw || P406View.Finished; // P410: late arrivals can also reopen entry from pause.
 }
 
 bool P406PresentRequired(UWorld* World)

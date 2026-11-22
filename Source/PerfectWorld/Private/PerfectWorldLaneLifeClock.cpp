@@ -6,6 +6,8 @@
 #include "GameFramework/PlayerController.h"
 #include "Misc/App.h"
 #include "PerfectWorldConversationPresenter.h"
+#include "PerfectWorldCharacterCreatorSubsystem.h"
+#include "Engine/GameInstance.h"
 #include "PerfectWorldDoorActor.h"
 #include "PerfectWorldFrontEndHUD.h"
 #include "PerfectWorldNpcPresenceSubsystem.h"
@@ -96,6 +98,14 @@ void BrLogEvent(const PerfectWorld::DoorChanged& Event)
     UE_LOG(LogPWLaneLife, Verbose, TEXT("Door %s is %s (side %d%s)."), *PWLaneLife::ToFString(Event.DoorId), Event.Open ? TEXT("open") : TEXT("closed"),
            static_cast<int32>(Event.SwingSide), Event.Settlement ? TEXT(", settled") : TEXT(""));
 }
+
+// P410: examination transitions use the same local event log as doors and time.
+void BrLogEvent(const PerfectWorld::ExamTransition& Event)
+{
+    UE_LOG(LogPWLaneLife, Display, TEXT("Examination sitting %u: transition %d (late %lld, outside %lld%s)."),
+        Event.Sitting, static_cast<int32>(Event.Kind), static_cast<long long>(Event.LateMinutes),
+        static_cast<long long>(Event.OutsideMinutes), Event.TimeCalled ? TEXT(", time called") : TEXT(""));
+}
 } // namespace
 
 int32 UPWLaneLifeSubsystem::GetMinuteOfDay() const
@@ -113,9 +123,19 @@ FText UPWLaneLifeSubsystem::GetClockText() const
 
 void UPWLaneLifeSubsystem::BuildWorld()
 {
+    TSharedPtr<const PerfectWorld::DateOfBirth> P410FreshBirth;
+    const auto* P410Instance = GetWorld()->GetGameInstance();
+    const auto* P410Creator = P410Instance != nullptr ? P410Instance->GetSubsystem<UPerfectWorldCharacterCreatorSubsystem>() : nullptr;
+    if (P410Creator != nullptr)
+    {
+        const auto P410Identity = P410Creator->GetIdentity();
+        P410FreshBirth = MakeShared<PerfectWorld::DateOfBirth>(PerfectWorld::DateOfBirth{
+            P410Identity.BirthYear, P410Identity.BirthMonth, P410Identity.BirthDay});
+    }
     Sim = MakeUnique<PerfectWorld::WorldSim>(BrWorldSeed, PerfectWorld::MaxEventsPerAdvance,
         PerfectWorld::DayLoopCatalogues{}, PerfectWorld::WorldCommerceCatalogues{}, PerfectWorld::WorldSchoolCatalogues{},
-        PerfectWorld::WorldAwakeningCatalogues{}, P406Exam::P406BExaminationCatalogues(GetWorld()));
+        PerfectWorld::WorldAwakeningCatalogues{}, P406Exam::P406BExaminationCatalogues(GetWorld(), P410FreshBirth.Get()));
+    P410Birth = MoveTemp(P410FreshBirth); // Replace the old owner only after its sim has been destroyed.
     ClockMode = PerfectWorld::TimeModeState();
     RealMsFraction = 0.0;
     LastClockRefusal.Reset();
@@ -188,12 +208,14 @@ bool UPWLaneLifeSubsystem::LoadWorldSlot(const std::string& Path, PerfectWorld::
     PerfectWorld::CharacterCreator Scratch;
     const auto Restored = Scratch.RestoreSave(Read.Data->Creation);
     if (!Restored.Succeeded()) { Message = Restored.Message; return false; }
+    const TSharedPtr<const PerfectWorld::DateOfBirth> P410LoadedBirth =
+        MakeShared<PerfectWorld::DateOfBirth>(Scratch.Identity().Birth);
     TUniquePtr<PerfectWorld::WorldSim> Prepared;
     if (Scratch.HasStarted())
     {
         Prepared = MakeUnique<PerfectWorld::WorldSim>(Read.Data->World, PerfectWorld::MaxEventsPerAdvance,
             PerfectWorld::DayLoopCatalogues{}, PerfectWorld::WorldCommerceCatalogues{}, PerfectWorld::WorldSchoolCatalogues{},
-            PerfectWorld::WorldAwakeningCatalogues{}, P406Exam::P406BExaminationCatalogues(GetWorld()));
+            PerfectWorld::WorldAwakeningCatalogues{}, P406Exam::P406BExaminationCatalogues(GetWorld(), P410LoadedBirth.Get()));
         const std::string Person(PerfectWorld::OpenConversationPersonId(Prepared->State()));
         if (!Person.empty() && !Prepared->Submit({PerfectWorld::CommandSource::Player,
             PerfectWorld::ConversationLeave{Person}}).Accepted)
@@ -208,7 +230,7 @@ bool UPWLaneLifeSubsystem::LoadWorldSlot(const std::string& Path, PerfectWorld::
     if (Prepared)
     {
         Placement = Read.Data->Player;
-        AdoptSavedWorld(MoveTemp(Prepared));
+        AdoptSavedWorld(MoveTemp(Prepared), P410LoadedBirth);
         PWLegacyRecovery::FP314ULoadActions P314UActions;
         P314UActions.Read = [this]() -> const PerfectWorld::WorldState& { return Sim->State(); };
         P314UActions.PendingWork = [this]() { return Sim->PendingSchoolWorkReconciliation(); };
@@ -237,10 +259,13 @@ bool UPWLaneLifeSubsystem::LoadWorldSlot(const std::string& Path, PerfectWorld::
     return true;
 }
 
-void UPWLaneLifeSubsystem::AdoptSavedWorld(TUniquePtr<PerfectWorld::WorldSim> Prepared)
+void UPWLaneLifeSubsystem::AdoptSavedWorld(TUniquePtr<PerfectWorld::WorldSim> Prepared,
+    TSharedPtr<const PerfectWorld::DateOfBirth> P410PreparedBirth)
 {
     if (auto* Buy = UPWBuyPresenter::Get(this)) Buy->Close(); // R88
     Sim = MoveTemp(Prepared);
+    // Same-life copies retain the existing owner; new-life/Continue supply the prepared sim's owner.
+    if (P410PreparedBirth.IsValid()) P410Birth = MoveTemp(P410PreparedBirth);
     R88InstallCommerce(); // R88: restored sim must borrow commerce catalogues too
     ClockMode = PerfectWorld::TimeModeState{};
     RealMsFraction = 0.0;

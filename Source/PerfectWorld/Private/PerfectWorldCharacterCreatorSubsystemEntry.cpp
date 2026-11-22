@@ -78,9 +78,11 @@ bool UPerfectWorldCharacterCreatorSubsystem::StartLifeAndSaveToSlot(int32 SlotIn
         return RecordFileError(FText::FromString(TEXT("Learning content is unavailable. Your creation has not started.")));
     const auto P36USeed = PerfectWorld::SeedNewLifeLearning(Fresh.World, *P38Content->GetDb(), Started.CaptureSave());
     if (!P36USeed.Ok()) return RecordFileError(FText::FromString(ToFString(P36USeed.Error)));
+    const TSharedPtr<const PerfectWorld::DateOfBirth> P410StartedBirth =
+        MakeShared<PerfectWorld::DateOfBirth>(Started.Identity().Birth);
     auto Prepared = MakeUnique<PerfectWorld::WorldSim>(Fresh.World, PerfectWorld::MaxEventsPerAdvance,
         PerfectWorld::DayLoopCatalogues{}, PerfectWorld::WorldCommerceCatalogues{}, PerfectWorld::WorldSchoolCatalogues{},
-        PerfectWorld::WorldAwakeningCatalogues{}, P406Exam::P406BExaminationCatalogues(GetWorld()));
+        PerfectWorld::WorldAwakeningCatalogues{}, P406Exam::P406BExaminationCatalogues(GetWorld(), P410StartedBirth.Get()));
     if (!Prepared->Submit({PerfectWorld::CommandSource::System,
         PerfectWorld::AdvanceTime{PWLaneLife::CampaignStartMinuteOfDay - 360}}).Accepted)
         return RecordFileError(FText::FromString(TEXT("The new world's clock could not start.")));
@@ -92,7 +94,7 @@ bool UPerfectWorldCharacterCreatorSubsystem::StartLifeAndSaveToSlot(int32 SlotIn
     Creator = MoveTemp(Started);
     // Fresh entry follows the same origin-marker and explicit camera path as a restart.
     LoadedPlacement = Fresh.Player;
-    Life->AdoptSavedWorld(MoveTemp(Prepared));
+    Life->AdoptSavedWorld(MoveTemp(Prepared), P410StartedBirth);
     LastError = EPWCreationError::None;
     LastErrorMessage = FText::GetEmpty();
     return true;
