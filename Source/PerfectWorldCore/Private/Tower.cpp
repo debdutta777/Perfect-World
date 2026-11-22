@@ -50,8 +50,9 @@ constexpr std::array<TowerCredentialDefinition, AptitudePathCount> Credentials{{
     {"credential.tower.artist", P::Artist}, {"credential.tower.ecologist", P::Ecologist}
 }};
 // Offers are qualification next steps, not automatic admission, debt or a licence.
-// The first four are open at every result, including declining: the examination cannot be failed
-// out of existence (AWAKENING_AND_EXAM "Failure"). The retake is annual up to age twenty.
+// The first three are open at every result, including declining: the examination cannot be failed
+// out of existence (AWAKENING_AND_EXAM "Failure"). P413 retains the retake ID for content compatibility only;
+// no scored result can offer another sitting under GAME_PLAN section 10's 2026-11-22 decision.
 // TODO M4-13/M5: authored institutions, terms, first weeks and eligibility rules (and the age bound).
 constexpr std::array<TowerOfferDefinition, 10> Offers{{
     {"offer.tower.apprenticeship", "Request a supervised workshop apprenticeship assessment", 10, 0},
@@ -241,6 +242,8 @@ TowerResult ResolveTower(const std::vector<TowerFloorAttempt>& attempts)
     result.Decile = (result.NationalRank * 10 + TowerCohortCount - 1) / TowerCohortCount;
     for (const auto& offer : Offers)
     {
+        if (offer.Id == "offer.tower.retake")
+            continue; // P413: stable catalogue identity, never an actionable offer.
         if (result.Decile > offer.MaxDecile || (offer.NeedsCredential && !HasCredential(result, offer.Discipline)))
             continue;
         result.OfferIds.push_back(offer.Id);

@@ -274,8 +274,8 @@ void TestRoutesAndRanking()
                        "top-rank offers are not given to the bottom decile");
             }
     Expect(bottomResults > 10, "the sweep really exercised the bottom decile");
-    Expect(Offered(empty, "offer.tower.apprenticeship") && Offered(empty, "offer.tower.retake") && empty.OfferIds.size() >= 3,
-           "declining the examination still has offers, including trying again");
+    Expect(Offered(empty, "offer.tower.apprenticeship") && !Offered(empty, "offer.tower.retake") && empty.OfferIds.size() >= 3,
+           "P413 declining still has three ordinary qualification offers and no retake");
     Expect(empty.SupportEnvelopePaise == 0, "no rank, no allowance");
 }
 

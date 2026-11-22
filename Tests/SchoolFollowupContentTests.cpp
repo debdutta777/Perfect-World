@@ -114,7 +114,8 @@ void A8Continuation(const SchoolFollowupContent& content, const TowerSessionView
             mappedOffers.insert(action.OfferId);
         }
     }
-    A8Expect(specific == 3, "three outcome-specific next steps");
+    A8Expect(specific == (std::string_view(outcome) == "poor" ? 2 : 3),
+        "P413 outcome next steps omit the obsolete poor-result retake preparation");
     A8Expect(kinds.contains("school") && kinds.contains("study") && kinds.contains("rest"), "ordinary school life continues");
     A8Expect(mappedOffers.size() == view.Result.OfferIds.size() && mappedOffers.size() >= 3, "all eligible offers are actionable, including bottom decile");
 }
@@ -164,7 +165,7 @@ int main(int argc, char** argv)
     }
     auto changed = poor; changed.Result.OfferIds.clear();
     const auto ordinary = QuerySchoolFollowups(loaded.Catalogue, changed);
-    A8Expect(ordinary.size() == 6, "lost eligibility keeps ordinary life and outcome next steps");
+    A8Expect(ordinary.size() == 5, "P413 lost eligibility keeps ordinary life and outcome steps without retake preparation");
     changed = poor; changed.Result.Error = TowerError::InvalidScore;
     A8Expect(QuerySchoolFollowups(loaded.Catalogue, changed).empty(), "invalid result exposes no final actions");
     for (const int decile : {0, 11})

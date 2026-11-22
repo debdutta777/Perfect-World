@@ -109,17 +109,64 @@ P402ExamPreparation P409SittingPreparation(const WorldState& world, std::uint32_
     return out;
 }
 
+bool P413DeferralUsed(const WorldState& world) noexcept
+{
+    return world.Examination.Participation == TowerParticipation::Deferred ||
+        std::any_of(world.ExaminationEarlier.begin(), world.ExaminationEarlier.end(), [](const auto& session) {
+            return session.Participation == TowerParticipation::Deferred;
+        });
+}
+
+std::optional<std::uint32_t> P413AvailableSitting(const WorldState& world, GameInstant now) noexcept
+{
+    std::uint32_t available = 0;
+    if (world.Awakening.Granted)
+    {
+        // Awakened BY the opening, not merely by today's query. An absent student retains the first annual sitting
+        // whose opening follows their eventual grant. Today's make-up orchestration requires an earlier grant;
+        // this rule also covers a future post-first-sitting grant path without inventing saved authority.
+        while (available <= P409MaxSitting && world.Awakening.Granted->At > P409SittingAt(available))
+            ++available;
+    }
+    else
+        available = P409SittingOpenedBy(now).value_or(0);
+
+    bool deferred = false;
+    const auto consume = [&](const TowerSessionState& session, std::uint32_t sitting) {
+        if (session.Participation == TowerParticipation::Unset)
+            return true;
+        if (session.Participation != TowerParticipation::Deferred || deferred)
+            return false; // Entered, every terminal result and Declined consume the one chance, even in legacy archives.
+        if (!world.Awakening.Granted)
+            available = sitting;
+        if (sitting != available)
+            return false; // A legacy deferral after an already missed eligible sitting grants no new chance.
+        deferred = true;
+        available = sitting + 1;
+        return true;
+    };
+    for (std::uint32_t sitting = 0; sitting < P409CurrentSitting(world); ++sitting)
+        if (!consume(world.ExaminationEarlier[sitting], sitting))
+            return std::nullopt;
+    if (!consume(world.Examination, P409CurrentSitting(world)))
+        return std::nullopt;
+    if ((world.Awakening.Granted || deferred) && now > P409SittingAt(available) + P409LateEntryMinutes)
+        return std::nullopt;
+    return available;
+}
+
 std::uint32_t P409DecisionTarget(const WorldState& world, GameInstant now) noexcept
 {
     const std::uint32_t current = P409CurrentSitting(world);
-    if (world.Examination.Participation == TowerParticipation::Entered)
-        return current;
-    const std::optional<std::uint32_t> opened = P409SittingOpenedBy(now);
-    return opened && *opened > current ? *opened : current;
+    const auto available = P413AvailableSitting(world, now);
+    return available && *available > current && P409SittingAt(*available) <= now ? *available : current;
 }
 
-void P409ArchiveUntil(std::vector<TowerSessionState>& earlier, TowerSessionState& session, std::uint32_t target)
+void P409ArchiveUntil(const WorldState& world, std::vector<TowerSessionState>& earlier, TowerSessionState& session, std::uint32_t target)
 {
+    const auto available = P413AvailableSitting(world, world.Clock.Now());
+    if (!available || target != *available || target != P409DecisionTarget(world, world.Clock.Now()) || target > P409MaxSitting)
+        return;
     while (earlier.size() < target)
     {
         earlier.push_back(std::move(session));
