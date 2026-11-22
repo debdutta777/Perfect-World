@@ -18,6 +18,8 @@ struct FAction
     bool bEnabled = true;
     bool bP407UFollowup = false;
     bool bP407UWait = false;
+    bool bP506SchoolDay = false;
+    bool bP506ReturnToWorld = false;
     PerfectWorld::P407UFollowupCommand P407UCommand;
 };
 struct FModel
@@ -53,6 +55,8 @@ bool P406PresentRequired(UWorld* World);
 /** Shared production content plus the caller-owned life birth, alive for every borrowing sim (including replay). */
 PerfectWorld::P402WorldExamCatalogues P406BExaminationCatalogues(const UWorld* World, const PerfectWorld::DateOfBirth* P410Birth);
 FText P407UFollowupText(const std::string& Key);
+/** Words for public task choice/record tokens; no eligibility or consequence rules. */
+FText P506TaskWords(const std::string& Token);
 bool P407UAtSchool(UWorld* World);
 void P407UAppendFollowups(FModel& Model, const PerfectWorld::WorldSim& Sim, bool bAtSchool);
 

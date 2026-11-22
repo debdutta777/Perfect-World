@@ -2,6 +2,8 @@
 
 #include "Engine/World.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
+#include "PerfectWorldSchoolLive.h"
+#include "PerfectWorldSchoolPresenter.h"
 #include "Tower.h"
 
 namespace
@@ -71,6 +73,15 @@ public:
                     P406Route != nullptr ? *PWLaneLife::ToFString(P406Route->Task) : TEXT("Cleared route"), P406Credential.ScoreMilli)));
             }
             P407UAppendFollowups(P406Model, P406Sim, P407UAtSchool(P406Life->GetWorld()));
+            FPWSchoolDayModel P506Day;
+            FString P506Why;
+            if (PWSchoolLive::MakeDayWorld(*P406Life->GetWorld())->ReadModel(P506Day, P506Why))
+            {
+                P406Model.Lines.Add(P506Day.Clock);
+                if (!P506Day.NextSchoolDay.IsEmpty()) P406Model.Lines.Add(P506Day.NextSchoolDay);
+                if (!P506Day.Closure.IsEmpty()) P406Model.Lines.Add(P506Day.Closure);
+                if (!P506Day.AbsenceRecovery.IsEmpty()) P406Model.Lines.Add(P506Day.AbsenceRecovery);
+            }
             return P406Model;
         }
         if (P410EntryOffered)
@@ -136,25 +147,53 @@ public:
     {
         auto* P406Life = P406Owner.Get();
         if (P406Life == nullptr) return {};
+        if (P406ActionRow.bP506SchoolDay)
+        {
+            PerfectWorld::CommandResult P506Reply;
+            auto* P506Host = UPWSchoolPresenter::Get(P406Life->GetWorld());
+            if (!P406Exam::P407UAtSchool(P406Life->GetWorld()) || P506Host == nullptr ||
+                !P406Life->GetSim().ExaminationWorldView().Finished)
+            {
+                P506Reply.Why = {"p407u.place", "Visit school to open the ordinary timetable."};
+                return P506Reply;
+            }
+            P506Host->Close();
+            P506Reply.Accepted = P506Host->OpenDay();
+            if (!P506Reply.Accepted) P506Reply.Why = {"p506.school", "Close the other screen and use your classroom seat to open the timetable."};
+            return P506Reply;
+        }
         if (P406ActionRow.bP407UFollowup)
         {
+            const auto P506Kind = P406ActionRow.P407UCommand.Kind;
+            const bool P506NeedsHost = P406ActionRow.bP407UWait || P506Kind == PerfectWorld::P407UFollowupAction::Attend ||
+                P506Kind == PerfectWorld::P407UFollowupAction::P502Start ||
+                P506Kind == PerfectWorld::P407UFollowupAction::P502Resume ||
+                P506Kind == PerfectWorld::P407UFollowupAction::P502Resolve;
+            bool P506SchoolHosted = false;
+            for (const auto& P506Row : P406Life->GetSim().P407UFollowups())
+                if (P506Row.Action.Id == P406ActionRow.P407UCommand.ActionId)
+                    P506SchoolHosted = P506Row.Action.Destination == "place.school" ||
+                        (!P506Row.Action.P502TaskId.empty() && P506Row.Action.Destination == "location.nabapara.repair_workshop");
+            // All six tasks are school-hosted, including the workshop practical and clinic enquiry.
+            // Leaving/cancelling remains possible even after movement or a loaded location change.
+            if (P506NeedsHost && (!P506SchoolHosted || !P406Exam::P407UAtSchool(P406Life->GetWorld())))
+            {
+                PerfectWorld::CommandResult P506Refused;
+                P506Refused.Why = {"p407u.place", "Visit Nabapara Vidyalaya for this school-hosted session."};
+                return P506Refused;
+            }
             if (P406ActionRow.bP407UWait)
             {
                 // Wait is ordinary time; it never records attendance.
                 for (const auto& P407URow : P406Life->GetSim().P407UFollowups())
                     if (P407URow.Action.Id == P406ActionRow.P407UCommand.ActionId && P407URow.Booked && !P407URow.Attended &&
-                        P407URow.At == P406ActionRow.P407UCommand.ExpectedAt && P407URow.At > P406Life->GetNow())
+                        P407URow.At == P406ActionRow.P407UCommand.ExpectedAt &&
+                        P407URow.P502Revision == P406ActionRow.P407UCommand.P502ExpectedRevision &&
+                        P407URow.At > P406Life->GetNow())
                         return P406Life->P406SubmitExaminationCommand({PerfectWorld::CommandSource::Player,
                             PerfectWorld::AdvanceTime{P407URow.At - P406Life->GetNow()}});
                 PerfectWorld::CommandResult P407URefused;
                 P407URefused.Why = {"p407u.stale", "Read the current appointment time again."};
-                return P407URefused;
-            }
-            if (P406ActionRow.P407UCommand.Kind == PerfectWorld::P407UFollowupAction::Attend &&
-                !P406Exam::P407UAtSchool(P406Life->GetWorld()))
-            {
-                PerfectWorld::CommandResult P407URefused;
-                P407URefused.Why = {"p407u.place", "Visit the school campus for this session."};
                 return P407URefused;
             }
             return P406Life->P406SubmitExaminationCommand({PerfectWorld::CommandSource::Player, P406ActionRow.P407UCommand});
