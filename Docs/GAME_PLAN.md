@@ -318,6 +318,7 @@ Every milestone is playable and ends with a gate. `ROADMAP.md` breaks each into 
 | 2026-09-28 | **World scale:** many real world cities built as block cities, plus fictional places, plus a dungeon realm ten times bigger than Earth's total surface. Real art is still added after the game is complete (M9). Detail and the proposed build approach in `WORLD_SCALE.md` |
 | 2026-09-28 | **India first, defined properly:** five cities (Kolkata, Delhi, Mumbai, Bengaluru, Chennai) with Gates and dungeon anchors, schools of every level and universities, social strata and resources (`INDIA_STAGE_ONE.md`); awakened grades F–S with ten stages each, promotion only by assessment (`AWAKENED_GRADES.md`). The owner delegated the world-scale answers W1–W4 (`WORLD_SCALE.md` §7) |
 | 2026-09-23 | GPT-6 review adopted: time contract, persistent identity at first reference, hazard onset versus consequence, presentation contracts, M9 as a three-part validation, early lifecycle proof, repetition gate, phase completeness rule, freedom acceptance rule |
+| 2026-11-22 | **Examination: one sitting per life** (owner, answering proposed questions I, J, K and M). Supersedes the annual retakes up to twenty in §1 and `AWAKENING_AND_EXAM.md`, because a second sitting would give an unfair advantage. (1) The 60-minute late-entry window stands: entry until 07:00, with the hall finish unchanged and a reduced allowance. (2) Each awakened candidate has exactly one sitting. Entering the tower uses it, whatever the result (strong, middle, poor, withdrawn, ejected or time called). Declining uses it. Missing the entry window uses it. (3) Defer is allowed once: the single sitting moves to a later annual sitting (2 February, 06:00), still within age twenty. A deferred candidate cannot defer again. (4) A later sitting is otherwise open only to a student who was not awakened by the first sitting (for example absent on Awakening Day), after they awaken. (5) R6 slice start: a compressed year (a fast-forward of Class XI with a few key choices) leads into Awakening Day, not a prepared late-year save. |
 
 ---
 
@@ -346,3 +347,17 @@ Every milestone is playable and ends with a gate. `ROADMAP.md` breaks each into 
 **G. Language.** English interface with Bengali and Hindi in the world, or full localisation — and when?
 
 **H. Business model.** A one-time premium purchase is assumed; no paid progression under any model.
+
+*Proposed 2026-11-22 (`PHASE5_PLAN_2026-11-22.md` §4; P5-01). Open, not answered; the recommendations are the proposer's, pending the owner.*
+
+**I. Late examination entry.** Ratify or replace the implemented 60-minute window (opens 06:00, inclusive through 07:00, common finish cap preserved, reduced outside allowance). Canon specifies simultaneous entry and an equal countdown but is silent on lateness; confirm it cannot buy extra preparation. Blocks P4-08 late-boundary acceptance and release wording. *Answered 2026-11-22 (§10): keep the 60-minute window.*
+
+**J. Annual sitting date and eligibility.** Ratify or replace the implemented 2 February, 06:00 every year (only 2 February 2043 is fixed in canon) and age 20 or under at sitting opening, no entry at 21, missed sittings preserve a later opportunity. Resolve calendar and holiday presentation without silently changing dates. *Answered 2026-11-22 (§10): one sitting per life; later sittings on 2 February, 06:00, only after a single deferral or for a student not yet awakened.*
+
+**K. Retake improvement and history.** What a year's new study contributes, whether best or latest credentials govern offers, and whether declining this year stays reversible. Recommend keeping historical achievements and an optional later sitting. Working rules only so far. Blocks retake-progression claims, P5-03, P5-05 and M5-04. *Answered 2026-11-22 (§10): no retakes; entering, declining or missing the window uses the one sitting.*
+
+**L. Social and institutional consequences and offer depth.** Approve the six week outlines in `POST_EXAM_WEEK.md`, in particular bottom and withdrawn dignity, changed peer and mentor access, and the line between an enquiry and admission or funding. Decide which support is actually awarded now. Blocks P5-01/04/05 and M4-13.
+
+**M. Slice start and certification resources.** Carry R6 into this list: prepared late-year save or compressed latent span. Recommend a disclosed prepared late-year life plus a short playable lead-in. Confirm R4 hardware and budgets, eight blind testers and owner sessions. Blocks P5-07/10 and M4-16, M4-18 to M4-21. *R6 answered 2026-11-22 (§10): a compressed year. R4 hardware, budgets and blind testers remain open.*
+
+**N. First adult routes.** Choose the three ordinary careers and one path for M5-06. Recommend deciding after observing the six-week slice; a choice now does not authorise breadth expansion before the repetition gate. Blocks later M5 career content.
