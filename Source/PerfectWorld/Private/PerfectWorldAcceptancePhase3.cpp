@@ -18,6 +18,7 @@
 #include "UI/SPWClassLesson.h"
 #include "UI/SPWSchoolDay.h"
 #include "WorldHash.h"
+#include "WorldSave.h"
 
 namespace
 {
@@ -177,7 +178,7 @@ bool P39ReadSlot(UPWAcceptanceSubsystem& Sub, PerfectWorld::WorldSaveData& Out)
     FString Text;
     if (Slot < 0 || !FFileHelper::LoadFileToString(Text, *UPerfectWorldCharacterCreatorSubsystem::GetSaveSlotPath(Slot))) return false;
     const auto Result = PerfectWorld::DeserializeWorldSave(TCHAR_TO_UTF8(*Text), Out);
-    return Result.Succeeded() && Result.SourceVersion == 12 && Result.HashVerified;
+    return Result.Succeeded() && Result.SourceVersion == PerfectWorld::WorldSaveSchemaVersion && Result.HashVerified;
 }
 
 FStepDef P39Phase(FStepDef Step, const TSharedRef<P39FRestart>& Run, bool Continue)
@@ -198,7 +199,7 @@ void P39AppendContinueSteps(TArray<FStepDef>& Out)
     const auto Run = MakeShared<P39FRestart>();
     const auto LessonRun = MakeShared<P39FLesson>();
     Out.Add(MakeWorldReadyStep());
-    Out.Add(P39Action(TEXT("p39_restart_phase_and_schema12_slot"), [Run](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
+    Out.Add(P39Action(TEXT("p39_restart_phase_and_current_schema_slot"), [Run](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
     {
         if (Sub.GetArgs().Start != TEXT("new") && Sub.GetArgs().Start != TEXT("continue"))
             return FStepOutcome::Fail(TEXT("continue_round9 requires --restart-pair: explicit new then fresh-process continue"));
@@ -208,8 +209,8 @@ void P39AppendContinueSteps(TArray<FStepDef>& Out)
         if (Run->bContinue && (!P39ReadSlot(Sub, Run->Saved) || Run->Saved.World.SchoolSessions.Active ||
             Run->Saved.World.SchoolSessions.Periods.size() != 1 || !Run->Saved.World.SchoolSessions.Periods.back().Completed ||
             Run->Saved.World.SchoolSessions.Periods.back().Cancelled || Run->Saved.World.DayLoop.Attendance.OnTimeDays != 1))
-            return FStepOutcome::Fail(TEXT("phase 2 needs an authenticated schema 12 slot with one completed lesson and on-time sign-in"));
-        return FStepOutcome::Pass(Run->bContinue ? TEXT("original schema 12 slot captured before Continue") : TEXT("new-life phase"));
+            return FStepOutcome::Fail(TEXT("phase 2 needs an authenticated current schema slot with one completed lesson and on-time sign-in"));
+        return FStepOutcome::Pass(Run->bContinue ? TEXT("original current schema slot captured before Continue") : TEXT("new-life phase"));
     }));
     TArray<FStepDef> School;
     P39AppendLesson(School, LessonRun, false);
@@ -235,11 +236,11 @@ void P39AppendContinueSteps(TArray<FStepDef>& Out)
         if (Life == nullptr || Sub.GetHud() == nullptr) return FStepOutcome::Fail(TEXT("save owner missing"));
         bool Saved = false;
         const auto Notice = Sub.GetHud()->SaveActiveGame(Saved);
-        if (!Saved || !P39ReadSlot(Sub, Run->Saved)) return FStepOutcome::Fail(TEXT("schema 12 save refused: ") + Notice.ToString());
+        if (!Saved || !P39ReadSlot(Sub, Run->Saved)) return FStepOutcome::Fail(TEXT("current schema save could not be authenticated: ") + Notice.ToString());
         const auto& State = Life->GetWorldState();
         return State.SchoolSessions == Run->Saved.World.SchoolSessions && State.DayLoop.Attendance == Run->Saved.World.DayLoop.Attendance &&
             State.Commerce.WalletPaise == Run->Saved.World.Commerce.WalletPaise && State.Awakening.Seeded
-            ? FStepOutcome::Pass(TEXT("authenticated schema 12 slot contains actual school history and wallet; driver exits normally"))
+            ? FStepOutcome::Pass(TEXT("authenticated current schema slot contains actual school history and wallet; driver exits normally"))
             : FStepOutcome::Fail(TEXT("saved school, attendance or wallet differs from the live core"));
     }), Run, false));
     Out.Add(P39Phase(MakeEnterWorldStep(), Run, true));
