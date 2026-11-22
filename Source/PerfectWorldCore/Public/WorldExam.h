@@ -25,7 +25,8 @@ namespace PerfectWorld
  * every accepted command is itself the recovery checkpoint, saved whole. Refusals carry the contract's "tower.session.*" codes;
  * the world adds only these "exam.*" codes:
  *   exam.not_open          before the fixed instant, for every entry choice;
- *   exam.missed            Enter after the sitting's late-entry window (P4-09, WorldExamSittings.h; next sitting remains);
+ *   exam.sitting_used      P413: Enter, Decline or a missed awakened entry window has used this life's chance;
+ *   exam.defer_used        P413: the single deferral has already moved the sitting to the following year;
  *   exam.age_limit         P4-09: a later sitting at which the candidate would be older than twenty;
  *   exam.decision_required a time path starting at the instant in a routed, awakened, undecided life;
  *   exam.active            any unrelated command while Entered (the tutorial.active precedent);
@@ -61,7 +62,7 @@ struct P409SittingView
     /** While Entered: lateness and the reduced outside allowance. */
     std::int64_t LateMinutes = 0;
     std::int64_t AllowanceMinutes = TowerWorldCapMinutes;
-    /** The next sitting after the current one that the age limit still allows. */
+    /** P413: the deferred/after-Awakening sitting, or the one a first deferral could reach; false after chance is used. */
     bool HasNextSitting = false;
     GameInstant NextSittingAt = 0;
 };

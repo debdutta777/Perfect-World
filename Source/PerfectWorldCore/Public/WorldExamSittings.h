@@ -14,24 +14,22 @@ namespace PerfectWorld
 /**
  * P4-09: the examination's remaining rules, so no life is stranded around exam day.
  *
- * Canon (GAME_PLAN.md §1, owner decision 2026-09-25; AWAKENING_AND_EXAM.md open questions, answered 2026-09-23;
- * PATHS_AND_PROGRESSION.md): the examination is annual and repeatable up to age twenty, and may be deferred to a later year
- * or declined. Canon is silent on late arrival and on the date of later sittings; the humane choices below are documented in
- * the P4-09 notes and here.
+ * P413: GAME_PLAN.md §10, owner decision 2026-11-22 supersedes annual retakes: one sitting per life, one deferral to the
+ * immediately following annual sitting, still at most twenty. Enter, Decline and an awakened candidate's missed window use
+ * the chance. The saved Awakening grant instant determines the first sitting at whose opening the candidate was awakened.
+ * No grant by an opening preserves eligibility for a later sitting after Awakening; it does not invent a grant.
  *
  * Sittings. Sitting k opens at 2 February (2043 + k) 06:00 (sitting 0 is CountdownEndInstant()). WorldState::Examination
- * belongs to sitting ExaminationEarlier.size(). An accepted Enter, Defer or Decline whose target sitting (the latest one
- * opened by now) is later than the current one, while the current session is Unset or closed, first archives the current
- * session (and an Unset "absent" record for every sitting skipped) and then applies to a fresh session: a deferred,
- * declined, poor, ejected or withdrawn candidate, or one who missed a morning, sits again the next year.
+ * belongs to sitting ExaminationEarlier.size(). A decision can archive only a single deferral or sittings before Awakening,
+ * then applies to a fresh session. Legacy histories still load byte-for-byte, but a used chance anywhere bars further entry.
  *
  * Age limit. Sitting k is open to a candidate aged at most twenty (AgeOnInstant) at its opening. The date of birth is a
  * binding (P402WorldExamCatalogues::P409Birth, from the life's creation record, bound on new life, Continue and replay),
  * not saved world state; unbound, the earliest legal birth (3 June 2025) is assumed, which every life satisfies through
  * 2046. Refusal: exam.age_limit.
  *
- * Late arrival. Enter is accepted from the opening until P409LateEntryMinutes after it; later it is exam.missed (the next
- * sitting remains). The hall's deadline does not move: the examination's outside-world footprint still ends at most
+ * Late arrival. Enter is accepted from the opening until P409LateEntryMinutes after it; after that an awakened candidate's
+ * chance is used (exam.sitting_used). The hall's deadline does not move: the examination's outside-world footprint ends at most
  * TowerWorldCapMinutes after the opening. A candidate who entered L minutes late has the reduced allowance
  * TowerWorldCapMinutes - L outside minutes: when a step would exceed that allowance, including a completing or ejecting
  * Choose, the same transaction withdraws it ("time called"). A floor-finishing choice is discarded; only earlier completed
@@ -43,6 +41,8 @@ namespace PerfectWorld
 inline constexpr std::int32_t P409FirstSittingYear = 2043;
 inline constexpr std::int64_t P409LateEntryMinutes = 60;
 inline constexpr std::int64_t P409AgeLimitYears = 20;
+inline constexpr std::int32_t P413SittingsPerLife = 1;
+inline constexpr std::int32_t P413DeferralsPerLife = 1;
 /** The last sitting any legal date of birth reaches (2 February 2047, for a birth on 2 June 2026): the codec's bound. */
 inline constexpr std::uint32_t P409MaxSitting = 4;
 
@@ -64,12 +64,15 @@ inline constexpr std::uint32_t P409MaxSitting = 4;
  */
 [[nodiscard]] PERFECTWORLDCORE_API P402ExamPreparation P409SittingPreparation(const WorldState& world, std::uint32_t sitting);
 /**
- * The sitting an Enter, Defer or Decline at `now` addresses: the latest opened sitting when it is later than the current one
- * and the current session is Unset or closed (a retake, or a morning missed), otherwise the current sitting.
+ * P413: the sole remaining sitting, before applying the age limit; empty after use, a missed awakened window, or a legacy
+ * history that already spent the chance. Pure, derived from the saved sessions and Awakening.Granted->At, never flags.
  */
+[[nodiscard]] PERFECTWORLDCORE_API std::optional<std::uint32_t> P413AvailableSitting(const WorldState& world, GameInstant now) noexcept;
+[[nodiscard]] PERFECTWORLDCORE_API bool P413DeferralUsed(const WorldState& world) noexcept;
+/** The available sitting once it opens, otherwise the stored sitting. Never advances a used candidate. */
 [[nodiscard]] PERFECTWORLDCORE_API std::uint32_t P409DecisionTarget(const WorldState& world, GameInstant now) noexcept;
-/** Archive `session` (and an Unset absence for each skipped sitting) until `earlier` reaches `target`; session becomes fresh. */
-PERFECTWORLDCORE_API void P409ArchiveUntil(std::vector<TowerSessionState>& earlier, TowerSessionState& session,
+/** Archive only toward the world's available sitting; a used chance cannot create fresh sessions. */
+PERFECTWORLDCORE_API void P409ArchiveUntil(const WorldState& world, std::vector<TowerSessionState>& earlier, TowerSessionState& session,
     std::uint32_t target);
 /**
  * Content-free validity of one stored session at `sitting` (the save rules). `current` selects the live-session rules (the

@@ -6,9 +6,13 @@ namespace P406Exam
 {
 FText P406RefusalText(const FString& Code)
 {
-    if (Code == TEXT("exam.missed"))
-        return FText::Format(FText::FromString(TEXT("The {0}-minute late-entry window has passed. The next annual sitting remains open; your ordinary life continues.")),
+    if (Code == TEXT("exam.sitting_used") || Code == TEXT("exam.missed"))
+        return FText::Format(FText::FromString(TEXT("Each life has {0} examination sitting. Entering, declining or missing the {1}-minute entry window uses it. Your ordinary life and alternative qualifications remain open.")),
+            FText::AsNumber(PerfectWorld::P413SittingsPerLife),
             FText::AsNumber(PerfectWorld::P409LateEntryMinutes));
+    if (Code == TEXT("exam.defer_used"))
+        return FText::Format(FText::FromString(TEXT("Each life may defer {0} time. Your sitting has already moved to the next annual examination; choose Sit or Decline.")),
+            FText::AsNumber(PerfectWorld::P413DeferralsPerLife));
     if (Code == TEXT("exam.age_limit"))
         return FText::Format(FText::FromString(TEXT("You would be older than {0} at this sitting. Annual examination entry ends at age {0}; apprenticeships and adult qualification routes remain open.")),
             FText::AsNumber(PerfectWorld::P409AgeLimitYears));
@@ -34,8 +38,8 @@ FText P406RefusalText(const FString& Code)
         {TEXT("time.activity_running"), TEXT("Finish or cancel your current activity before sitting the examination.")},
         {TEXT("time.asleep"), TEXT("Wake up before sitting the examination.")},
         {TEXT("time.beyond_calendar"), TEXT("The remaining calendar cannot hold this examination.")},
-        {TEXT("exam.not_open"), TEXT("The examination opens at 06:00 on 2 February 2043.")},
-        {TEXT("exam.decision_required"), TEXT("Choose whether to sit, defer or decline before the day continues.")},
+        {TEXT("exam.not_open"), TEXT("Your eligible annual examination sitting has not opened.")},
+        {TEXT("exam.decision_required"), TEXT("Choose an available examination option before the day continues.")},
         {TEXT("exam.active"), TEXT("Your examination is in progress. Continue it or withdraw first.")},
         {TEXT("exam.not_awakened"), TEXT("Complete your supervised Awakening before sitting the examination.")},
         {TEXT("exam.no_preparation"), TEXT("Your preparation record is not ready. Ask for supervised recovery before sitting.")},

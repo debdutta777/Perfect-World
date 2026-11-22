@@ -13,15 +13,14 @@
 // TowerSession stays the only owner of guards, evidence and mission arithmetic. The world adds the opening instant, the
 // Awakening and preparation authority, the exam.active guard, the examination-instant time boundary and the single terminal
 // outside-world charge through ChargeTime; Submit's snapshot restores any late refusal, so nothing is ever half published.
-// P4-09 (WorldExamSittings.h): annual sittings with the age-twenty limit, the late-entry window with its reduced allowance
+// P413 (WorldExamSittings.h): one sitting per life with the age-twenty limit, the late-entry window with its reduced allowance
 // ("time called"), the deferred candidate's next-sitting stop, and one ExamTransition event per accepted transition.
 namespace PerfectWorld
 {
 namespace
 {
 // P405D: derive the sitting key from the saved examination date, never the live
-// clock, floor Attempts or runner nonces. The current saved Awakening contract
-// pins ExaminationAt to the first sitting in 2043, so every valid life uses zero.
+// clock, floor Attempts or runner nonces. Deferred or late-awakened candidates keep the archived ordinal on Continue.
 std::uint32_t P405DSittingNumber(const WorldState& world)
 {
     // P409: the current session belongs to sitting ExaminationEarlier.size(); 0 for every first sitting.
@@ -177,15 +176,8 @@ GameInstant WorldSim::ExamDecisionAt() const noexcept
 {
     if (!CountdownRouted() || !State_.Awakening.Granted.has_value())
         return -1;
-    const std::uint32_t current = P409CurrentSitting(State_);
-    switch (State_.Examination.Participation)
-    {
-    case TowerParticipation::Unset: return P409SittingAt(current);
-    case TowerParticipation::Deferred:
-        // P4-09: a deferral is "ask me next year": the next sitting the age limit allows meets the candidate the same way.
-        return P409SittingAllowsAge(current + 1, Examination_.P409Birth) ? P409SittingAt(current + 1) : -1;
-    default: return -1;
-    }
+    const auto available = P413AvailableSitting(State_, State_.Clock.Now());
+    return available && P409SittingAllowsAge(*available, Examination_.P409Birth) ? P409SittingAt(*available) : -1;
 }
 
 bool WorldSim::ExamDecisionPending() const noexcept
@@ -206,7 +198,7 @@ bool WorldSim::StopForExamBoundary(GameInstant target, CommandResult& result)
         return false;
     // A path that arrived here in this command publishes its stop; one that starts at the instant cannot pass it.
     if (result.From >= State_.Clock.Now())
-        Boundary_ = P402Refusal("exam.decision_required", "Sit, defer or decline the examination before time moves on.");
+        Boundary_ = P402Refusal("exam.decision_required", "Choose an available examination option before time moves on.");
     result.Partial = true;
     return true;
 }
@@ -217,11 +209,23 @@ std::optional<Rejection> WorldSim::ValidateExamCommand(const Command& command) c
     if (!IsWorldDayInStep(State_))
         return P402Refusal("exam.invalid_state", "The world and day must be valid and share one clock.");
     const GameInstant now = State_.Clock.Now();
-    // P4-09: a decision may address a later sitting (a retake, or a morning missed); it then starts from a fresh session.
+    // P413: only a single deferral or an opening before Awakening can address a later sitting.
     const std::uint32_t target = P409DecisionTarget(State_, now);
     const bool later = target > P409CurrentSitting(State_);
     const bool undecided = later || State_.Examination.Participation == TowerParticipation::Unset;
     const GameInstant at = P409SittingAt(target);
+    const bool decision = exam.Kind == TowerSessionAction::Enter || exam.Kind == TowerSessionAction::Defer ||
+                          exam.Kind == TowerSessionAction::Decline;
+    if (decision && State_.Examination.Participation != TowerParticipation::Entered)
+    {
+        const auto available = P413AvailableSitting(State_, now);
+        if (!available)
+            return P402Refusal("exam.sitting_used", "This life's examination chance has been used.");
+        if (exam.Kind == TowerSessionAction::Defer && P413DeferralUsed(State_))
+            return P402Refusal("exam.defer_used", "This life's examination deferral has already been used.");
+        if (*available > target && State_.Examination.Participation == TowerParticipation::Unset)
+            return P402Refusal("exam.not_open", "The candidate's eligible annual sitting has not opened.");
+    }
     switch (exam.Kind)
     {
     case TowerSessionAction::Withdraw:
@@ -230,7 +234,8 @@ std::optional<Rejection> WorldSim::ValidateExamCommand(const Command& command) c
     case TowerSessionAction::Decline:
         if (undecided && now < at)
             return P402Refusal("exam.not_open", "The examination opens at 06:00 on 2 February 2043.");
-        if (later && !P409SittingAllowsAge(target, Examination_.P409Birth))
+        if (undecided && (!P409SittingAllowsAge(target, Examination_.P409Birth) ||
+            (exam.Kind == TowerSessionAction::Defer && !P409SittingAllowsAge(target + 1, Examination_.P409Birth))))
             return P402Refusal("exam.age_limit", "The examination is open to candidates up to the age of twenty.");
         return std::nullopt;
     case TowerSessionAction::Enter:
@@ -242,7 +247,7 @@ std::optional<Rejection> WorldSim::ValidateExamCommand(const Command& command) c
         if (!P409SittingAllowsAge(target, Examination_.P409Birth))
             return P402Refusal("exam.age_limit", "The examination is open to candidates up to the age of twenty.");
         if (now > at + P409LateEntryMinutes)
-            return P402Refusal("exam.missed", "Entry to this sitting closed an hour after 06:00; the next sitting remains.");
+            return P402Refusal("exam.not_awakened", "The candidate had not awakened by this sitting's opening.");
         if (!IsWorldQuiescent(State_))
             return P402Refusal("world.unsettled", "Events are still due; settle them first.");
         if (!OpenConversationPersonId(State_).empty())
@@ -280,7 +285,7 @@ std::optional<Rejection> WorldSim::ApplyExamCommand(const TowerSessionCommand& c
     const bool decision = command.Kind == TowerSessionAction::Enter || command.Kind == TowerSessionAction::Defer ||
                           command.Kind == TowerSessionAction::Decline;
     if (decision)
-        P409ArchiveUntil(earlier, session, P409DecisionTarget(State_, now));
+        P409ArchiveUntil(State_, earlier, session, P409DecisionTarget(State_, now));
     const auto sitting = static_cast<std::uint32_t>(earlier.size());
     const GameInstant at = P409SittingAt(sitting);
     CountdownProfile preparation;
@@ -383,9 +388,12 @@ P402ExamWorldView WorldSim::ExaminationWorldView() const
     view.Sittings.EntryClosesAt = view.ExaminationAt + P409LateEntryMinutes;
     view.Sittings.LateMinutes = P409EntryLateness(State_);
     view.Sittings.AllowanceMinutes = P409OutsideAllowance(State_);
-    for (std::uint32_t next = std::max(target, current + 1); next <= P409MaxSitting && !view.Sittings.HasNextSitting; ++next)
+    const auto available = P413AvailableSitting(State_, now);
+    if (available)
     {
-        if (P409SittingAt(next) > now && P409SittingAllowsAge(next, Examination_.P409Birth))
+        const std::uint32_t next = *available > current ? *available : current + 1;
+        const bool canMove = *available > current || !P413DeferralUsed(State_);
+        if (canMove && P409SittingAt(next) > now && P409SittingAllowsAge(next, Examination_.P409Birth))
         {
             view.Sittings.HasNextSitting = true;
             view.Sittings.NextSittingAt = P409SittingAt(next);
@@ -398,7 +406,7 @@ P402ExamWorldView WorldSim::ExaminationWorldView() const
     const auto refusal = [this](TowerSessionAction kind) {
         return Validate(Command{CommandSource::Player, P402Command(kind)});
     };
-    if (participation == TowerParticipation::Unset || later)
+    if (participation != TowerParticipation::Entered && (participation == TowerParticipation::Unset || later || !available))
     {
         view.CanDefer = !refusal(TowerSessionAction::Defer);
         view.CanDecline = !refusal(TowerSessionAction::Decline);

@@ -117,6 +117,9 @@ std::vector<SchoolFollowupAction> QuerySchoolFollowups(const SchoolFollowupConte
     if (outcome.empty()) return out;
     for (const auto& action : content.Actions)
     {
+        // P413: these legacy records promise another tower sitting. Keep loading their stable IDs until the content
+        // order rewrites them, but never expose or book either offer through result/follow-up presentation.
+        if (action.OfferId == "offer.tower.retake" || action.Id == "school_followup.p2.p4_poor_retake_prep") continue;
         if (action.Outcome != "all" && action.Outcome != outcome) continue;
         if (!action.OfferId.empty() && std::find(view.Result.OfferIds.begin(), view.Result.OfferIds.end(), action.OfferId) == view.Result.OfferIds.end()) continue;
         out.push_back(action);

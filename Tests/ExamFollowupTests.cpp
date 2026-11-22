@@ -41,6 +41,8 @@ void P407UOutcome(WorldSim& sim, std::string_view outcome)
     std::size_t booked = 0;
     for (const auto& row : rows)
     {
+        P2CExpect(row.Action.OfferId != "offer.tower.retake" && row.Action.Id != "school_followup.p2.p4_poor_retake_prep",
+            "P413 no outcome exposes either legacy retake action");
         P2CExpect(row.CanBook, "every displayed next step has a resolved bookable slot");
         S04Accept(sim, P407UFollowupCommand{P407UFollowupAction::Book, row.Action.Id, row.At}, "offer books a real reservation");
         P2CExpect(P407URow(sim, row.Action.Id).Booked, "booking is visible in saved authority");
@@ -144,9 +146,22 @@ void P407USlotsAndRollback(const P405World& w)
         "an interrupted charge restores clock, flags, events and sequence");
     P2CExpect(!P407URow(capped, P407UMentor).Attended, "interruption records no attendance");
     const auto school = w.Base.W.School.Cats.Day;
-    const auto retake = P407URow(P407UWithdrawn(w), "school_followup.p2.retake");
-    P2CExpect(CalendarRequiresAttendance(*school.Calendar, CalendarDayOfInstant(retake.At)),
-        "a weekend retake suggestion moves to an open school day");
+    auto P413Spent = P407UWithdrawn(w);
+    auto P413Weekend = w.Followups;
+    for (auto& P413Action : P413Weekend.Actions)
+        if (P413Action.Id == "school_followup.p2.study_bridge") P413Action.DayOffset = 6;
+    auto P413WeekendSim = WorldSim(P413Spent.State(), MaxEventsPerAdvance, w.Base.W.School.Cats.Day, {},
+        w.Base.W.School.School(), w.Base.W.Bind(), {&w.Runners, &P413Weekend});
+    const auto P413Bridge = P407URow(P413WeekendSim, "school_followup.p2.study_bridge");
+    P2CExpect(CalendarRequiresAttendance(*school.Calendar, CalendarDayOfInstant(P413Bridge.At)),
+        "P413 a weekend ordinary qualification suggestion moves to an open school day");
+    for (const auto* P413Id : {"school_followup.p2.retake", "school_followup.p2.p4_poor_retake_prep"})
+    {
+        S04Refused(P413Spent, P407UFollowupCommand{P407UFollowupAction::Book, P413Id, 0}, "p407u.unavailable",
+            "P413 hidden retake actions cannot be booked by submitting their IDs");
+        S04Refused(P413Spent, P407UFollowupCommand{P407UFollowupAction::Attend, P413Id, 0}, "p407u.unavailable",
+            "P413 hidden retake actions cannot be attended by submitting their IDs");
+    }
 }
 } // namespace
 

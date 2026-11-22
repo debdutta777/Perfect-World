@@ -22,7 +22,14 @@ void P402AllRefused(WorldSim& sim, std::string_view what)
     choose.ChoiceId = "careful";
     for (const TowerSessionCommand& command : {P402Cmd(A::Enter), P402Cmd(A::OpenRoute, route, TowerMethod::Endurance), choose,
                                                P402Cmd(A::Withdraw), P402Cmd(A::Defer), P402Cmd(A::Decline)})
-        S04Refused(sim, command, "tower.session.closed", what);
+    {
+        // P413: entry decisions now refuse reuse explicitly; the deferred candidate also has no second deferral.
+        const bool P413Decision = command.Kind == A::Enter || command.Kind == A::Defer || command.Kind == A::Decline;
+        const bool P413Deferred = sim.State().Examination.Participation == TowerParticipation::Deferred;
+        const std::string_view P413Code = P413Decision && !P413Deferred ? "exam.sitting_used" :
+            command.Kind == A::Defer && P413Deferred ? "exam.defer_used" : "tower.session.closed";
+        S04Refused(sim, command, P413Code, what);
+    }
 }
 
 void P402Opening(const P402World& w)
@@ -94,9 +101,10 @@ void P402EnterRules(const P402World& w)
     WorldSim passer = w.W.Unbound(w.Morning);
     S04Accept(passer, AdvanceTime{61}, "an unrouted sim passes the instant and the entry window");
     WorldSim late = w.Sim(passer.State());
-    S04Refused(late, P402Cmd(A::Enter), "exam.missed", "the sitting has passed");
-    P2CExpect(late.ExaminationWorldView().SitRefusal == "exam.missed" && late.ExaminationWorldView().CanDefer, "late view");
-    S04Accept(late, P402Cmd(A::Defer), "a late life may still defer");
+    S04Refused(late, P402Cmd(A::Enter), "exam.sitting_used", "P413 the missed sitting uses the chance");
+    P2CExpect(late.ExaminationWorldView().SitRefusal == "exam.sitting_used" && !late.ExaminationWorldView().CanDefer,
+        "P413 a missed sitting offers no retake by deferral");
+    S04Refused(late, P402Cmd(A::Defer), "exam.sitting_used", "P413 missing the window cannot defer the used chance");
 }
 
 void P402Climbing(const P402World& w)
@@ -247,7 +255,7 @@ void P402Replay(const P402World& w)
     const ReplayResult again = ReplayCommandLogFromSnapshot(w.Morning, sim.Log(), w.Replay(&w.Runners));
     P2CExpect(again.Complete && again.Hash == HashWorldState(sim.State()), "replay from the morning reaches the same world");
     const ReplayResult twice = ReplayCommandLogFromSnapshot(sim.State(), sim.Log(), w.Replay(&w.Runners));
-    P2CExpect(!twice.Complete && twice.Applied == 0 && twice.Refusal.Code == "tower.session.closed" &&
+    P2CExpect(!twice.Complete && twice.Applied == 0 && twice.Refusal.Code == "exam.sitting_used" &&
                   twice.Hash == HashWorldState(sim.State()),
               "replaying onto the finished world can never sit, score or charge again");
     const ReplayResult unbound = ReplayCommandLogFromSnapshot(w.Morning, sim.Log(), w.Replay(nullptr));
