@@ -19,6 +19,7 @@
 #include "PerfectWorldSchoolPresenter.h" // S03
 #include "PerfectWorldExaminationBridge.h"
 #include "PerfectWorldCommerceText.h" // R88
+#include "PerfectWorldSliceSessionLog.h"
 #include "UI/SPWClockReadout.h"
 #include "Widgets/SWeakWidget.h"
 
@@ -156,12 +157,14 @@ void UPWLaneLifeSubsystem::BuildWorld()
         UE_LOG(LogPWLaneLife, Error, TEXT("The world clock could not be set to the creation start: %hs"), Opened.Why.Code.c_str());
     }
     LastBroadcastInstant = GetNow();
+    P509SessionLog::Boundary(TEXT("world_created"), *Sim);
 }
 
 void UPWLaneLifeSubsystem::ResetWorld()
 {
     if (auto* Buy = UPWBuyPresenter::Get(this)) Buy->Close(); // R88
     BuildWorld();
+    P509SessionLog::Boundary(TEXT("restart"), *Sim);
     R88InstallCommerce(); // R88
     KnockedDoors.Reset(); // F5: an answered ring belongs to one visit; a fresh world remembers none
     for (const TWeakObjectPtr<APWDoorActor>& Weak : RegisteredDoors)
@@ -231,6 +234,7 @@ bool UPWLaneLifeSubsystem::LoadWorldSlot(const std::string& Path, PerfectWorld::
     {
         Placement = Read.Data->Player;
         AdoptSavedWorld(MoveTemp(Prepared), P410LoadedBirth);
+        P509SessionLog::Boundary(TEXT("load_or_continue"), *Sim, &Read.Data->World);
         PWLegacyRecovery::FP314ULoadActions P314UActions;
         P314UActions.Read = [this]() -> const PerfectWorld::WorldState& { return Sim->State(); };
         P314UActions.PendingWork = [this]() { return Sim->PendingSchoolWorkReconciliation(); };
@@ -264,6 +268,7 @@ void UPWLaneLifeSubsystem::AdoptSavedWorld(TUniquePtr<PerfectWorld::WorldSim> Pr
 {
     if (auto* Buy = UPWBuyPresenter::Get(this)) Buy->Close(); // R88
     Sim = MoveTemp(Prepared);
+    P509SessionLog::Boundary(TEXT("world_adopted"), *Sim);
     // Same-life copies retain the existing owner; new-life/Continue supply the prepared sim's owner.
     if (P410PreparedBirth.IsValid()) P410Birth = MoveTemp(P410PreparedBirth);
     R88InstallCommerce(); // R88: restored sim must borrow commerce catalogues too
@@ -305,7 +310,9 @@ bool UPWLaneLifeSubsystem::HasMovingDoors() const
 
 PerfectWorld::CommandResult UPWLaneLifeSubsystem::SubmitCommand(const PerfectWorld::Command& Command)
 {
+    const uint64 P509FirstReceipt = Sim->State().DayLoop.Receipts.NextSeq;
     PerfectWorld::CommandResult Result = Sim->Submit(Command);
+    P509SessionLog::Command(Command, Result, *Sim, P509FirstReceipt);
     if (Result.Accepted)
     {
         PresentEvents(Result.Events);
