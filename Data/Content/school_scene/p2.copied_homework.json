@@ -1,0 +1,367 @@
+{
+  "type": "school_scene",
+  "id": "p2.copied_homework",
+  "note": "Order C2 scene 5: a classmate asks to copy worked physics exercises before the morning register, and the player navigates lending vs explaining the method with Ishan Sheikh, Mira Sen, Deven Chakraborty and Amrita Basu (INDIA_WORLD_BIBLE.md named cast: Amrita Basu, Ishan Sheikh, Mira Sen, plus proposed classmate Deven Chakraborty, household adult and care worker).",
+  "arcKind": "group_project",
+  "titleKey": "school_scene.p2.copied_homework.title",
+  "summaryKey": "school_scene.p2.copied_homework.summary",
+  "institution": "institution.nabapara_vidyalaya",
+  "calendar": "calendar.nabapara_2042_43",
+  "term": "term_2",
+  "calendarSpan": "unit_test_2",
+  "threadTemplate": "thread.borrowed_notes",
+  "entryScene": "scene_morning_exercise_book",
+  "cast": [
+    {
+      "person": "person.amrita_basu",
+      "role": "teacher",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.ishan_sheikh",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.mira_sen",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.deven_chakraborty",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": true
+    },
+    {
+      "person": "person.household_adult",
+      "role": "family_adult",
+      "originVariant": "family",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.care_worker",
+      "role": "care_adult",
+      "originVariant": "care_home",
+      "proposedNewCast": false
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_morning_exercise_book",
+      "titleKey": "school_scene.p2.copied_homework.morning.title",
+      "promptKey": "school_scene.p2.copied_homework.morning.prompt",
+      "speaker": "person.ishan_sheikh",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "timetable_period",
+        "bellSchedule": "bell_schedule.nabapara_xi_science",
+        "periodIndex": 1,
+        "subject": "physics",
+        "zone": "nhss.room_xi_science",
+        "startMinute": 670,
+        "endMinute": 715
+      },
+      "conversationTopic": "topic.ishan_sheikh.borrowed_exercise_book",
+      "choices": [
+        {
+          "id": "lend_rough_steps_only",
+          "labelKey": "school_scene.p2.copied_homework.morning.lend.label",
+          "outcomeKey": "school_scene.p2.copied_homework.morning.lend.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_tiffin_notebook_return",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.homework.rough_steps_shared",
+            "factSet": "school.homework.lent_rough_margin",
+            "journalAgreementFact": "c2_homework_rough_steps_lent"
+          }
+        },
+        {
+          "id": "plan_family_evening_worked_sheet",
+          "labelKey": "school_scene.p2.copied_homework.morning.family.label",
+          "outcomeKey": "school_scene.p2.copied_homework.morning.family.outcome",
+          "costMinutes": 5,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_family_homework_boundary",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.homework.family_sheet_planned",
+            "factSet": "school.homework.planning_family_hints"
+          }
+        },
+        {
+          "id": "plan_care_evening_worked_sheet",
+          "labelKey": "school_scene.p2.copied_homework.morning.care.label",
+          "outcomeKey": "school_scene.p2.copied_homework.morning.care.outcome",
+          "costMinutes": 5,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_care_homework_boundary",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.homework.care_sheet_planned",
+            "factSet": "school.homework.planning_care_hints"
+          }
+        },
+        {
+          "id": "keep_exercise_book_closed_refusal",
+          "labelKey": "school_scene.p2.copied_homework.morning.refuse.label",
+          "outcomeKey": "school_scene.p2.copied_homework.morning.refuse.outcome",
+          "costMinutes": 0,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.homework.kept_notebook_in_bag",
+            "factSet": "school.homework.declined_copying"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_family_homework_boundary",
+      "titleKey": "school_scene.p2.copied_homework.family.title",
+      "promptKey": "school_scene.p2.copied_homework.family.prompt",
+      "speaker": "person.household_adult",
+      "originVariant": "family",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.player_home",
+        "startMinute": 1110,
+        "endMinute": 1170
+      },
+      "conversationTopic": "topic.household_adult.homework_sharing_advice",
+      "choices": [
+        {
+          "id": "write_separate_hint_sheet_at_home",
+          "labelKey": "school_scene.p2.copied_homework.family.hints.label",
+          "outcomeKey": "school_scene.p2.copied_homework.family.hints.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_tiffin_notebook_return",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.homework.family_hint_card_written",
+            "factSet": "school.homework.family_hint_card_ready",
+            "journalAgreementFact": "c2_homework_family_hint_sheet"
+          }
+        },
+        {
+          "id": "pack_only_own_copy_refusal",
+          "labelKey": "school_scene.p2.copied_homework.family.refuse.label",
+          "outcomeKey": "school_scene.p2.copied_homework.family.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.homework.family_kept_own_book",
+            "factSet": "school.homework.kept_family_book_private"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_care_homework_boundary",
+      "titleKey": "school_scene.p2.copied_homework.care.title",
+      "promptKey": "school_scene.p2.copied_homework.care.prompt",
+      "speaker": "person.care_worker",
+      "originVariant": "care_home",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.care_home",
+        "startMinute": 1110,
+        "endMinute": 1170
+      },
+      "conversationTopic": "topic.care_worker.homework_sharing_advice",
+      "choices": [
+        {
+          "id": "write_separate_hint_sheet_at_care",
+          "labelKey": "school_scene.p2.copied_homework.care.hints.label",
+          "outcomeKey": "school_scene.p2.copied_homework.care.hints.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_tiffin_notebook_return",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.homework.care_hint_card_written",
+            "factSet": "school.homework.care_hint_card_ready",
+            "journalAgreementFact": "c2_homework_care_hint_sheet"
+          }
+        },
+        {
+          "id": "keep_care_study_copy_private_refusal",
+          "labelKey": "school_scene.p2.copied_homework.care.refuse.label",
+          "outcomeKey": "school_scene.p2.copied_homework.care.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.homework.care_kept_own_book",
+            "factSet": "school.homework.kept_care_book_private"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_tiffin_notebook_return",
+      "titleKey": "school_scene.p2.copied_homework.tiffin.title",
+      "promptKey": "school_scene.p2.copied_homework.tiffin.prompt",
+      "speaker": "person.deven_chakraborty",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "school_break",
+        "bellSchedule": "bell_schedule.nabapara_xi_science",
+        "periodIndex": -1,
+        "zone": "nhss.court",
+        "startMinute": 770,
+        "endMinute": 800
+      },
+      "conversationTopic": "topic.deven_chakraborty.identical_working_lines",
+      "choices": [
+        {
+          "id": "collect_notebook_before_submission",
+          "labelKey": "school_scene.p2.copied_homework.tiffin.return.label",
+          "outcomeKey": "school_scene.p2.copied_homework.tiffin.return.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "returned",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.homework.book_returned_at_tiffin",
+            "threadEvent": "notes_returned",
+            "factSet": "school.homework.book_collected_on_time"
+          }
+        },
+        {
+          "id": "offer_after_school_problem_walkthrough",
+          "labelKey": "school_scene.p2.copied_homework.tiffin.walkthrough.label",
+          "outcomeKey": "school_scene.p2.copied_homework.tiffin.walkthrough.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_after_school_problem_work",
+          "consequence": {
+            "targetPerson": "person.deven_chakraborty",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.homework.method_session_planned",
+            "threadEvent": "notes_explained_together",
+            "factSet": "school.homework.promised_method_session",
+            "journalAgreementFact": "c2_homework_after_school_method"
+          }
+        },
+        {
+          "id": "step_back_from_sharing_notebook_refusal",
+          "labelKey": "school_scene.p2.copied_homework.tiffin.refuse.label",
+          "outcomeKey": "school_scene.p2.copied_homework.tiffin.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.mira_sen",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.homework.kept_submissions_separate",
+            "factSet": "school.homework.submitted_separately"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_after_school_problem_work",
+      "titleKey": "school_scene.p2.copied_homework.after_school.title",
+      "promptKey": "school_scene.p2.copied_homework.after_school.prompt",
+      "speaker": "person.ishan_sheikh",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "after_school",
+        "bellSchedule": "bell_schedule.nabapara_xi_science",
+        "periodIndex": -1,
+        "zone": "nhss.xi_a",
+        "startMinute": 955,
+        "endMinute": 1000
+      },
+      "conversationTopic": "topic.ishan_sheikh.worked_numerical_practice",
+      "choices": [
+        {
+          "id": "solve_unseen_problem_together",
+          "labelKey": "school_scene.p2.copied_homework.after_school.explain.label",
+          "outcomeKey": "school_scene.p2.copied_homework.after_school.explain.outcome",
+          "costMinutes": 25,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "shared_understanding",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.homework.numericals_solved_together",
+            "threadEvent": "notes_explained_together",
+            "factSet": "school.homework.method_understood_together"
+          }
+        },
+        {
+          "id": "take_back_exercise_book_cleanly",
+          "labelKey": "school_scene.p2.copied_homework.after_school.return.label",
+          "outcomeKey": "school_scene.p2.copied_homework.after_school.return.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "returned",
+          "consequence": {
+            "targetPerson": "person.deven_chakraborty",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.homework.rough_sheet_returned",
+            "threadEvent": "notes_returned",
+            "factSet": "school.homework.rough_sheet_settled"
+          }
+        },
+        {
+          "id": "pack_up_when_bell_rings_refusal",
+          "labelKey": "school_scene.p2.copied_homework.after_school.refuse.label",
+          "outcomeKey": "school_scene.p2.copied_homework.after_school.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "faded",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.homework.wrapped_up_at_bell",
+            "factSet": "school.homework.left_after_bell",
+            "factCleared": "school.homework.promised_method_session"
+          }
+        }
+      ]
+    }
+  ],
+  "resolutions": [
+    "returned",
+    "shared_understanding",
+    "faded"
+  ]
+}

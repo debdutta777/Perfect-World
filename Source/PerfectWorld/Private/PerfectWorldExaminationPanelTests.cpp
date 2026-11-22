@@ -1,0 +1,401 @@
+#include "PerfectWorldExaminationBridge.h"
+#include "UI/SPWExaminationPanel.h"
+
+#include "Input/Events.h"
+#include "InputCoreTypes.h"
+#include "P406BExaminationSupport.h"
+#include "UI/SPWPauseMenu.h"
+#include "Layout/Children.h"
+#include "Misc/AutomationTest.h"
+#include "Widgets/Text/STextBlock.h"
+#include "WorldExamSittings.h"
+
+#if WITH_DEV_AUTOMATION_TESTS
+
+namespace
+{
+P406Exam::FAction P406TestAction(const TCHAR* P406Label, PerfectWorld::TowerSessionAction P406Kind, bool P406Enabled = true)
+{
+    P406Exam::FAction P406Row;
+    P406Row.Label = FText::FromString(P406Label);
+    P406Row.Kind = P406Kind;
+    P406Row.bEnabled = P406Enabled;
+    return P406Row;
+}
+
+P406Exam::FModel P406TestDecision()
+{
+    P406Exam::FModel P406Model;
+    P406Model.Screen = P406Exam::EScreen::Decision;
+    P406Model.World.DecisionRequired = true;
+    P406Model.Title = FText::FromString(TEXT("06:00 - 2 February 2043"));
+    P406Model.World.SitRefusal = "exam.missing_content";
+    P406Model.Lines.Add(P406Exam::P406RefusalText(TEXT("exam.missing_content")));
+    P406Model.Actions.Add(P406TestAction(TEXT("Sit"), PerfectWorld::TowerSessionAction::Enter, false));
+    P406Model.Actions.Add(P406TestAction(TEXT("Defer"), PerfectWorld::TowerSessionAction::Defer));
+    P406Model.Actions.Add(P406TestAction(TEXT("Decline"), PerfectWorld::TowerSessionAction::Decline));
+    return P406Model;
+}
+
+P406Exam::FModel P406TestResult()
+{
+    P406Exam::FModel P406Model;
+    P406Model.Screen = P406Exam::EScreen::Result;
+    P406Model.World.Finished = true;
+    P406Model.Lines.Add(FText::FromString(TEXT("You withdrew. Cleared evidence is retained.")));
+    P406Model.Offers.Add(FText::FromString(TEXT("Ask the school about an apprenticeship.")));
+    return P406Model;
+}
+
+void P406TestTexts(const TSharedRef<SWidget>& P406Root, TArray<FString>& P406Out)
+{
+    if (!P406Root->GetVisibility().IsVisible()) return;
+    if (P406Root->GetType() == FName(TEXT("STextBlock")))
+        P406Out.Add(static_cast<const STextBlock&>(P406Root.Get()).GetText().ToString());
+    FChildren* P406Children = P406Root->GetChildren();
+    for (int32 P406Index = 0; P406Children != nullptr && P406Index < P406Children->Num(); ++P406Index)
+        P406TestTexts(P406Children->GetChildAt(P406Index), P406Out);
+}
+
+FString P406TestAllText(const TSharedRef<SWidget>& P406Root)
+{
+    TArray<FString> P406Texts;
+    P406TestTexts(P406Root, P406Texts);
+    return FString::Join(P406Texts, TEXT("\n"));
+}
+
+void P406TestKey(const TSharedRef<SPWExaminationPanel>& P406Panel, const FKey& P406Key, bool P406Repeat = false)
+{
+    P406Panel->OnPreviewKeyDown(FGeometry(), FKeyEvent(P406Key, FModifierKeysState(), 0, P406Repeat, 0, 0));
+}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FP406DecisionPanelTest, "PerfectWorld.Examination.P406.Decision",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FP406DecisionPanelTest::RunTest(const FString& Parameters)
+{
+    const auto P406Fake = MakeShared<P406Exam::FFakeWorld>();
+    P406Fake->Model = P406TestDecision();
+    P406Fake->AfterAccepted = P406TestResult();
+    const auto P406Panel = SNew(SPWExaminationPanel).BridgeOverride(P406Fake).ViewportSize(FVector2D(853.0, 480.0));
+    TestEqual(TEXT("construction is read-only"), P406Fake->Submitted.Num(), 0);
+    TestEqual(TEXT("disabled Sit is skipped on initial focus"), P406Panel->P406GetFocusIndex(), 1);
+    TestFalse(TEXT("unavailable Sit cannot submit"), P406Panel->P406TriggerAction(0));
+    const auto P406Text = P406TestAllText(P406Panel);
+    TestTrue(TEXT("Sit reason is visible in words"), P406Text.Contains(TEXT("passages are unavailable")));
+    TestFalse(TEXT("raw refusal code is hidden"), P406Text.Contains(TEXT("exam.missing_content")));
+    TestTrue(TEXT("all participation choices are present"), P406Text.Contains(TEXT("Sit")) &&
+        P406Text.Contains(TEXT("Defer")) && P406Text.Contains(TEXT("Decline")));
+    P406TestKey(P406Panel, EKeys::Gamepad_DPad_Down);
+    TestEqual(TEXT("controller reaches Decline"), P406Panel->P406GetFocusIndex(), 2);
+    P406TestKey(P406Panel, EKeys::Gamepad_FaceButton_Bottom);
+    TestEqual(TEXT("one controller press submits once"), P406Fake->Submitted.Num(), 1);
+    if (P406Fake->Submitted.Num() != 1) return false;
+    TestTrue(TEXT("Decline command"), P406Fake->Submitted[0].Kind == PerfectWorld::TowerSessionAction::Decline);
+    TestTrue(TEXT("result appears without reopening entry"), P406Panel->P406GetModel().Screen == P406Exam::EScreen::Result);
+    TestTrue(TEXT("next step is visible"), P406TestAllText(P406Panel).Contains(TEXT("apprenticeship")));
+    TestFalse(TEXT("terminal result has no Withdraw action"), P406Panel->P406TriggerWithdraw());
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FP406SessionPanelTest, "PerfectWorld.Examination.P406.RouteBeatResume",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FP406SessionPanelTest::RunTest(const FString& Parameters)
+{
+    const auto P406Fake = MakeShared<P406Exam::FFakeWorld>();
+    auto& P406Model = P406Fake->Model;
+    P406Model.Screen = P406Exam::EScreen::Routes;
+    P406Model.World.CanWithdraw = true;
+    P406Model.World.OutsideMinutes = 7;
+    auto P406Route = P406TestAction(TEXT("Analysis route - opening costs no time"), PerfectWorld::TowerSessionAction::OpenRoute);
+    P406Route.RouteId = TEXT("test.analysis");
+    P406Route.Method = PerfectWorld::TowerMethod::Analysis;
+    P406Model.Actions.Add(P406Route);
+    P406Model.Session.Runner = 12;
+    P406Model.Session.Beat = 3;
+    P406Fake->AfterAccepted = P406Model;
+    P406Fake->AfterAccepted.Screen = P406Exam::EScreen::Beat;
+    P406Fake->AfterAccepted.Session.Runner = 13;
+    P406Fake->AfterAccepted.Session.Beat = 0;
+    P406Fake->AfterAccepted.Actions.Reset();
+    auto P406Choice = P406TestAction(TEXT("Study the clue | 4 mission minutes | 1 strain"), PerfectWorld::TowerSessionAction::Choose);
+    P406Choice.ChoiceId = TEXT("test.study");
+    P406Fake->AfterAccepted.Actions.Add(P406Choice);
+    P406Fake->AfterAccepted.Lines.Add(FText::FromString(TEXT("Prompt: where did the supply go?")));
+    P406Fake->AfterAccepted.Lines.Add(FText::FromString(TEXT("Clue: the seal is intact.")));
+    const auto P406Panel = SNew(SPWExaminationPanel).BridgeOverride(P406Fake);
+    TestTrue(TEXT("open route accepted"), P406Panel->P406TriggerAction(0));
+    TestEqual(TEXT("one route command"), P406Fake->Submitted.Num(), 1);
+    if (P406Fake->Submitted.Num() != 1) return false;
+    TestEqual(TEXT("route ID preserved"), FString(UTF8_TO_TCHAR(P406Fake->Submitted[0].RouteId.c_str())), FString(TEXT("test.analysis")));
+    TestTrue(TEXT("method preserved"), P406Fake->Submitted[0].Method == PerfectWorld::TowerMethod::Analysis);
+    const auto P406Text = P406TestAllText(P406Panel);
+    TestTrue(TEXT("prompt, clue and costs visible"), P406Text.Contains(TEXT("supply go")) && P406Text.Contains(TEXT("seal is intact")) &&
+        P406Text.Contains(TEXT("4 mission minutes | 1 strain")));
+    TestTrue(TEXT("withdraw cost visible on beat"), P406Text.Contains(TEXT("Withdraw - 7 outside minutes")));
+    // A resumed panel must read the existing beat, without Enter or OpenRoute side effects.
+    const auto P406Resumed = SNew(SPWExaminationPanel).BridgeOverride(P406Fake);
+    TestEqual(TEXT("resume submits nothing"), P406Fake->Submitted.Num(), 1);
+    P406Fake->Reply.Accepted = false;
+    P406Fake->Reply.Why.Code = "tower.session.stale_beat";
+    TestFalse(TEXT("refused choice is returned honestly"), P406Resumed->P406TriggerAction(0));
+    TestEqual(TEXT("one choice attempt"), P406Fake->Submitted.Num(), 2);
+    if (P406Fake->Submitted.Num() != 2) return false;
+    TestTrue(TEXT("current runner counter and beat are submitted"), P406Fake->Submitted[1].Runner == 13 && P406Fake->Submitted[1].Beat == 0);
+    TestEqual(TEXT("choice ID preserved"), FString(UTF8_TO_TCHAR(P406Fake->Submitted[1].ChoiceId.c_str())), FString(TEXT("test.study")));
+    TestTrue(TEXT("stale refusal displayed in words"), P406TestAllText(P406Resumed).Contains(TEXT("passage has moved on")));
+    TestTrue(TEXT("refusal preserves active beat"), P406Resumed->P406GetModel().Screen == P406Exam::EScreen::Beat);
+    P406Fake->Model.Session.Runner = 21;
+    P406Fake->Model.Session.Beat = 5;
+    P406Fake->Reply.Accepted = true;
+    P406Fake->AfterAccepted = P406TestResult();
+    TestTrue(TEXT("withdraw remains possible after refusal"), P406Resumed->P406TriggerWithdraw());
+    TestEqual(TEXT("one Withdraw attempt"), P406Fake->Submitted.Num(), 3);
+    if (P406Fake->Submitted.Num() != 3) return false;
+    TestTrue(TEXT("Withdraw uses freshly read counters"), P406Fake->Submitted[2].Runner == 21 && P406Fake->Submitted[2].Beat == 5);
+    TestTrue(TEXT("withdraw result has next step"), P406TestAllText(P406Resumed).Contains(TEXT("apprenticeship")));
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FP406FocusPanelTest, "PerfectWorld.Examination.P406.FocusAndBack",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FP406FocusPanelTest::RunTest(const FString& Parameters)
+{
+    const auto P406Fake = MakeShared<P406Exam::FFakeWorld>();
+    P406Fake->Model = P406TestDecision();
+    int32 P406Closed = 0;
+    const auto P406Panel = SNew(SPWExaminationPanel).BridgeOverride(P406Fake)
+        .OnClose(FSimpleDelegate::CreateLambda([&P406Closed]() { ++P406Closed; }));
+    P406TestKey(P406Panel, EKeys::Up);
+    TestEqual(TEXT("keyboard wraps past disabled Sit"), P406Panel->P406GetFocusIndex(), 3);
+    P406TestKey(P406Panel, EKeys::Down);
+    TestEqual(TEXT("keyboard wraps to Defer"), P406Panel->P406GetFocusIndex(), 1);
+    P406TestKey(P406Panel, EKeys::Enter, true);
+    TestEqual(TEXT("held activation never submits"), P406Fake->Submitted.Num(), 0);
+    P406TestKey(P406Panel, EKeys::Gamepad_FaceButton_Right);
+    TestEqual(TEXT("Back closes without choosing participation"), P406Closed, 1);
+    TestEqual(TEXT("Back is not an examination command"), P406Fake->Submitted.Num(), 0);
+    TestTrue(TEXT("decision survives close"), P406Fake->Model.World.DecisionRequired);
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FP406ExitPanelTest, "PerfectWorld.Examination.P406.ParticipationAndExit",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FP406ExitPanelTest::RunTest(const FString& Parameters)
+{
+    for (const auto P406Kind : {PerfectWorld::TowerSessionAction::Enter, PerfectWorld::TowerSessionAction::Defer,
+        PerfectWorld::TowerSessionAction::Decline})
+    {
+        const auto P406Fake = MakeShared<P406Exam::FFakeWorld>();
+        P406Fake->Model = P406TestDecision();
+        P406Fake->Model.Actions.Reset();
+        P406Fake->Model.Actions.Add(P406TestAction(TEXT("Participation"), P406Kind));
+        P406Fake->AfterAccepted = P406TestResult();
+        const auto P406Panel = SNew(SPWExaminationPanel).BridgeOverride(P406Fake);
+        TestTrue(TEXT("enabled participation action accepted"), P406Panel->P406TriggerAction(0));
+        TestEqual(TEXT("one participation command"), P406Fake->Submitted.Num(), 1);
+        if (P406Fake->Submitted.Num() != 1) return false;
+        TestTrue(TEXT("participation kind preserved"), P406Fake->Submitted[0].Kind == P406Kind);
+    }
+    const auto P406Fake = MakeShared<P406Exam::FFakeWorld>();
+    P406Fake->Model.Screen = P406Exam::EScreen::Routes;
+    P406Fake->Model.World.CanWithdraw = true;
+    // A resumed session with missing content has no route or choice buttons; exit must still work.
+    P406Fake->AfterAccepted = P406TestResult();
+    const auto P406Panel = SNew(SPWExaminationPanel).BridgeOverride(P406Fake).ViewportSize(FVector2D(569.0, 320.0));
+    TestEqual(TEXT("missing content retains Withdraw and Close"), P406Panel->P406GetFocusCount(), 2);
+    TestTrue(TEXT("Withdraw is present without route content"), P406TestAllText(P406Panel).Contains(TEXT("Withdraw")));
+    TestTrue(TEXT("withdraw without content succeeds"), P406Panel->P406TriggerWithdraw());
+    TestEqual(TEXT("one exit command"), P406Fake->Submitted.Num(), 1);
+    if (P406Fake->Submitted.Num() != 1) return false;
+    TestTrue(TEXT("exit really submits Withdraw"), P406Fake->Submitted[0].Kind == PerfectWorld::TowerSessionAction::Withdraw);
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FP406TextTableTest, "PerfectWorld.Examination.P406.AuthoredWords",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FP406TextTableTest::RunTest(const FString& Parameters)
+{
+    const auto P406Original = P406Exam::P406RunnerText("p2.a7.encounter.b1.prompt", TEXT("Missing"));
+    const auto P406Expanded = P406Exam::P406RunnerText("p2.a7.alliance_p404.b1.prompt", TEXT("Missing"));
+    TestTrue(TEXT("original passage resolves"), !P406Original.IsEmpty() && P406Original.ToString() != TEXT("Missing"));
+    TestTrue(TEXT("expanded passage resolves"), !P406Expanded.IsEmpty() && P406Expanded.ToString() != TEXT("Missing"));
+    TestEqual(TEXT("unknown key uses words instead of exposing ID"),
+        P406Exam::P406RunnerText("p406.unknown_key", TEXT("Text unavailable")).ToString(), FString(TEXT("Text unavailable")));
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FP406BDecisionPauseTest, "PerfectWorld.Examination.P406B.DecisionPause",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FP406BDecisionPauseTest::RunTest(const FString& Parameters)
+{
+    for (const auto& P406BKey : {EKeys::Escape, EKeys::Gamepad_FaceButton_Right, EKeys::Gamepad_Special_Right, EKeys::Enter})
+    {
+        const auto P406BFake = MakeShared<P406Exam::FFakeWorld>();
+        P406BFake->Model = P406TestDecision();
+        bool P406BPanelOpen = true;
+        bool P406BMenuOpen = false;
+        int32 P406BPresentations = 0;
+        TSharedPtr<SPWPauseMenu> P406BPause;
+        const auto P406BPanel = SNew(SPWExaminationPanel).BridgeOverride(P406BFake)
+            .OnClose(FSimpleDelegate::CreateLambda([&]()
+            {
+                P406Exam::P406BLeaveExamination(P406BFake->Model.World.DecisionRequired,
+                    [&]() { P406BPanelOpen = false; }, [&]()
+                    {
+                        TestFalse(TEXT("decision releases input before pause"), P406BPanelOpen);
+                        P406BMenuOpen = true;
+                        P406BPause = SNew(SPWPauseMenu);
+                    });
+            }));
+        if (P406BKey == EKeys::Enter) P406BPanel->P406SelectFocus(P406BPanel->P406GetFocusCount() - 1);
+        P406TestKey(P406BPanel, P406BKey);
+        TestTrue(TEXT("Esc, controller Back/Menu and footer open pause"), P406BMenuOpen && P406BPause.IsValid());
+        if (!P406BPause.IsValid()) return false;
+        const auto P406BText = P406TestAllText(P406BPause.ToSharedRef());
+        TestTrue(TEXT("pause exposes Save, Settings and Quit"), P406BText.Contains(TEXT("Save")) &&
+            P406BText.Contains(TEXT("Settings")) && P406BText.Contains(TEXT("Quit")));
+        for (int32 P406BFrame = 0; P406BFrame < 120; ++P406BFrame)
+            TestTrue(TEXT("pending decision still holds time in pause"), P406Exam::P406BPresentDecision(
+                P406BFake->Model.World.DecisionRequired, P406BMenuOpen, P406BPanelOpen, [&]() { ++P406BPresentations; }));
+        TestEqual(TEXT("pause is never displaced by a tick"), P406BPresentations, 0);
+        TestTrue(TEXT("decision remains required"), P406BFake->Model.World.DecisionRequired);
+        TestEqual(TEXT("dismissal submits no exam command"), P406BFake->Submitted.Num(), 0);
+    }
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FP407UMentorSessionTest, "PerfectWorld.Examination.P407U.MentorSession",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FP407UMentorSessionTest::RunTest(const FString& Parameters)
+{
+    const auto P407UFake = MakeShared<P406Exam::FFakeWorld>();
+    P407UFake->Model = P406TestResult();
+    PerfectWorld::P407UFollowupView P407URow;
+    P407URow.Action.Id = "school_followup.p2.p4_withdrawn_school_mentor";
+    P407URow.Action.TitleTextKey = "phase2.a8.p4_withdrawn_school_mentor.title";
+    P407URow.Action.BriefTextKey = "phase2.a8.p4_withdrawn_school_mentor.brief";
+    P407URow.Action.DurationMinutes = 30;
+    P407URow.At = 12345;
+    P407URow.Booked = P407URow.CanAttend = true;
+    P407UFake->Model.P407UFollowups.push_back(P407URow);
+    P406Exam::FAction P407UAction;
+    P407UAction.Label = FText::FromString(TEXT("Attend school mentor session"));
+    P407UAction.bP407UFollowup = true;
+    P407UAction.P407UCommand = {PerfectWorld::P407UFollowupAction::Attend, P407URow.Action.Id, P407URow.At};
+    P407UFake->Model.Actions.Add(P407UAction);
+    P407UFake->AfterAccepted = P406TestResult();
+    const auto P407UPanel = SNew(SPWExaminationPanel).BridgeOverride(P407UFake).ViewportSize(FVector2D(569.0, 320.0));
+    TestTrue(TEXT("session opens"), P407UPanel->P406TriggerAction(0));
+    TestTrue(TEXT("a separate session is presented"), P407UPanel->P406GetModel().Screen == P406Exam::EScreen::P407USession);
+    TestEqual(TEXT("reading sends no attendance"), P407UFake->P407USubmitted.Num(), 0);
+    TestTrue(TEXT("mentor has readable words"), P406TestAllText(P407UPanel).Contains(TEXT("Amrita Basu")));
+    TestTrue(TEXT("duration is disclosed"), P406TestAllText(P407UPanel).Contains(TEXT("30 minutes")));
+    TestTrue(TEXT("session finishes through the bridge"), P407UPanel->P407UFinishSession());
+    TestEqual(TEXT("exactly one attendance command"), P407UFake->P407USubmitted.Num(), 1);
+    TestEqual(TEXT("no examination command is sent"), P407UFake->Submitted.Num(), 0);
+    if (P407UFake->P407USubmitted.Num() != 1) return false;
+    TestTrue(TEXT("stable identity and instant survive"), P407UFake->P407USubmitted[0].ActionId == P407URow.Action.Id &&
+        P407UFake->P407USubmitted[0].ExpectedAt == P407URow.At &&
+        P407UFake->P407USubmitted[0].Kind == PerfectWorld::P407UFollowupAction::Attend);
+    TestFalse(TEXT("finishing twice is unavailable"), P407UPanel->P407UFinishSession());
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FP410AgeLimitPanelTest, "PerfectWorld.Examination.P410.AgeLimitWords",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FP410AgeLimitPanelTest::RunTest(const FString& Parameters)
+{
+    const auto P410Fake = MakeShared<P406Exam::FFakeWorld>();
+    P410Fake->Model = P406TestDecision();
+    P410Fake->Reply.Accepted = false;
+    P410Fake->Reply.Why.Code = "exam.age_limit";
+    const auto P410Panel = SNew(SPWExaminationPanel).BridgeOverride(P410Fake);
+    TestFalse(TEXT("age refusal is returned"), P410Panel->P406TriggerAction(1));
+    TestEqual(TEXT("one refused command"), P410Fake->Submitted.Num(), 1);
+    const auto P410Text = P406TestAllText(P410Panel);
+    const FString P411Age = FText::AsNumber(PerfectWorld::P409AgeLimitYears).ToString();
+    TestTrue(TEXT("age limit explains the maximum entry age"),
+        P410Text.Contains(FString::Printf(TEXT("older than %s"), *P411Age)));
+    TestTrue(TEXT("entry ends at the core age limit"),
+        P410Text.Contains(FString::Printf(TEXT("entry ends at age %s"), *P411Age)));
+    TestTrue(TEXT("other qualifications remain available"), P410Text.Contains(TEXT("apprenticeships and adult qualification routes")));
+    TestFalse(TEXT("age refusal ID is hidden"), P410Text.Contains(TEXT("exam.age_limit")));
+    TestEqual(TEXT("refusal preserves the world projection"), FString(UTF8_TO_TCHAR(P410Fake->Model.World.SitRefusal.c_str())),
+        FString(TEXT("exam.missing_content")));
+
+    P410Fake->Reply.Why.Code = "exam.sitting_used";
+    TestFalse(TEXT("missed window refusal is returned"), P410Panel->P406TriggerAction(1));
+    const auto P410Missed = P406TestAllText(P410Panel);
+    const FString P411Window = FText::AsNumber(PerfectWorld::P409LateEntryMinutes).ToString();
+    TestTrue(TEXT("missed means past late entry"),
+        P410Missed.Contains(FString::Printf(TEXT("missing the %s-minute entry window uses it"), *P411Window)));
+    TestFalse(TEXT("P413 no retake promise after the chance is used"), P410Missed.Contains(TEXT("next annual sitting remains open")));
+    TestFalse(TEXT("P413 used refusal ID is hidden"), P410Missed.Contains(TEXT("exam.sitting_used")));
+    P410Fake->Reply.Why.Code = "exam.defer_used";
+    TestFalse(TEXT("P413 repeated deferral is refused"), P410Panel->P406TriggerAction(1));
+    const auto P413Deferred = P406TestAllText(P410Panel);
+    const FString P413Deferrals = FText::AsNumber(PerfectWorld::P413DeferralsPerLife).ToString();
+    TestTrue(TEXT("P413 deferral text uses the core limit"),
+        P413Deferred.Contains(FString::Printf(TEXT("defer %s time"), *P413Deferrals)));
+    TestTrue(TEXT("P413 deferred choices are Sit and Decline"), P413Deferred.Contains(TEXT("choose Sit or Decline")));
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FP410SittingPanelTest, "PerfectWorld.Examination.P410.LateEntryAndSittings",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FP410SittingPanelTest::RunTest(const FString& Parameters)
+{
+    const auto P410Fake = MakeShared<P406Exam::FFakeWorld>();
+    auto& P410Model = P410Fake->Model;
+    P410Model.World.CanWithdraw = true;
+    P410Model.World.Sittings.LateMinutes = 37;
+    // Deliberately independent fake values: presentation must use the allowance supplied by the core.
+    P410Model.World.Sittings.AllowanceMinutes = 109;
+    P410Model.World.Sittings.HasNextSitting = false;
+    for (const auto P410Screen : {P406Exam::EScreen::Routes, P406Exam::EScreen::Beat})
+    {
+        P410Model.Screen = P410Screen;
+        const auto P410Panel = SNew(SPWExaminationPanel).BridgeOverride(P410Fake).ViewportSize(FVector2D(569.0, 320.0));
+        const auto P410Text = P406TestAllText(P410Panel);
+        TestTrue(TEXT("late minutes are projected on route and beat"), P410Text.Contains(TEXT("Late entry: 37 minutes late")));
+        TestTrue(TEXT("allowance is supplied rather than recalculated"), P410Text.Contains(TEXT("Reduced outside allowance: 109 minutes")));
+        TestFalse(TEXT("P413 an entered candidate has no next sitting"), P410Text.Contains(TEXT("Next annual sitting:")));
+        TestEqual(TEXT("opening and reading submit nothing"), P410Fake->Submitted.Num(), 0);
+    }
+    P410Model.World.Sittings.LateMinutes = 0;
+    const auto P410OnTime = SNew(SPWExaminationPanel).BridgeOverride(P410Fake);
+    TestFalse(TEXT("on-time entry has no late notice"), P406TestAllText(P410OnTime).Contains(TEXT("Late entry:")));
+    P410Model = P406TestResult();
+    P410Model.World.Session.Participation = PerfectWorld::TowerParticipation::Deferred;
+    P410Model.World.Sittings.HasNextSitting = true;
+    P410Model.World.Sittings.NextSittingAt = PerfectWorld::GameClock::FromCalendar(2046, 2, 2, 6, 0);
+    const auto P410Result = SNew(SPWExaminationPanel).BridgeOverride(P410Fake);
+    TestTrue(TEXT("P413 a deferral retains the projected annual date"),
+        P406TestAllText(P410Result).Contains(TEXT("Next annual sitting: 2046-02-02 06:00")));
+    P410Model = P406TestResult();
+    P410Model.World.Sittings.HasNextSitting = false;
+    const auto P410Last = SNew(SPWExaminationPanel).BridgeOverride(P410Fake);
+    TestFalse(TEXT("no invented date after the last eligible sitting"), P406TestAllText(P410Last).Contains(TEXT("Next annual sitting:")));
+    TestFalse(TEXT("closed session has no late entry allowance"), P406TestAllText(P410Last).Contains(TEXT("Late entry:")));
+
+    P410Model = P406TestDecision();
+    P410Model.Title = FText::FromString(TEXT("Tower Examination"));
+    P410Model.World.Sittings.OpensAt = PerfectWorld::GameClock::FromCalendar(2047, 2, 2, 6, 0);
+    const auto P410Decision = SNew(SPWExaminationPanel).BridgeOverride(P410Fake);
+    TestTrue(TEXT("decision date follows the current sitting"),
+        P406TestAllText(P410Decision).Contains(TEXT("Sitting opens: 2047-02-02 06:00")));
+    TestEqual(TEXT("all sitting presentation remains read-only"), P410Fake->Submitted.Num(), 0);
+    return true;
+}
+
+#endif

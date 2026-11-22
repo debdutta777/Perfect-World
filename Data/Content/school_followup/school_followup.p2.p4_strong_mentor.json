@@ -1,0 +1,15 @@
+{
+  "type": "school_followup",
+  "id": "school_followup.p2.p4_strong_mentor",
+  "outcome": "strong",
+  "offerId": "",
+  "appointmentId": "appointment.p2.p4_strong_mentor",
+  "kind": "appointment",
+  "titleTextKey": "phase2.a8.p4_strong_mentor.title",
+  "briefTextKey": "phase2.a8.p4_strong_mentor.brief",
+  "destination": "place.school",
+  "dayOffset": 2,
+  "minute": 975,
+  "durationMinutes": 20,
+  "taskId": "term_plan"
+}

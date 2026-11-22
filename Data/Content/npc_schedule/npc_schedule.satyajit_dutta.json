@@ -1,0 +1,49 @@
+{
+  "type": "npc_schedule",
+  "id": "npc_schedule.satyajit_dutta",
+  "note": "R66: Satyajit Dutta, Kolkata Bengali tailor, age 44, 167 cm. Lives off-lane at dutta_home. Daily browsing hours match R53TailorHours: 10:00-13:00 and 15:00-19:30. Measures at staff_counter, cuts at workbench, stitches and presses at finishing_table. The 13:00-15:00 break is a meal then rest at the counter; closed-door presence is not customer service. All seven days have work, break, closure, cooking, reading and sleep. Geometry is the existing 700x900 Workshop: counter (250,407), bench (465,639), finishing (85,629), threshold (250,-45). Routes follow the kit staff gap at U615, not straight lines through furniture. Home is an authored 1680 cm off-lane walk. All travel minutes are ceil(total route length/140). No sale, inventory, money or completed garment is represented.",
+  "person": "person.satyajit_dutta",
+  "home": "location.nabapara.dutta_home",
+  "workplace": "location.nabapara.tailor_shop",
+  "door": "door.nabapara.tailor_shop_front",
+  "speedCmPerMinute": 140,
+  "routine": [
+    { "days": 127, "start": 0, "end": 390, "zone": "location.nabapara.dutta_home", "role": "sleeping" },
+    { "days": 127, "start": 390, "end": 420, "zone": "location.nabapara.dutta_home", "role": "at_home" },
+    { "days": 127, "start": 420, "end": 450, "zone": "location.nabapara.dutta_home", "role": "cooking" },
+    { "days": 127, "start": 450, "end": 579, "zone": "location.nabapara.dutta_home", "role": "at_home" },
+    { "days": 127, "start": 600, "end": 660, "zone": "anchor.tailor_shop.staff_counter", "role": "inspecting" },
+    { "days": 127, "start": 666, "end": 720, "zone": "anchor.tailor_shop.workbench", "role": "repairing" },
+    { "days": 127, "start": 723, "end": 760, "zone": "anchor.tailor_shop.finishing_table", "role": "repairing" },
+    { "days": 127, "start": 769, "end": 780, "zone": "anchor.tailor_shop.staff_counter", "role": "inspecting" },
+    { "days": 127, "start": 780, "end": 900, "zone": "anchor.tailor_shop.staff_counter", "role": "break" },
+    { "days": 127, "start": 900, "end": 950, "zone": "anchor.tailor_shop.staff_counter", "role": "inspecting" },
+    { "days": 127, "start": 956, "end": 1010, "zone": "anchor.tailor_shop.workbench", "role": "repairing" },
+    { "days": 127, "start": 1013, "end": 1080, "zone": "anchor.tailor_shop.finishing_table", "role": "repairing" },
+    { "days": 127, "start": 1080, "end": 1150, "zone": "anchor.tailor_shop.finishing_table", "role": "inspecting" },
+    { "days": 127, "start": 1159, "end": 1170, "zone": "anchor.tailor_shop.staff_counter", "role": "inspecting" },
+    { "days": 127, "start": 1191, "end": 1240, "zone": "location.nabapara.dutta_home", "role": "cooking" },
+    { "days": 127, "start": 1240, "end": 1300, "zone": "location.nabapara.dutta_home", "role": "at_home" },
+    { "days": 127, "start": 1300, "end": 1380, "zone": "location.nabapara.dutta_home", "role": "reading" },
+    { "days": 127, "start": 1380, "end": 1440, "zone": "location.nabapara.dutta_home", "role": "sleeping" }
+  ],
+  "routes": [
+    { "id": "route.tailor_shop.counter_to_door", "from": "anchor.tailor_shop.staff_counter", "to": "anchor.tailor_shop.front_door", "lengthCm": 1182 },
+    { "id": "route.tailor_shop.counter_to_workbench", "from": "anchor.tailor_shop.staff_counter", "to": "anchor.tailor_shop.workbench", "lengthCm": 747 },
+    { "id": "route.tailor_shop.counter_to_finishing_table", "from": "anchor.tailor_shop.staff_counter", "to": "anchor.tailor_shop.finishing_table", "lengthCm": 1137 },
+    { "id": "route.tailor_shop.workbench_to_finishing_table", "from": "anchor.tailor_shop.workbench", "to": "anchor.tailor_shop.finishing_table", "lengthCm": 390 },
+    { "id": "route.dutta_home.footpath_to_home", "from": "anchor.tailor_shop.front_door", "to": "location.nabapara.dutta_home", "lengthCm": 1680 }
+  ],
+  "travel": [
+    { "from": "anchor.tailor_shop.finishing_table", "to": "anchor.tailor_shop.front_door", "minutes": 17, "routes": ["route.tailor_shop.counter_to_finishing_table", "route.tailor_shop.counter_to_door"] },
+    { "from": "anchor.tailor_shop.finishing_table", "to": "anchor.tailor_shop.staff_counter", "minutes": 9, "routes": ["route.tailor_shop.counter_to_finishing_table"] },
+    { "from": "anchor.tailor_shop.finishing_table", "to": "anchor.tailor_shop.workbench", "minutes": 3, "routes": ["route.tailor_shop.workbench_to_finishing_table"] },
+    { "from": "anchor.tailor_shop.finishing_table", "to": "location.nabapara.dutta_home", "minutes": 29, "routes": ["route.tailor_shop.counter_to_finishing_table", "route.tailor_shop.counter_to_door", "route.dutta_home.footpath_to_home"] },
+    { "from": "anchor.tailor_shop.front_door", "to": "anchor.tailor_shop.staff_counter", "minutes": 9, "routes": ["route.tailor_shop.counter_to_door"] },
+    { "from": "anchor.tailor_shop.front_door", "to": "anchor.tailor_shop.workbench", "minutes": 14, "routes": ["route.tailor_shop.counter_to_door", "route.tailor_shop.counter_to_workbench"] },
+    { "from": "anchor.tailor_shop.front_door", "to": "location.nabapara.dutta_home", "minutes": 12, "routes": ["route.dutta_home.footpath_to_home"] },
+    { "from": "anchor.tailor_shop.staff_counter", "to": "anchor.tailor_shop.workbench", "minutes": 6, "routes": ["route.tailor_shop.counter_to_workbench"] },
+    { "from": "anchor.tailor_shop.staff_counter", "to": "location.nabapara.dutta_home", "minutes": 21, "routes": ["route.tailor_shop.counter_to_door", "route.dutta_home.footpath_to_home"] },
+    { "from": "anchor.tailor_shop.workbench", "to": "location.nabapara.dutta_home", "minutes": 26, "routes": ["route.tailor_shop.counter_to_workbench", "route.tailor_shop.counter_to_door", "route.dutta_home.footpath_to_home"] }
+  ]
+}

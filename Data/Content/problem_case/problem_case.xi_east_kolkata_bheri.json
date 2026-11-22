@@ -1,0 +1,28 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_east_kolkata_bheri",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "The fish pond at the edge of the wetlands",
+  "subject": "geography",
+  "unknown": "inflow",
+  "role": "critic",
+  "scarce": "help",
+  "fault": "hidden_flow",
+  "method": "method.rate_from_readings",
+  "brief": "For the East Kolkata Wetlands unit, the geography class has a gauge sheet from a shallow fish-pond bheri near Bantala. The pond held 9,000 cubic metres at dawn and 10,080 cubic metres nine hours later, while a bamboo weir let 180 cubic metres an hour out toward the drainage channel. The group says the feeder channel brought in 120 cubic metres an hour. You are the critic, so the group's figure is yours to test, and nobody on the practical can show you how the sheet should be read. What does the log say the feeder brought in each hour?",
+  "quantities": [
+    { "id": "q_pond_volume", "name": "Cubic metres of water in the pond", "kind": "stock", "given": true },
+    { "id": "q_feeder_flow", "name": "Cubic metres from the feeder channel an hour", "kind": "inflow", "given": false },
+    { "id": "q_weir_flow", "name": "Cubic metres over the bamboo weir an hour", "kind": "outflow", "given": true },
+    { "id": "q_gauge_hours", "name": "Hours between the two gauge readings", "kind": "time", "given": true },
+    { "id": "q_pond_area", "name": "Surface area of the pond in hectares", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_feeder_adds", "from": "q_feeder_flow", "to": "q_pond_volume", "effect": "adds", "sound": true },
+    { "id": "l_weir_subtracts", "from": "q_weir_flow", "to": "q_pond_volume", "effect": "subtracts", "sound": true },
+    { "id": "l_hours_accumulate", "from": "q_gauge_hours", "to": "q_pond_volume", "effect": "adds", "sound": true },
+    { "id": "l_area_subtracts", "from": "q_pond_area", "to": "q_pond_volume", "effect": "subtracts", "sound": false },
+    { "id": "l_weir_adds", "from": "q_weir_flow", "to": "q_pond_volume", "effect": "adds", "sound": false }
+  ],
+  "note": "East Kolkata Wetlands fish-pond hydrology for Class XI geography (West Bengal; Bantala is a real locality). Worked answer: the pond rose 10,080 - 9,000 = 1,080 cubic metres in 9 hours, which is 120 cubic metres an hour net; the weir took out 180 an hour, so the feeder gave 120 + 180 = 300 cubic metres an hour. The group's 120 is the net rise, which forgets the weir. The hidden flow is seepage through the pond bed into a nursery ditch: it is not in the log, so 300 is the inflow the logged flows require, and a seeping pond would need even more than that."
+}

@@ -1,0 +1,53 @@
+{
+  "type": "npc_schedule",
+  "id": "npc_schedule.subrata_dey",
+  "note": "Subrata Dey, the lane caretaker, lives in location.nabapara.caretaker_flat (his home). Every day he sleeps from 21:30 to 05:15 and has breakfast at home. On Monday to Saturday he walks the lane (06:15-07:00, location.nabapara.lane_round, an authored off-lane leg) and checks the shared entry of the tall flats (07:16-08:00, anchor.tall_flats.front_door). On Monday to Friday he then sweeps the stair (08:08-08:40) and works at the noticeboard (08:44-09:13); on Saturday he goes straight to the noticeboard (08:04-08:40). He is home for the midday meal and rest from 09:50 (Saturday 09:17, Sunday 09:36) and stays home until the afternoon: at home through 13:00-14:00 reading, on Monday to Friday he walks back to check the entry (14:33-15:00), attends to the stair (15:08-15:50) and works at the noticeboard again (15:54-16:53), then walks home (arrives 17:30). Saturday and Sunday afternoons are spent at home. Every evening he is home from 17:30 (supper, then reading) until 20:30; Monday to Saturday he then does a short evening round of the lane (20:48-21:12) and is home again at 21:30, asleep; Sunday he rests at home from 20:30. Because he is home at every minute from 10:00 to 12:30 and from 17:30 to 20:30 on every day of the week, the caretaker flat's visiting hours (Doors.cpp: 10:00-12:30 and 17:30-20:30) are always answered by a host who is awake. The anchors in the tall flats are the shared stair/entry (door.nabapara.tall_flats_front is public). The lane-round and walking legs are authored off-lane lengths; the tall-flats legs are conservative ceilings over the built shared-entry passage until the presenter bindings exist. Every travel duration is ceil(sum(lengthCm)/140).",
+  "person": "person.subrata_dey",
+  "home": "location.nabapara.caretaker_flat",
+  "workplace": "location.nabapara.tall_flats",
+  "door": "door.nabapara.tall_flats_front",
+  "speedCmPerMinute": 140,
+  "routine": [
+    { "days": 127, "start": 0, "end": 315, "zone": "location.nabapara.caretaker_flat", "role": "sleeping" },
+    { "days": 126, "start": 315, "end": 357, "zone": "location.nabapara.caretaker_flat", "role": "at_home" },
+    { "days": 1, "start": 315, "end": 480, "zone": "location.nabapara.caretaker_flat", "role": "at_home" },
+    { "days": 126, "start": 375, "end": 420, "zone": "location.nabapara.lane_round", "role": "inspecting" },
+    { "days": 126, "start": 436, "end": 480, "zone": "anchor.tall_flats.front_door", "role": "inspecting" },
+    { "days": 64, "start": 484, "end": 520, "zone": "anchor.tall_flats.noticeboard", "role": "observing" },
+    { "days": 62, "start": 488, "end": 520, "zone": "anchor.tall_flats.stair", "role": "sweeping" },
+    { "days": 1, "start": 513, "end": 543, "zone": "anchor.tall_flats.front_door", "role": "inspecting" },
+    { "days": 62, "start": 524, "end": 553, "zone": "anchor.tall_flats.noticeboard", "role": "observing" },
+    { "days": 64, "start": 557, "end": 700, "zone": "location.nabapara.caretaker_flat", "role": "at_home" },
+    { "days": 1, "start": 576, "end": 700, "zone": "location.nabapara.caretaker_flat", "role": "at_home" },
+    { "days": 62, "start": 590, "end": 700, "zone": "location.nabapara.caretaker_flat", "role": "at_home" },
+    { "days": 127, "start": 700, "end": 800, "zone": "location.nabapara.caretaker_flat", "role": "resting" },
+    { "days": 127, "start": 800, "end": 840, "zone": "location.nabapara.caretaker_flat", "role": "reading" },
+    { "days": 65, "start": 840, "end": 1050, "zone": "location.nabapara.caretaker_flat", "role": "reading" },
+    { "days": 62, "start": 873, "end": 900, "zone": "anchor.tall_flats.front_door", "role": "inspecting" },
+    { "days": 62, "start": 908, "end": 950, "zone": "anchor.tall_flats.stair", "role": "repairing" },
+    { "days": 62, "start": 954, "end": 1013, "zone": "anchor.tall_flats.noticeboard", "role": "observing" },
+    { "days": 127, "start": 1050, "end": 1110, "zone": "location.nabapara.caretaker_flat", "role": "at_home" },
+    { "days": 127, "start": 1110, "end": 1230, "zone": "location.nabapara.caretaker_flat", "role": "reading" },
+    { "days": 1, "start": 1230, "end": 1290, "zone": "location.nabapara.caretaker_flat", "role": "resting" },
+    { "days": 126, "start": 1248, "end": 1272, "zone": "location.nabapara.lane_round", "role": "inspecting" },
+    { "days": 127, "start": 1290, "end": 1440, "zone": "location.nabapara.caretaker_flat", "role": "sleeping" }
+  ],
+  "routes": [
+    { "id": "route.caretaker.home_to_lane_round", "from": "location.nabapara.caretaker_flat", "to": "location.nabapara.lane_round", "lengthCm": 2400 },
+    { "id": "route.caretaker.lane_round_to_entry", "from": "location.nabapara.lane_round", "to": "anchor.tall_flats.front_door", "lengthCm": 2200 },
+    { "id": "route.tall_flats.entry_to_noticeboard", "from": "anchor.tall_flats.front_door", "to": "anchor.tall_flats.noticeboard", "lengthCm": 500 },
+    { "id": "route.tall_flats.noticeboard_to_stair", "from": "anchor.tall_flats.noticeboard", "to": "anchor.tall_flats.stair", "lengthCm": 500 }
+  ],
+  "travel": [
+    { "from": "anchor.tall_flats.front_door", "to": "anchor.tall_flats.noticeboard", "minutes": 4, "routes": ["route.tall_flats.entry_to_noticeboard"] },
+    { "from": "anchor.tall_flats.front_door", "to": "anchor.tall_flats.stair", "minutes": 8, "routes": ["route.tall_flats.entry_to_noticeboard", "route.tall_flats.noticeboard_to_stair"] },
+    { "from": "anchor.tall_flats.front_door", "to": "location.nabapara.caretaker_flat", "minutes": 33, "routes": ["route.caretaker.lane_round_to_entry", "route.caretaker.home_to_lane_round"] },
+    { "from": "anchor.tall_flats.front_door", "to": "location.nabapara.lane_round", "minutes": 16, "routes": ["route.caretaker.lane_round_to_entry"] },
+    { "from": "anchor.tall_flats.noticeboard", "to": "anchor.tall_flats.stair", "minutes": 4, "routes": ["route.tall_flats.noticeboard_to_stair"] },
+    { "from": "anchor.tall_flats.noticeboard", "to": "location.nabapara.caretaker_flat", "minutes": 37, "routes": ["route.tall_flats.entry_to_noticeboard", "route.caretaker.lane_round_to_entry", "route.caretaker.home_to_lane_round"] },
+    { "from": "anchor.tall_flats.noticeboard", "to": "location.nabapara.lane_round", "minutes": 20, "routes": ["route.tall_flats.entry_to_noticeboard", "route.caretaker.lane_round_to_entry"] },
+    { "from": "anchor.tall_flats.stair", "to": "location.nabapara.caretaker_flat", "minutes": 40, "routes": ["route.tall_flats.noticeboard_to_stair", "route.tall_flats.entry_to_noticeboard", "route.caretaker.lane_round_to_entry", "route.caretaker.home_to_lane_round"] },
+    { "from": "anchor.tall_flats.stair", "to": "location.nabapara.lane_round", "minutes": 23, "routes": ["route.tall_flats.noticeboard_to_stair", "route.tall_flats.entry_to_noticeboard", "route.caretaker.lane_round_to_entry"] },
+    { "from": "location.nabapara.caretaker_flat", "to": "location.nabapara.lane_round", "minutes": 18, "routes": ["route.caretaker.home_to_lane_round"] }
+  ]
+}

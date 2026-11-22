@@ -1,0 +1,81 @@
+{
+  "type": "school_lesson",
+  "id": "p2.science",
+  "scope": "science",
+  "bellSchedule": "bell_schedule.nabapara_xi_science",
+  "lessons": [
+    {
+      "id": "school.lesson.science.p0_mathematics",
+      "period": 0,
+      "subject": "mathematics",
+      "structure": "model",
+      "family": "problem_family.xi_stock_and_flow",
+      "familySubject": "mathematics",
+      "role": "solver",
+      "titleKey": "phase2.a1.lesson.science.p0_mathematics.title",
+      "briefKey": "phase2.a1.lesson.science.p0_mathematics.brief",
+      "roleKey": "phase2.a1.lesson.science.p0_mathematics.role"
+    },
+    {
+      "id": "school.lesson.science.p1_physics",
+      "period": 1,
+      "subject": "physics",
+      "structure": "model",
+      "family": "problem_family.xi_stock_and_flow",
+      "familySubject": "physics",
+      "role": "solver",
+      "titleKey": "phase2.a1.lesson.science.p1_physics.title",
+      "briefKey": "phase2.a1.lesson.science.p1_physics.brief",
+      "roleKey": "phase2.a1.lesson.science.p1_physics.role"
+    },
+    {
+      "id": "school.lesson.science.p2_chemistry",
+      "period": 2,
+      "subject": "chemistry",
+      "structure": "coordinate",
+      "family": "coordinate_family.xi_group_work",
+      "familySubject": "practicals",
+      "role": "scribe",
+      "titleKey": "phase2.a1.lesson.science.p2_chemistry.title",
+      "briefKey": "phase2.a1.lesson.science.p2_chemistry.brief",
+      "roleKey": "phase2.a1.lesson.science.p2_chemistry.role"
+    },
+    {
+      "id": "school.lesson.science.p3_english",
+      "period": 3,
+      "subject": "english",
+      "structure": "explain",
+      "family": "explain_family.xi_claim_evidence_limit",
+      "familySubject": "interpretation",
+      "role": "recorder",
+      "titleKey": "phase2.a1.lesson.science.p3_english.title",
+      "briefKey": "phase2.a1.lesson.science.p3_english.brief",
+      "roleKey": "phase2.a1.lesson.science.p3_english.role"
+    },
+    {
+      "id": "school.lesson.science.p4_physics_lab",
+      "period": 4,
+      "subject": "physics",
+      "structure": "investigate",
+      "family": "investigate_family.xi_fault_finding",
+      "familySubject": "practical_science",
+      "role": "experimenter",
+      "titleKey": "phase2.a1.lesson.science.p4_physics_lab.title",
+      "briefKey": "phase2.a1.lesson.science.p4_physics_lab.brief",
+      "roleKey": "phase2.a1.lesson.science.p4_physics_lab.role"
+    },
+    {
+      "id": "school.lesson.science.p5_bengali",
+      "period": 5,
+      "subject": "bengali",
+      "structure": "explain",
+      "family": "explain_family.xi_claim_evidence_limit",
+      "familySubject": "literature",
+      "role": "author",
+      "titleKey": "phase2.a1.lesson.science.p5_bengali.title",
+      "briefKey": "phase2.a1.lesson.science.p5_bengali.brief",
+      "roleKey": "phase2.a1.lesson.science.p5_bengali.role"
+    }
+  ],
+  "note": "Phase 2 A1: one lesson binding for every period of this stream's bell schedule. The subject repeats the schedule's so a re-ordered timetable is refused. familySubject and role name a subject and role that an authored case of the family really has; the case itself is chosen by the structure runner."
+}

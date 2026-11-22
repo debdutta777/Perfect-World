@@ -1,0 +1,26 @@
+{
+  "type": "investigate_case",
+  "id": "investigate_case.xi_bell_timer_contactor",
+  "family": "investigate_family.xi_fault_finding",
+  "name": "The ten-second peal on the period bell",
+  "subject": "repair",
+  "symptom": "wrong_output",
+  "role": "inspector",
+  "scarce": "parts",
+  "method": "method.half_split",
+  "brief": "At the end of the third period at Nabapara Vidyalaya, the electric brass gong outside the office rings for a full ten seconds—the fire-drill signal—instead of the normal two-second period chime. The caretaker's cupboard has no spare cam timers or contactor coils on the shelf.",
+  "causes": [
+    { "id": "c_manual_pushbutton", "name": "The brass manual bell-push outside the headmistress's door is wedged by a coat of varnish", "fault": false },
+    { "id": "c_sticky_dashpot_plunger", "name": "Gummed oil in the pneumatic delay plunger holds the bell contactor closed for ten seconds after a brief pulse", "fault": true },
+    { "id": "c_slipped_timer_trippers", "name": "Two brass tripper pins on the 24-hour clock dial have slipped together on the noon notch", "fault": false },
+    { "id": "c_gong_striker_spring", "name": "The return spring inside the courtyard brass gong has unhooked", "fault": false }
+  ],
+  "tests": [
+    { "id": "t_inspect_push_and_plunger", "name": "Look at the office manual bell-push and watch the contactor plunger drop inside the glass cupboard", "kind": "observe", "units": 1, "implicates": ["c_manual_pushbutton", "c_sticky_dashpot_plunger"] },
+    { "id": "t_watch_cam_and_dashpot", "name": "Watch the clock-dial tripper release while timing how slowly the contactor armature rises", "kind": "observe", "units": 2, "implicates": ["c_sticky_dashpot_plunger", "c_slipped_timer_trippers"] },
+    { "id": "t_meter_coil_input_pulse", "name": "Measure how many seconds 230-volt power actually stays on the contactor coil terminals", "kind": "measure", "units": 2, "implicates": ["c_manual_pushbutton", "c_slipped_timer_trippers"] },
+    { "id": "t_time_mechanical_release", "name": "Press and release the unpowered contactor armature by hand and time its return stroke", "kind": "measure", "units": 3, "implicates": ["c_sticky_dashpot_plunger"] },
+    { "id": "t_swap_reserve_gong", "name": "Switch the output knife-blade over to the reserve exam-hall bell on the upper floor", "kind": "swap", "units": 3, "implicates": ["c_gong_striker_spring"] }
+  ],
+  "note": "Set at Nabapara Vidyalaya (loc_nhss). The clock dial sends a clean two-second pulse, but gummed oil in the contactor's delay plunger holds the contacts closed about eight seconds longer. Looking at the plunger, then timing the armature by hand, isolates it. The bell is a plain period bell and has nothing to do with any drill."
+}

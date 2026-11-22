@@ -1,0 +1,14 @@
+{
+  "type": "school_followup",
+  "id": "school_followup.p2.rest",
+  "outcome": "all",
+  "offerId": "",
+  "appointmentId": "appointment.p2.rest",
+  "kind": "rest",
+  "titleTextKey": "phase2.a8.rest.title",
+  "briefTextKey": "phase2.a8.rest.brief",
+  "destination": "place.home",
+  "dayOffset": 1,
+  "minute": 1080,
+  "durationMinutes": 30
+}

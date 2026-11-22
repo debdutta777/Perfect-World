@@ -1,0 +1,9 @@
+{
+  "type": "commerce_funding",
+  "id": "commerce_funding.rank_4",
+  "stratum": "stratum.comfortable",
+  "householdResourcesRank": 4,
+  "startingWalletPaise": 120000,
+  "weeklyAllowancePaise": 120000,
+  "note": "Personal discretionary funds, separate from household budget and the 1000 creation points. Baseline essentials remain accessible."
+}

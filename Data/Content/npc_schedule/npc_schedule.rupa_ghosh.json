@@ -1,0 +1,45 @@
+{
+  "type": "npc_schedule",
+  "id": "npc_schedule.rupa_ghosh",
+  "note": "Rupa Ghosh lives in location.nabapara.tea_row_house (her home, behind its front door) and keeps the household every day of the week. Every day she sleeps from 22:00 to 05:30, then washes and dresses; Monday to Saturday she cooks breakfast and the packed midday meal (06:00-07:00) and eats (07:00-07:49), and on Sunday she starts slowly. Monday to Saturday she walks to work (11 minutes) and works at location.nabapara.rupa_work, an authored off-lane workplace behind the lane's footpath: Monday to Friday 08:00-16:00 (with a break from 12:00 to 12:45), Saturday 08:00-13:00 (break 10:00-10:30). She walks home and is back at 16:11 on Monday to Friday (13:11 on Saturday). Monday to Friday she rests from 16:11 to 17:00, on Saturday she rests, sweeps the house and is at home through the afternoon; on Sunday she starts slowly, cooks breakfast (07:00-08:00), sweeps and washes (09:00-11:00), cooks the midday meal (11:00-12:30), rests, and is at home all afternoon. Every evening she cooks (17:00-18:00), sits down to supper (18:00-20:00), does the evening household work (20:00-21:00) and reads (21:00-22:00). The row house's visiting hours (Doors.cpp: 16:00-19:30) therefore find her at home and able to come to the door from 16:11 to 17:00 on Monday to Friday and from 18:00 to 19:30 every day; at 17:00-18:00 she is cooking at home (answers the door, but declines a conversation); and on Monday to Friday between 16:00 and 16:11 she is still walking home, so a knock then is not answered. The row house door is private: she is a host who is home, never a resident of the player's home. The only route is the authored walk between the row house doorstep and the workplace threshold on the footpath (1540 cm = 11 minutes at 140 cm per minute); the workplace itself is off-lane, as Anindita's home is. Every travel duration is ceil(sum(lengthCm)/140).",
+  "person": "person.rupa_ghosh",
+  "home": "location.nabapara.tea_row_house",
+  "workplace": "location.nabapara.rupa_work",
+  "door": "door.nabapara.tea_row_house_front",
+  "speedCmPerMinute": 140,
+  "routine": [
+    { "days": 127, "start": 0, "end": 330, "zone": "location.nabapara.tea_row_house", "role": "sleeping" },
+    { "days": 127, "start": 330, "end": 360, "zone": "location.nabapara.tea_row_house", "role": "at_home" },
+    { "days": 126, "start": 360, "end": 420, "zone": "location.nabapara.tea_row_house", "role": "cooking" },
+    { "days": 126, "start": 420, "end": 469, "zone": "location.nabapara.tea_row_house", "role": "at_home" },
+    { "days": 1, "start": 360, "end": 420, "zone": "location.nabapara.tea_row_house", "role": "at_home" },
+    { "days": 1, "start": 420, "end": 480, "zone": "location.nabapara.tea_row_house", "role": "cooking" },
+    { "days": 1, "start": 480, "end": 540, "zone": "location.nabapara.tea_row_house", "role": "at_home" },
+    { "days": 1, "start": 540, "end": 660, "zone": "location.nabapara.tea_row_house", "role": "sweeping" },
+    { "days": 1, "start": 660, "end": 750, "zone": "location.nabapara.tea_row_house", "role": "cooking" },
+    { "days": 1, "start": 750, "end": 840, "zone": "location.nabapara.tea_row_house", "role": "at_home" },
+    { "days": 1, "start": 840, "end": 960, "zone": "location.nabapara.tea_row_house", "role": "resting" },
+    { "days": 1, "start": 960, "end": 1020, "zone": "location.nabapara.tea_row_house", "role": "at_home" },
+    { "days": 62, "start": 480, "end": 720, "zone": "location.nabapara.rupa_work", "role": "stocking" },
+    { "days": 62, "start": 720, "end": 765, "zone": "location.nabapara.rupa_work", "role": "break" },
+    { "days": 62, "start": 765, "end": 960, "zone": "location.nabapara.rupa_work", "role": "stocking" },
+    { "days": 62, "start": 971, "end": 1020, "zone": "location.nabapara.tea_row_house", "role": "resting" },
+    { "days": 64, "start": 480, "end": 600, "zone": "location.nabapara.rupa_work", "role": "stocking" },
+    { "days": 64, "start": 600, "end": 630, "zone": "location.nabapara.rupa_work", "role": "break" },
+    { "days": 64, "start": 630, "end": 780, "zone": "location.nabapara.rupa_work", "role": "stocking" },
+    { "days": 64, "start": 791, "end": 840, "zone": "location.nabapara.tea_row_house", "role": "resting" },
+    { "days": 64, "start": 840, "end": 900, "zone": "location.nabapara.tea_row_house", "role": "sweeping" },
+    { "days": 64, "start": 900, "end": 1020, "zone": "location.nabapara.tea_row_house", "role": "at_home" },
+    { "days": 127, "start": 1020, "end": 1080, "zone": "location.nabapara.tea_row_house", "role": "cooking" },
+    { "days": 127, "start": 1080, "end": 1200, "zone": "location.nabapara.tea_row_house", "role": "at_home" },
+    { "days": 127, "start": 1200, "end": 1260, "zone": "location.nabapara.tea_row_house", "role": "sweeping" },
+    { "days": 127, "start": 1260, "end": 1320, "zone": "location.nabapara.tea_row_house", "role": "reading" },
+    { "days": 127, "start": 1320, "end": 1440, "zone": "location.nabapara.tea_row_house", "role": "sleeping" }
+  ],
+  "routes": [
+    { "id": "route.rupa_work.home_to_work", "from": "location.nabapara.tea_row_house", "to": "location.nabapara.rupa_work", "lengthCm": 1540 }
+  ],
+  "travel": [
+    { "from": "location.nabapara.rupa_work", "to": "location.nabapara.tea_row_house", "minutes": 11, "routes": ["route.rupa_work.home_to_work"] }
+  ]
+}

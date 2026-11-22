@@ -167,9 +167,22 @@ SchoolDayKind ClassifyCalendarDay(const SchoolCalendar& calendar, CalendarDay da
     return SchoolDayKind::SchoolDay;
 }
 
-bool CalendarIsSchoolDay(const SchoolCalendar& calendar, CalendarDay day)
+bool CalendarRequiresAttendance(const SchoolCalendar& calendar, CalendarDay day)
 {
     return ClassifyCalendarDay(calendar, day) == SchoolDayKind::SchoolDay;
+}
+
+bool CalendarHasOrdinaryPeriods(const SchoolCalendar& calendar, CalendarDay day)
+{
+    if (!CalendarRequiresAttendance(calendar, day) || CalendarAssessmentOn(calendar, day) != nullptr)
+        return false;
+    const CalendarEvent* event = CalendarEventOn(calendar, day);
+    return event == nullptr || event->Kind != "sports_day";
+}
+
+bool CalendarIsSchoolDay(const SchoolCalendar& calendar, CalendarDay day)
+{
+    return CalendarRequiresAttendance(calendar, day);
 }
 
 bool CalendarIsSchoolDayAt(const SchoolCalendar& calendar, GameInstant instant)

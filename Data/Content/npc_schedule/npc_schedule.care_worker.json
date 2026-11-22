@@ -1,0 +1,48 @@
+{
+  "type": "npc_schedule",
+  "id": "npc_schedule.care_worker",
+  "note": "The children's home day-shift care worker is on duty 07:00 to 15:00 every day, at the staff desk in the entry and in the common room; she hands over to the evening staff at the desk at 15:00 and then walks home, off the lane. Weekdays have a morning at the desk (school run, registers, calls) and a homework hour in the common room; weekends have a slower breakfast, a longer common room block for the shared jobs rota and outing preparation, and a longer desk handover. Rest and nights are at her own home. TS lengths are conservative integer ceilings of the building-local layout; the staff desk chair is at about U 114 V 314, the common room staff spot at U 600 V 360 through the doorway at U 506 V 435, the front door at U 235. Home is an authored off-lane leg, not a built interior.",
+  "person": "person.care_worker",
+  "home": "location.nabapara.care_worker_home",
+  "workplace": "location.nabapara.care_home",
+  "door": "door.nabapara.care_front",
+  "speedCmPerMinute": 140,
+  "routine": [
+    {"days":127,"start":0,"end":360,"zone":"location.nabapara.care_worker_home","role":"sleeping"},
+    {"days":127,"start":360,"end":388,"zone":"location.nabapara.care_worker_home","role":"at_home"},
+    {"days":62,"start":420,"end":480,"zone":"anchor.care_home.common_room","role":"caring"},
+    {"days":62,"start":485,"end":600,"zone":"anchor.care_home.staff_desk","role":"caring"},
+    {"days":62,"start":600,"end":615,"zone":"anchor.care_home.staff_desk","role":"break"},
+    {"days":62,"start":620,"end":660,"zone":"anchor.care_home.common_room","role":"sweeping"},
+    {"days":62,"start":660,"end":775,"zone":"anchor.care_home.common_room","role":"caring"},
+    {"days":62,"start":780,"end":820,"zone":"anchor.care_home.staff_desk","role":"break"},
+    {"days":62,"start":825,"end":870,"zone":"anchor.care_home.common_room","role":"caring"},
+    {"days":62,"start":875,"end":900,"zone":"anchor.care_home.staff_desk","role":"caring"},
+    {"days":65,"start":420,"end":495,"zone":"anchor.care_home.common_room","role":"caring"},
+    {"days":65,"start":500,"end":560,"zone":"anchor.care_home.staff_desk","role":"caring"},
+    {"days":65,"start":565,"end":600,"zone":"anchor.care_home.common_room","role":"sweeping"},
+    {"days":65,"start":600,"end":780,"zone":"anchor.care_home.common_room","role":"caring"},
+    {"days":65,"start":785,"end":825,"zone":"anchor.care_home.staff_desk","role":"break"},
+    {"days":65,"start":825,"end":900,"zone":"anchor.care_home.staff_desk","role":"caring"},
+    {"days":127,"start":928,"end":1320,"zone":"location.nabapara.care_worker_home","role":"at_home"},
+    {"days":127,"start":1320,"end":1440,"zone":"location.nabapara.care_worker_home","role":"sleeping"}
+  ],
+  "routes": [
+    {"id":"route.care_home.desk_to_common","from":"anchor.care_home.staff_desk","to":"anchor.care_home.common_room","lengthCm":600},
+    {"id":"route.care_home.desk_to_door","from":"anchor.care_home.staff_desk","to":"anchor.care_home.front_door","lengthCm":500},
+    {"id":"route.care_home.door_to_footpath","from":"anchor.care_home.front_door","to":"location.nabapara.care_home_footpath","lengthCm":300},
+    {"id":"route.care_worker_home.footpath_to_home","from":"location.nabapara.care_home_footpath","to":"location.nabapara.care_worker_home","lengthCm":3000}
+  ],
+  "travel": [
+    {"from":"anchor.care_home.common_room","to":"anchor.care_home.front_door","minutes":8,"routes":["route.care_home.desk_to_common","route.care_home.desk_to_door"]},
+    {"from":"anchor.care_home.common_room","to":"anchor.care_home.staff_desk","minutes":5,"routes":["route.care_home.desk_to_common"]},
+    {"from":"anchor.care_home.common_room","to":"location.nabapara.care_home_footpath","minutes":10,"routes":["route.care_home.desk_to_common","route.care_home.desk_to_door","route.care_home.door_to_footpath"]},
+    {"from":"anchor.care_home.common_room","to":"location.nabapara.care_worker_home","minutes":32,"routes":["route.care_home.desk_to_common","route.care_home.desk_to_door","route.care_home.door_to_footpath","route.care_worker_home.footpath_to_home"]},
+    {"from":"anchor.care_home.front_door","to":"anchor.care_home.staff_desk","minutes":4,"routes":["route.care_home.desk_to_door"]},
+    {"from":"anchor.care_home.front_door","to":"location.nabapara.care_home_footpath","minutes":3,"routes":["route.care_home.door_to_footpath"]},
+    {"from":"anchor.care_home.front_door","to":"location.nabapara.care_worker_home","minutes":24,"routes":["route.care_home.door_to_footpath","route.care_worker_home.footpath_to_home"]},
+    {"from":"anchor.care_home.staff_desk","to":"location.nabapara.care_home_footpath","minutes":6,"routes":["route.care_home.desk_to_door","route.care_home.door_to_footpath"]},
+    {"from":"anchor.care_home.staff_desk","to":"location.nabapara.care_worker_home","minutes":28,"routes":["route.care_home.desk_to_door","route.care_home.door_to_footpath","route.care_worker_home.footpath_to_home"]},
+    {"from":"location.nabapara.care_home_footpath","to":"location.nabapara.care_worker_home","minutes":22,"routes":["route.care_worker_home.footpath_to_home"]}
+  ]
+}

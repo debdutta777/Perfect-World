@@ -1,0 +1,28 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_laterite_well_recharge",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "The dug well after the monsoon",
+  "subject": "geography",
+  "unknown": "stock",
+  "role": "presenter",
+  "scarce": "help",
+  "fault": "none",
+  "method": "method.balance_stock",
+  "brief": "A masonry dug well in laterite soil near Bolpur in Birbhum held 18,000 litres at the start of a ten-day dry spell in late October. A gravel trench still seeps 1,450 litres a day into it from the last rains, while the village pulley draws 1,100 litres a day. How many litres will the well hold at the end of the ten days? You will present the answer to the class, and the geography teacher has not shown anyone how to set out a groundwater balance.",
+  "quantities": [
+    { "id": "q_well_volume", "name": "Litres of water in the dug well", "kind": "stock", "given": false },
+    { "id": "q_trench_seepage", "name": "Litres seeping in from the gravel trench a day", "kind": "inflow", "given": true },
+    { "id": "q_pulley_draw", "name": "Litres drawn at the pulley a day", "kind": "outflow", "given": true },
+    { "id": "q_dry_days", "name": "Days of the dry spell", "kind": "time", "given": true },
+    { "id": "q_well_diameter", "name": "Inside diameter of the well in metres", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_seepage_adds", "from": "q_trench_seepage", "to": "q_well_volume", "effect": "adds", "sound": true },
+    { "id": "l_pulley_subtracts", "from": "q_pulley_draw", "to": "q_well_volume", "effect": "subtracts", "sound": true },
+    { "id": "l_days_accumulate", "from": "q_dry_days", "to": "q_well_volume", "effect": "adds", "sound": true },
+    { "id": "l_diameter_adds", "from": "q_well_diameter", "to": "q_well_volume", "effect": "adds", "sound": false },
+    { "id": "l_pulley_adds", "from": "q_pulley_draw", "to": "q_well_volume", "effect": "adds", "sound": false }
+  ],
+  "note": "Rarh Bengal groundwater for Class XI geography; Bolpur and Birbhum are real. Worked answer: the well gains 1,450 - 1,100 = 350 litres a day, over 10 days that is 3,500 litres, and it ends at 18,000 + 3,500 = 21,500 litres. A well 2.4 m across has a floor area of about 4.5 square metres, so that is a rise of about 0.8 m. There is no fault; the figures agree."
+}

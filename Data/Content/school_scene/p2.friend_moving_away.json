@@ -1,0 +1,362 @@
+{
+  "type": "school_scene",
+  "id": "p2.friend_moving_away",
+  "note": "Order C2 scene 9: a friend's household prepares to move out of the lane after the January class test, and the player weighs helping sort book crates and transfer records with Ishan Sheikh, Tara Das, Amrita Basu and a stop by Farida Qadri's Shanti Chai Corner (INDIA_WORLD_BIBLE.md named cast: Ishan Sheikh, Tara Das, Amrita Basu, Farida Qadri, plus household adult and care worker).",
+  "arcKind": "changing_friendship",
+  "titleKey": "school_scene.p2.friend_moving_away.title",
+  "summaryKey": "school_scene.p2.friend_moving_away.summary",
+  "institution": "institution.nabapara_vidyalaya",
+  "calendar": "calendar.nabapara_2042_43",
+  "term": "term_3",
+  "calendarSpan": "january_class_test",
+  "threadTemplate": "thread.hidden_pickup",
+  "entryScene": "scene_transfer_certificate_rumour",
+  "cast": [
+    {
+      "person": "person.ishan_sheikh",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.tara_das",
+      "role": "classmate",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.amrita_basu",
+      "role": "teacher",
+      "originVariant": "both",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.household_adult",
+      "role": "family_adult",
+      "originVariant": "family",
+      "proposedNewCast": false
+    },
+    {
+      "person": "person.care_worker",
+      "role": "care_adult",
+      "originVariant": "care_home",
+      "proposedNewCast": false
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_transfer_certificate_rumour",
+      "titleKey": "school_scene.p2.friend_moving_away.tiffin.title",
+      "promptKey": "school_scene.p2.friend_moving_away.tiffin.prompt",
+      "speaker": "person.ishan_sheikh",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "school_break",
+        "bellSchedule": "bell_schedule.nabapara_xi_science",
+        "periodIndex": -1,
+        "zone": "nhss.court",
+        "startMinute": 770,
+        "endMinute": 800
+      },
+      "conversationTopic": "topic.ishan_sheikh.household_relocation_news",
+      "choices": [
+        {
+          "id": "ask_ishan_about_packing_crates",
+          "labelKey": "school_scene.p2.friend_moving_away.tiffin.ask.label",
+          "outcomeKey": "school_scene.p2.friend_moving_away.tiffin.ask.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_english_keep_in_touch",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "confide",
+            "relationshipEvent": "school.moving.relocation_worry_shared",
+            "threadEvent": "confidence_shared",
+            "factSet": "school.moving.ishan_confided"
+          }
+        },
+        {
+          "id": "ask_at_home_for_saturday_packing_window",
+          "labelKey": "school_scene.p2.friend_moving_away.tiffin.family.label",
+          "outcomeKey": "school_scene.p2.friend_moving_away.tiffin.family.outcome",
+          "costMinutes": 5,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_family_packing_afternoon",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.moving.family_window_planned",
+            "factSet": "school.moving.planning_family_window"
+          }
+        },
+        {
+          "id": "ask_care_worker_for_saturday_leave_note",
+          "labelKey": "school_scene.p2.friend_moving_away.tiffin.care.label",
+          "outcomeKey": "school_scene.p2.friend_moving_away.tiffin.care.outcome",
+          "costMinutes": 5,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_care_packing_handover",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.moving.care_window_planned",
+            "factSet": "school.moving.planning_care_window"
+          }
+        },
+        {
+          "id": "give_quiet_space_at_tiffin_refusal",
+          "labelKey": "school_scene.p2.friend_moving_away.tiffin.refuse.label",
+          "outcomeKey": "school_scene.p2.friend_moving_away.tiffin.refuse.outcome",
+          "costMinutes": 0,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.moving.left_unpressed_at_tiffin",
+            "factSet": "school.moving.gave_quiet_space"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_family_packing_afternoon",
+      "titleKey": "school_scene.p2.friend_moving_away.family.title",
+      "promptKey": "school_scene.p2.friend_moving_away.family.prompt",
+      "speaker": "person.household_adult",
+      "originVariant": "family",
+      "schedule": {
+        "slotKind": "home_evening",
+        "periodIndex": -1,
+        "zone": "location.nabapara.player_home",
+        "startMinute": 1110,
+        "endMinute": 1170
+      },
+      "conversationTopic": "topic.household_adult.friend_moving_help",
+      "choices": [
+        {
+          "id": "clear_afternoon_to_bundle_books",
+          "labelKey": "school_scene.p2.friend_moving_away.family.agree.label",
+          "outcomeKey": "school_scene.p2.friend_moving_away.family.agree.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_english_keep_in_touch",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.moving.family_hour_cleared",
+            "factSet": "school.moving.family_hour_agreed",
+            "journalAgreementFact": "c2_moving_family_packing_window"
+          }
+        },
+        {
+          "id": "keep_january_revision_hours_refusal",
+          "labelKey": "school_scene.p2.friend_moving_away.family.refuse.label",
+          "outcomeKey": "school_scene.p2.friend_moving_away.family.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.household_adult",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.moving.family_revision_kept",
+            "factSet": "school.moving.kept_family_study_hours"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_care_packing_handover",
+      "titleKey": "school_scene.p2.friend_moving_away.care.title",
+      "promptKey": "school_scene.p2.friend_moving_away.care.prompt",
+      "speaker": "person.care_worker",
+      "originVariant": "care_home",
+      "schedule": {
+        "slotKind": "care_handover",
+        "periodIndex": -1,
+        "zone": "location.nabapara.care_home",
+        "startMinute": 840,
+        "endMinute": 885
+      },
+      "conversationTopic": "topic.care_worker.friend_moving_detour",
+      "choices": [
+        {
+          "id": "log_afternoon_farewell_detour",
+          "labelKey": "school_scene.p2.friend_moving_away.care.agree.label",
+          "outcomeKey": "school_scene.p2.friend_moving_away.care.agree.outcome",
+          "costMinutes": 10,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_english_keep_in_touch",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.moving.care_detour_logged",
+            "factSet": "school.moving.care_hour_agreed",
+            "journalAgreementFact": "c2_moving_care_packing_window"
+          }
+        },
+        {
+          "id": "keep_usual_care_return_refusal",
+          "labelKey": "school_scene.p2.friend_moving_away.care.refuse.label",
+          "outcomeKey": "school_scene.p2.friend_moving_away.care.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.care_worker",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.moving.care_return_unchanged",
+            "factSet": "school.moving.kept_care_return_time"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_english_keep_in_touch",
+      "titleKey": "school_scene.p2.friend_moving_away.english.title",
+      "promptKey": "school_scene.p2.friend_moving_away.english.prompt",
+      "speaker": "person.tara_das",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "timetable_period",
+        "bellSchedule": "bell_schedule.nabapara_xi_science",
+        "periodIndex": 3,
+        "subject": "english",
+        "zone": "nhss.room_xi_science",
+        "startMinute": 805,
+        "endMinute": 850
+      },
+      "conversationTopic": "topic.tara_das.moving_away_book_crates",
+      "choices": [
+        {
+          "id": "help_cord_book_bundles_after_bell",
+          "labelKey": "school_scene.p2.friend_moving_away.english.cord.label",
+          "outcomeKey": "school_scene.p2.friend_moving_away.english.cord.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "nextScene": "scene_after_school_farewell_gate",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.moving.crate_packing_promised",
+            "threadEvent": "pickup_covered",
+            "factSet": "school.moving.helping_pack_books",
+            "journalAgreementFact": "c2_moving_book_crate_help"
+          }
+        },
+        {
+          "id": "arrange_transfer_record_with_amrita",
+          "labelKey": "school_scene.p2.friend_moving_away.english.adviser.label",
+          "outcomeKey": "school_scene.p2.friend_moving_away.english.adviser.outcome",
+          "costMinutes": 15,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "support_found",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.moving.practical_record_attested",
+            "threadEvent": "adviser_consulted",
+            "factSet": "school.moving.record_attested_early",
+            "journalAgreementFact": "c2_moving_amrita_record_copy"
+          }
+        },
+        {
+          "id": "exchange_addresses_and_step_back_refusal",
+          "labelKey": "school_scene.p2.friend_moving_away.english.refuse.label",
+          "outcomeKey": "school_scene.p2.friend_moving_away.english.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.tara_das",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.moving.address_slips_exchanged",
+            "factSet": "school.moving.exchanged_addresses_quietly"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_after_school_farewell_gate",
+      "titleKey": "school_scene.p2.friend_moving_away.gate.title",
+      "promptKey": "school_scene.p2.friend_moving_away.gate.prompt",
+      "speaker": "person.ishan_sheikh",
+      "originVariant": "both",
+      "schedule": {
+        "slotKind": "after_school",
+        "bellSchedule": "bell_schedule.nabapara_xi_science",
+        "periodIndex": -1,
+        "zone": "nhss.court",
+        "startMinute": 955,
+        "endMinute": 1005
+      },
+      "conversationTopic": "topic.ishan_sheikh.bus_stand_farewell_walk",
+      "choices": [
+        {
+          "id": "walk_crates_toward_shanti_chai_corner",
+          "labelKey": "school_scene.p2.friend_moving_away.gate.walk.label",
+          "outcomeKey": "school_scene.p2.friend_moving_away.gate.walk.outcome",
+          "costMinutes": 25,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "lightened",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.moving.crates_carried_to_stand",
+            "threadEvent": "pickup_covered",
+            "factSet": "school.moving.parted_with_shared_walk"
+          }
+        },
+        {
+          "id": "collect_stamped_practical_file_from_amrita",
+          "labelKey": "school_scene.p2.friend_moving_away.gate.adviser.label",
+          "outcomeKey": "school_scene.p2.friend_moving_away.gate.adviser.outcome",
+          "costMinutes": 20,
+          "isRefusal": false,
+          "humiliating": false,
+          "resolution": "support_found",
+          "consequence": {
+            "targetPerson": "person.amrita_basu",
+            "relationshipAct": "help",
+            "relationshipEvent": "school.moving.stamped_file_handed_over",
+            "threadEvent": "adviser_consulted",
+            "factSet": "school.moving.transfer_file_complete"
+          }
+        },
+        {
+          "id": "say_goodbye_at_school_gate_refusal",
+          "labelKey": "school_scene.p2.friend_moving_away.gate.refuse.label",
+          "outcomeKey": "school_scene.p2.friend_moving_away.gate.refuse.outcome",
+          "costMinutes": 5,
+          "isRefusal": true,
+          "humiliating": false,
+          "resolution": "carried_alone",
+          "consequence": {
+            "targetPerson": "person.ishan_sheikh",
+            "relationshipAct": "share_time",
+            "relationshipEvent": "school.moving.warm_farewell_at_gate",
+            "factSet": "school.moving.parted_at_school_gate",
+            "factCleared": "school.moving.helping_pack_books"
+          }
+        }
+      ]
+    }
+  ],
+  "resolutions": [
+    "lightened",
+    "support_found",
+    "carried_alone"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "type": "commerce_item",
+  "id": "item.pen",
+  "name": "Pen",
+  "unit": "pen",
+  "stackLimit": 10,
+  "effect": "none",
+  "hungerRelief": 0
+}

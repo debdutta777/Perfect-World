@@ -13,10 +13,12 @@
 #include <array>
 #include <cstdint>
 #include <string_view>
+#include <vector>
 
 namespace PerfectWorld
 {
-constexpr std::size_t TraitGroupCount = 7;
+/** How many "Strongest backgrounds" the preset preview lists. */
+constexpr std::size_t StrongestTraitCount = 3;
 constexpr std::size_t MaxEffectLines = 2;
 constexpr std::size_t RankCount = static_cast<std::size_t>(MaxRank) + 1;
 
@@ -111,4 +113,20 @@ struct RankChange
 [[nodiscard]] PERFECTWORLDCORE_API RankChange CostOfRankChange(std::int32_t fromRank, std::int32_t toRank) noexcept;
 /** Points to raise a trait one rank (the "next rank" price); Valid is false at MaxRank. */
 [[nodiscard]] PERFECTWORLDCORE_API RankChange CostOfNextRank(std::int32_t fromRank) noexcept;
+
+/**
+ * Points spent in each trait group, in TraitGroups() display order, summing the
+ * Cost of every allocation whose trait is known. Allocations naming no known
+ * trait are ignored. For a valid review the seven totals sum to Review.Spent.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API std::array<std::int32_t, TraitGroupCount>
+GroupAllocationTotals(const std::vector<TraitAllocation>& allocations) noexcept;
+
+/**
+ * Up to count trait IDs, best first: higher rank, then higher cost, with ties
+ * kept in the order the allocations are listed (catalogue order for a review).
+ * Rank 0 traits are never included, so an empty allocation gives an empty list.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API std::vector<std::string_view>
+StrongestTraits(const std::vector<TraitAllocation>& allocations, std::size_t count);
 } // namespace PerfectWorld

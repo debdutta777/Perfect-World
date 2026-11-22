@@ -1,0 +1,9 @@
+{
+  "type": "commerce_item",
+  "id": "item.biscuits",
+  "name": "Biscuits",
+  "unit": "pair",
+  "stackLimit": 10,
+  "effect": "food",
+  "hungerRelief": 1500
+}

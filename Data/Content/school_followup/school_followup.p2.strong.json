@@ -1,0 +1,14 @@
+{
+  "type": "school_followup",
+  "id": "school_followup.p2.strong",
+  "outcome": "strong",
+  "offerId": "",
+  "appointmentId": "appointment.p2.strong",
+  "kind": "appointment",
+  "titleTextKey": "phase2.a8.strong.title",
+  "briefTextKey": "phase2.a8.strong.brief",
+  "destination": "place.school",
+  "dayOffset": 1,
+  "minute": 960,
+  "durationMinutes": 15
+}

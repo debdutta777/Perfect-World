@@ -1,0 +1,26 @@
+{
+  "type": "investigate_case",
+  "id": "investigate_case.xi_marksheet_rank_script",
+  "family": "investigate_family.xi_fault_finding",
+  "name": "The blank ranks in Section B",
+  "subject": "computing",
+  "symptom": "intermittent",
+  "role": "inspector",
+  "scarce": "equipment",
+  "method": "method.half_split",
+  "brief": "The spreadsheet script that assigns class ranks for the Class XI terminal marksheet works cleanly on Section A's forty rows, but on Section B it intermittently prints a blank rank cell whenever two students share the same aggregate total. Only one shared terminal in the commerce room has the script debugger installed.",
+  "causes": [
+    { "id": "c_text_formatted_marks", "name": "Some marks in Section B were entered as text strings with a trailing space", "fault": false },
+    { "id": "c_strict_inequality", "name": "The tie-handling branch uses strict '<' instead of '<=' when advancing the rank counter", "fault": true },
+    { "id": "c_row_range_cap", "name": "The lookup range is hard-coded to stop at row 35", "fault": false },
+    { "id": "c_sort_order_flag", "name": "The pre-sort routine sorts Section B in ascending order by mistake", "fault": false }
+  ],
+  "tests": [
+    { "id": "t_read_tie_rows", "name": "Inspect the printed Section B sheet to see whether every blank rank occurs on the second row of a tied pair", "kind": "observe", "units": 1, "implicates": ["c_text_formatted_marks", "c_strict_inequality"] },
+    { "id": "t_read_loop_branch", "name": "Read the six-line comparison block in the rank-assignment function", "kind": "observe", "units": 2, "implicates": ["c_strict_inequality", "c_row_range_cap"] },
+    { "id": "t_test_row_types", "name": "Print the data type and row index of each cell in Section B at the midpoint of the script", "kind": "measure", "units": 2, "implicates": ["c_text_formatted_marks", "c_row_range_cap"] },
+    { "id": "t_trace_tied_pair", "name": "Step through the rank function on a synthetic two-row tied input of 412 and 412", "kind": "measure", "units": 3, "implicates": ["c_strict_inequality"] },
+    { "id": "t_swap_sort_module", "name": "Run the ranker on a manually pre-sorted table bypassing the sort routine", "kind": "swap", "units": 3, "implicates": ["c_sort_order_flag"] }
+  ],
+  "note": "Set in the computer room at Nabapara Vidyalaya (loc_nhss). Section A has no tied totals and Section B has three tied pairs, so the fault shows only there. The rank loop advances its counter with a strict less-than where it needs less-than-or-equal, which leaves the second row of a tie unranked. Tracing the tied pair 412 and 412 and reading the six-line comparison block isolate it."
+}

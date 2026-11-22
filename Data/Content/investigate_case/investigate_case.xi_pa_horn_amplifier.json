@@ -1,0 +1,26 @@
+{
+  "type": "investigate_case",
+  "id": "investigate_case.xi_pa_horn_amplifier",
+  "family": "investigate_family.xi_fault_finding",
+  "name": "The silent horn on the verandah",
+  "subject": "repair",
+  "symptom": "no_response",
+  "role": "critic",
+  "scarce": "equipment",
+  "method": "method.read_the_meter",
+  "brief": "Ten minutes before morning assembly at Nabapara Vidyalaya, the verandah PA amplifier's red pilot lamp glows and its level needles flick when the headmistress taps the lectern microphone, yet no sound comes from the courtyard horn speaker. The physics room multimeter has to be signed out from the laboratory assistant.",
+  "causes": [
+    { "id": "c_mic_mute_toggle", "name": "The toggle switch on the lectern microphone body is in the mute position", "fault": false },
+    { "id": "c_common_spade_lug", "name": "The 100-volt line common spade lug on the rear screw strip has slipped off its binding post", "fault": true },
+    { "id": "c_impedance_selector", "name": "The rotary output-tap selector knob is parked between the 8-ohm and 100-volt detents", "fault": false },
+    { "id": "c_horn_voice_coil", "name": "The weatherproof driver unit inside the courtyard horn has an open voice coil", "fault": false }
+  ],
+  "tests": [
+    { "id": "t_watch_vu_and_back", "name": "Watch the front-panel level meter and peer behind the amplifier at the screw terminal strip", "kind": "observe", "units": 1, "implicates": ["c_mic_mute_toggle", "c_common_spade_lug"] },
+    { "id": "t_inspect_rear_strip", "name": "Inspect the rear terminal lugs and the position of the rotary tap selector switch", "kind": "observe", "units": 2, "implicates": ["c_common_spade_lug", "c_impedance_selector"] },
+    { "id": "t_meter_tap_voltage", "name": "Measure AC audio voltage between the chassis tap and the microphone input jack", "kind": "measure", "units": 2, "implicates": ["c_mic_mute_toggle", "c_impedance_selector"] },
+    { "id": "t_ohmmeter_line_loop", "name": "Measure loop continuity across the two speaker line wires and the rear binding posts", "kind": "measure", "units": 3, "implicates": ["c_common_spade_lug"] },
+    { "id": "t_clip_test_speaker", "name": "Connect a small workshop test speaker across the far end of the courtyard line", "kind": "swap", "units": 3, "implicates": ["c_horn_voice_coil"] }
+  ],
+  "note": "Set at Nabapara Vidyalaya (loc_nhss). Level needles that flick on a tap show the microphone and the first stages are alive, so the break is after them: the common spade lug on the rear strip has slipped off its binding post. A continuity reading across the line loop and the rear posts finds it."
+}

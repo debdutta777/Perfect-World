@@ -1,0 +1,203 @@
+{
+  "type": "tower_scenario",
+  "id": "p2.alliance",
+  "note": "Floor 3 route alliance: negotiate shared relay amplifier windows across three competing squads.",
+  "route": "tower.route.alliance",
+  "floor": 3,
+  "runner": "tower.runner.alliance",
+  "primaryMethod": "negotiation",
+  "allowsCombat": false,
+  "classroomModel": "none",
+  "changedRuleKey": "",
+  "titleKey": "p2.a7.alliance.title",
+  "setupKey": "p2.a7.alliance.setup",
+  "entryBeat": "beat.1",
+  "beats": [
+    {
+      "id": "beat.1",
+      "promptKey": "p2.a7.alliance.b1.prompt",
+      "metric": "discipline",
+      "clues": [
+        {
+          "id": "clue.1",
+          "method": "negotiation",
+          "textKey": "p2.a7.alliance.b1.clue1"
+        },
+        {
+          "id": "clue.2",
+          "method": "analysis",
+          "textKey": "p2.a7.alliance.b1.clue2"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "opt.audit_wattage_windows",
+          "labelKey": "p2.a7.alliance.b1.opt1.label",
+          "outcomeKey": "p2.a7.alliance.b1.opt1.outcome",
+          "method": "negotiation",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 500,
+          "minutes": 5,
+          "nextBeat": "beat.2"
+        },
+        {
+          "id": "opt.split_equal_slots",
+          "labelKey": "p2.a7.alliance.b1.opt2.label",
+          "outcomeKey": "p2.a7.alliance.b1.opt2.outcome",
+          "method": "negotiation",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 350,
+          "minutes": 6,
+          "nextBeat": "beat.2"
+        },
+        {
+          "id": "opt.back_loudest_claim",
+          "labelKey": "p2.a7.alliance.b1.opt3.label",
+          "outcomeKey": "p2.a7.alliance.b1.opt3.outcome",
+          "method": "negotiation",
+          "isCombat": false,
+          "isMistake": true,
+          "scoreMilli": 150,
+          "minutes": 4,
+          "nextBeat": "recovery"
+        }
+      ],
+      "recovery": {
+        "id": "rec.1",
+        "promptKey": "p2.a7.alliance.b1.rec.prompt",
+        "actionKey": "p2.a7.alliance.b1.rec.action",
+        "outcomeKey": "p2.a7.alliance.b1.rec.outcome",
+        "method": "negotiation",
+        "restoredScoreMilli": 400,
+        "minutes": 3,
+        "nextBeat": "beat.2"
+      }
+    },
+    {
+      "id": "beat.2",
+      "promptKey": "p2.a7.alliance.b2.prompt",
+      "metric": "discipline",
+      "clues": [
+        {
+          "id": "clue.1",
+          "method": "negotiation",
+          "textKey": "p2.a7.alliance.b2.clue1"
+        },
+        {
+          "id": "clue.2",
+          "method": "logistics",
+          "textKey": "p2.a7.alliance.b2.clue2"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "opt.staggered_handoff_compact",
+          "labelKey": "p2.a7.alliance.b2.opt1.label",
+          "outcomeKey": "p2.a7.alliance.b2.opt1.outcome",
+          "method": "negotiation",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 500,
+          "minutes": 5,
+          "nextBeat": "beat.3"
+        },
+        {
+          "id": "opt.bilateral_swap_first",
+          "labelKey": "p2.a7.alliance.b2.opt2.label",
+          "outcomeKey": "p2.a7.alliance.b2.opt2.outcome",
+          "method": "negotiation",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 350,
+          "minutes": 6,
+          "nextBeat": "beat.3"
+        },
+        {
+          "id": "opt.unverified_verbal_pledge",
+          "labelKey": "p2.a7.alliance.b2.opt3.label",
+          "outcomeKey": "p2.a7.alliance.b2.opt3.outcome",
+          "method": "negotiation",
+          "isCombat": false,
+          "isMistake": true,
+          "scoreMilli": 150,
+          "minutes": 4,
+          "nextBeat": "recovery"
+        }
+      ],
+      "recovery": {
+        "id": "rec.2",
+        "promptKey": "p2.a7.alliance.b2.rec.prompt",
+        "actionKey": "p2.a7.alliance.b2.rec.action",
+        "outcomeKey": "p2.a7.alliance.b2.rec.outcome",
+        "method": "negotiation",
+        "restoredScoreMilli": 400,
+        "minutes": 3,
+        "nextBeat": "beat.3"
+      }
+    },
+    {
+      "id": "beat.3",
+      "promptKey": "p2.a7.alliance.b3.prompt",
+      "metric": "common_judgment",
+      "clues": [
+        {
+          "id": "clue.1",
+          "method": "negotiation",
+          "textKey": "p2.a7.alliance.b3.clue1"
+        },
+        {
+          "id": "clue.2",
+          "method": "construction",
+          "textKey": "p2.a7.alliance.b3.clue2"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "opt.protect_smallest_squad_window",
+          "labelKey": "p2.a7.alliance.b3.opt1.label",
+          "outcomeKey": "p2.a7.alliance.b3.opt1.outcome",
+          "method": "negotiation",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 1000,
+          "minutes": 3,
+          "nextBeat": "complete"
+        },
+        {
+          "id": "opt.majority_vote_schedule",
+          "labelKey": "p2.a7.alliance.b3.opt2.label",
+          "outcomeKey": "p2.a7.alliance.b3.opt2.outcome",
+          "method": "negotiation",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 750,
+          "minutes": 3,
+          "nextBeat": "complete"
+        },
+        {
+          "id": "opt.bump_late_squad",
+          "labelKey": "p2.a7.alliance.b3.opt3.label",
+          "outcomeKey": "p2.a7.alliance.b3.opt3.outcome",
+          "method": "negotiation",
+          "isCombat": false,
+          "isMistake": true,
+          "scoreMilli": 250,
+          "minutes": 2,
+          "nextBeat": "recovery"
+        }
+      ],
+      "recovery": {
+        "id": "rec.3",
+        "promptKey": "p2.a7.alliance.b3.rec.prompt",
+        "actionKey": "p2.a7.alliance.b3.rec.action",
+        "outcomeKey": "p2.a7.alliance.b3.rec.outcome",
+        "method": "negotiation",
+        "restoredScoreMilli": 800,
+        "minutes": 2,
+        "nextBeat": "complete"
+      }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_ferry_ghat_waiting",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "The waiting pen at Babughat",
+  "subject": "mathematics",
+  "unknown": "stock",
+  "role": "presenter",
+  "scarce": "equipment",
+  "fault": "none",
+  "method": "method.balance_stock",
+  "brief": "At Babughat on the Hooghly 64 passengers are inside the waiting pen when the morning tide bell rings. For the next 12 minutes the turnstiles admit 18 passengers a minute and the launches to Howrah take 15 passengers a minute from the gangway. How many passengers are in the pen when the 12 minutes are over? You will present the answer to the class, and the ghat has only one tally counter for the whole group to share.",
+  "quantities": [
+    { "id": "q_pen_crowd", "name": "Passengers in the waiting pen", "kind": "stock", "given": false },
+    { "id": "q_turnstile_entry", "name": "Passengers admitted by the turnstiles a minute", "kind": "inflow", "given": true },
+    { "id": "q_launch_boarding", "name": "Passengers boarding the launches a minute", "kind": "outflow", "given": true },
+    { "id": "q_bell_minutes", "name": "Minutes after the tide bell", "kind": "time", "given": true },
+    { "id": "q_ticket_fare", "name": "Fare per passenger in rupees", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_entry_adds", "from": "q_turnstile_entry", "to": "q_pen_crowd", "effect": "adds", "sound": true },
+    { "id": "l_boarding_subtracts", "from": "q_launch_boarding", "to": "q_pen_crowd", "effect": "subtracts", "sound": true },
+    { "id": "l_minutes_accumulate", "from": "q_bell_minutes", "to": "q_pen_crowd", "effect": "adds", "sound": true },
+    { "id": "l_fare_adds", "from": "q_ticket_fare", "to": "q_pen_crowd", "effect": "adds", "sound": false },
+    { "id": "l_boarding_adds", "from": "q_launch_boarding", "to": "q_pen_crowd", "effect": "adds", "sound": false }
+  ],
+  "note": "Linear rates of change in Class XI mathematics, set at a Hooghly ghat in Kolkata. Worked answer: the pen gains 18 - 15 = 3 passengers a minute, over 12 minutes that is 36, and it holds 64 + 36 = 100 passengers. There is no fault. The plausible mistake is to add the two rates (33 a minute) or to forget the 64 who were already in the pen."
+}

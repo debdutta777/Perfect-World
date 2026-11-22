@@ -1,0 +1,81 @@
+{
+  "type": "school_lesson",
+  "id": "p2.commerce",
+  "scope": "commerce",
+  "bellSchedule": "bell_schedule.nabapara_xi_commerce",
+  "lessons": [
+    {
+      "id": "school.lesson.commerce.p0_accountancy",
+      "period": 0,
+      "subject": "accountancy",
+      "structure": "investigate",
+      "family": "investigate_family.xi_fault_finding",
+      "familySubject": "computing",
+      "role": "critic",
+      "titleKey": "phase2.a1.lesson.commerce.p0_accountancy.title",
+      "briefKey": "phase2.a1.lesson.commerce.p0_accountancy.brief",
+      "roleKey": "phase2.a1.lesson.commerce.p0_accountancy.role"
+    },
+    {
+      "id": "school.lesson.commerce.p1_business_studies",
+      "period": 1,
+      "subject": "business_studies",
+      "structure": "coordinate",
+      "family": "coordinate_family.xi_group_work",
+      "familySubject": "events",
+      "role": "treasurer",
+      "titleKey": "phase2.a1.lesson.commerce.p1_business_studies.title",
+      "briefKey": "phase2.a1.lesson.commerce.p1_business_studies.brief",
+      "roleKey": "phase2.a1.lesson.commerce.p1_business_studies.role"
+    },
+    {
+      "id": "school.lesson.commerce.p2_economics",
+      "period": 2,
+      "subject": "economics",
+      "structure": "explain",
+      "family": "explain_family.xi_claim_evidence_limit",
+      "familySubject": "economics",
+      "role": "critic",
+      "titleKey": "phase2.a1.lesson.commerce.p2_economics.title",
+      "briefKey": "phase2.a1.lesson.commerce.p2_economics.brief",
+      "roleKey": "phase2.a1.lesson.commerce.p2_economics.role"
+    },
+    {
+      "id": "school.lesson.commerce.p3_english",
+      "period": 3,
+      "subject": "english",
+      "structure": "explain",
+      "family": "explain_family.xi_claim_evidence_limit",
+      "familySubject": "interpretation",
+      "role": "recorder",
+      "titleKey": "phase2.a1.lesson.commerce.p3_english.title",
+      "briefKey": "phase2.a1.lesson.commerce.p3_english.brief",
+      "roleKey": "phase2.a1.lesson.commerce.p3_english.role"
+    },
+    {
+      "id": "school.lesson.commerce.p4_mathematics",
+      "period": 4,
+      "subject": "mathematics",
+      "structure": "model",
+      "family": "problem_family.xi_stock_and_flow",
+      "familySubject": "mathematics",
+      "role": "solver",
+      "titleKey": "phase2.a1.lesson.commerce.p4_mathematics.title",
+      "briefKey": "phase2.a1.lesson.commerce.p4_mathematics.brief",
+      "roleKey": "phase2.a1.lesson.commerce.p4_mathematics.role"
+    },
+    {
+      "id": "school.lesson.commerce.p5_bengali",
+      "period": 5,
+      "subject": "bengali",
+      "structure": "explain",
+      "family": "explain_family.xi_claim_evidence_limit",
+      "familySubject": "literature",
+      "role": "author",
+      "titleKey": "phase2.a1.lesson.commerce.p5_bengali.title",
+      "briefKey": "phase2.a1.lesson.commerce.p5_bengali.brief",
+      "roleKey": "phase2.a1.lesson.commerce.p5_bengali.role"
+    }
+  ],
+  "note": "Phase 2 A1: one lesson binding for every period of this stream's bell schedule. The subject repeats the schedule's so a re-ordered timetable is refused. familySubject and role name a subject and role that an authored case of the family really has; the case itself is chosen by the structure runner."
+}

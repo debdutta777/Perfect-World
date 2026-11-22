@@ -1,0 +1,26 @@
+{
+  "type": "investigate_case",
+  "id": "investigate_case.xi_weather_logger_serial",
+  "family": "investigate_family.xi_fault_finding",
+  "name": "The garbled lines from the roof rain gauge",
+  "subject": "computing",
+  "symptom": "intermittent",
+  "role": "critic",
+  "scarce": "parts",
+  "method": "method.read_the_meter",
+  "brief": "The microcontroller weather box on the school roof sends a ten-minute serial line down to the geography room PC. Most lines arrive cleanly, but every third or fourth line turns into random punctuation marks. There are no spare microcontroller boards or serial cables in the cupboard.",
+  "causes": [
+    { "id": "c_wrong_baud_setting", "name": "The terminal window on the PC is set to 19,200 baud instead of 9,600 baud", "fault": false },
+    { "id": "c_loose_ground_screw", "name": "The signal-ground screw terminal on the windowsill junction block is loose and chatters in the breeze", "fault": true },
+    { "id": "c_rain_reed_bounce", "name": "The tipping-bucket reed switch bounces when a raindrop tips the spoon", "fault": false },
+    { "id": "c_pc_com_port_chip", "name": "The desktop PC's serial port receiver chip is failing", "fault": false }
+  ],
+  "tests": [
+    { "id": "t_watch_good_lines", "name": "Observe that three quarters of the ten-minute timestamp lines arrive in readable ASCII", "kind": "observe", "units": 1, "implicates": ["c_wrong_baud_setting", "c_loose_ground_screw"] },
+    { "id": "t_inspect_sill_block", "name": "Look closely at the windowsill screw block while the sash window vibrates in the wind", "kind": "observe", "units": 2, "implicates": ["c_loose_ground_screw", "c_rain_reed_bounce"] },
+    { "id": "t_measure_baud_idle", "name": "Measure idle line voltage and bit period on the serial header during a dry spell", "kind": "measure", "units": 2, "implicates": ["c_wrong_baud_setting", "c_rain_reed_bounce"] },
+    { "id": "t_meter_ground_drop", "name": "Measure resistance and voltage drift across the windowsill ground terminal while tapping the frame", "kind": "measure", "units": 3, "implicates": ["c_loose_ground_screw"] },
+    { "id": "t_loopback_com_port", "name": "Jumper TX to RX on the PC's serial connector to test the receiver chip on its own", "kind": "swap", "units": 3, "implicates": ["c_pc_com_port_chip"] }
+  ],
+  "note": "Set at Nabapara Vidyalaya (loc_nhss) with the roof weather box and the geography room PC. A wrong baud rate would garble every line, not every third or fourth, so most lines arriving clean rules it out. The signal-ground screw on the windowsill block is loose and chatters in the wind; a meter across it while the frame is tapped shows the drift."
+}

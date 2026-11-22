@@ -1,0 +1,28 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_seedling_nursery_plot",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "The marigold seedlings on the school roof",
+  "subject": "mathematics",
+  "unknown": "inflow",
+  "role": "solver",
+  "scarce": "help",
+  "fault": "none",
+  "method": "method.rate_from_readings",
+  "brief": "The Class XI roof garden at Nabapara Vidyalaya raises marigold seedlings under a shade net. The count of seedlings was 140 on Monday morning and 230 on Saturday morning, six days later, and the class gave 25 seedlings a day to the Lake Gardens neighbourhood boxes. How many new seedlings were pricked out into the trays each day? You are solving it for the group, and no teacher is free to say whether the setting out is right.",
+  "quantities": [
+    { "id": "q_seedlings", "name": "Seedlings under the shade net", "kind": "stock", "given": true },
+    { "id": "q_pricked_out", "name": "Seedlings pricked out a day", "kind": "inflow", "given": false },
+    { "id": "q_given_away", "name": "Seedlings given away a day", "kind": "outflow", "given": true },
+    { "id": "q_nursery_days", "name": "Days between the two counts", "kind": "time", "given": true },
+    { "id": "q_pot_diameter", "name": "Rim diameter of a pot in centimetres", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_pricked_adds", "from": "q_pricked_out", "to": "q_seedlings", "effect": "adds", "sound": true },
+    { "id": "l_given_subtracts", "from": "q_given_away", "to": "q_seedlings", "effect": "subtracts", "sound": true },
+    { "id": "l_days_accumulate", "from": "q_nursery_days", "to": "q_seedlings", "effect": "adds", "sound": true },
+    { "id": "l_diameter_adds", "from": "q_pot_diameter", "to": "q_seedlings", "effect": "adds", "sound": false },
+    { "id": "l_seedlings_drive_pricked", "from": "q_seedlings", "to": "q_pricked_out", "effect": "subtracts", "sound": false }
+  ],
+  "note": "A linear-rate problem for Class XI mathematics set on the school roof (loc_nhss); Lake Gardens is a real Kolkata locality. Worked answer: the count rose 230 - 140 = 90 in 6 days, which is 15 a day net; with 25 a day given away, 15 + 25 = 40 seedlings a day were pricked out (by days: 40 x 6 = 240 in, 25 x 6 = 150 out, 140 + 240 - 150 = 230). The common mistake is to answer 15, the net gain. There is no fault."
+}

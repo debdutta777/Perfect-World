@@ -1,0 +1,28 @@
+{
+  "type": "coordinate_case",
+  "id": "coordinate_case.xi_metre_bridge_graph",
+  "family": "coordinate_family.xi_group_work",
+  "name": "The metre-bridge readings and the graph",
+  "subject": "practicals",
+  "constraint": "capacity",
+  "role": "scribe",
+  "scarce": "materials",
+  "method": "method.split_the_list",
+  "seam": true,
+  "brief": "Your physics group of three has to set up the metre bridge, take a table of readings and plot the graph for the practical file. You are the scribe, keeping the group's record. There is one box of pencils and one pad of graph paper between you and the other groups, and it is nearly the end of the day. Nobody has yet said what each of you can manage this afternoon.",
+  "members": [
+    { "id": "m_you", "name": "You", "capacity": 2, "self": true },
+    { "id": "m_ishan", "name": "Ishan Sheikh", "capacity": 2, "self": false },
+    { "id": "m_nasrin", "name": "Nasrin Khatun", "capacity": 1, "self": false }
+  ],
+  "tasks": [
+    { "id": "t_setup", "name": "Set up the bridge and balance it", "load": 2, "fits": ["m_ishan", "m_you"] },
+    { "id": "t_readings", "name": "Record the table of balance lengths", "load": 1, "fits": ["m_you", "m_nasrin"] },
+    { "id": "t_graph", "name": "Plot the graph on the graph paper", "load": 1, "fits": ["m_nasrin", "m_ishan"] }
+  ],
+  "facts": [
+    { "id": "f_ishan_coaching", "holder": "m_ishan", "text": "Ishan has coaching class from three o'clock and can take only one light job today", "critical": true },
+    { "id": "f_nasrin_pencils", "holder": "m_nasrin", "text": "Nasrin has brought her own set of sharp 2H pencils", "critical": false }
+  ],
+  "note": "Set in the physics laboratory at Nabapara Vidyalaya (loc_nhss); Ishan Sheikh is npc_ishan_sheikh and Nasrin Khatun is an invented classmate. The constraint is capacity: Ishan's coaching class limits him, so the setup, which is the heavy job, must go to the player. A Sound assignment is setup to you, readings to Nasrin and graph to Ishan. The seam: the table records balance lengths in centimetres and the graph axis is marked in metres, which only a check of the hand-over finds."
+}

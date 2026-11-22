@@ -1,0 +1,19 @@
+{
+  "type": "school_work_brief",
+  "id": "school.work.term2_commerce_middle",
+  "calendar": "calendar.nabapara_2042_43",
+  "bellSchedule": "bell_schedule.nabapara_xi_commerce",
+  "stream": "commerce",
+  "subject": "business_studies",
+  "term": "term_2",
+  "issueDate": "2042-11-17",
+  "period": 1,
+  "dueDate": "2042-11-24",
+  "dueMinute": 1080,
+  "paper": "assessment_paper.xi_half_yearly_mixed",
+  "titleKey": "phase3.p304.term2.commerce.middle.title",
+  "briefKey": "phase3.p304.term2.commerce.middle.brief",
+  "criteriaKey": "phase3.p304.term2.commerce.middle.criteria",
+  "recoveryKey": "phase3.p304.term2.commerce.middle.recovery",
+  "note": "C3 Term 2 assignment. Business Studies hosts a multi-section report hand-over rehearsal; the existing mixed paper is deliberately reused. Dates, timetable and deadlines are authored production assumptions, not a new syllabus or a cultural-review claim."
+}

@@ -1,0 +1,28 @@
+{
+  "type": "problem_case",
+  "id": "problem_case.xi_club_subscription_ledger",
+  "family": "problem_family.xi_stock_and_flow",
+  "name": "The cultural fund box before Puja",
+  "subject": "accounting",
+  "unknown": "inflow",
+  "role": "recorder",
+  "scarce": "equipment",
+  "fault": "timing",
+  "method": "method.rate_from_readings",
+  "brief": "Mira Sen, treasurer of the Class XI cultural committee, shows you the cash book for the Puja-week programme. The box held 1,250 rupees at the start of the subscription drive and 2,530 rupees eight school days later. Over the same days the committee paid out 190 rupees a day for stage bamboo and harmonium tuning. How many rupees a day came in from subscriptions? As recorder you have to write the daily figure in the book, but the commerce room has one calculator and the receipt counterfoils for one Saturday carry Monday's date.",
+  "quantities": [
+    { "id": "q_fund_balance", "name": "Rupees in the committee cash box", "kind": "stock", "given": true },
+    { "id": "q_subscriptions", "name": "Rupees of subscriptions received a day", "kind": "inflow", "given": false },
+    { "id": "q_stage_payments", "name": "Rupees paid out for stage and harmonium a day", "kind": "outflow", "given": true },
+    { "id": "q_drive_days", "name": "School days of the subscription drive", "kind": "time", "given": true },
+    { "id": "q_receipt_colour", "name": "Colour of the carbon leaves in the receipt book", "kind": "context", "given": true }
+  ],
+  "links": [
+    { "id": "l_subscriptions_add", "from": "q_subscriptions", "to": "q_fund_balance", "effect": "adds", "sound": true },
+    { "id": "l_payments_subtract", "from": "q_stage_payments", "to": "q_fund_balance", "effect": "subtracts", "sound": true },
+    { "id": "l_days_accumulate", "from": "q_drive_days", "to": "q_fund_balance", "effect": "adds", "sound": true },
+    { "id": "l_colour_adds", "from": "q_receipt_colour", "to": "q_fund_balance", "effect": "adds", "sound": false },
+    { "id": "l_fund_drives_subscriptions", "from": "q_fund_balance", "to": "q_subscriptions", "effect": "adds", "sound": false }
+  ],
+  "note": "A non-trading receipts-and-payments exercise from Class XI accountancy; Mira Sen (npc_mira_sen) is the committee's treasurer. Worked answer: the box gained 2,530 - 1,250 = 1,280 rupees in 8 days, which is 160 rupees a day net; payments took out 190 rupees a day, so subscriptions brought in 160 + 190 = 350 rupees a day (by days: 350 x 8 = 2,800 in, 190 x 8 = 1,520 out, and 1,250 + 2,800 - 1,520 = 2,530). The timing fault is the misdated counterfoils: if Saturday's receipts were counted as Monday's, the number of collection days is in doubt, and the honest claim names the day count it rests on."
+}

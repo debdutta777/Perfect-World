@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <string_view>
@@ -79,10 +80,19 @@ struct AdvanceResult
 {
     GameInstant From = 0;
     GameInstant To = 0;
-    /** Events whose instant fell in (From, To], in chronological order. */
+    /**
+     * Events that fired, in chronological order: first any already due at From (scheduled for that very
+     * instant and not yet fired), then those whose instant fell in (From, To].
+     */
     std::vector<ScheduledEvent> Fired;
     /** Midnights crossed, so callers can run daily rollover exactly once. */
     std::int32_t DaysCrossed = 0;
+    /**
+     * A capped advance (AdvanceToCapped) reached its event limit before every event due by the requested
+     * instant had fired. To is then the instant of the last fired event (From when none fired), and every
+     * unfired event is still pending.
+     */
+    bool Capped = false;
     bool Rejected = false;
     std::string RejectionReason;
 };
@@ -120,10 +130,23 @@ public:
     /**
      * Move time forward. Rejects a negative or absurd advance rather than
      * accepting it, because time running backwards would corrupt every
-     * schedule that depends on this clock.
+     * schedule that depends on this clock. Events due at the current instant
+     * fire too, so Advance(0) fires whatever is due now without moving time.
      */
     [[nodiscard]] AdvanceResult Advance(std::int64_t minutes);
     [[nodiscard]] AdvanceResult AdvanceTo(GameInstant instant);
+    /**
+     * AdvanceTo, firing at most `maxEvents` events (due-now ones first). When every event due by `instant`
+     * fires, the clock reaches `instant`. Otherwise the result is Capped: the clock stops at the instant of
+     * the last fired event (it stays put when none fired) and nothing unfired is lost; whatever remains at
+     * that instant is due now and fires first next time. `maxEvents` 0 moves the clock only when no event
+     * is due by `instant`.
+     */
+    [[nodiscard]] AdvanceResult AdvanceToCapped(GameInstant instant, std::size_t maxEvents);
+    /** Fires up to `maxEvents` events due at the current instant without moving time. */
+    [[nodiscard]] AdvanceResult DrainDue(std::size_t maxEvents);
+    /** True when an event is due at the current instant: scheduled for now and not yet fired. */
+    [[nodiscard]] bool HasDueEvents() const noexcept;
 
     /** Schedules an event. An instant already past is rejected, not silently fired. */
     [[nodiscard]] std::int64_t Schedule(GameInstant when, std::string id);

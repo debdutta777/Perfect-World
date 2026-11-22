@@ -1,0 +1,203 @@
+{
+  "type": "tower_scenario",
+  "id": "p2.encounter_p404",
+  "note": "Floor 1 route encounter (P4-04): laterite weir resonator causeway with non-combat cadence evasion or optional combat disarm.",
+  "route": "tower.route.encounter",
+  "floor": 1,
+  "runner": "tower.runner.encounter",
+  "primaryMethod": "endurance",
+  "allowsCombat": true,
+  "classroomModel": "none",
+  "changedRuleKey": "",
+  "titleKey": "p2.a7.encounter_p404.title",
+  "setupKey": "p2.a7.encounter_p404.setup",
+  "entryBeat": "beat.1",
+  "beats": [
+    {
+      "id": "beat.1",
+      "promptKey": "p2.a7.encounter_p404.b1.prompt",
+      "metric": "discipline",
+      "clues": [
+        {
+          "id": "clue.1",
+          "method": "endurance",
+          "textKey": "p2.a7.encounter_p404.b1.clue1"
+        },
+        {
+          "id": "clue.2",
+          "method": "combat",
+          "textKey": "p2.a7.encounter_p404.b1.clue2"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "opt.buttress_trough_glide",
+          "labelKey": "p2.a7.encounter_p404.b1.opt1.label",
+          "outcomeKey": "p2.a7.encounter_p404.b1.opt1.outcome",
+          "method": "endurance",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 500,
+          "minutes": 4,
+          "nextBeat": "beat.2"
+        },
+        {
+          "id": "opt.unseat_pawl_ring",
+          "labelKey": "p2.a7.encounter_p404.b1.opt2.label",
+          "outcomeKey": "p2.a7.encounter_p404.b1.opt2.outcome",
+          "method": "combat",
+          "isCombat": true,
+          "isMistake": false,
+          "scoreMilli": 500,
+          "minutes": 4,
+          "nextBeat": "beat.2"
+        },
+        {
+          "id": "opt.rush_centre_apron",
+          "labelKey": "p2.a7.encounter_p404.b1.opt3.label",
+          "outcomeKey": "p2.a7.encounter_p404.b1.opt3.outcome",
+          "method": "endurance",
+          "isCombat": false,
+          "isMistake": true,
+          "scoreMilli": 150,
+          "minutes": 3,
+          "nextBeat": "recovery"
+        }
+      ],
+      "recovery": {
+        "id": "rec.1",
+        "promptKey": "p2.a7.encounter_p404.b1.rec.prompt",
+        "actionKey": "p2.a7.encounter_p404.b1.rec.action",
+        "outcomeKey": "p2.a7.encounter_p404.b1.rec.outcome",
+        "method": "endurance",
+        "restoredScoreMilli": 400,
+        "minutes": 3,
+        "nextBeat": "beat.2"
+      }
+    },
+    {
+      "id": "beat.2",
+      "promptKey": "p2.a7.encounter_p404.b2.prompt",
+      "metric": "discipline",
+      "clues": [
+        {
+          "id": "clue.1",
+          "method": "analysis",
+          "textKey": "p2.a7.encounter_p404.b2.clue1"
+        },
+        {
+          "id": "clue.2",
+          "method": "combat",
+          "textKey": "p2.a7.encounter_p404.b2.clue2"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "opt.sluice_step_cadence",
+          "labelKey": "p2.a7.encounter_p404.b2.opt1.label",
+          "outcomeKey": "p2.a7.encounter_p404.b2.opt1.outcome",
+          "method": "endurance",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 500,
+          "minutes": 5,
+          "nextBeat": "beat.3"
+        },
+        {
+          "id": "opt.deflect_coupled_arm",
+          "labelKey": "p2.a7.encounter_p404.b2.opt2.label",
+          "outcomeKey": "p2.a7.encounter_p404.b2.opt2.outcome",
+          "method": "combat",
+          "isCombat": true,
+          "isMistake": false,
+          "scoreMilli": 500,
+          "minutes": 5,
+          "nextBeat": "beat.3"
+        },
+        {
+          "id": "opt.leap_twin_beam",
+          "labelKey": "p2.a7.encounter_p404.b2.opt3.label",
+          "outcomeKey": "p2.a7.encounter_p404.b2.opt3.outcome",
+          "method": "endurance",
+          "isCombat": false,
+          "isMistake": true,
+          "scoreMilli": 150,
+          "minutes": 4,
+          "nextBeat": "recovery"
+        }
+      ],
+      "recovery": {
+        "id": "rec.2",
+        "promptKey": "p2.a7.encounter_p404.b2.rec.prompt",
+        "actionKey": "p2.a7.encounter_p404.b2.rec.action",
+        "outcomeKey": "p2.a7.encounter_p404.b2.rec.outcome",
+        "method": "endurance",
+        "restoredScoreMilli": 400,
+        "minutes": 3,
+        "nextBeat": "beat.3"
+      }
+    },
+    {
+      "id": "beat.3",
+      "promptKey": "p2.a7.encounter_p404.b3.prompt",
+      "metric": "common_judgment",
+      "clues": [
+        {
+          "id": "clue.1",
+          "method": "endurance",
+          "textKey": "p2.a7.encounter_p404.b3.clue1"
+        },
+        {
+          "id": "clue.2",
+          "method": "logistics",
+          "textKey": "p2.a7.encounter_p404.b3.clue2"
+        }
+      ],
+      "decisions": [
+        {
+          "id": "opt.brace_ratchet_and_count",
+          "labelKey": "p2.a7.encounter_p404.b3.opt1.label",
+          "outcomeKey": "p2.a7.encounter_p404.b3.opt1.outcome",
+          "method": "endurance",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 1000,
+          "minutes": 3,
+          "nextBeat": "complete"
+        },
+        {
+          "id": "opt.wedge_sill_and_beckon",
+          "labelKey": "p2.a7.encounter_p404.b3.opt2.label",
+          "outcomeKey": "p2.a7.encounter_p404.b3.opt2.outcome",
+          "method": "endurance",
+          "isCombat": false,
+          "isMistake": false,
+          "scoreMilli": 750,
+          "minutes": 2,
+          "nextBeat": "complete"
+        },
+        {
+          "id": "opt.drop_gate_bar_immediately",
+          "labelKey": "p2.a7.encounter_p404.b3.opt3.label",
+          "outcomeKey": "p2.a7.encounter_p404.b3.opt3.outcome",
+          "method": "endurance",
+          "isCombat": false,
+          "isMistake": true,
+          "scoreMilli": 250,
+          "minutes": 2,
+          "nextBeat": "recovery"
+        }
+      ],
+      "recovery": {
+        "id": "rec.3",
+        "promptKey": "p2.a7.encounter_p404.b3.rec.prompt",
+        "actionKey": "p2.a7.encounter_p404.b3.rec.action",
+        "outcomeKey": "p2.a7.encounter_p404.b3.rec.outcome",
+        "method": "endurance",
+        "restoredScoreMilli": 800,
+        "minutes": 2,
+        "nextBeat": "complete"
+      }
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "type": "commerce_item",
+  "id": "item.phuchka",
+  "name": "Phuchka",
+  "unit": "plate of six",
+  "stackLimit": 10,
+  "effect": "food",
+  "hungerRelief": 3000
+}
