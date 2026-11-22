@@ -33,11 +33,12 @@ namespace PerfectWorld
  * Late arrival. Enter is accepted from the opening until P409LateEntryMinutes after it; later it is exam.missed (the next
  * sitting remains). The hall's deadline does not move: the examination's outside-world footprint still ends at most
  * TowerWorldCapMinutes after the opening. A candidate who entered L minutes late has the reduced allowance
- * TowerWorldCapMinutes - L outside minutes: when an accepted step leaves the session Entered with more pending outside
- * minutes than that, the same transaction withdraws it ("time called": completed floors kept, the unfinished floor's time
- * counted, no credit for it), and every exit charges at most the allowance. L is the clock minus the opening, exact while
- * Entered because the clock stands still then, so nothing new is stored. For an on-time candidate the pending minutes are
- * already capped at TowerWorldCapMinutes, so P4-01's rule (the cap is not a mission-duration limit) is unchanged.
+ * TowerWorldCapMinutes - L outside minutes: when a step would exceed that allowance, including a completing or ejecting
+ * Choose, the same transaction withdraws it ("time called"). A floor-finishing choice is discarded; only earlier completed
+ * floors earn credit, and the remaining allowance is spent at the hall deadline. Every other exit charges at most the
+ * allowance. L is the clock minus the opening, exact while Entered because the clock stands still then, so nothing new is
+ * stored. For an on-time candidate the pending minutes are already capped at TowerWorldCapMinutes, so P4-01's rule (the cap
+ * is not a mission-duration limit) is unchanged.
  */
 inline constexpr std::int32_t P409FirstSittingYear = 2043;
 inline constexpr std::int64_t P409LateEntryMinutes = 60;

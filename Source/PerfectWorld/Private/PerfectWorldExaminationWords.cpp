@@ -1,9 +1,17 @@
 #include "PerfectWorldExaminationBridge.h"
 
+#include "WorldExamSittings.h"
+
 namespace P406Exam
 {
 FText P406RefusalText(const FString& Code)
 {
+    if (Code == TEXT("exam.missed"))
+        return FText::Format(FText::FromString(TEXT("The {0}-minute late-entry window has passed. The next annual sitting remains open; your ordinary life continues.")),
+            FText::AsNumber(PerfectWorld::P409LateEntryMinutes));
+    if (Code == TEXT("exam.age_limit"))
+        return FText::Format(FText::FromString(TEXT("You would be older than {0} at this sitting. Annual examination entry ends at age {0}; apprenticeships and adult qualification routes remain open.")),
+            FText::AsNumber(PerfectWorld::P409AgeLimitYears));
     struct FP406Words { const TCHAR* Code; const TCHAR* Words; };
     static const FP406Words P406Words[] = {
         {TEXT("p407u.invalid_state"), TEXT("The appointment cannot be read from this life. No booking changed.")},
@@ -27,8 +35,6 @@ FText P406RefusalText(const FString& Code)
         {TEXT("time.asleep"), TEXT("Wake up before sitting the examination.")},
         {TEXT("time.beyond_calendar"), TEXT("The remaining calendar cannot hold this examination.")},
         {TEXT("exam.not_open"), TEXT("The examination opens at 06:00 on 2 February 2043.")},
-        {TEXT("exam.missed"), TEXT("The 60-minute late-entry window has passed. The next annual sitting remains open; your ordinary life continues.")},
-        {TEXT("exam.age_limit"), TEXT("You would be older than twenty at this sitting. Annual examination entry ends at age twenty; apprenticeships and adult qualification routes remain open.")},
         {TEXT("exam.decision_required"), TEXT("Choose whether to sit, defer or decline before the day continues.")},
         {TEXT("exam.active"), TEXT("Your examination is in progress. Continue it or withdraw first.")},
         {TEXT("exam.not_awakened"), TEXT("Complete your supervised Awakening before sitting the examination.")},

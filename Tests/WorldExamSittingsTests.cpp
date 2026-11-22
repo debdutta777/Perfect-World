@@ -1,5 +1,6 @@
 #include "WorldExamSittings.h"
 
+#include "ExamContract.h"
 #include "P402ExamTestSupport.h"
 
 #include <iostream>
@@ -134,7 +135,7 @@ void P409ReducedClock(const P402World& w)
             P2CExpect(P409Transitions(P402Choose(sim, "slow", "a slow beat")).empty(), "no transition mid-floor");
         P2CExpect(sim.State().Examination.Participation == TowerParticipation::Entered, "on time, no time is called");
     }
-    // Late slow climb: whichever comes first (the bell or the last floor), the exit is charged at most the allowance.
+    // Late slow climb: the bell withdraws the candidate before the last floor can finish.
     {
         WorldSim sim = w.Sim(P409LateMorning(w, 60));
         S04Accept(sim, P402Cmd(A::Enter), "late sit");
@@ -147,12 +148,11 @@ void P409ReducedClock(const P402World& w)
             for (int beat = 0; beat < 3 && sim.State().Examination.Participation == TowerParticipation::Entered; ++beat)
                 last = P402Choose(sim, "slow", "a slow beat");
         }
-        const std::vector<ExamTransition> all = P409Transitions(last);
-        P2CExpect(all.size() == 1 && (all.front().Kind == K::Finished || (all.front().Kind == K::Withdrew && all.front().TimeCalled)),
-                  "the slow late climb ends exactly once, finished or with time called");
-        P2CExpect(all.front().OutsideMinutes == std::min<std::int64_t>(sim.ExaminationResult().Score.OutsideMinutes, 120) &&
-                      sim.State().Clock.Now() == CountdownEndInstant() + 60 + all.front().OutsideMinutes,
-                  "a late exit is charged at most the allowance");
+        const ExamTransition t = P409One(last, K::Withdrew, 0, "the slow late climb ends once with time called");
+        P2CExpect(t.TimeCalled && t.Participation == TowerParticipation::Withdrawn && t.OutsideMinutes == 120 &&
+                      sim.State().Examination.Attempts.size() == 2 && sim.State().Examination.Active &&
+                      sim.State().Clock.Now() == CountdownEndInstant() + TowerWorldCapMinutes,
+                  "the slow late climb retains two floors and spends the remaining hall time");
         (void)P402Reload(w, sim.State(), "a late closed session reloads");
     }
     // A brisk late climb finishes well inside the allowance and is charged exactly its own time.
@@ -171,6 +171,102 @@ void P409ReducedClock(const P402World& w)
                       t.OutsideMinutes == sim.ExaminationResult().Score.OutsideMinutes &&
                       sim.State().Clock.Now() == CountdownEndInstant() + 30 + t.OutsideMinutes,
                   "a completed late climb inside the allowance pays its own time");
+    }
+}
+
+void P411LateFinish(const P402World& w)
+{
+    TowerRunnerCatalogue P411Runners = w.Runners;
+    // The final rush can eject only after taking long enough to pass the late allowance.
+    for (auto& P411Scenario : P411Runners.Scenarios)
+        if (P411Scenario.RouteId == P402Climb[2])
+            for (auto& P411Option : P411Scenario.Beats.back().Choices)
+                if (P411Option.Id == "rush")
+                    P411Option.MissionMinutes = 60;
+
+    for (const bool P411Eject : {false, true})
+    for (const std::int64_t P411Late : {std::int64_t{60}, std::int64_t{0}})
+    {
+        const WorldState P411Start = P409LateMorning(w, P411Late);
+        WorldSim P411Sim = w.Sim(P411Start, &P411Runners);
+        S04Accept(P411Sim, P402Cmd(A::Enter), "P411 candidate enters");
+        P402Floor(P411Sim, P402Climb[0], "slow");
+        P402Floor(P411Sim, P402Climb[1], "slow");
+        S04Accept(P411Sim, P402Cmd(A::OpenRoute, std::string(P402Climb[2]), FindTowerRoute(P402Climb[2])->Method),
+                  "P411 final floor opens");
+        P402Choose(P411Sim, "careful", "P411 first final-floor beat");
+        P402Choose(P411Sim, P411Eject ? "rush" : "careful", "P411 second final-floor beat");
+        const WorldState P411Before = P411Sim.State();
+        const TowerSessionView P411View = P411Sim.ExaminationView();
+        P2CExpect(P411View.Result.OutsideMinutes <= 120 && P411Before.Examination.Attempts.size() == 2 &&
+                      P411Before.Examination.Active && P411Before.Examination.Active->Beat == 2,
+                  "P411 two completed floors and two final-floor beats fit the late allowance");
+        TowerSessionCommand P411Choice = P402Cmd(A::Choose);
+        P411Choice.Runner = P411View.Runner;
+        P411Choice.Beat = P411View.Beat;
+        P411Choice.ChoiceId = P411Eject ? "rush" : "slow";
+        const TowerParticipation P411Terminal = P411Eject ? TowerParticipation::Ejected : TowerParticipation::Completed;
+        const P401ExamStepResult P411Preview = P401ApplyExamChoice(P411Before.Examination, P411Runners, P411Choice, {},
+            P411Before.Clock.Now(), P411Before.WorldSeed, 0);
+        P2CExpect(P411Preview.Resolution.Ok() && P411Preview.State.Participation == P411Terminal &&
+                      P411Preview.Resolution.OutsideMinutes > 120,
+                  "P411 standalone terminal choice would pass the reduced allowance");
+
+        const CommandResult P411Last = S04Accept(P411Sim, P411Choice, "P411 terminal choice");
+        const ExamTransition P411Exit = P409One(P411Last, P411Late ? K::Withdrew : K::Finished, 0,
+                                              "P411 terminal choice publishes exactly one transition");
+        if (P411Late)
+        {
+            const auto& P411Session = P411Sim.State().Examination;
+            const TowerResult P411Score = P411Sim.ExaminationResult().Score;
+            P2CExpect(P411Exit.TimeCalled && P411Exit.LateMinutes == 60 && P411Exit.OutsideMinutes == 120 &&
+                          P411Exit.Participation == TowerParticipation::Withdrawn &&
+                          P411Session.Participation == TowerParticipation::Withdrawn &&
+                          P411Session.Attempts == P411Before.Examination.Attempts &&
+                          P411Session.Active == P411Before.Examination.Active &&
+                          P411Score.FloorsCleared == 2 && !P411Score.Completed && !P411Score.Ejected &&
+                          P411Score.ScorePoints == P411View.Result.ScorePoints &&
+                          P411Sim.State().Clock.Now() == CountdownEndInstant() + TowerWorldCapMinutes &&
+                          P411Last.To - P411Last.From == 120,
+                      "P411 time called retains only earlier floors and charges to the fixed hall deadline");
+            P2CExpect(P411Last.Events.size() >= 2 &&
+                          std::holds_alternative<ExamTransition>(P411Last.Events.front().Payload) &&
+                          std::holds_alternative<TimeAdvanced>(P411Last.Events.at(1).Payload),
+                      "P411 the single withdrawal event precedes its time charge");
+        }
+        else
+        {
+            WorldState P411Expected = P411Sim.State();
+            P411Expected.Examination = P411Preview.State;
+            P2CExpect(!P411Exit.TimeCalled && P411Exit.LateMinutes == 0 && P411Exit.Participation == P411Terminal &&
+                          P411Exit.OutsideMinutes == P411Preview.Resolution.OutsideMinutes &&
+                          SerialiseExamState(P411Sim.State()) == SerialiseExamState(P411Expected) &&
+                          P411Sim.State().Clock.Now() == CountdownEndInstant() + P411Exit.OutsideMinutes,
+                      "P411 punctual terminal state keeps P4-01 evidence bytes and its full time charge");
+        }
+
+        P2CExpect(ExamStateMatchesRunners(P411Sim.State().Examination, P411Runners, P411Before.WorldSeed, 0),
+                  "P411 terminal evidence replays against the bound runners");
+        const auto P411Hash = HashWorldState(P411Sim.State());
+        (void)P402Reload(w, P411Sim.State(), "P411 terminal save and reload preserve the hash");
+        WorldSim P411Resumed = w.Sim(P402Reload(w, P411Before, "P411 pre-terminal save and reload"), &P411Runners);
+        const CommandResult P411Again = S04Accept(P411Resumed, P411Choice, "P411 terminal choice after Continue");
+        const ExamTransition P411ResumedExit = P409One(P411Again, P411Exit.Kind, 0, "P411 Continue publishes one exit");
+        P2CExpect(HashWorldState(P411Resumed.State()) == P411Hash && P411ResumedExit.TimeCalled == P411Exit.TimeCalled &&
+                      P411ResumedExit.OutsideMinutes == P411Exit.OutsideMinutes,
+                  "P411 Continue reproduces the terminal hash and time-called outcome");
+        ReplayOptions P411Options = w.Replay(&P411Runners);
+        P411Options.KeepResults = true;
+        const ReplayResult P411Replay = ReplayCommandLogFromSnapshot(P411Start, P411Sim.Log(), P411Options);
+        P2CExpect(P411Replay.Complete && P411Replay.Hash == P411Hash && !P411Replay.Results.empty(),
+                  "P411 command replay reproduces the terminal hash");
+        const ExamTransition P411ReplayExit = P409One(P411Replay.Results.back(), P411Exit.Kind, 0,
+                                                    "P411 replay resolves a single terminal transition");
+        P2CExpect(P411ReplayExit.TimeCalled == P411Exit.TimeCalled && P411ReplayExit.OutsideMinutes == P411Exit.OutsideMinutes,
+                  "P411 replay retains the time-called flag and charge");
+        const CommandResult P411Duplicate = P411Resumed.Submit({CommandSource::Player, P411Choice});
+        P2CExpect(!P411Duplicate.Accepted && P411Duplicate.Events.empty() && HashWorldState(P411Resumed.State()) == P411Hash,
+                  "P411 a repeated terminal choice publishes nothing and preserves the hash");
     }
 }
 
@@ -363,6 +459,7 @@ int main(int argc, char** argv)
     P409Pure();
     P409LateWindow(world);
     P409ReducedClock(world);
+    P411LateFinish(world);
     P409Events(world);
     P409Retakes(world);
     P409AgeLimit(world);

@@ -8,6 +8,7 @@
 #include "Layout/Children.h"
 #include "Misc/AutomationTest.h"
 #include "Widgets/Text/STextBlock.h"
+#include "WorldExamSittings.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -321,7 +322,11 @@ bool FP410AgeLimitPanelTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("age refusal is returned"), P410Panel->P406TriggerAction(1));
     TestEqual(TEXT("one refused command"), P410Fake->Submitted.Num(), 1);
     const auto P410Text = P406TestAllText(P410Panel);
-    TestTrue(TEXT("age limit explains older than twenty"), P410Text.Contains(TEXT("older than twenty")));
+    const FString P411Age = FText::AsNumber(PerfectWorld::P409AgeLimitYears).ToString();
+    TestTrue(TEXT("age limit explains the maximum entry age"),
+        P410Text.Contains(FString::Printf(TEXT("older than %s"), *P411Age)));
+    TestTrue(TEXT("entry ends at the core age limit"),
+        P410Text.Contains(FString::Printf(TEXT("entry ends at age %s"), *P411Age)));
     TestTrue(TEXT("other qualifications remain available"), P410Text.Contains(TEXT("apprenticeships and adult qualification routes")));
     TestFalse(TEXT("age refusal ID is hidden"), P410Text.Contains(TEXT("exam.age_limit")));
     TestEqual(TEXT("refusal preserves the world projection"), FString(UTF8_TO_TCHAR(P410Fake->Model.World.SitRefusal.c_str())),
@@ -330,7 +335,9 @@ bool FP410AgeLimitPanelTest::RunTest(const FString& Parameters)
     P410Fake->Reply.Why.Code = "exam.missed";
     TestFalse(TEXT("missed window refusal is returned"), P410Panel->P406TriggerAction(1));
     const auto P410Missed = P406TestAllText(P410Panel);
-    TestTrue(TEXT("missed means past late entry"), P410Missed.Contains(TEXT("60-minute late-entry window has passed")));
+    const FString P411Window = FText::AsNumber(PerfectWorld::P409LateEntryMinutes).ToString();
+    TestTrue(TEXT("missed means past late entry"),
+        P410Missed.Contains(FString::Printf(TEXT("%s-minute late-entry window has passed"), *P411Window)));
     TestTrue(TEXT("annual opportunity stays visible"), P410Missed.Contains(TEXT("next annual sitting remains open")));
     TestFalse(TEXT("missed refusal ID is hidden"), P410Missed.Contains(TEXT("exam.missed")));
     return true;

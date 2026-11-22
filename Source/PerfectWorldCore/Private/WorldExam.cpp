@@ -302,14 +302,19 @@ std::optional<Rejection> WorldSim::ApplyExamCommand(const TowerSessionCommand& c
     const std::int64_t late = sat ? now - at : 0;
     const std::int64_t allowance = TowerWorldCapMinutes - late;
     bool timeCalled = false;
-    if (step.State.Participation == TowerParticipation::Entered && QueryTowerSession(step.State, {}).Result.OutsideMinutes > allowance)
+    if ((step.State.Participation == TowerParticipation::Entered || command.Kind == TowerSessionAction::Choose) &&
+        QueryTowerSession(step.State, {}).Result.OutsideMinutes > allowance)
     {
-        // P4-09: the late candidate's reduced allowance ran out; the hall's deadline does not move, so time is called.
+        // P411: a floor-finishing choice past the hall deadline earns no credit, even if it completes or ejects the
+        // candidate. Withdraw from its preceding beat so the unfinished floor remains valid for save and runner replay.
+        if (step.State.Attempts.size() > session.Attempts.size())
+            step.State = session;
         const TowerSessionResult called =
             ApplyTowerSession(step.State, P402Runners(Examination_), P402Command(TowerSessionAction::Withdraw), {}, now);
         if (!called.Ok())
             return P402FromIssue(called.Issue);
-        minutes = called.OutsideMinutes;
+        // The interrupted choice spends the remaining allowance, even when its final evidence was discarded.
+        minutes = allowance;
         timeCalled = true;
     }
     const bool finished = !P402ExamClosed(before) && P402ExamClosed(step.State.Participation);
