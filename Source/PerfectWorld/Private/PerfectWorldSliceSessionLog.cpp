@@ -129,7 +129,8 @@ struct FP509Writer
     TMap<FString, FString> SlotStamps; // worker only; never stores creation/identity/placement data
     bool Writable = false;
 
-    ~FP509Writer() { FPlatformProcess::ReturnSynchEventToPool(Wake); }
+    // No destructor: the writer is intentionally leaked (see P509Writer). Static teardown runs after the engine's
+    // synch-event pool is gone, and returning the event then crashed every packaged run at exit (0xC0000005).
 
     void Put(const TCHAR* Type, GameInstant At, uint64 Seq, const FString& Fields)
     {
@@ -230,21 +231,26 @@ struct FP509Writer
 
 FP509Writer& P509Writer()
 {
-    static TSharedRef<FP509Writer, ESPMode::ThreadSafe> Writer = []()
+    // Leaked on purpose: never destroyed during static teardown, when engine services are already gone.
+    static FP509Writer* Writer = []()
     {
-        auto New = MakeShared<FP509Writer, ESPMode::ThreadSafe>();
+        auto* New = new FP509Writer();
         New->Work = Async(EAsyncExecution::Thread, [New]() { New->Run(); });
         FCoreDelegates::OnPreExit.AddLambda([New]()
         {
             // Join only during engine shutdown, after play has ended, before modules/filesystem services unload.
+            if (New->Stopping.load()) return;
             New->Put(TEXT("session_end"), New->LastAt, New->LastSeq, FString());
             New->Stopping.store(true);
             New->Wake->Trigger();
             New->Work.Wait();
+            // The worker has returned; give the event back while the pool still exists.
+            FPlatformProcess::ReturnSynchEventToPool(New->Wake);
+            New->Wake = nullptr;
         });
         return New;
     }();
-    return Writer.Get();
+    return *Writer;
 }
 
 const TCHAR* P509Participation(TowerParticipation Kind)
