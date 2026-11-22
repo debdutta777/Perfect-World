@@ -49,7 +49,7 @@ constexpr std::int32_t TowerDisciplineSharePercent = 80;
 constexpr std::int32_t TowerDepthPoints = 1000;
 constexpr std::int32_t TowerDefeatPenaltyPoints = 500;
 constexpr std::int32_t TowerCohortCount = 1000; // includes the player
-/** The synthetic cohort spans the possible scores, a defeated first floor to a perfect climb. */
+/** The synthetic cohort's lowest peer is a defeated first floor (shape: Tower.cpp NationalRank). */
 constexpr std::int32_t TowerCohortMinPoints = -TowerDefeatPenaltyPoints;
 constexpr std::int32_t TowerWorldCapMinutes = 180;
 constexpr std::int32_t TowerWorldRatePermille = 250;

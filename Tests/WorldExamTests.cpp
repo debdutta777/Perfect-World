@@ -375,8 +375,19 @@ void P405RealExits(const P405World& w)
         for (int floor = 0; floor < cleared; ++floor) P405Floor(sim, w.Runners, P402Climb[floor]);
         P405Floor(sim, w.Runners, P402Climb[cleared], true);
         P2CExpect(sim.State().Examination.Participation == TowerParticipation::Ejected, "real mistakes eject");
-        P405Next(sim.ExaminationResult(), cleared == 0 ? "poor" : "middle");
+        // P5-15 cohort: an ejection after two clean floors (3500, rank 928) is poor, like a first-floor one.
+        P405Next(sim.ExaminationResult(), "poor");
     }
+    WorldState zero = w.Base.Morning;
+    zero.CountdownText.clear();
+    zero.Gates.erase(std::string(CountdownWorldEvent().GateId));
+    zero.Flags[std::string(AwakeningCountdownUnavailableFlag)] = true;
+    WorldSim middle = w.Sim(zero);
+    S04Accept(middle, P402Cmd(A::Enter), "sit before recovered mistakes");
+    for (const auto route : P402Climb) P405MiddleFloor(middle, w.Runners, route);
+    P2CExpect(middle.State().Examination.Participation == TowerParticipation::Completed &&
+        middle.ExaminationResult().Score.ScorePoints == 5547, "one recovered mistake per floor completes at 5547");
+    P405Next(middle.ExaminationResult(), "middle");
 }
 
 void P405ContentFreeExit(const P405World& w)

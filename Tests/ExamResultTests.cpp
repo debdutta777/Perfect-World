@@ -155,7 +155,8 @@ void P403Explanations(const P403ExamResult& result)
 }
 void P403Outcomes(const SchoolFollowupContent& content)
 {
-    std::array<TowerSessionState, 6> fixtures{P403Receipt(1000), P403Receipt(500), P403Receipt(1000), {}, {}, {}};
+    // P5-15 cohort: quality 900 on three floors is 5700, rank 300, decile 3 (middle).
+    std::array<TowerSessionState, 6> fixtures{P403Receipt(1000), P403Receipt(900), P403Receipt(1000), {}, {}, {}};
     fixtures[2].Participation = TowerParticipation::Ejected;
     fixtures[2].Attempts.resize(1);
     fixtures[2].Attempts.back().Defeated = true;
@@ -195,7 +196,8 @@ TowerRunnerCatalogue P403Runners()
         beat.Id = "p403.beat";
         beat.PromptTextKey = "p403.fixture.prompt";
         beat.Choices.push_back({"p403.safe", "p403.fixture.safe", 12, 1, 1, 1000, 1000});
-        beat.Choices.push_back({"p403.modest", "p403.fixture.modest", 12, 0, 0, 300, 400});
+        // Modest quality (80*900 + 20*800)/100 = 880: 5640, rank 360, decile 4 (middle) in the P5-15 cohort.
+        beat.Choices.push_back({"p403.modest", "p403.fixture.modest", 12, 0, 0, 900, 800});
         scenario.Beats.push_back(std::move(beat));
         catalogue.Scenarios.push_back(std::move(scenario));
     }
