@@ -53,12 +53,12 @@ WorldSaveError R94SErrorOf(const std::string& text)
 WorldSaveData R94SRoundTrip(const R94World& w, const WorldState& world, const char* what)
 {
     const std::string text = SerializeWorldSave(w.Save(world));
-    P2CExpect(!text.empty() && text.find("\"schemaVersion\": 13,") != std::string::npos && text.find("\"hashVersion\": 10,") != std::string::npos &&
+    P2CExpect(!text.empty() && text.find("\"schemaVersion\": 14,") != std::string::npos && text.find("\"hashVersion\": 10,") != std::string::npos &&
                   text.find("\"awakening\": \"pw.awakening/1\\n") != std::string::npos,
               what);
     WorldSaveData loaded;
     const WorldSaveResult result = DeserializeWorldSave(text, loaded);
-    P2CExpect(result.Succeeded() && result.HashVerified && result.SourceVersion == 13 && !result.Migrated, what);
+    P2CExpect(result.Succeeded() && result.HashVerified && result.SourceVersion == WorldSaveSchemaVersion && !result.Migrated, what);
     P2CExpect(SerialiseAwakeningState(loaded.World) == SerialiseAwakeningState(world) && loaded.World.CountdownText == world.CountdownText &&
                   loaded.World.Tutorial == world.Tutorial && HashWorldState(loaded.World) == HashWorldState(world),
               what);
@@ -205,13 +205,19 @@ void R94SLegacy(const R94World& w)
     const std::string migrated = SerializeWorldSave(loaded);
     if (const char* path = std::getenv("PW_WRITE_MIGRATED"); path != nullptr && path[0] != '\0')
         R94SWrite(path, migrated);
-    const std::string frozen = R94SRead(dir + "/world_v11_doors_29_migrated_v13.json");
-    P2CExpect(migrated == frozen, "the migration produces exactly the frozen expected v13 save");
+    const std::string frozen = R94SRead(dir + "/world_v11_doors_29_migrated_v14.json");
+    P2CExpect(migrated == frozen, "the migration produces exactly the frozen expected v14 save");
     WorldSaveData frozenLoaded;
     const WorldSaveResult frozenResult = DeserializeWorldSave(frozen, frozenLoaded);
-    P2CExpect(frozenResult.Succeeded() && frozenResult.HashVerified && frozenResult.SourceVersion == 13 &&
+    P2CExpect(frozenResult.Succeeded() && frozenResult.HashVerified && frozenResult.SourceVersion == 14 &&
                   HashWorldState(frozenLoaded.World) == HashWorldState(loaded.World),
-              "the expected migrated save is a certified v13 world");
+              "the expected migrated save is a certified v14 world");
+    // P5-03: P4-02's own v13 output is now historical: authenticated in hash 10, unverified, the same world.
+    WorldSaveData p402Loaded;
+    const WorldSaveResult p402Result = DeserializeWorldSave(R94SRead(dir + "/world_v11_doors_29_migrated_v13.json"), p402Loaded);
+    P2CExpect(p402Result.Succeeded() && !p402Result.HashVerified && p402Result.SourceVersion == 13 &&
+                  HashWorldState(p402Loaded.World) == HashWorldState(loaded.World),
+              "P4-02's v13 output authenticates its hash-10 checksum and loads unverified");
     // P4-02: R9-04's own v12 output is now historical: authenticated in hash 9, unverified, the same world.
     WorldSaveData r94Loaded;
     const WorldSaveResult r94Result = DeserializeWorldSave(R94SRead(dir + "/world_v11_doors_29_migrated_v12.json"), r94Loaded);
@@ -240,7 +246,7 @@ void R94SLegacy(const R94World& w)
     std::string v11 = SerializeWorldSave(w.Save(lived));
     const std::size_t key = v11.find(",\n    \"awakening\": ");
     v11 = v11.substr(0, key) + v11.substr(v11.find("\n  }", key));
-    v11 = R94SReplace(v11, "\"schemaVersion\": 13,", "\"schemaVersion\": 11,");
+    v11 = R94SReplace(v11, "\"schemaVersion\": " + std::to_string(WorldSaveSchemaVersion) + ",", "\"schemaVersion\": 11,");
     v11 = R94SReplace(v11, "\"hashVersion\": 10,", "\"hashVersion\": 8,");
     const std::uint64_t old = HashWorldStateWithDoorsText(lived, SerialiseDoorState(lived.Doors), 8);
     v11 = R94SReplace(v11, "\"stateHash\": \"" + R94Hex(HashWorldState(lived)) + "\"", "\"stateHash\": \"" + R94Hex(old) + "\"");

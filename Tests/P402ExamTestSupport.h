@@ -121,7 +121,7 @@ inline std::string P402SaveText(const P402World& w, const PerfectWorld::WorldSta
     return PerfectWorld::SerializeWorldSave(w.W.Save(world));
 }
 
-/** Save, load, demand v13 and a verified hash, and return the loaded world. */
+/** Save, load, demand the current schema and a verified hash, and return the loaded world. */
 inline PerfectWorld::WorldState P402Reload(const P402World& w, const PerfectWorld::WorldState& world, std::string_view what)
 {
     using namespace PerfectWorld;
@@ -130,7 +130,7 @@ inline PerfectWorld::WorldState P402Reload(const P402World& w, const PerfectWorl
     const WorldSaveResult result = DeserializeWorldSave(text, loaded);
     if (!result.Succeeded())
         std::cerr << "reload: " << result.Message << '\n';
-    P2CExpect(!text.empty() && result.Succeeded() && result.HashVerified && result.SourceVersion == 13 &&
+    P2CExpect(!text.empty() && result.Succeeded() && result.HashVerified && result.SourceVersion == WorldSaveSchemaVersion &&
                   HashWorldState(loaded.World) == HashWorldState(world) && loaded.World.Examination == world.Examination,
               what);
     return loaded.World;

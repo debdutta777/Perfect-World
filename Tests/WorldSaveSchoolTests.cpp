@@ -58,7 +58,7 @@ std::string S04Hex(std::uint64_t value)
 WorldState S04RoundTrip(const S04World& w, const WorldState& world, const char* what)
 {
     const std::string text = SerializeWorldSave(w.Save(world));
-    P2CExpect(!text.empty() && text.find("\"schemaVersion\": 13,") != std::string::npos && text.find("\"hashVersion\": 10,") != std::string::npos &&
+    P2CExpect(!text.empty() && text.find("\"schemaVersion\": 14,") != std::string::npos && text.find("\"hashVersion\": 10,") != std::string::npos &&
                   text.find("\"school\": \"pw.school/1\\n") != std::string::npos,
               what);
     WorldSaveData back;
@@ -240,13 +240,19 @@ void S04Legacy(const S04World& w)
     const std::string migrated = SerializeWorldSave(loaded);
     if (const char* path = std::getenv("PW_WRITE_MIGRATED"); path != nullptr && path[0] != '\0')
         S04WriteFile(path, migrated);
-    const std::string frozen = S04ReadFile(dir + "/world_v10_doors_29_migrated_v13.json");
-    P2CExpect(migrated == frozen, "the migration produces exactly the frozen expected v13 save");
+    const std::string frozen = S04ReadFile(dir + "/world_v10_doors_29_migrated_v14.json");
+    P2CExpect(migrated == frozen, "the migration produces exactly the frozen expected v14 save");
     WorldSaveData frozenLoaded;
     const WorldSaveResult frozenResult = DeserializeWorldSave(frozen, frozenLoaded);
-    P2CExpect(frozenResult.Succeeded() && frozenResult.HashVerified && frozenResult.SourceVersion == 13 &&
+    P2CExpect(frozenResult.Succeeded() && frozenResult.HashVerified && frozenResult.SourceVersion == 14 &&
                   HashWorldState(frozenLoaded.World) == HashWorldState(loaded.World),
-              "the expected migrated save is a certified v13 world");
+              "the expected migrated save is a certified v14 world");
+    // P5-03: P4-02's v13 output is now a historical save: authenticated in hash 10, unverified, the same world.
+    WorldSaveData p402Loaded;
+    const WorldSaveResult p402Result = DeserializeWorldSave(S04ReadFile(dir + "/world_v10_doors_29_migrated_v13.json"), p402Loaded);
+    P2CExpect(p402Result.Succeeded() && !p402Result.HashVerified && p402Result.SourceVersion == 13 &&
+                  HashWorldState(p402Loaded.World) == HashWorldState(loaded.World),
+              "P4-02's v13 output authenticates its hash-10 checksum and loads unverified");
     // P4-02: R9-04's v12 output is now a historical save: authenticated in hash 9, unverified, the same world.
     WorldSaveData r94Loaded;
     const WorldSaveResult r94Result = DeserializeWorldSave(S04ReadFile(dir + "/world_v10_doors_29_migrated_v12.json"), r94Loaded);
@@ -289,7 +295,7 @@ void S04Legacy(const S04World& w)
     std::string v10 = SerializeWorldSave(lived);
     const std::size_t key = v10.find(",\n    \"school\": ");
     v10 = v10.substr(0, key) + v10.substr(v10.find("\n  }", key));
-    v10 = S04Replace(v10, "\"schemaVersion\": 13,", "\"schemaVersion\": 10,");
+    v10 = S04Replace(v10, "\"schemaVersion\": " + std::to_string(WorldSaveSchemaVersion) + ",", "\"schemaVersion\": 10,");
     v10 = S04Replace(v10, "\"hashVersion\": 10,", "\"hashVersion\": 7,");
     const std::uint64_t old = HashWorldStateWithDoorsText(lived.World, SerialiseDoorState(lived.World.Doors), 7);
     v10 = S04Replace(v10, "\"stateHash\": \"" + S04Hex(HashWorldState(lived.World)) + "\"", "\"stateHash\": \"" + S04Hex(old) + "\"");

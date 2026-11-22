@@ -37,6 +37,8 @@ namespace PerfectWorld
  * 8 (2026-11-07, S04): appends school, the canonical pw.school/1 text of the three school slices (SerialiseSchoolState).
  * 9 (2026-11-09, R9-04): appends awakening, the canonical pw.awakening/1 text of the four Round 9 slices (SerialiseAwakeningState).
  * 10 (2026-11-15, P4-02): appends examination, the canonical pw.examination/1 text of the examination (SerialiseExamState).
+ *    P4-09 (/2, earlier sittings) and P5-03 (/3, follow-up records, world v14) extend that text only when present, so every
+ *    world without them hashes exactly as before and version 10 stands; the examination section covers the follow-ups.
  */
 constexpr std::uint32_t WorldHashVersion = 10;
 

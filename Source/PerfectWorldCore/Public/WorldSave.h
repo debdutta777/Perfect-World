@@ -132,8 +132,18 @@ struct CommerceContent;
  * WorldState::Examination (format and rules in WorldExam.h: SerialiseExamState, IsExamStateValidInWorld). Every v6 to v12
  * world loads Unset: no sitting, deferral or result is invented. Historical v12/hash-v9 is authenticated with its original
  * twelve-section encoding first and loads unverified; its first v13 save is certified.
+ *
+ * v14 (P5-03) moves examination follow-up progress out of the generic flag map into typed records inside the examination
+ * text (pw.examination/3 only when there are any: WorldExam.h, WorldState::ExaminationFollowups), so a world without
+ * follow-ups keeps its v13 bytes apart from the version, and its hash (hash version 10 unchanged). A v14 world refuses any
+ * reserved p407u.followup.* flag and v13 refuses /3. Every v6 to v13 world is authenticated first (v13 with hash 10) and
+ * then migrates its P4-07 flags by P503MigrateLegacyFollowupFlags: reservations and paid attendance only, never a task
+ * completion; contradictory or ambiguous flags refuse the load (InvalidWorld) and the file is never rewritten. A v13 world
+ * loads unverified; its first v14 save is certified.
  */
-constexpr std::int32_t WorldSaveSchemaVersion = 13;
+constexpr std::int32_t WorldSaveSchemaVersion = 14;
+/** P5-03: the last schema that spelled follow-up progress as reserved world flags; v6 to v13 migrate them on load. */
+constexpr std::int32_t WorldSaveLastFollowupFlagsVersion = 13;
 /** P4-02: the last schema without the examination: v6 to v12 load Unset (undecided), with no sitting or result. */
 constexpr std::int32_t WorldSaveLastWithoutExamVersion = 12;
 /** R9-04: the last schema without the Awakening slices: v6 to v11 load unseeded, with no session, countdown or profile. */
