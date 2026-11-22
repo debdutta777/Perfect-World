@@ -1,11 +1,15 @@
 #include "WorldExam.h"
 
 #include "OpportunityReceipts.h"
+#include "WorldExamFollowup.h"
 #include "WorldExamSittings.h"
 #include "WorldSaveInternal.h"
 
 #include <algorithm>
 #include <limits>
+#include <map>
+#include <set>
+#include <tuple>
 #include <utility>
 
 // P4-02: the pw.examination/1 envelope (format in WorldExam.h), the content-free rules the examination keeps inside its world,
@@ -20,6 +24,7 @@ namespace
 {
 constexpr std::string_view P402Header = "pw.examination/1";
 constexpr std::string_view P409Header = "pw.examination/2";
+constexpr std::string_view P503Header = "pw.examination/3";
 
 bool P402Id(std::string_view id) { return IsReceiptIdWellFormed(id); }
 
@@ -74,11 +79,19 @@ std::string P402Body(const TowerSessionState& s, bool& ok)
  * P4-09: pw.examination/1 (header, the current body, end) while there is no earlier sitting, byte for byte P4-02's format;
  * otherwise pw.examination/2, "sittings=<n>", the n earlier bodies in sitting order, then the current body and end.
  */
-std::string P402Encode(const std::vector<TowerSessionState>& earlier, const TowerSessionState& s)
+std::string P402Encode(const std::vector<TowerSessionState>& earlier, const TowerSessionState& s,
+    const std::vector<P503FollowupRecord>& followups)
 {
-    bool ok = earlier.size() <= P409MaxSitting;
+    bool ok = earlier.size() <= P409MaxSitting && followups.size() <= P503MaxFollowupRecords;
     std::string out;
-    if (earlier.empty())
+    if (!followups.empty())
+    {
+        // P5-03: /3 always names its earlier sittings, possibly none, so one header covers every follow-up world.
+        out = std::string(P503Header) + "\nsittings=" + P402Num(earlier.size()) + '\n';
+        for (const TowerSessionState& e : earlier)
+            out += P402Body(e, ok);
+    }
+    else if (earlier.empty())
         out = std::string(P402Header) + '\n';
     else
     {
@@ -86,7 +99,33 @@ std::string P402Encode(const std::vector<TowerSessionState>& earlier, const Towe
         for (const TowerSessionState& e : earlier)
             out += P402Body(e, ok);
     }
-    out += P402Body(s, ok) + "end\n";
+    out += P402Body(s, ok);
+    if (!followups.empty())
+    {
+        out += "followups=" + P402Num(followups.size()) + '\n';
+        for (const P503FollowupRecord& r : followups)
+        {
+            ok = ok && P402Id(r.AppointmentId) && r.Sessions.size() <= P503MaxFollowupSessions;
+            out += "followup=" + P402Num(r.Sitting) + ',' + r.AppointmentId + ',' + P402Num(r.Revision) + ',' +
+                   P402Num(r.Sessions.size()) + '\n';
+            for (const P503FollowupSession& session : r.Sessions)
+            {
+                ok = ok && session.At >= 0 && static_cast<unsigned>(session.State) <= static_cast<unsigned>(P503SessionState::Released);
+                out += "session=" + P402Num(session.Generation) + ',' + P402Num(session.At) + ',' +
+                       P402Num(static_cast<unsigned>(session.State)) + '\n';
+            }
+            if (!r.Completion)
+                out += "completion=none\n";
+            else
+            {
+                const P503FollowupCompletion& c = *r.Completion;
+                ok = ok && P402Id(c.TaskId) && P402Id(c.ChoiceId) && c.CompletedAt >= 0 && !c.Records.empty();
+                out += "completion=" + P402Num(c.Generation) + ',' + c.TaskId + ',' + c.ChoiceId + ',' + P402Num(c.CompletedAt) +
+                       ',' + P402Joined(c.Records, ok) + '\n';
+            }
+        }
+    }
+    out += "end\n";
     return ok ? out : std::string{};
 }
 
@@ -220,7 +259,60 @@ bool P402DecodeBody(const std::vector<std::string_view>& lines, std::size_t& at,
 }
 
 /** Version-gated: /1 holds the current session only; /2 adds "sittings=<n>" (1..P409MaxSitting) earlier bodies first. */
-bool P402Decode(std::string_view text, std::vector<TowerSessionState>& earlier, TowerSessionState& s)
+/** P5-03: the follow-up records after the current body; the count, sessions and records are bounded before allocating. */
+bool P503DecodeFollowups(const std::vector<std::string_view>& lines, std::size_t& at, std::vector<P503FollowupRecord>& out)
+{
+    std::string_view v;
+    const auto next = [&](std::string_view key) { return at < lines.size() && P402Value(lines[at++], key, v); };
+    std::size_t count = 0;
+    if (!next("followups") || !P402Read(v, count, std::uint64_t{P503MaxFollowupRecords}) || count == 0)
+        return false;
+    out.resize(count);
+    for (P503FollowupRecord& r : out)
+    {
+        if (!next("followup"))
+            return false;
+        const auto f = P402Split(v, ',');
+        std::size_t sessions = 0;
+        if (f.size() != 4 || !P402Read(f[0], r.Sitting, std::uint64_t{P409MaxSitting}) || !P402Id(f[1]) ||
+            !P402Read(f[2], r.Revision) || !P402Read(f[3], sessions, std::uint64_t{P503MaxFollowupSessions}) || sessions == 0)
+            return false;
+        r.AppointmentId = std::string(f[1]);
+        r.Sessions.resize(sessions);
+        for (P503FollowupSession& session : r.Sessions)
+        {
+            if (!next("session"))
+                return false;
+            const auto g = P402Split(v, ',');
+            unsigned state = 0;
+            if (g.size() != 3 || !P402Read(g[0], session.Generation) || !P402Read(g[1], session.At) ||
+                !P402Read(g[2], state, static_cast<unsigned>(P503SessionState::Released)))
+                return false;
+            session.State = static_cast<P503SessionState>(state);
+        }
+        if (at >= lines.size())
+            return false;
+        if (lines[at] == "completion=none")
+        {
+            ++at;
+            continue;
+        }
+        if (!next("completion"))
+            return false;
+        const auto c = P402Split(v, ',');
+        P503FollowupCompletion done;
+        if (c.size() != 5 || !P402Read(c[0], done.Generation) || !P402Id(c[1]) || !P402Id(c[2]) || !P402Read(c[3], done.CompletedAt) ||
+            c[4].empty() || P402Split(c[4], ';').size() > P503MaxCompletionRecords || !P402Choices(c[4], done.Records))
+            return false;
+        done.TaskId = std::string(c[1]);
+        done.ChoiceId = std::string(c[2]);
+        r.Completion = std::move(done);
+    }
+    return true;
+}
+
+bool P402Decode(std::string_view text, std::vector<TowerSessionState>& earlier, TowerSessionState& s,
+    std::vector<P503FollowupRecord>& followups)
 {
     if (text.size() < 2 || text.back() != '\n')
         return false;
@@ -229,12 +321,13 @@ bool P402Decode(std::string_view text, std::vector<TowerSessionState>& earlier, 
     if (lines.empty())
         return false;
     const std::string_view header = lines[at++];
-    if (header == P409Header)
+    const bool withFollowups = header == P503Header;
+    if (header == P409Header || withFollowups)
     {
         std::string_view v;
         std::size_t count = 0;
         if (at >= lines.size() || !P402Value(lines[at++], "sittings", v) || !P402Read(v, count, std::uint64_t{P409MaxSitting}) ||
-            count == 0)
+            (count == 0 && !withFollowups))
             return false;
         earlier.resize(count);
         for (TowerSessionState& e : earlier)
@@ -245,8 +338,101 @@ bool P402Decode(std::string_view text, std::vector<TowerSessionState>& earlier, 
         return false;
     if (!P402DecodeBody(lines, at, s))
         return false;
+    if (withFollowups && !P503DecodeFollowups(lines, at, followups))
+        return false;
     return at + 1 == lines.size() && lines[at] == "end";
 }
+
+bool P503Open(P503SessionState state)
+{
+    return state == P503SessionState::Booked || state == P503SessionState::Arrived || state == P503SessionState::Active ||
+           state == P503SessionState::Paused;
+}
+
+/** The session of `sitting` (an earlier one or the current one); null past the current sitting. */
+const TowerSessionState* P503SittingSession(const WorldState& world, std::uint32_t sitting)
+{
+    const std::uint32_t current = P409CurrentSitting(world);
+    if (sitting > current)
+        return nullptr;
+    return sitting == current ? &world.Examination : &world.ExaminationEarlier[sitting];
+}
+
+bool P503Decided(const WorldState& world, std::uint32_t sitting)
+{
+    const TowerSessionState* session = P503SittingSession(world, sitting);
+    return session != nullptr && session->Participation != TowerParticipation::Unset &&
+           session->Participation != TowerParticipation::Entered;
+}
+
+bool P503RecordValid(const WorldState& world, const P503FollowupRecord& r)
+{
+    const GameInstant now = world.Clock.Now();
+    if (!P503Decided(world, r.Sitting) || !r.AppointmentId.starts_with("appointment.") || !P402Id(r.AppointmentId) ||
+        r.Sessions.empty() || r.Sessions.size() > P503MaxFollowupSessions)
+        return false;
+    const GameInstant opened = P409SittingAt(r.Sitting);
+    std::uint64_t previous = 0;
+    std::size_t paid = 0;
+    std::size_t completed = 0;
+    for (std::size_t i = 0; i < r.Sessions.size(); ++i)
+    {
+        const P503FollowupSession& s = r.Sessions[i];
+        const bool last = i + 1 == r.Sessions.size();
+        if (s.Generation <= previous || s.Generation > r.Revision || s.At < opened || s.At > DayLoopMaxInstant ||
+            static_cast<unsigned>(s.State) > static_cast<unsigned>(P503SessionState::Released))
+            return false;
+        previous = s.Generation;
+        if (P503Open(s.State) && !last)
+            return false; // At most one open session, and it is the newest.
+        if (s.State != P503SessionState::Booked && P503Open(s.State) && s.At > now)
+            return false; // Arrival happens at the booked instant.
+        if (s.State == P503SessionState::Paid && (s.At > now || ++paid > 1))
+            return false;
+        if (s.State == P503SessionState::Completed && (!last || ++completed > 1))
+            return false;
+    }
+    if (completed == 0)
+        return !r.Completion;
+    if (!r.Completion)
+        return false;
+    const P503FollowupCompletion& c = *r.Completion;
+    const P503FollowupSession& done = r.Sessions.back();
+    return c.Generation == done.Generation && P503IsTaskChoice(c.TaskId, c.ChoiceId) && !c.Records.empty() &&
+           c.Records.size() <= P503MaxCompletionRecords &&
+           std::all_of(c.Records.begin(), c.Records.end(), [](const std::string& id) { return P402Id(id); }) &&
+           c.CompletedAt >= done.At && c.CompletedAt <= now;
+}
+
+} // namespace
+
+bool P503IsReservedFollowupFlag(std::string_view id) noexcept
+{
+    return id.starts_with(P407UFollowupFlagPrefix);
+}
+
+bool P503FollowupsValidInWorld(const WorldState& world)
+{
+    const auto& records = world.ExaminationFollowups;
+    if (records.size() > P503MaxFollowupRecords)
+        return false;
+    for (std::size_t i = 0; i < records.size(); ++i)
+    {
+        if (!P503RecordValid(world, records[i]))
+            return false;
+        if (i > 0 && std::tie(records[i - 1].Sitting, records[i - 1].AppointmentId) >= std::tie(records[i].Sitting, records[i].AppointmentId))
+            return false;
+        // No repeat reward: one task completion per appointment in the whole life, across sittings.
+        if (records[i].Completion)
+            for (std::size_t j = 0; j < i; ++j)
+                if (records[j].Completion && records[j].AppointmentId == records[i].AppointmentId)
+                    return false;
+    }
+    return true;
+}
+
+namespace
+{
 
 } // namespace
 
@@ -259,34 +445,40 @@ bool IsExamStateValidInWorld(const WorldState& world)
     for (std::uint32_t sitting = 0; sitting < current; ++sitting)
         if (!P409SessionValidInWorld(world, world.ExaminationEarlier[sitting], sitting, false))
             return false;
-    return P409SessionValidInWorld(world, world.Examination, current, true);
+    return P409SessionValidInWorld(world, world.Examination, current, true) && P503FollowupsValidInWorld(world);
 }
 
 std::string SerialiseExamState(const WorldState& world)
 {
     if (!IsExamStateValidInWorld(world))
         return {};
-    return P402Encode(world.ExaminationEarlier, world.Examination);
+    return P402Encode(world.ExaminationEarlier, world.Examination, world.ExaminationFollowups);
 }
 
 bool DeserialiseExamState(std::string_view text, WorldState& world)
 {
     std::vector<TowerSessionState> earlier;
     TowerSessionState decoded;
-    if (!P402Decode(text, earlier, decoded) || P402Encode(earlier, decoded) != text)
+    std::vector<P503FollowupRecord> followups;
+    if (!P402Decode(text, earlier, decoded, followups) || P402Encode(earlier, decoded, followups) != text)
         return false;
     WorldState staged = world;
     staged.Examination = std::move(decoded);
     staged.ExaminationEarlier = std::move(earlier);
+    staged.ExaminationFollowups = std::move(followups);
     if (!IsExamStateValidInWorld(staged))
         return false;
     world.Examination = std::move(staged.Examination);
     world.ExaminationEarlier = std::move(staged.ExaminationEarlier);
+    world.ExaminationFollowups = std::move(staged.ExaminationFollowups);
     return true;
 }
 
 std::string WorldSaveWriteExam(const WorldState& world)
 {
+    // P5-03: the reserved follow-up flags are a pre-v14 spelling only; a world still holding them is not saved.
+    if (const auto it = world.Flags.lower_bound(P407UFollowupFlagPrefix); it != world.Flags.end() && P503IsReservedFollowupFlag(it->first))
+        return {};
     const std::string text = SerialiseExamState(world);
     return text.empty() ? std::string{} : ",\n    \"examination\": " + WorldSaveQuoted(text);
 }
@@ -298,13 +490,124 @@ WorldSaveResult WorldSaveReadExam(const JsonValue& value, WorldState& world, std
         // No sitting, deferral or result is inferred from anything an older world kept: those lives are undecided.
         world.Examination = {};
         world.ExaminationEarlier.clear();
+        world.ExaminationFollowups.clear();
         return {};
     }
     const JsonValue* exam = value.Find("examination");
     if (exam == nullptr || !exam->IsString())
         return WorldSaveInvalid("the examination section has the wrong type.");
+    // P5-03: v13 never wrote follow-up records; its reserved flags migrate after the hash (P503MigrateLegacyFollowupFlags).
+    if (version <= WorldSaveLastFollowupFlagsVersion && exam->String.starts_with(P503Header))
+        return WorldSaveInvalid("the examination holds follow-up records this version never wrote.");
     if (!DeserialiseExamState(exam->String, world))
         return WorldSaveInvalid("the examination is damaged or does not fit this world.");
+    if (version > WorldSaveLastFollowupFlagsVersion)
+    {
+        const auto reserved = world.Flags.lower_bound(P407UFollowupFlagPrefix);
+        if (reserved != world.Flags.end() && P503IsReservedFollowupFlag(reserved->first))
+            return WorldSaveInvalid("a world flag claims follow-up authority that only the examination section holds.");
+    }
     return {};
+}
+bool P503MigrateLegacyFollowupFlags(WorldState& world, std::string& why)
+{
+    struct Legacy
+    {
+        std::map<GameInstant, bool> Book;
+        std::set<GameInstant> Done;
+    };
+    const auto refuse = [&](std::string reason) {
+        why = std::move(reason);
+        return false;
+    };
+    std::map<std::string, Legacy> byAppointment;
+    std::vector<std::string> keys;
+    for (auto it = world.Flags.lower_bound(P407UFollowupFlagPrefix); it != world.Flags.end() && P503IsReservedFollowupFlag(it->first); ++it)
+    {
+        keys.push_back(it->first);
+        const std::string_view rest = std::string_view(it->first).substr(P407UFollowupFlagPrefix.size());
+        if (rest.find(".p502.") != std::string_view::npos)
+            return refuse("a provisional P5-02 task flag (" + it->first + ") was never a released save format.");
+        const std::size_t book = rest.rfind(".book.");
+        const std::size_t done = rest.rfind(".done.");
+        if (book == std::string_view::npos && done == std::string_view::npos)
+            return refuse("the follow-up flag " + it->first + " is not a reservation or an attendance.");
+        const bool isBook = done == std::string_view::npos || (book != std::string_view::npos && book > done);
+        const std::size_t at = isBook ? book : done;
+        const std::string_view appointment = rest.substr(0, at);
+        GameInstant instant = 0;
+        if (!appointment.starts_with("appointment.") || !P402Id(appointment) || !P402Read(rest.substr(at + 6), instant) ||
+            instant > DayLoopMaxInstant)
+            return refuse("the follow-up flag " + it->first + " is not in the canonical P4-07 spelling.");
+        Legacy& legacy = byAppointment[std::string(appointment)];
+        if (isBook)
+            legacy.Book[instant] = it->second;
+        else if (!it->second)
+            return refuse("an attendance flag is false, which P4-07 never wrote (" + it->first + ").");
+        else
+            legacy.Done.insert(instant);
+    }
+    if (keys.empty())
+        return true;
+    if (!world.ExaminationFollowups.empty())
+        return refuse("a world holds both follow-up flags and follow-up records.");
+    const std::uint32_t current = P409CurrentSitting(world);
+    const auto attribute = [&](GameInstant at, std::uint32_t& sitting) {
+        std::size_t candidates = 0;
+        for (std::uint32_t s = 0; s <= current; ++s)
+            if (P503Decided(world, s) && P409SittingAt(s) <= at)
+            {
+                sitting = s;
+                ++candidates;
+            }
+        return candidates == 1;
+    };
+    WorldState staged = world;
+    for (const std::string& key : keys)
+        staged.Flags.erase(key);
+    std::map<std::pair<std::uint32_t, std::string>, P503FollowupRecord> records;
+    for (const auto& [appointment, legacy] : byAppointment)
+    {
+        std::vector<GameInstant> live;
+        for (const auto& [at, value] : legacy.Book)
+            if (value)
+                live.push_back(at);
+        if (live.size() > 1)
+            return refuse(appointment + " holds two live reservations, which P4-07 never wrote.");
+        if (legacy.Done.size() > 1)
+            return refuse(appointment + " holds two attendances, which P4-07 never wrote.");
+        if (!legacy.Done.empty() && (live.size() != 1 || live.front() != *legacy.Done.begin()))
+            return refuse(appointment + " holds an attendance without its own reservation, which P4-07 never wrote.");
+        if (!legacy.Done.empty() && *legacy.Done.begin() > world.Clock.Now())
+            return refuse(appointment + " holds an attendance after the saved clock.");
+        // Terminal history first, in instant order, then the one live reservation: generations record order of creation only.
+        std::vector<P503FollowupSession> sessions;
+        for (const auto& [at, value] : legacy.Book)
+            if (!value)
+                sessions.push_back({0, at, P503SessionState::Released});
+        if (!legacy.Done.empty())
+            sessions.push_back({0, *legacy.Done.begin(), P503SessionState::Paid});
+        std::stable_sort(sessions.begin(), sessions.end(), [](const auto& a, const auto& b) { return a.At < b.At; });
+        if (legacy.Done.empty() && !live.empty())
+            sessions.push_back({0, live.front(), P503SessionState::Booked});
+        for (P503FollowupSession& session : sessions)
+        {
+            std::uint32_t sitting = 0;
+            if (!attribute(session.At, sitting))
+                return refuse(appointment + " at " + std::to_string(session.At) +
+                              " cannot be attributed to exactly one decided sitting; the original save is kept.");
+            P503FollowupRecord& record = records[{sitting, appointment}];
+            record.Sitting = sitting;
+            record.AppointmentId = appointment;
+            session.Generation = ++record.Revision;
+            record.Sessions.push_back(session);
+        }
+    }
+    for (auto& [key, record] : records)
+        staged.ExaminationFollowups.push_back(std::move(record));
+    if (!P503FollowupsValidInWorld(staged))
+        return refuse("the migrated follow-up records break a rule of this world.");
+    world = std::move(staged);
+    return true;
 }
 } // namespace PerfectWorld

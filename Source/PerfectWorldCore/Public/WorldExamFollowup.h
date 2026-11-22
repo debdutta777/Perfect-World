@@ -5,6 +5,11 @@
 #include "SchoolFollowupContent.h"
 
 #include <optional>
+#include <string_view>
+
+#ifndef PERFECTWORLDCORE_API
+#define PERFECTWORLDCORE_API
+#endif
 
 namespace PerfectWorld
 {
@@ -48,15 +53,18 @@ struct P407UFollowupView
     /** Changes on each accepted task transition, including a same-instant cancel/rebook. */
     std::uint64_t P502Revision = 0;
 };
-/** Reservations and attendance use the existing saved/hashed world flag map.
- * Keys: p407u.followup.<appointmentId>.book.<instant> and .done.<instant>.
- * Book is free; attendance-only records charge the authored duration once. An
- * expired booking can be replaced; Cancel releases an optional reservation.
- * No admissions, retake registration, learning or financial awards are implied.
+/**
+ * P5-03: follow-up progress lives in WorldState::ExaminationFollowups, one record per (sitting, appointment), saved inside
+ * the examination section (world v14) and hashed with it. Rows show the current sitting's result only; records of earlier
+ * sittings stay as history and never reopen. Book is free and appends a session (an expired open session becomes Missed);
+ * Cancel ends the open session; attendance-only records charge the authored duration once (Paid). For a task, Attend is
+ * arrival only and Resolve charges the disclosed duration once, recording one receipt and an immutable completion snapshot.
+ * A task appointment completes at most once in the whole life. A migrated pre-v14 Paid session is paid attendance, shown
+ * as LegacyAttendance on a task row, and never a completion; a fresh task session can be booked after it. Every accepted
+ * task transition advances the record's revision. No admissions, retake registration, learning or financial awards.
  */
+/** The reserved pre-v14 flag namespace: generic SetWorldFlag refuses it and a v14 world may not hold it. */
 inline constexpr std::string_view P407UFollowupFlagPrefix = "p407u.followup.";
-/** P502 task flags are provisional, pending P5-03 validation/migration. No save schema or hash change here.
- * Selected task attendance is arrival only; Resolve charges the disclosed duration and records one receipt.
- * Legacy .done flags remain paid attendance and never imply a completed task. Cancel/Leave earn nothing.
- */
+/** True when `choice` is one of the supported P502 task's stable choice IDs (content-free; used by the save rules). */
+[[nodiscard]] PERFECTWORLDCORE_API bool P503IsTaskChoice(std::string_view task, std::string_view choice) noexcept;
 } // namespace PerfectWorld

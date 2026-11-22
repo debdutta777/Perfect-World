@@ -4,33 +4,20 @@
 
 #include "KnownCommitments.h"
 #include "LaneJournal.h"
+#include "WorldExam.h"
 #include "WorldExamSittings.h"
 
 #include <algorithm>
 #include <charconv>
 #include <limits>
+#include <tuple>
 
 namespace PerfectWorld
 {
 namespace
 {
-std::string P407UKey(const SchoolFollowupAction& action, std::string_view kind)
-{
-    return std::string(P407UFollowupFlagPrefix) + action.AppointmentId + std::string(kind);
-}
-
-bool P407UFlag(const WorldState& state, const std::string& key)
-{
-    const auto found = state.Flags.find(key);
-    return found != state.Flags.end() && found->second;
-}
-
-std::string P502Scope(const WorldState& state, const SchoolFollowupAction& action)
-{
-    return P407UKey(action, ".p502.s") + std::to_string(P409CurrentSitting(state)) + ".";
-}
-
-std::vector<P502TaskChoice> P502Choices(const WorldState& state, std::string_view task)
+/** The supported P502 task variants and their stable choices, before any result-dependent record is appended. */
+std::vector<P502TaskChoice> P502ChoiceTable(std::string_view task)
 {
     if (task == "term_plan") return {
         {"explore_study", {"term.explore.study", "term.decline.hunter_enquiry"}},
@@ -42,17 +29,9 @@ std::vector<P502TaskChoice> P502Choices(const WorldState& state, std::string_vie
     if (task == "practical_step") return {
         {"reseat_connector", {"practical.connector_reseated", "workshop.reference.debashis_pal"}},
         {"secure_housing", {"practical.housing_secured", "workshop.reference.debashis_pal"}}};
-    if (task == "pacing_plan")
-    {
-        std::vector<P502TaskChoice> choices{
-            {"lighter_evenings", {"pacing.lighter_evenings.two_weeks"}},
-            {"usual_rhythm", {"pacing.usual_rhythm"}}};
-        // List only an earned credential, including the legitimate no-credential withdrawal.
-        const auto view = QueryTowerSession(state.Examination, {});
-        for (auto& choice : choices)
-            if (!view.Result.Credentials.empty()) choice.Records.push_back(std::string(view.Result.Credentials.front().Id));
-        return choices;
-    }
+    if (task == "pacing_plan") return {
+        {"lighter_evenings", {"pacing.lighter_evenings.two_weeks"}},
+        {"usual_rhythm", {"pacing.usual_rhythm"}}};
     if (task == "volunteer_enquiry") return {
         {"reading_table", {"volunteer.request.reading_table", "calendar.proposed.next_week.reading_table"}},
         {"patient_cards", {"volunteer.request.patient_cards", "calendar.proposed.next_week.patient_cards"}}};
@@ -62,56 +41,73 @@ std::vector<P502TaskChoice> P502Choices(const WorldState& state, std::string_vie
     return {};
 }
 
+std::vector<P502TaskChoice> P502Choices(const WorldState& state, std::string_view task)
+{
+    auto choices = P502ChoiceTable(task);
+    if (task == "pacing_plan")
+    {
+        // List only an earned credential, including the legitimate no-credential withdrawal.
+        const auto view = QueryTowerSession(state.Examination, {});
+        for (auto& choice : choices)
+            if (!view.Result.Credentials.empty()) choice.Records.push_back(std::string(view.Result.Credentials.front().Id));
+    }
+    return choices;
+}
+
+/** P5-03: the record of one appointment at one sitting, or null. */
+const P503FollowupRecord* P503Record(const WorldState& state, std::uint32_t sitting, std::string_view appointment)
+{
+    for (const auto& record : state.ExaminationFollowups)
+        if (record.Sitting == sitting && record.AppointmentId == appointment) return &record;
+    return nullptr;
+}
+
+/** P5-03: a task completion of this appointment in any sitting; it is earned once per life. */
+const P503FollowupCompletion* P503LifeCompletion(const WorldState& state, std::string_view appointment)
+{
+    for (const auto& record : state.ExaminationFollowups)
+        if (record.AppointmentId == appointment && record.Completion) return &*record.Completion;
+    return nullptr;
+}
+
 P407UFollowupView P407UStored(const WorldState& state, const SchoolFollowupAction& action)
 {
     P407UFollowupView row;
     row.Action = action;
     row.P502Choices = P502Choices(state, action.P502TaskId);
-    if (!row.P502Choices.empty()) row.P502Stage = P502TaskStage::Offered;
-    const auto prefix = P407UKey(action, ".book.");
-    for (auto it = state.Flags.lower_bound(prefix); it != state.Flags.end() && it->first.starts_with(prefix); ++it)
+    const bool task = !row.P502Choices.empty();
+    if (task) row.P502Stage = P502TaskStage::Offered;
+    if (const auto* record = P503Record(state, P409CurrentSitting(state), action.AppointmentId))
     {
-        if (!it->second) continue;
-        const auto digits = std::string_view(it->first).substr(prefix.size());
-        GameInstant at = 0;
-        const auto parsed = std::from_chars(digits.data(), digits.data() + digits.size(), at);
-        if (parsed.ec != std::errc{} || parsed.ptr != digits.data() + digits.size() || at < CountdownEndInstant() ||
-            at > DayLoopMaxInstant - action.DurationMinutes || std::to_string(at) != digits) continue;
-        row.At = at;
-        row.Booked = true;
-        row.Attended = P407UFlag(state, P407UKey(action, ".done.") + std::to_string(at));
-        break;
+        row.P502Revision = record->Revision;
+        const auto& last = record->Sessions.back();
+        const auto reserve = [&](bool arrived, P502TaskStage stage) {
+            row.At = last.At;
+            row.Booked = true;
+            row.Attended = arrived;
+            if (task) row.P502Stage = stage;
+        };
+        switch (last.State)
+        {
+        case P503SessionState::Booked: reserve(false, P502TaskStage::Offered); break;
+        // Arrival is a task stage; an attendance-only row (changed content) treats it as an unpaid reservation.
+        case P503SessionState::Arrived: reserve(task, P502TaskStage::Arrived); break;
+        case P503SessionState::Active: reserve(task, P502TaskStage::Active); break;
+        case P503SessionState::Paused: reserve(task, P502TaskStage::Paused); break;
+        case P503SessionState::Completed: reserve(true, P502TaskStage::Completed); break;
+        case P503SessionState::Paid:
+            // Paid attendance is the whole outcome of an attendance-only row. On a task row it is history only.
+            if (task) row.P502Stage = P502TaskStage::LegacyAttendance;
+            else reserve(true, P502TaskStage::Offered);
+            break;
+        default: break; // Cancelled, Missed and Released leave nothing reserved.
+        }
     }
-    if (!row.P502Choices.empty())
+    if (const auto* done = P503LifeCompletion(state, action.AppointmentId))
     {
-        const auto scope = P502Scope(state, action);
-        const auto revisionPrefix = scope + "revision.";
-        for (auto it = state.Flags.lower_bound(revisionPrefix);
-            it != state.Flags.end() && it->first.starts_with(revisionPrefix); ++it)
-        {
-            if (!it->second) continue;
-            const auto digits = std::string_view(it->first).substr(revisionPrefix.size());
-            std::uint64_t revision = 0;
-            const auto parsed = std::from_chars(digits.data(), digits.data() + digits.size(), revision);
-            if (parsed.ec == std::errc{} && parsed.ptr == digits.data() + digits.size() &&
-                std::to_string(revision) == digits) row.P502Revision = std::max(row.P502Revision, revision);
-        }
-        const auto progress = scope + "at." + std::to_string(row.At) + ".";
-        if (P407UFlag(state, progress + "arrived"))
-        {
-            row.Attended = true;
-            row.P502Stage = P502TaskStage::Arrived;
-            if (P407UFlag(state, progress + "paused")) row.P502Stage = P502TaskStage::Paused;
-            if (P407UFlag(state, progress + "active")) row.P502Stage = P502TaskStage::Active;
-        }
-        else if (row.Attended) row.P502Stage = P502TaskStage::LegacyAttendance;
-        for (const auto& choice : row.P502Choices)
-            if (P407UFlag(state, scope + "completed." + choice.Id))
-            {
-                row.P502Stage = P502TaskStage::Completed;
-                row.P502Record = choice;
-                break;
-            }
+        // The snapshot, never a reinterpretation through today's content.
+        row.P502Stage = P502TaskStage::Completed;
+        row.P502Record = P502TaskChoice{done->ChoiceId, done->Records};
     }
     return row;
 }
@@ -178,8 +174,7 @@ std::vector<P407UFollowupView> WorldSim::P407UFollowups() const
         OpenConversationPersonId(State_).empty() && !SchoolPlayOpenRefusal(State_) && IsWorldQuiescent(State_);
     for (auto& row : rows)
     {
-        if (row.P502Stage == P502TaskStage::Completed || row.P502Stage == P502TaskStage::LegacyAttendance ||
-            (row.Attended && row.P502Choices.empty())) continue;
+        if (row.P502Stage == P502TaskStage::Completed || (row.Attended && row.P502Choices.empty())) continue;
         const bool reserved = row.Booked && row.At >= now;
         const auto preferred = GameClock::StartOfDay(P409SittingAt(P409CurrentSitting(State_))) +
             row.Action.DayOffset * MinutesPerDay;
@@ -204,7 +199,7 @@ std::vector<P407UFollowupView> WorldSim::P407UFollowups() const
         {
             row.Booked = false; // A missed task, including arrival without resolution, can be rebooked.
             row.Attended = false;
-            if (!row.P502Choices.empty()) row.P502Stage = P502TaskStage::Offered;
+            if (!row.P502Choices.empty() && row.P502Stage != P502TaskStage::LegacyAttendance) row.P502Stage = P502TaskStage::Offered;
         }
         const auto first = std::max(preferred, GameClock::StartOfDay(now));
         for (int offset = 0; offset < 32; ++offset)
@@ -222,8 +217,6 @@ std::vector<P407UFollowupView> WorldSim::P407UFollowups() const
             {
                 const auto at = midnight + minute;
                 if (at < now || at > DayLoopMaxInstant - row.Action.DurationMinutes) continue;
-                // Old paid attendance remains history. Rebooking it must use a fresh instant.
-                if (!row.P502Choices.empty() && P407UFlag(State_, P407UKey(row.Action, ".done.") + std::to_string(at))) continue;
                 if (at == now && !idle) continue;
                 if (!P502Conflicts(State_, School_, known, reservations, row.Action, at).empty()) continue;
                 row.P502AlternativeAt = at;
@@ -274,91 +267,121 @@ std::optional<Rejection> WorldSim::ApplyP407UFollowup(const P407UFollowupCommand
     if (auto issue = SchoolPlayOpenRefusal(State_)) return issue;
     if (!ServiceShop_.empty() || State_.DayLoop.HasCommitment || State_.DayLoop.Asleep)
         return refuse("p407u.busy", "Finish the current activity, sleep or counter service first.");
+    // P5-03: the records must already keep the save rules; a world that breaks them changes nothing further.
+    if (!P503FollowupsValidInWorld(State_)) return refuse("p503.invalid_records", "The follow-up records break a save rule.");
     const auto rows = P407UFollowups();
     const auto found = std::find_if(rows.begin(), rows.end(), [&](const auto& row) { return row.Action.Id == command.ActionId; });
     if (found == rows.end()) return refuse("p407u.unavailable", "That next step is not available for the recorded result.");
     const auto& row = *found;
+    const bool task = !row.P502Choices.empty();
     if (row.P502Stage == P502TaskStage::Completed) return refuse("p502.completed", "This task already has its record.");
-    if (row.P502Stage == P502TaskStage::LegacyAttendance && command.Kind != P407UFollowupAction::Cancel)
-        return refuse("p407u.attended", "Historical attendance is already paid; cancel and book a new task session if wanted.");
-    if (row.Attended && row.P502Choices.empty()) return refuse("p407u.attended", "This session is already recorded.");
+    if (row.Attended && !task) return refuse("p407u.attended", "This session is already recorded.");
     if (row.At != command.ExpectedAt) return refuse("p407u.stale", "The appointment changed; read its current time again.");
-    if (!row.P502Choices.empty() && row.P502Revision != command.P502ExpectedRevision)
+    if (task && row.P502Revision != command.P502ExpectedRevision)
         return refuse("p502.stale", "The task changed; read its current revision again.");
     if (row.P502Revision == std::numeric_limits<std::uint64_t>::max())
         return refuse("p502.revision_limit", "The task revision cannot advance.");
-    const auto bookPrefix = P407UKey(row.Action, ".book.");
-    const auto scope = P502Scope(State_, row.Action);
-    const auto progress = scope + "at." + std::to_string(row.At) + ".";
-    const auto publish = [&](const std::string& key, bool value) {
-        State_.Flags[key] = value;
-        result.Events.push_back({0, State_.Clock.Now(), WorldFlagChanged{key, value}});
-    };
     if (command.Kind != P407UFollowupAction::P502Resolve && !command.P502ChoiceId.empty())
         return refuse("p502.choice_unexpected", "Only task resolution takes a choice.");
+
+    const std::uint32_t sitting = P409CurrentSitting(State_);
+    auto& records = State_.ExaminationFollowups;
+    const auto locate = [&]() {
+        return std::find_if(records.begin(), records.end(),
+            [&](const auto& r) { return r.Sitting == sitting && r.AppointmentId == row.Action.AppointmentId; });
+    };
+    // Every command but Book needs the reserved open session the row was built from.
+    const auto open = [&]() -> P503FollowupSession* {
+        const auto it = locate();
+        if (it == records.end() || !row.Booked) return nullptr;
+        auto& last = it->Sessions.back();
+        const bool isOpen = last.State == P503SessionState::Booked || last.State == P503SessionState::Arrived ||
+            last.State == P503SessionState::Active || last.State == P503SessionState::Paused;
+        return isOpen && last.At == row.At ? &last : nullptr;
+    };
     if (command.Kind == P407UFollowupAction::Book)
     {
         if (!row.CanBook) return refuse("p407u.booked", "This appointment is already booked or has no available slot.");
-        // Release an expired booking; attendance history is never removed.
-        for (auto& [key, value] : State_.Flags)
-            if (key.starts_with(bookPrefix) && value) publish(key, false);
-        publish(bookPrefix + std::to_string(row.At), true);
+        auto it = locate();
+        if (it == records.end())
+        {
+            P503FollowupRecord fresh;
+            fresh.Sitting = sitting;
+            fresh.AppointmentId = row.Action.AppointmentId;
+            it = records.insert(std::upper_bound(records.begin(), records.end(), fresh,
+                [](const auto& a, const auto& b) { return std::tie(a.Sitting, a.AppointmentId) < std::tie(b.Sitting, b.AppointmentId); }),
+                std::move(fresh));
+        }
+        auto& sessions = it->Sessions;
+        if (!sessions.empty())
+        {
+            auto& last = sessions.back();
+            // CanBook means any open session's slot has passed: it is missed, kept as history.
+            if (last.State == P503SessionState::Booked || last.State == P503SessionState::Arrived ||
+                last.State == P503SessionState::Active || last.State == P503SessionState::Paused)
+                last.State = P503SessionState::Missed;
+        }
+        if (sessions.size() >= P503MaxFollowupSessions)
+        {
+            const auto droppable = std::find_if(sessions.begin(), sessions.end(), [](const auto& s) {
+                return s.State == P503SessionState::Cancelled || s.State == P503SessionState::Missed ||
+                    s.State == P503SessionState::Released;
+            });
+            if (droppable == sessions.end()) return refuse("p503.history_full", "This appointment's history cannot grow.");
+            sessions.erase(droppable); // Only plain history is compacted; paid and completed sessions remain.
+        }
+        sessions.push_back({it->Revision + 1, row.At, P503SessionState::Booked});
     }
     else if (command.Kind == P407UFollowupAction::Cancel)
     {
-        if (!row.Booked) return refuse("p407u.not_booked", "Book a session first.");
-        for (auto& [key, value] : State_.Flags)
-            if (key.starts_with(bookPrefix) && value) publish(key, false);
-        if (!row.P502Choices.empty())
-        {
-            publish(progress + "active", false);
-            publish(progress + "paused", false);
-            // Arrival is historical. A new booking must have a different generation (P5-03).
-            // Prevent a same-instant cancellation from resurrecting it.
-            publish(progress + "arrived", false);
-        }
+        auto* session = open();
+        if (session == nullptr) return refuse("p407u.not_booked", "Book a session first.");
+        session->State = P503SessionState::Cancelled; // Arrival and any work stay history; nothing is earned.
     }
     else if (command.Kind == P407UFollowupAction::Attend)
     {
         if (row.Attended) return refuse("p407u.attended", "This session is already recorded.");
-        if (!row.Booked || !row.CanAttend) return refuse("p407u.not_due", "Attend at the booked time, or book another slot.");
-        if (!row.P502Choices.empty())
+        auto* session = open();
+        if (session == nullptr || !row.CanAttend) return refuse("p407u.not_due", "Attend at the booked time, or book another slot.");
+        if (task)
+            session->State = P503SessionState::Arrived; // Arrival and task work are distinct; Resolve pays once.
+        else
         {
-            // Arrival and task work are distinct. Reading/choosing is free; Resolve pays once.
-            publish(progress + "arrived", true);
-            publish(scope + "revision." + std::to_string(row.P502Revision + 1), true);
-            return std::nullopt;
+            if (auto issue = ValidateTimeCharge(row.Action.DurationMinutes)) return issue;
+            const auto target = State_.Clock.Now() + row.Action.DurationMinutes;
+            ChargeTime(row.Action.DurationMinutes, result);
+            if (result.Partial || State_.Clock.Now() != target)
+                return refuse("p407u.charge_interrupted", "The session could not finish; no attendance was recorded.");
+            session = open();
+            if (session == nullptr) return refuse("p503.session_lost", "The session changed while it was paid.");
+            session->State = P503SessionState::Paid;
         }
-        if (auto issue = ValidateTimeCharge(row.Action.DurationMinutes)) return issue;
-        const auto target = State_.Clock.Now() + row.Action.DurationMinutes;
-        ChargeTime(row.Action.DurationMinutes, result);
-        if (result.Partial || State_.Clock.Now() != target)
-            return refuse("p407u.charge_interrupted", "The session could not finish; no attendance was recorded.");
-        publish(P407UKey(row.Action, ".done.") + std::to_string(row.At), true);
     }
     else if (command.Kind == P407UFollowupAction::P502Start || command.Kind == P407UFollowupAction::P502Resume)
     {
-        if (row.P502Choices.empty()) return refuse("p502.no_task", "This is an attendance-only continuation.");
+        if (!task) return refuse("p502.no_task", "This is an attendance-only continuation.");
         const bool start = command.Kind == P407UFollowupAction::P502Start;
-        if (!(start ? row.P502CanStart : row.P502CanResume))
+        auto* session = open();
+        if (session == nullptr || !(start ? row.P502CanStart : row.P502CanResume))
             return refuse("p502.not_ready", "Use the current booked slot after arrival, or cancel and rebook.");
-        publish(progress + "paused", false);
-        publish(progress + "active", true);
+        session->State = P503SessionState::Active;
     }
     else if (command.Kind == P407UFollowupAction::P502Leave)
     {
-        if (row.P502Stage != P502TaskStage::Active) return refuse("p502.not_active", "No task is open to leave.");
-        publish(progress + "active", false);
-        publish(progress + "paused", true);
+        auto* session = open();
+        if (row.P502Stage != P502TaskStage::Active || session == nullptr) return refuse("p502.not_active", "No task is open to leave.");
+        session->State = P503SessionState::Paused;
     }
     else if (command.Kind == P407UFollowupAction::P502Resolve)
     {
-        if (row.P502Stage != P502TaskStage::Active) return refuse("p502.not_active", "Start or resume this task first.");
+        if (row.P502Stage != P502TaskStage::Active || open() == nullptr) return refuse("p502.not_active", "Start or resume this task first.");
         if (!row.P502CanResolve)
             return refuse("p502.conflict", "The task window is unavailable; cancel and use the disclosed alternative slot.");
         const auto choice = std::find_if(row.P502Choices.begin(), row.P502Choices.end(),
             [&](const auto& item) { return item.Id == command.P502ChoiceId; });
         if (choice == row.P502Choices.end()) return refuse("p502.choice", "Choose one of this task's current actions.");
+        if (P503LifeCompletion(State_, row.Action.AppointmentId) != nullptr)
+            return refuse("p502.completed", "This task already has its record.");
         if (auto issue = ValidateTimeCharge(row.Action.DurationMinutes)) return issue;
         // The authored appointment is the activity. Reuse the receipt owner; no learning allowance is invented.
         auto receipts = State_.DayLoop.Receipts;
@@ -372,13 +395,33 @@ std::optional<Rejection> WorldSim::ApplyP407UFollowup(const P407UFollowupCommand
         ChargeTime(row.Action.DurationMinutes, result);
         if (result.Partial || State_.Clock.Now() != target)
             return refuse("p407u.charge_interrupted", "The task could not finish; no record was applied.");
+        auto* session = open();
+        if (session == nullptr) return refuse("p503.session_lost", "The task session changed while it was resolved.");
         State_.DayLoop.Receipts = std::move(receipts);
         State_.DayLoop.Condition = condition;
-        publish(progress + "active", false);
-        publish(scope + "completed." + choice->Id, true);
+        session->State = P503SessionState::Completed;
+        locate()->Completion = P503FollowupCompletion{session->Generation, row.Action.P502TaskId, choice->Id, choice->Records,
+            State_.Clock.Now()};
     }
     else return refuse("p407u.bad_action", "Unknown follow-up action.");
-    if (!row.P502Choices.empty()) publish(scope + "revision." + std::to_string(row.P502Revision + 1), true);
+    ++locate()->Revision;
+    if (!P503FollowupsValidInWorld(State_)) return refuse("p503.invalid_records", "The follow-up transition broke a save rule.");
     return std::nullopt;
+}
+} // namespace PerfectWorld
+
+namespace PerfectWorld
+{
+bool P503IsTaskChoice(std::string_view task, std::string_view choice) noexcept
+{
+    try
+    {
+        const auto choices = P502ChoiceTable(task);
+        return std::any_of(choices.begin(), choices.end(), [&](const auto& item) { return item.Id == choice; });
+    }
+    catch (...)
+    {
+        return false;
+    }
 }
 } // namespace PerfectWorld

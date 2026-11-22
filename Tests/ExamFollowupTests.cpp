@@ -3,13 +3,17 @@
 #include "P405ExamTestSupport.h"
 #include "LegacyRecovery.h"
 #include "KnownCommitments.h"
+#include "WorldExamSittings.h"
 
 #include <iostream>
+#include <map>
+#include <tuple>
 
 using namespace PerfectWorld;
 
 namespace
 {
+const ContentDb* P503Content = nullptr;
 constexpr std::string_view P407UMentor = "school_followup.p2.p4_withdrawn_school_mentor";
 WorldSim P407UWithdrawn(const P405World& w);
 
@@ -83,7 +87,10 @@ void P502Tasks(const WorldSim& source)
                 "the selected plan or practical step has its observable record and exact time cost");
             P2CExpect(SerialiseReceipts(before.DayLoop.Receipts) != SerialiseReceipts(sim.State().DayLoop.Receipts),
                 "task resolution goes through the authoritative receipt owner");
-            P2CExpect(before.Commerce == sim.State().Commerce && before.Examination == sim.State().Examination &&
+            // P503: the time charge runs the ordinary allowance settlement (WorldSim::Submit); the task adds no money of its own.
+            const auto settled = SettleAllowance(before.Commerce, paid.From, paid.To);
+            P2CExpect(settled.Ok(), "the task interval settles like any other time");
+            P2CExpect(settled.State == sim.State().Commerce && before.Examination == sim.State().Examination &&
                 SerialiseAwakeningState(before) == SerialiseAwakeningState(sim.State()),
                 "an enquiry never grants money, admission, a licence, a sitting or invented learning");
             S04Refused(sim, resolve, "p502.completed", "duplicate resolution changes nothing");
@@ -116,7 +123,12 @@ void P502RecoveryAndConflicts(const P405World& w)
         if (action.Id == P407UMentor) action.Minute = 18 * 60;
     auto promiseState = initial.State();
     promiseState.Conversations[std::string(HouseholdAdultId)].Facts = {std::string(FactRotaSweepAndCook)};
-    auto promiseSim = bind(promiseState, promises);
+    // P503: known household promises are read from the bound content (WorldAwakeningCatalogues::Content), which the
+    // shared fixture binding leaves empty; bind the real content so the promise is actually known.
+    auto knowing = w.Base.W.Bind();
+    knowing.Content = P503Content;
+    auto promiseSim = WorldSim(promiseState, MaxEventsPerAdvance, w.Base.W.School.Cats.Day, {},
+        w.Base.W.School.School(), knowing, {&w.Runners, &promises});
     const auto afterPromise = P407URow(promiseSim, P407UMentor);
     P2CExpect(afterPromise.CanBook &&
         std::find(afterPromise.P502Conflicts.begin(), afterPromise.P502Conflicts.end(), FactRotaSweepAndCook) != afterPromise.P502Conflicts.end() &&
@@ -163,22 +175,7 @@ void P502RecoveryAndConflicts(const P405World& w)
     P2CExpect(!P407URow(sim, P407UMentor).Attended && !P407URow(sim, P407UMentor).P502Record,
         "cancel and rebook require a new arrival and keep consequences empty");
 
-    const auto legacyRow = P407URow(initial, P407UMentor);
-    S04Accept(initial, AdvanceTime{legacyRow.At + legacyRow.Action.DurationMinutes - initial.State().Clock.Now()},
-        "seed historical paid attendance at its legitimate finish instant");
-    auto legacyState = initial.State();
-    const auto key = std::string(P407UFollowupFlagPrefix) + legacyRow.Action.AppointmentId;
-    legacyState.Flags[key + ".book." + std::to_string(legacyRow.At)] = true;
-    legacyState.Flags[key + ".done." + std::to_string(legacyRow.At)] = true;
-    auto legacy = w.Sim(legacyState);
-    P2CExpect(P407URow(legacy, P407UMentor).P502Stage == P502TaskStage::LegacyAttendance &&
-        !P407URow(legacy, P407UMentor).P502Record, "old paid attendance never invents task completion");
-    S04Accept(legacy, P407UCommand(legacy, P407UFollowupAction::Cancel), "release the legacy reservation");
-    S04Accept(legacy, P407UCommand(legacy, P407UFollowupAction::Book), "book a fresh task after legacy attendance");
-    P2CExpect(P407URow(legacy, P407UMentor).At > legacyRow.At &&
-        P407URow(legacy, P407UMentor).P502Stage == P502TaskStage::Offered &&
-        legacy.State().Flags.at(key + ".done." + std::to_string(legacyRow.At)),
-        "legacy history survives recovery and cannot be selected as the new task instant");
+    // P5-03: pre-v14 paid attendance is exercised through a real schema-13 save in P503Legacy.
 }
 
 void P502ReceiptsAndReplay(const P405World& w)
@@ -311,7 +308,7 @@ void P407USession(const P405World& w)
     P2CExpect(sim.State().Clock.Now() == now, "booking charges no time");
     S04Refused(sim, book, "p407u.booked", "duplicate booking refuses atomically");
     S04Refused(sim, P407UCommand(sim, P407UFollowupAction::Attend, P502AttendanceId), "p407u.not_due", "early attendance refuses");
-    auto loaded = w.Sim(P402Reload(w.Base, sim.State(), "booking survives v13 save with existing flags and hash"));
+    auto loaded = w.Sim(P402Reload(w.Base, sim.State(), "booking survives the current save envelope and hash"));
     P2CExpect(P407URow(loaded, P502AttendanceId).Booked && P407URow(loaded, P502AttendanceId).At == book.ExpectedAt,
         "Continue retains the exact appointment");
     S04Accept(sim, AdvanceTime{book.ExpectedAt - now}, "ordinary time reaches the appointment");
@@ -387,12 +384,347 @@ void P407USlotsAndRollback(const P405World& w)
             "P502 hidden retake actions cannot resolve through task commands");
     }
 }
+// ---- P5-03: durable follow-up records, the v13 flag migration and second-sitting identity ----
+
+std::string P503Hex(std::uint64_t value)
+{
+    static const char digits[] = "0123456789abcdef";
+    std::string text = "0x";
+    for (int shift = 60; shift >= 0; shift -= 4) text.push_back(digits[(value >> shift) & 0xfU]);
+    return text;
+}
+
+std::string P503Replace(std::string text, const std::string& from, const std::string& to)
+{
+    const auto at = text.find(from);
+    P2CExpect(at != std::string::npos, "replacement anchor exists");
+    return text.replace(at, from.size(), to);
+}
+
+/**
+ * A schema-13 save of `world` (no follow-up records) holding `legacy` flags exactly as P4-07 spelled them: the v13 writer
+ * differs from the v14 one only in the version and in the flags it held, and hash version 10 is unchanged, so the checksum
+ * is the hash of the world with those flags.
+ */
+std::string P503V13(const P405World& w, WorldState world, const std::map<std::string, bool>& legacy, std::int32_t version = 13)
+{
+    P2CExpect(world.ExaminationFollowups.empty(), "a v13 world has no follow-up records");
+    const std::string clean = P402SaveText(w.Base, world);
+    P2CExpect(!clean.empty(), "the base world saves");
+    const std::uint64_t cleanHash = HashWorldState(world);
+    for (const auto& [key, value] : legacy) world.Flags[key] = value;
+    std::string flags = "\"flags\": {";
+    bool first = true;
+    for (const auto& [key, value] : world.Flags)
+    {
+        flags += first ? "\n" : ",\n";
+        first = false;
+        flags += "      \"" + key + "\": " + (value ? "true" : "false");
+    }
+    flags += first ? "}" : "\n    }";
+    const auto open = clean.find("\"flags\": {");
+    const auto close = clean.find(",\n    \"gates\"", open);
+    P2CExpect(open != std::string::npos && close != std::string::npos, "flags anchors");
+    std::string text = clean.substr(0, open) + flags + clean.substr(close);
+    text = P503Replace(text, "\"schemaVersion\": " + std::to_string(WorldSaveSchemaVersion) + ",",
+        "\"schemaVersion\": " + std::to_string(version) + ",");
+    return P503Replace(text, "\"stateHash\": \"" + P503Hex(cleanHash) + "\"", "\"stateHash\": \"" + P503Hex(HashWorldState(world)) + "\"");
+}
+
+WorldSaveError P503ErrorOf(const std::string& text)
+{
+    WorldSaveData data;
+    return DeserializeWorldSave(text, data).Error;
+}
+
+P407UFollowupCommand P503Resolve(const WorldSim& sim, std::string_view id = P407UMentor, std::size_t choice = 0)
+{
+    auto command = P407UCommand(sim, P407UFollowupAction::P502Resolve, id);
+    command.P502ChoiceId = P407URow(sim, id).P502Choices.at(choice).Id;
+    return command;
+}
+
+void P503Reach(WorldSim& sim, GameInstant at, std::string_view what)
+{
+    if (at > sim.State().Clock.Now()) S04Accept(sim, AdvanceTime{at - sim.State().Clock.Now()}, what);
+    P2CExpect(sim.State().Clock.Now() == at, "the clock reaches the appointment");
+}
+
+void P503Legacy(const P405World& w)
+{
+    constexpr std::string_view Attendance = "school_followup.p2.withdrawn";
+    auto sim = P407UWithdrawn(w);
+    const auto mentor = P407URow(sim, P407UMentor);
+    const auto other = P407URow(sim, Attendance);
+    const std::string prefix(P407UFollowupFlagPrefix);
+    const std::string mentorKey = prefix + mentor.Action.AppointmentId;
+    const std::string otherKey = prefix + other.Action.AppointmentId;
+    // P4-07 history: the mentor session was booked and paid; the other was booked once, released, then booked again.
+    P503Reach(sim, mentor.At + mentor.Action.DurationMinutes, "the legacy paid session has finished");
+    const WorldState seed = sim.State();
+    const auto later = std::to_string(sim.State().Clock.Now() + 24 * 60);
+    const std::map<std::string, bool> legacy{
+        {mentorKey + ".book." + std::to_string(mentor.At), true}, {mentorKey + ".done." + std::to_string(mentor.At), true},
+        {otherKey + ".book." + std::to_string(other.At), false}, {otherKey + ".book." + later, true}};
+    const std::string v13 = P503V13(w, seed, legacy);
+    const std::string original = v13;
+    WorldSaveData data;
+    const auto loaded = DeserializeWorldSave(v13, data);
+    if (!loaded.Succeeded()) std::cerr << loaded.Message << '\n';
+    P2CExpect(loaded.Succeeded() && loaded.SourceVersion == 13 && !loaded.HashVerified && !loaded.Migrated && v13 == original,
+        "a schema-13 save with P4-07 flags authenticates, migrates in memory and loads unverified");
+    const auto& world = data.World;
+    P2CExpect(world.Flags.lower_bound(prefix) == world.Flags.end() || !world.Flags.lower_bound(prefix)->first.starts_with(prefix),
+        "no reserved follow-up flag survives migration");
+    P2CExpect(world.ExaminationFollowups.size() == 2, "one record per appointment of the sitting");
+    const auto record = [&](const std::string& appointment) {
+        const auto it = std::find_if(world.ExaminationFollowups.begin(), world.ExaminationFollowups.end(),
+            [&](const auto& r) { return r.AppointmentId == appointment; });
+        P2CExpect(it != world.ExaminationFollowups.end(), "migrated record exists");
+        return *it;
+    };
+    const auto paid = record(mentor.Action.AppointmentId);
+    P2CExpect(paid.Sitting == 0 && paid.Revision == 1 && paid.Sessions.size() == 1 &&
+        paid.Sessions[0] == P503FollowupSession{1, mentor.At, P503SessionState::Paid} && !paid.Completion,
+        "old paid attendance migrates as paid attendance, never a task completion");
+    const auto booked = record(other.Action.AppointmentId);
+    P2CExpect(booked.Revision == 2 && booked.Sessions.size() == 2 &&
+        booked.Sessions[0] == P503FollowupSession{1, other.At, P503SessionState::Released} &&
+        booked.Sessions[1].State == P503SessionState::Booked && std::to_string(booked.Sessions[1].At) == later,
+        "an old reservation stays a reservation and its released predecessor stays history");
+
+    auto continued = w.Sim(world);
+    auto row = P407URow(continued, P407UMentor);
+    P2CExpect(row.P502Stage == P502TaskStage::LegacyAttendance && !row.P502Record && row.CanBook && row.At > mentor.At,
+        "the mentor task shows legacy attendance and offers a fresh task session");
+    P2CExpect(P407URow(continued, Attendance).Booked && std::to_string(P407URow(continued, Attendance).At) == later,
+        "Continue retains the migrated reservation exactly");
+    S04Refused(continued, P407UCommand(continued, P407UFollowupAction::Cancel), "p407u.not_booked",
+        "legacy paid attendance is not a reservation to cancel");
+    S04Accept(continued, P407UCommand(continued, P407UFollowupAction::Book), "book a fresh task after legacy attendance");
+    P503Reach(continued, P407URow(continued, P407UMentor).At, "reach the fresh task");
+    S04Accept(continued, P407UCommand(continued, P407UFollowupAction::Attend), "arrive at the fresh task");
+    S04Accept(continued, P407UCommand(continued, P407UFollowupAction::P502Start), "start the fresh task");
+    S04Accept(continued, P503Resolve(continued), "resolve the fresh task once");
+    const auto& after = continued.State().ExaminationFollowups;
+    const auto done = std::find_if(after.begin(), after.end(), [&](const auto& r) { return r.AppointmentId == mentor.Action.AppointmentId; });
+    P2CExpect(done != after.end() && done->Sessions.size() == 2 && done->Sessions[0].State == P503SessionState::Paid &&
+        done->Sessions[1].State == P503SessionState::Completed && done->Completion && done->Completion->Generation == 2,
+        "the legacy history survives beside the one real completion");
+    const auto resaved = P402Reload(w.Base, continued.State(), "the migrated life's first v14 save is certified");
+    P2CExpect(resaved.ExaminationFollowups == continued.State().ExaminationFollowups, "the records round-trip exactly");
+
+    // Everything P4-07 could not have written refuses the load; the file is never rewritten.
+    const auto refused = [&](const std::map<std::string, bool>& flags, std::string_view what, const WorldState* base = nullptr) {
+        const std::string text = P503V13(w, base != nullptr ? *base : seed, flags);
+        const std::string copy = text;
+        P2CExpect(P503ErrorOf(text) == WorldSaveError::InvalidWorld && text == copy, what);
+    };
+    const auto at = std::to_string(mentor.At);
+    refused({{mentorKey + ".book." + at, true}, {mentorKey + ".book." + later, true}}, "two live reservations refuse");
+    refused({{mentorKey + ".book." + at, true}, {mentorKey + ".done." + at, false}}, "a false attendance refuses");
+    refused({{mentorKey + ".book." + at, false}, {mentorKey + ".done." + at, true}}, "an attendance without its reservation refuses");
+    refused({{mentorKey + ".book." + later, true}, {mentorKey + ".done." + at, true}}, "a reservation besides an attendance refuses");
+    refused({{mentorKey + ".book." + later, true}, {mentorKey + ".done." + later, true}}, "an attendance after the clock refuses");
+    refused({{mentorKey + ".p502.s0.revision.1", true}}, "provisional P5-02 task flags refuse instead of being guessed");
+    refused({{mentorKey + ".book.0" + at, true}}, "a non-canonical instant refuses");
+    refused({{prefix + "forged", true}}, "an unknown reserved key refuses");
+    refused({{prefix + "school_followup.p2.x.book." + at, true}}, "a non-appointment id refuses");
+    refused({{mentorKey + ".book." + at, true}}, "an undecided world cannot own a follow-up", &w.Base.Morning);
+    // v14 relabelling: the flags are no longer a legal spelling at all.
+    P2CExpect(P503ErrorOf(P503V13(w, seed, legacy, 14)) == WorldSaveError::InvalidWorld,
+        "a v14 world holding reserved follow-up flags is refused");
+    WorldState carrying = seed;
+    carrying.Flags[mentorKey + ".book." + at] = true;
+    P2CExpect(P402SaveText(w.Base, carrying).empty(), "a live world still holding reserved flags is never written");
+    // v13 never wrote records: a /3 examination under a v13 label is refused.
+    std::string forged = P402SaveText(w.Base, continued.State());
+    forged = P503Replace(forged, "\"schemaVersion\": 14,", "\"schemaVersion\": 13,");
+    P2CExpect(forged.find("pw.examination/3") != std::string::npos && P503ErrorOf(forged) == WorldSaveError::InvalidWorld,
+        "a v13 label cannot smuggle in follow-up records");
+}
+
+/** Book, arrive, start and leave the mentor task: the interrupted state every round trip starts from. */
+WorldSim P503Interrupted(const P405World& w, const WorldState& seed)
+{
+    auto sim = w.Sim(seed);
+    S04Accept(sim, P407UCommand(sim, P407UFollowupAction::Book), "book the mentor task");
+    P503Reach(sim, P407URow(sim, P407UMentor).At, "reach the mentor task");
+    S04Accept(sim, P407UCommand(sim, P407UFollowupAction::Attend), "arrive");
+    S04Accept(sim, P407UCommand(sim, P407UFollowupAction::P502Start), "start");
+    S04Accept(sim, P407UCommand(sim, P407UFollowupAction::P502Leave), "leave mid-task");
+    return sim;
+}
+
+void P503RoundTrips(const P405World& w)
+{
+    const WorldState seed = P407UWithdrawn(w).State();
+    // Uninterrupted.
+    auto straight = P503Interrupted(w, seed);
+    S04Accept(straight, P407UCommand(straight, P407UFollowupAction::P502Resume), "resume without saving");
+    S04Accept(straight, P503Resolve(straight), "resolve without saving");
+
+    // Interrupted by Continue in a fresh process while paused, and again while active.
+    auto paused = P503Interrupted(w, seed);
+    const auto oldResume = P407UCommand(paused, P407UFollowupAction::P502Resume);
+    const auto pausedText = P402SaveText(w.Base, paused.State());
+    P2CExpect(pausedText.find("pw.examination/3") != std::string::npos, "an open task is saved as typed records");
+    auto reloaded = w.Sim(P402Reload(w.Base, paused.State(), "a paused task survives save and load verified"));
+    const auto row = P407URow(reloaded, P407UMentor);
+    P2CExpect(row.P502Stage == P502TaskStage::Paused && row.P502CanResume && row.P502Revision == oldResume.P502ExpectedRevision &&
+        row.At == oldResume.ExpectedAt, "the reloaded task has its exact stage, slot and revision");
+    const WorldState snapshot = reloaded.State();
+    S04Accept(reloaded, oldResume, "a disclosure read before saving still matches after Continue");
+    auto active = w.Sim(P402Reload(w.Base, reloaded.State(), "an active task survives save and load verified"));
+    S04Accept(active, P503Resolve(active), "resolve after the second Continue");
+
+    P2CExpect(HashWorldState(active.State()) == HashWorldState(straight.State()) &&
+        active.State().ExaminationFollowups == straight.State().ExaminationFollowups &&
+        SerialiseReceipts(active.State().DayLoop.Receipts) == SerialiseReceipts(straight.State().DayLoop.Receipts) &&
+        active.State().Clock.Now() == straight.State().Clock.Now(),
+        "equivalent reload and uninterrupted runs give equal records, receipts, time and hash");
+
+    // Fresh binding and replay: the uninterrupted log from the seed, and the post-Continue log from its own snapshot.
+    const auto replay = ReplayCommandLogFromSnapshot(seed, straight.Log(), w.Replay());
+    P2CExpect(replay.Complete && replay.Hash == HashWorldState(straight.State()), "the task log replays from a fresh binding");
+    auto rebound = w.Sim(snapshot);
+    for (const auto& command : reloaded.Log()) S04Accept(rebound, command.Payload, "rebound replay accepts the same command");
+    P2CExpect(HashWorldState(rebound.State()) == HashWorldState(reloaded.State()), "a fresh binding of the loaded world replays identically");
+
+    // Duplicate completion: live, after Continue, and through a forged save.
+    S04Refused(straight, P503Resolve(straight), "p502.completed", "a second resolution changes nothing");
+    auto done = w.Sim(P402Reload(w.Base, straight.State(), "the completed task survives save and load verified"));
+    const auto completed = P407URow(done, P407UMentor);
+    P2CExpect(completed.P502Stage == P502TaskStage::Completed && completed.P502Record &&
+        completed.P502Record->Id == completed.P502Choices.front().Id, "Continue shows the snapshotted record");
+    S04Refused(done, P407UCommand(done, P407UFollowupAction::Book), "p502.completed", "a completed task cannot rebook a reward");
+    const auto hashBefore = HashWorldState(done.State());
+    S04Refused(done, P407UFollowupCommand{P407UFollowupAction::P502Resolve, std::string(P407UMentor), completed.At,
+        completed.P502Choices.back().Id, completed.P502Revision}, "p502.completed", "no second choice after Continue");
+    P2CExpect(HashWorldState(done.State()) == hashBefore, "refused duplicates leave the world unchanged");
+
+    // Forged records are never written, and a damaged text never loads.
+    const auto& good = straight.State();
+    const auto forged = [&](auto mutate, std::string_view what) {
+        WorldState bad = good;
+        mutate(bad.ExaminationFollowups);
+        P2CExpect(!P503FollowupsValidInWorld(bad) && SerialiseExamState(bad).empty() && P402SaveText(w.Base, bad).empty(), what);
+    };
+    const auto mentorRecord = [](std::vector<P503FollowupRecord>& records) -> P503FollowupRecord& {
+        for (auto& r : records)
+            if (r.Completion) return r;
+        P2CExpect(false, "the completed record exists");
+        return records.front();
+    };
+    forged([&](auto& r) { auto& m = mentorRecord(r); m.Sessions.push_back(m.Sessions.back()); m.Sessions.back().Generation = ++m.Revision; },
+        "a second completed session is refused");
+    forged([&](auto& r) { mentorRecord(r).Completion->ChoiceId = "admission.money"; }, "a forged choice is refused");
+    forged([&](auto& r) { mentorRecord(r).Completion.reset(); }, "a completed session without its completion is refused");
+    forged([&](auto& r) { mentorRecord(r).Completion->Records.clear(); }, "a completion without records is refused");
+    forged([&](auto& r) { mentorRecord(r).Completion->CompletedAt = good.Clock.Now() + 1; }, "a future completion is refused");
+    forged([&](auto& r) { auto& m = mentorRecord(r); m.Revision = m.Sessions.back().Generation - 1; }, "a revision behind its sessions is refused");
+    forged([&](auto& r) { auto& m = mentorRecord(r); m.Sessions.front().State = P503SessionState::Booked; },
+        "an open session that is not the newest is refused");
+    forged([&](auto& r) { mentorRecord(r).Sitting = 1; }, "a record for a sitting not yet held is refused");
+    forged([&](auto& r) { mentorRecord(r).AppointmentId = "school_followup.p2.withdrawn"; }, "a non-appointment record is refused");
+    forged([&](auto& r) { auto copy = mentorRecord(r); r.push_back(copy); }, "a duplicate record (and repeat reward) is refused");
+    forged([&](auto& r) { auto& m = mentorRecord(r); m.Sessions.front().At = P409SittingAt(0) - 1; }, "a session before its sitting is refused");
+
+    const std::string text = P402SaveText(w.Base, good);
+    const auto examAt = text.find("pw.examination/3");
+    P2CExpect(examAt != std::string::npos, "the completed world saves with typed records");
+    for (std::size_t cut = 0; cut < text.size(); cut += (cut + 1500 > examAt && cut < text.size() - 0) ? 1 : 17)
+        P2CExpect(P503ErrorOf(text.substr(0, cut)) != WorldSaveError::None, "every truncation of a follow-up save is refused");
+    const auto session = text.find("session=", examAt);
+    const auto lineEnd = text.find("\\n", session);
+    std::string badState = text;
+    badState.replace(lineEnd - 1, 1, "9");
+    P2CExpect(P503ErrorOf(badState) == WorldSaveError::InvalidWorld, "an unknown session state is refused");
+    std::string padded = text;
+    padded.insert(text.find(",", session) + 1, "0");
+    P2CExpect(P503ErrorOf(padded) == WorldSaveError::InvalidWorld, "a non-canonical session number is refused");
+    std::string reordered = text;
+    reordered = P503Replace(reordered, "followups=", "followups=0");
+    P2CExpect(P503ErrorOf(reordered) == WorldSaveError::InvalidWorld, "a damaged record count is refused");
+    S04Refused(done, SetWorldFlag{std::string(P407UFollowupFlagPrefix) + "appointment.p2.p4_withdrawn_school_mentor.book.1", true},
+        "flag.reserved", "generic flags cannot forge follow-up authority");
+}
+
+void P503SecondSitting(const P405World& w)
+{
+    auto sim = w.Sim(w.Base.Morning);
+    S04Accept(sim, P402Cmd(TowerSessionAction::Defer), "defer the single sitting");
+    const auto rows = sim.P407UFollowups();
+    const auto task = std::find_if(rows.begin(), rows.end(), [](const auto& r) { return !r.P502Choices.empty(); });
+    const auto common = std::find_if(rows.begin(), rows.end(), [](const auto& r) {
+        // P503: not at school; the authored school calendar has no attendance day in 2044 (reported, not hidden here).
+        return r.P502Choices.empty() && r.Action.Outcome == "all" && r.Action.Destination != "place.school" && r.CanBook; });
+    P2CExpect(task != rows.end() && common != rows.end(), "the deferred week has a task and a shared appointment");
+    const std::string taskId = task->Action.Id;
+    const std::string commonId = common->Action.Id;
+    S04Accept(sim, P407UCommand(sim, P407UFollowupAction::Book, commonId), "book a shared appointment in the deferred week");
+    S04Accept(sim, P407UCommand(sim, P407UFollowupAction::Book, taskId), "book the deferred task");
+    P503Reach(sim, P407URow(sim, taskId).At, "reach the deferred task");
+    S04Accept(sim, P407UCommand(sim, P407UFollowupAction::Attend, taskId), "arrive at the deferred task");
+    S04Accept(sim, P407UCommand(sim, P407UFollowupAction::P502Start, taskId), "start the deferred task");
+    S04Accept(sim, P503Resolve(sim, taskId), "complete the deferred task");
+    const auto firstRecords = sim.State().ExaminationFollowups;
+
+    for (int guard = 0; guard < 8 && sim.State().Clock.Now() < P409SittingAt(1); ++guard)
+        S04Accept(sim, AdvanceTime{P409SittingAt(1) - sim.State().Clock.Now()}, "a year passes toward the deferred sitting");
+    P2CExpect(sim.State().Clock.Now() == P409SittingAt(1), "the deferred candidate reaches the next sitting");
+    S04Accept(sim, P402Cmd(TowerSessionAction::Decline), "decline the deferred sitting");
+    P2CExpect(P409CurrentSitting(sim.State()) == 1 && sim.ExaminationResult().Outcome == "declined", "sitting 1 holds the result");
+
+    const auto second = P407URow(sim, commonId);
+    P2CExpect(!second.Booked && !second.Attended && second.P502Revision == 0 && second.CanBook &&
+        second.At >= GameClock::StartOfDay(P409SittingAt(1)),
+        "the shared appointment starts fresh for sitting 1 and schedules from that sitting");
+    const auto rows1 = sim.P407UFollowups();
+    const auto task1 = std::find_if(rows1.begin(), rows1.end(), [](const auto& r) { return !r.P502Choices.empty(); });
+    P2CExpect(task1 != rows1.end() && task1->Action.Id != taskId && task1->P502Stage == P502TaskStage::Offered &&
+        task1->P502Revision == 0 && !task1->Booked, "the declined task is offered fresh at the second sitting");
+    P2CExpect(std::none_of(rows1.begin(), rows1.end(), [&](const auto& r) { return r.Action.Id == taskId; }),
+        "the deferred week's task does not reopen");
+    S04Accept(sim, P407UCommand(sim, P407UFollowupAction::Book, commonId), "book the shared appointment for sitting 1");
+    const auto& records = sim.State().ExaminationFollowups;
+    P2CExpect(records.size() == firstRecords.size() + 1 &&
+        std::equal(firstRecords.begin(), firstRecords.end(), records.begin()) &&
+        records.back().Sitting == 1 && records.back().AppointmentId == common->Action.AppointmentId &&
+        records.back().Sessions.size() == 1 && records.back().Sessions[0].Generation == 1,
+        "the second-sitting booking is a new record; sitting 0's history and completion are untouched");
+    const auto text = P402SaveText(w.Base, sim.State());
+    P2CExpect(text.find("pw.examination/3\\nsittings=1\\n") != std::string::npos, "the save names the earlier sitting and its records");
+    auto loaded = w.Sim(P402Reload(w.Base, sim.State(), "two sittings of follow-ups survive save and load verified"));
+    P2CExpect(loaded.State().ExaminationFollowups == records && P407URow(loaded, commonId).Booked, "Continue keeps both sittings");
+    // The deferred week's completion is still the only one; a forged second completion of it in sitting 1 is refused.
+    WorldState repeat = loaded.State();
+    auto copy = *std::find_if(repeat.ExaminationFollowups.begin(), repeat.ExaminationFollowups.end(),
+        [](const auto& r) { return r.Completion.has_value(); });
+    copy.Sitting = 1;
+    for (auto& session : copy.Sessions) session.At = P409SittingAt(1);
+    copy.Completion->CompletedAt = P409SittingAt(1);
+    P2CExpect(repeat.Clock.Now() >= P409SittingAt(1), "the forged instants are not in the future");
+    repeat.ExaminationFollowups.push_back(copy);
+    std::sort(repeat.ExaminationFollowups.begin(), repeat.ExaminationFollowups.end(),
+        [](const auto& a, const auto& b) { return std::tie(a.Sitting, a.AppointmentId) < std::tie(b.Sitting, b.AppointmentId); });
+    P2CExpect(!P503FollowupsValidInWorld(repeat) && P402SaveText(w.Base, repeat).empty(),
+        "a task completed after one sitting cannot be rewarded again after another");
+    for (auto& record : repeat.ExaminationFollowups)
+        if (record.Sitting == 1 && record.Completion)
+        {
+            record.Completion.reset();
+            record.Sessions.back().State = P503SessionState::Cancelled;
+        }
+    P2CExpect(P503FollowupsValidInWorld(repeat), "the same second-sitting history without the repeat reward is valid");
+}
 } // namespace
 
 int main(int argc, char** argv)
 {
     P2CExpect(argc == 2, "content root");
     const P2CFixture fixture(argv[1]);
+    P503Content = &fixture.Content;
     const P402World base(fixture);
     const P405World real(base, fixture.Content);
     P407UOutcomes(real);
@@ -400,6 +732,9 @@ int main(int argc, char** argv)
     P407USlotsAndRollback(real);
     P502RecoveryAndConflicts(real);
     P502ReceiptsAndReplay(real);
+    P503Legacy(real);
+    P503RoundTrips(real);
+    P503SecondSitting(real);
     std::cout << "P407U follow-up assertions passed\n";
     return 0;
 }

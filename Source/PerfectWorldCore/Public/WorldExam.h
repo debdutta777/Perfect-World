@@ -148,8 +148,41 @@ using P402ExamFinish = P403ExamResult;
  * sittings=<n> and the n earlier session bodies (participation..active) before the current body; a world with no earlier
  * sitting keeps the /1 bytes above exactly, so its hash and every P4-02 save are unchanged. IsExamStateValidInWorld applies
  * P409SessionValidInWorld to each earlier sitting and to the current one (late-entry window, reduced allowance).
+ * P5-03 (world v14): with follow-up records (WorldState::ExaminationFollowups) the header is pw.examination/3, then
+ * sittings=<n> (n may be 0) and the n earlier bodies, the current body, followups=<m> (m >= 1) and m records, each
+ *   followup=<sitting>,<appointmentId>,<revision>,<sessionCount>, sessionCount lines session=<generation>,<at>,<state>,
+ *   completion=none | completion=<generation>,<taskId>,<choiceId>,<completedAt>,<records>
+ * then end. A world without follow-ups keeps the /1 or /2 bytes exactly, so its hash and save are unchanged. IsExamStateValid
+ * InWorld also applies P503FollowupsValidInWorld.
  */
 [[nodiscard]] PERFECTWORLDCORE_API std::string SerialiseExamState(const WorldState& world);
-/** Strict canonical parse into world.Examination, validated in `world`; false and untouched otherwise. */
+/** Strict canonical parse into world.Examination, Earlier and Followups, validated in `world`; false and untouched otherwise. */
 [[nodiscard]] PERFECTWORLDCORE_API bool DeserialiseExamState(std::string_view text, WorldState& world);
+
+/** P5-03 bounds: records per world, sessions kept per record (oldest cancelled/missed/released dropped first), task records. */
+inline constexpr std::size_t P503MaxFollowupRecords = 256;
+inline constexpr std::size_t P503MaxFollowupSessions = 16;
+inline constexpr std::size_t P503MaxCompletionRecords = 8;
+/**
+ * P5-03: the content-free follow-up rules. Records strictly sorted by (Sitting, AppointmentId); each sitting at most the
+ * current one and holding a decided, closed result (never Unset or Entered); appointment IDs "appointment.*" and well formed;
+ * 1..P503MaxFollowupSessions sessions with strictly increasing generations from 1, the last at most Revision; every session
+ * at or after its sitting's opening and within the day-loop range; an open state (Booked/Arrived/Active/Paused) only as
+ * the last session; Arrived/Active/Paused/Paid/Completed no later than the clock; at most one Paid; Completed at most once,
+ * last, and exactly when Completion names it, with a supported task choice, 1..P503MaxCompletionRecords well-formed
+ * records and At <= CompletedAt <= now; and at most one completion per appointment in the whole life (no repeat reward).
+ */
+[[nodiscard]] PERFECTWORLDCORE_API bool P503FollowupsValidInWorld(const WorldState& world);
+/** True for the reserved follow-up flag namespace, which no v14 world may hold (P407UFollowupFlagPrefix). */
+[[nodiscard]] PERFECTWORLDCORE_API bool P503IsReservedFollowupFlag(std::string_view id) noexcept;
+/**
+ * P5-03: migrates a pre-v14 world's P4-07 follow-up flags (p407u.followup.<appointment>.book.<instant> and .done.<instant>)
+ * into ExaminationFollowups and removes them from Flags, after its examination is decoded and its hash authenticated.
+ * A reservation becomes Booked (Released when false), a paid attendance Paid; neither is ever a task completion. Each
+ * instant is attributed to the single decided sitting whose opening it follows; anything the P4-07 rules could not have
+ * written (an unknown key, a provisional P5-02 ".p502." key, a false or unbooked attendance, two live reservations, a
+ * reservation besides an attendance, an attendance after the clock) or an instant two sittings could own is refused:
+ * false, with `world` untouched and the reason in `why`. Never guesses.
+ */
+[[nodiscard]] PERFECTWORLDCORE_API bool P503MigrateLegacyFollowupFlags(WorldState& world, std::string& why);
 } // namespace PerfectWorld
