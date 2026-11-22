@@ -30,7 +30,7 @@
   "phase2.a8.deferred.title": "Plan a school week without this year's exam",
   "phase2.a8.deferred.brief": "Meet the school office after lessons to ask about next year's examination and its age limit, or focus on class work. Deferral does not reserve admission or interrupt school.",
   "phase2.a8.declined.title": "Explore a route without the examination",
-  "phase2.a8.declined.brief": "Ask the careers adviser about workshop apprenticeships and foundation or adult bridge qualifications. Continue Class XI; you do not have to register for another tower attempt.",
+  "phase2.a8.declined.brief": "Ask the careers adviser about workshop apprenticeships and foundation or adult bridge qualifications. Continue Class XI; declining the examination closes nothing else at school.",
   "phase2.a8.school.title": "Return to your next school day",
   "phase2.a8.school.brief": "Open the school timetable and attend the next scheduled class. The calendar, stream and school closures still govern attendance; the tower result does not cancel lessons.",
   "phase2.a8.study.title": "Work on a homework question",
@@ -78,5 +78,5 @@
   "phase2.a8.p4_declined_vocational_craft.brief": "Meet Debashis Pal at the Nabapara Lane repair workshop after school to ask about electrical repair apprenticeships, polytechnic diplomas and neighbourhood shop work. Declining the tower leaves every ordinary craft and trade open.",
   "phase2.a8.p4_declined_stream_civic_path.title": "Map a board-exam and civic route with Amrita Basu",
   "phase2.a8.p4_declined_stream_civic_path.brief": "Meet Amrita Basu at Nabapara Vidyalaya for 30 minutes to pair your Class XII board subjects with a local civic activity such as the neighbourhood reading table or neighbourhood records, and review direct degree pathways at Bhagirathi State University. Completing the session records your route sheet and a board-subject timetable note; university entry stays an enquiry rather than an award, and a full adult life requires neither a tower rank nor supernatural practice. You may refuse or cancel with no obligation.",
-  "phase2.a8.p407u.mentor.session": "Amrita Basu sets your result beside the school timetable. You discuss managing pressure and where your retained evidence can be useful. Ordinary school, a later attempt, and leaving the tower behind remain open. The session ends with one manageable next step for the coming week."
+  "phase2.a8.p407u.mentor.session": "Amrita Basu sets your result beside the school timetable. You discuss managing pressure and where your retained evidence can be useful. Ordinary school and paths beyond the tower remain open. The session ends with one manageable next step for the coming week."
 }
