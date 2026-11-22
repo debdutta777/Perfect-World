@@ -259,15 +259,14 @@ void P412AppendExaminationLateSteps(TArray<FStepDef>& Out)
         Panel->P406Refresh();
         const auto& View = Panel->P406GetModel().World;
         const auto Words = P412Text(Panel.ToSharedRef());
-        const auto RefusalWords = P406Exam::P406RefusalText(TEXT("exam.missed")).ToString();
-        if (Refused.Accepted || Refused.Why.Code != "exam.missed" || View.CanSit || View.SitRefusal != "exam.missed" ||
-            RefusalWords.IsEmpty() || Words.Contains(TEXT("exam.missed")) || !Words.Contains(RefusalWords) ||
-            !Words.Contains(TEXT("late-entry window")) || !View.Sittings.HasNextSitting ||
-            P412Date(View.Sittings.NextSittingAt) != TEXT("2044-02-02 06:00") ||
-            !Words.Contains(TEXT("Next annual sitting: ") + P412Date(View.Sittings.NextSittingAt)) ||
+        // P413 (owner 2026-11-22): missing the window uses the life's one sitting; no later sitting is offered.
+        const auto RefusalWords = P406Exam::P406RefusalText(TEXT("exam.sitting_used")).ToString();
+        if (Refused.Accepted || Refused.Why.Code != "exam.sitting_used" || View.CanSit || View.SitRefusal != "exam.sitting_used" ||
+            RefusalWords.IsEmpty() || Words.Contains(TEXT("exam.sitting_used")) || !Words.Contains(RefusalWords) ||
+            View.Sittings.HasNextSitting || Words.Contains(TEXT("Next annual sitting")) ||
             Before != PerfectWorld::HashWorldState(Life->GetWorldState()) || Life->GetWorldState().Examination.Participation != TowerParticipation::Unset)
-            return FStepOutcome::Fail(TEXT("07:01 refusal, readable panel text, future sitting or unchanged state disagree"));
-        return FStepOutcome::Pass(TEXT("07:01 live Enter refused exam.missed without mutation; panel explains expiry and displays 2044-02-02 06:00"));
+            return FStepOutcome::Fail(TEXT("07:01 refusal, readable panel text, absent next sitting or unchanged state disagree"));
+        return FStepOutcome::Pass(TEXT("07:01 live Enter refused exam.sitting_used without mutation; panel explains the one sitting and shows no later sitting"));
     }));
     Out.Add(MakeShotStep(TEXT("p412_shot_missed_and_next_sitting")));
 }
