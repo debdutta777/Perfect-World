@@ -10,5 +10,6 @@
   "destination": "place.school",
   "dayOffset": 2,
   "minute": 975,
-  "durationMinutes": 20
+  "durationMinutes": 20,
+  "taskId": "term_plan"
 }

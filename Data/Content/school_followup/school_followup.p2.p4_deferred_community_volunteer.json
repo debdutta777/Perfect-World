@@ -10,5 +10,6 @@
   "destination": "place.school",
   "dayOffset": 4,
   "minute": 990,
-  "durationMinutes": 30
+  "durationMinutes": 30,
+  "taskId": "volunteer_enquiry"
 }

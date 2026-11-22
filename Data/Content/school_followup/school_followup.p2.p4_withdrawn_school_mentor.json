@@ -10,5 +10,6 @@
   "destination": "place.school",
   "dayOffset": 3,
   "minute": 960,
-  "durationMinutes": 30
+  "durationMinutes": 30,
+  "taskId": "pacing_plan"
 }
