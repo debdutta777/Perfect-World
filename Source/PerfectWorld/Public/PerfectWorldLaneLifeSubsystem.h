@@ -127,8 +127,10 @@ public:
      */
     void ResetWorld();
 
-    /** Commits a fully validated, detached world; its saved conversation must already be closed. */
-    void AdoptSavedWorld(TUniquePtr<PerfectWorld::WorldSim> Prepared);
+    /** Adopts a detached world with its new-life/Continue birth owner; same-life copies may retain the current owner.
+     * Its saved conversation must already be closed. */
+    void AdoptSavedWorld(TUniquePtr<PerfectWorld::WorldSim> Prepared,
+        TSharedPtr<const PerfectWorld::DateOfBirth> P410PreparedBirth = {});
     /** Validates and closes the saved session before committing any live state. */
     bool LoadWorldSlot(const std::string& Path, PerfectWorld::CharacterCreator& Creation,
         std::optional<PerfectWorld::PlayerPlacement>& Placement, std::string& Message);
@@ -250,6 +252,8 @@ private:
     /** APWReadableActor::GlobalReadRequested: open the text in this world's reading presenter. */
     void HandleReadRequested(FName ReadableId, FName ContentId, FText Title);
 
+    /** P410: immutable creation-record birth; declared before Sim so it also outlives Sim at destruction. */
+    TSharedPtr<const PerfectWorld::DateOfBirth> P410Birth;
     TUniquePtr<PerfectWorld::WorldSim> Sim;
     TSharedPtr<PWCommerce::FCmLiveContent> R88CommerceContent;
     uint64 RestorePresentationCount = 0;

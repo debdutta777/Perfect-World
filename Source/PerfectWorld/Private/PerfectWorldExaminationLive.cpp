@@ -33,8 +33,12 @@ public:
         const auto& P406World = P406Model.World;
         const auto& P406Session = P406Model.Session;
         P406Model.Title = FText::FromString(TEXT("Tower Examination"));
-        if (P406World.Finished)
+        // P410: a closed earlier result must not hide the portable world's later-sitting choices.
+        const bool P410EntryOffered = P406World.DecisionRequired || P406World.CanSit || P406World.CanDefer || P406World.CanDecline;
+        if (P406World.Finished && !P410EntryOffered)
         {
+            if (P406World.SitRefusal == "exam.age_limit")
+                P406Model.Lines.Add(P406RefusalText(TEXT("exam.age_limit")));
             const auto P406Finish = P406Sim.ExaminationResult();
             if (!P406Finish.Ok())
             {
@@ -69,10 +73,9 @@ public:
             P407UAppendFollowups(P406Model, P406Sim, P407UAtSchool(P406Life->GetWorld()));
             return P406Model;
         }
-        if (P406World.DecisionRequired || P406World.CanDefer || P406World.CanDecline)
+        if (P410EntryOffered)
         {
             P406Model.Screen = EScreen::Decision;
-            P406Model.Title = FText::FromString(TEXT("06:00 - 2 February 2043"));
             P406Model.Lines.Add(FText::FromString(TEXT("Decide whether to sit the national examination this year. Reading and choosing your participation cost no time.")));
             if (!P406World.CanSit) P406Model.Lines.Add(P406RefusalText(PWLaneLife::ToFString(P406World.SitRefusal)));
             P406Model.Actions.Add(P406Action(TEXT("Sit"), TowerSessionAction::Enter, P406World.CanSit));

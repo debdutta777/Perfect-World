@@ -6,7 +6,9 @@
 #include "PerfectWorldAcceptanceAwakening.h"
 #include "PerfectWorldFrontEndHUD.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
+#include "PerfectWorldSchoolPresenter.h"
 #include "UI/SPWCountdownPanel.h"
+#include "UI/SPWExaminationPanel.h"
 #include "UI/SPWPauseMenu.h"
 #include "Widgets/SWindow.h"
 
@@ -175,7 +177,7 @@ void P312AppendCountdownSteps(TArray<FStepDef>& Out)
         return FStepOutcome::Pass(TEXT("the core closed the countdown at 2 February 2043 06:00; a standing obligation was honoured and the selected opportunity resolved; one news delivery"));
     }));
     Out.Add(MakeShotStep(TEXT("p312_shot_countdown_deadline")));
-    Out.Add(P312Action(TEXT("p312_return_to_play_after_deadline"), [Run](UPWAcceptanceSubsystem& Sub, FStepRuntime& Rt)
+    Out.Add(P312Action(TEXT("p318_examination_decision_required_after_deadline"), [Run](UPWAcceptanceSubsystem& Sub, FStepRuntime& Rt)
     {
         auto* Hud = Sub.GetHud();
         auto* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
@@ -189,9 +191,57 @@ void P312AppendCountdownSteps(TArray<FStepDef>& Out)
             Rt.NextPhase();
             return FStepOutcome::Wait();
         }
+        if (Hud->IsMenuOpen()) return FStepOutcome::Fail(TEXT("pause menu did not close"));
+        const auto Before = Life->GetNow();
+        const auto Seq = Life->GetWorldState().Seq;
         const auto Done = Life->SubmitAwakeningCommand({PerfectWorld::CommandSource::Player, PerfectWorld::AdvanceTime{1}});
-        return !Hud->IsMenuOpen() && Done.Accepted ? FStepOutcome::Pass(TEXT("panel and pause closed; ordinary time still advances after examination morning, with no countdown dead end"))
-            : FStepOutcome::Fail(TEXT("play did not resume: ") + PWLaneLife::ToFString(Done.Why.Message));
+        if (Done.Accepted || Done.Why.Code != "exam.decision_required" || Life->GetNow() != Before ||
+            Life->GetWorldState().Seq != Seq || !Life->GetSim().ExaminationWorldView().DecisionRequired)
+            return FStepOutcome::Fail(TEXT("examination morning did not require a decision without advancing time: ") + PWLaneLife::ToFString(Done.Why.Code));
+        return FStepOutcome::Pass(TEXT("panel and pause closed; time.advance refused with exam.decision_required and no clock or sequence change"));
+    }));
+    Out.Add(P312Action(TEXT("p318_defer_examination_through_live_panel"), [](UPWAcceptanceSubsystem& Sub, FStepRuntime&)
+    {
+        auto* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
+        const auto* Presenter = UPWSchoolPresenter::Get(Sub.GetPlayWorld());
+        const auto Panel = Presenter != nullptr && Presenter->GetKind() == EPWSchoolPanel::P406Examination
+            ? StaticCastSharedPtr<SPWExaminationPanel>(Presenter->GetPanel()) : nullptr;
+        if (!Life || !Panel.IsValid() || Panel->P406GetModel().Screen != P406Exam::EScreen::Decision)
+            return FStepOutcome::Fail(TEXT("the required examination decision panel is absent"));
+        const auto Rows = Panel->P406GetModel().Actions;
+        for (int32 Index = 0; Index < Rows.Num(); ++Index)
+        {
+            if (Rows[Index].Kind != PerfectWorld::TowerSessionAction::Defer) continue;
+            const auto Before = Life->GetNow();
+            if (!Rows[Index].bEnabled || !Panel->P406TriggerAction(Index))
+                return FStepOutcome::Fail(TEXT("the live Defer action was refused: ") + Panel->P406GetNotice().ToString());
+            const auto Result = Life->GetSim().ExaminationResult();
+            if (!Result.Ok() || Result.Participation != PerfectWorld::TowerParticipation::Deferred ||
+                Life->GetSim().ExaminationWorldView().DecisionRequired || Life->GetNow() != Before)
+                return FStepOutcome::Fail(TEXT("the live Defer action did not record deferral without consuming time"));
+            return FStepOutcome::Pass(TEXT("the live examination panel submitted Defer; core participation is Deferred and the decision hold is released"));
+        }
+        return FStepOutcome::Fail(TEXT("the examination panel has no Defer action"));
+    }));
+    Out.Add(P312Action(TEXT("p312_return_to_play_after_deadline"), [](UPWAcceptanceSubsystem& Sub, FStepRuntime& Rt)
+    {
+        auto* Hud = Sub.GetHud();
+        auto* Life = UPWLaneLifeSubsystem::Get(Sub.GetPlayWorld());
+        auto* Presenter = UPWSchoolPresenter::Get(Sub.GetPlayWorld());
+        if (!Hud || !Life || !Presenter) return FStepOutcome::Fail(TEXT("no live examination host"));
+        if (Rt.Phase == 0)
+        {
+            Presenter->Close();
+            Rt.NextPhase();
+            return FStepOutcome::Wait();
+        }
+        if (Hud->IsMenuOpen() || Presenter->IsOpen() || Life->GetSim().ExaminationWorldView().DecisionRequired)
+            return FStepOutcome::Fail(TEXT("a panel or examination decision still holds play"));
+        const auto Before = Life->GetNow();
+        const auto Done = Life->SubmitAwakeningCommand({PerfectWorld::CommandSource::Player, PerfectWorld::AdvanceTime{1}});
+        return Done.Accepted && Life->GetNow() == Before + 1
+            ? FStepOutcome::Pass(TEXT("deferral recorded and result closed; ordinary time advances after examination morning"))
+            : FStepOutcome::Fail(TEXT("play did not resume after deferral: ") + PWLaneLife::ToFString(Done.Why.Message));
     }));
 }
 }

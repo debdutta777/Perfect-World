@@ -308,4 +308,79 @@ bool FP407UMentorSessionTest::RunTest(const FString& Parameters)
     return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FP410AgeLimitPanelTest, "PerfectWorld.Examination.P410.AgeLimitWords",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FP410AgeLimitPanelTest::RunTest(const FString& Parameters)
+{
+    const auto P410Fake = MakeShared<P406Exam::FFakeWorld>();
+    P410Fake->Model = P406TestDecision();
+    P410Fake->Reply.Accepted = false;
+    P410Fake->Reply.Why.Code = "exam.age_limit";
+    const auto P410Panel = SNew(SPWExaminationPanel).BridgeOverride(P410Fake);
+    TestFalse(TEXT("age refusal is returned"), P410Panel->P406TriggerAction(1));
+    TestEqual(TEXT("one refused command"), P410Fake->Submitted.Num(), 1);
+    const auto P410Text = P406TestAllText(P410Panel);
+    TestTrue(TEXT("age limit explains older than twenty"), P410Text.Contains(TEXT("older than twenty")));
+    TestTrue(TEXT("other qualifications remain available"), P410Text.Contains(TEXT("apprenticeships and adult qualification routes")));
+    TestFalse(TEXT("age refusal ID is hidden"), P410Text.Contains(TEXT("exam.age_limit")));
+    TestEqual(TEXT("refusal preserves the world projection"), FString(UTF8_TO_TCHAR(P410Fake->Model.World.SitRefusal.c_str())),
+        FString(TEXT("exam.missing_content")));
+
+    P410Fake->Reply.Why.Code = "exam.missed";
+    TestFalse(TEXT("missed window refusal is returned"), P410Panel->P406TriggerAction(1));
+    const auto P410Missed = P406TestAllText(P410Panel);
+    TestTrue(TEXT("missed means past late entry"), P410Missed.Contains(TEXT("60-minute late-entry window has passed")));
+    TestTrue(TEXT("annual opportunity stays visible"), P410Missed.Contains(TEXT("next annual sitting remains open")));
+    TestFalse(TEXT("missed refusal ID is hidden"), P410Missed.Contains(TEXT("exam.missed")));
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FP410SittingPanelTest, "PerfectWorld.Examination.P410.LateEntryAndSittings",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FP410SittingPanelTest::RunTest(const FString& Parameters)
+{
+    const auto P410Fake = MakeShared<P406Exam::FFakeWorld>();
+    auto& P410Model = P410Fake->Model;
+    P410Model.World.CanWithdraw = true;
+    P410Model.World.Sittings.LateMinutes = 37;
+    // Deliberately independent fake values: presentation must use the allowance supplied by the core.
+    P410Model.World.Sittings.AllowanceMinutes = 109;
+    P410Model.World.Sittings.HasNextSitting = true;
+    P410Model.World.Sittings.NextSittingAt = PerfectWorld::GameClock::FromCalendar(2045, 2, 2, 6, 0);
+    for (const auto P410Screen : {P406Exam::EScreen::Routes, P406Exam::EScreen::Beat})
+    {
+        P410Model.Screen = P410Screen;
+        const auto P410Panel = SNew(SPWExaminationPanel).BridgeOverride(P410Fake).ViewportSize(FVector2D(569.0, 320.0));
+        const auto P410Text = P406TestAllText(P410Panel);
+        TestTrue(TEXT("late minutes are projected on route and beat"), P410Text.Contains(TEXT("Late entry: 37 minutes late")));
+        TestTrue(TEXT("allowance is supplied rather than recalculated"), P410Text.Contains(TEXT("Reduced outside allowance: 109 minutes")));
+        TestTrue(TEXT("next sitting is the projected date"), P410Text.Contains(TEXT("Next annual sitting: 2045-02-02 06:00")));
+        TestEqual(TEXT("opening and reading submit nothing"), P410Fake->Submitted.Num(), 0);
+    }
+    P410Model.World.Sittings.LateMinutes = 0;
+    const auto P410OnTime = SNew(SPWExaminationPanel).BridgeOverride(P410Fake);
+    TestFalse(TEXT("on-time entry has no late notice"), P406TestAllText(P410OnTime).Contains(TEXT("Late entry:")));
+    P410Model = P406TestResult();
+    P410Model.World.Sittings.HasNextSitting = true;
+    P410Model.World.Sittings.NextSittingAt = PerfectWorld::GameClock::FromCalendar(2046, 2, 2, 6, 0);
+    const auto P410Result = SNew(SPWExaminationPanel).BridgeOverride(P410Fake);
+    TestTrue(TEXT("terminal result retains the annual date"),
+        P406TestAllText(P410Result).Contains(TEXT("Next annual sitting: 2046-02-02 06:00")));
+    P410Model.World.Sittings.HasNextSitting = false;
+    const auto P410Last = SNew(SPWExaminationPanel).BridgeOverride(P410Fake);
+    TestFalse(TEXT("no invented date after the last eligible sitting"), P406TestAllText(P410Last).Contains(TEXT("Next annual sitting:")));
+    TestFalse(TEXT("closed session has no late entry allowance"), P406TestAllText(P410Last).Contains(TEXT("Late entry:")));
+
+    P410Model = P406TestDecision();
+    P410Model.Title = FText::FromString(TEXT("Tower Examination"));
+    P410Model.World.Sittings.OpensAt = PerfectWorld::GameClock::FromCalendar(2047, 2, 2, 6, 0);
+    const auto P410Decision = SNew(SPWExaminationPanel).BridgeOverride(P410Fake);
+    TestTrue(TEXT("decision date follows the current sitting"),
+        P406TestAllText(P410Decision).Contains(TEXT("Sitting opens: 2047-02-02 06:00")));
+    TestEqual(TEXT("all sitting presentation remains read-only"), P410Fake->Submitted.Num(), 0);
+    return true;
+}
+
 #endif
