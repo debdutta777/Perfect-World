@@ -4,6 +4,9 @@
 #include "EngineUtils.h"
 #include "GameClock.h"
 #include "GameFramework/PlayerController.h"
+#include "Input/Events.h"
+#include "InputCoreTypes.h"
+#include "Misc/App.h"
 #include "PerfectWorldAcceptanceSchoolR7Steps.h"
 #include "PerfectWorldInteractionComponent.h"
 #include "PerfectWorldLaneLifeSubsystem.h"
@@ -335,7 +338,7 @@ static void S03AppendLessonSteps(TArray<FStepDef>& Out, bool bP313EntryOnly)
             Run->bReady ? TEXT("recorded") : TEXT("left early"), static_cast<long long>(Life->GetNow() - Run->ClockAtOpen)));
     }));
 
-    // Back leaves the summary (to the day panel); closing the panel restores game input and the clock.
+    // P318: exercise both Back handlers; the clock also respects the application's independent focus pause.
     Out.Add(S03Action(TEXT("close_the_panel_and_restore_play"), 15.0, [](UPWAcceptanceSubsystem& Sub, FStepRuntime& Rt)
     {
         UWorld* World = Sub.GetPlayWorld();
@@ -346,31 +349,39 @@ static void S03AppendLessonSteps(TArray<FStepDef>& Out, bool bP313EntryOnly)
         }
         if (Rt.Phase == 0)
         {
-            if (const TSharedPtr<SPWClassLesson> Lesson = S03LessonScreen(World))
-            {
-                Lesson->RequestClose();
-            }
+            const TSharedPtr<SPWClassLesson> Lesson = S03LessonScreen(World);
+            if (!Lesson.IsValid()) return FStepOutcome::Fail(TEXT("no lesson summary to leave"));
+            Lesson->OnKeyDown(FGeometry(), FKeyEvent(EKeys::Escape, FModifierKeysState(), 0, false, 0, 0));
             Rt.NextPhase();
             return FStepOutcome::Wait();
         }
         if (Rt.Phase == 1)
         {
-            if (Presenter->GetKind() != EPWSchoolPanel::Day)
+            const auto Day = Presenter->GetDayPanel();
+            if (Presenter->GetKind() != EPWSchoolPanel::Day || !Day.IsValid())
             {
                 return FStepOutcome::Fail(TEXT("Back did not return to the day panel"));
             }
-            Presenter->Close();
+            Day->OnKeyDown(FGeometry(), FKeyEvent(EKeys::Gamepad_FaceButton_Right, FModifierKeysState(), 0, false, 0, 0));
             Rt.NextPhase();
             return FStepOutcome::Wait();
         }
         const UPWLaneLifeSubsystem* Life = UPWLaneLifeSubsystem::Get(World);
         const APlayerController* Controller = Sub.GetController();
         if (Presenter->IsOpen() || Sub.GetPawn() == nullptr || UPWInteractionComponent::IsWorldInputBlocked(Sub.GetPawn()) ||
-            (Controller != nullptr && Controller->bShowMouseCursor))
+            Controller == nullptr || Controller->bShowMouseCursor)
         {
             return FStepOutcome::Fail(TEXT("world input was not restored after closing"));
         }
-        return Life != nullptr && Life->GetClockHold() == EPWClockHold::None ? FStepOutcome::Pass(TEXT("panel closed, game input and the clock restored")) : FStepOutcome::Wait();
+        if (Life == nullptr) return FStepOutcome::Fail(TEXT("no lane-life subsystem"));
+        const bool bFocused = FApp::HasFocus();
+        const auto ExpectedHold = bFocused ? EPWClockHold::None : EPWClockHold::Unfocused;
+        Rt.Note = FString::Printf(TEXT("panel closed; focus %d; clock hold %d (expected %d)"),
+            bFocused, static_cast<int32>(Life->GetClockHold()), static_cast<int32>(ExpectedHold));
+        return Life->GetClockHold() == ExpectedHold
+            ? FStepOutcome::Pass(bFocused ? TEXT("lesson and day Back restored play input and the free-roam clock")
+                : TEXT("lesson and day Back restored play input; clock paused only because the application is unfocused"))
+            : FStepOutcome::Wait();
     }));
 
     // What the core recorded: no open lesson, and a period record for the opened binding.
